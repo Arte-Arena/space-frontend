@@ -9,6 +9,7 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { Roboto } from 'next/font/google'
 import NavBar from "@/components/Navbar";
+import { Box } from '@mui/material';
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -32,13 +33,19 @@ export default function RootLayout({
       <body className={roboto.variable}>
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
-            <NavBar />
-            <div className="p-6">
-              {children}
-            </div>
+            <Box sx={{ p: 2 }}>
+              <header>
+                <NavBar />
+              </header>
+              <main>
+                {children}
+              </main>
+              <footer>
+              </footer>
+            </Box>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>
-    </html>
+    </html >
   );
 }

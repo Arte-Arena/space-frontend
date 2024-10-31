@@ -25,62 +25,59 @@ export default function NavBar() {
   };
 
   return (
-    <header>
-      <Box sx={{ flexGrow: 1 }}>
-        <AppBar position="static">
-          <Toolbar>
-            <IconButton
-              size="large"
-              edge="start"
-              color="inherit"
-              aria-label="menu"
-              sx={{ mr: 2 }}
-              onClick={handleClick}
-            >
-              <MenuIcon />
-            </IconButton>
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static">
+        <Toolbar>
+          <IconButton
+            size="large"
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            onClick={handleClick}
+          >
+            <MenuIcon />
+          </IconButton>
 
-            <Box sx={{ flexGrow: 1 }} />
+          <Box sx={{ flexGrow: 1 }} />
 
-            <Menu
-              id="simple-menu"
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-              sx={{
-                '& .MuiMenu-paper': {
-                  backgroundColor: 'primary.main',
-                  color: 'primary.contrastText',
-                },
-              }}
-            >
-              <MenuItem onClick={handleClose}>Option 1</MenuItem>
-              <MenuItem onClick={handleClose}>Option 2</MenuItem>
-              <MenuItem onClick={handleClose}>Option 3</MenuItem>
-            </Menu>
+          <Menu
+            id="simple-menu"
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            sx={{
+              '& .MuiMenu-paper': {
+                backgroundColor: 'primary.main',
+                color: 'primary.contrastText',
+              },
+            }}
+          >
+            <MenuItem onClick={handleClose}>Option 1</MenuItem>
+            <MenuItem onClick={handleClose}>Option 2</MenuItem>
+            <MenuItem onClick={handleClose}>Option 3</MenuItem>
+          </Menu>
 
-            <Image
-              src="/logo-arte-arena.webp"
-              alt="Descrição da imagem"
-              width={106.66}
-              height={38.33}
-            />
+          <Image
+            src="/logo-arte-arena.webp"
+            alt="Descrição da imagem"
+            width={80}
+            height={28.75}
+          />
 
-            <Typography variant="h6" component="div" sx={{ mr: 2, px: 2 }}>
-              Space
-            </Typography>
+          <Typography component="div" sx={{ mr: 2, px: 2 }}>
+            Space
+          </Typography>
 
-            <Box sx={{ flexGrow: 1 }} />
+          <Box sx={{ flexGrow: 1 }} />
 
-            <Button
-              startIcon={<AccountCircleIcon />}
-              color="inherit"
-            >
-              Login
-            </Button>
-          </Toolbar>
-        </AppBar>
-      </Box>
-    </header>
+          <Button
+            startIcon={<AccountCircleIcon />}
+            color="inherit"
+          >
+            Login
+          </Button>
+        </Toolbar>
+      </AppBar>
+    </Box>
   );
 }
