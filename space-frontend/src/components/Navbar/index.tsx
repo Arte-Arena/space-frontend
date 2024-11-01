@@ -52,9 +52,9 @@ export default function NavBar() {
               },
             }}
           >
-            <MenuItem onClick={handleClose}>Option 1</MenuItem>
-            <MenuItem onClick={handleClose}>Option 2</MenuItem>
-            <MenuItem onClick={handleClose}>Option 3</MenuItem>
+            <MenuItem onClick={handleClose}>Orçamento</MenuItem>
+            <MenuItem onClick={handleClose}>Custo Bandeira</MenuItem>
+            <MenuItem onClick={handleClose}>Contas a Pagar e a Receber</MenuItem>
           </Menu>
 
           <Image

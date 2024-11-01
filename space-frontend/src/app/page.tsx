@@ -1,7 +1,7 @@
-import Orcamento from "./orcamento/page";
+import OrcamentoScreen from "./orcamento/page";
 
 export default function Home() {
   return (
-    <Orcamento />
+    <OrcamentoScreen />
   );
 }

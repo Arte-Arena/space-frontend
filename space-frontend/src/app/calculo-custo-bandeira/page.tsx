@@ -5,9 +5,9 @@ import Link from '@mui/material/Link';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import HomeIcon from '@mui/icons-material/Home';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import OrcamentoClienteBusca from "@/components/OrcamentoClienteBusca";
+import { Typography } from '@mui/material';
 
-export default function OrcamentoScreen() {
+export default function CalculoCustoBandeiraScreen() {
   return (
     <>
       <Box sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
@@ -19,12 +19,14 @@ export default function OrcamentoScreen() {
 
           <Link underline="hover" key="2" color="inherit" href="/orcamento">
             <AccountBalanceWalletIcon sx={{ mr: 1 }} />
-            Orçamento
+            Cálculo de Custo de Bandeira
           </Link>
         </Breadcrumbs>
       </Box>
-      
-      <OrcamentoClienteBusca />
+
+      <Typography variant="h4" component="h1" sx={{ color: 'primary.contrastText' }}>
+        Para calcular o custo da bandeira, é necessário informar os seguintes requisitos:
+      </Typography>
 
     </>
   );
