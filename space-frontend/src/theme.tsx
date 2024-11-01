@@ -28,6 +28,17 @@ const theme = createTheme({
     typography: {
       fontFamily: 'var(--font-roboto)',
     },
+    components: {
+        MuiTextField: {
+            styleOverrides: {
+                root: {
+                    '& .MuiOutlinedInput-root': {
+                        backgroundColor: '#616161', // secondary.main
+                    },
+                },
+            },
+        },
+    },
 });
 
 export default theme;
