@@ -4,5 +4,6 @@ Space Frontend - Interface intuitiva e responsiva desenvolvida com Next.js 15, R
 
 Devido ao uso de bibliotecas (por exemplo, o Material UI) que dependem de versões mais antigas do React, é necessário instalar as dependências passando o argumento `--legacy-peer-deps`. Deste modo, para uma correta instalação das dependências deste projeto, utilize o seguinte comando: `npm i --legacy-peer-deps`.
 
+# Criar imagem docker em ambiente de desenvolvimento
 
-
+sudo docker build -t space-frontend -f ./docker/Dockerfile . 
