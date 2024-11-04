@@ -29,11 +29,26 @@ const theme = createTheme({
       fontFamily: 'var(--font-roboto)',
     },
     components: {
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: '#616161',
+                    color: '#fafafa',
+                    '&:hover': {
+                        backgroundColor: '#ededed',
+                        color: '#171717',
+                    },
+                },
+            },
+        },
         MuiTextField: {
             styleOverrides: {
                 root: {
                     '& .MuiOutlinedInput-root': {
-                        backgroundColor: '#616161', // secondary.main
+                        backgroundColor: '#616161',
+                        border: '1px solid #ccc',
+                        color: '#fafafa',
+                        width: '100%',
                     },
                 },
             },

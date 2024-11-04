@@ -12,6 +12,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Image from 'next/image';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import Link from 'next/link';
 
 export default function NavBar() {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -52,21 +53,31 @@ export default function NavBar() {
               },
             }}
           >
-            <MenuItem onClick={handleClose}>Orçamento</MenuItem>
-            <MenuItem onClick={handleClose}>Custo Bandeira</MenuItem>
-            <MenuItem onClick={handleClose}>Contas a Pagar e a Receber</MenuItem>
+            <Link href="/orcamento">
+              <MenuItem onClick={handleClose}>Orçamento</MenuItem>
+            </Link>
+            <Link href="/custo-bandeira">
+              <MenuItem onClick={handleClose}>Custo Bandeira</MenuItem>
+            </Link>
+            <Link href="/contas-pagar-receber">
+              <MenuItem onClick={handleClose}>Contas a Pagar e a Receber</MenuItem>
+            </Link>
           </Menu>
 
-          <Image
-            src="/logo-arte-arena.webp"
-            alt="Descrição da imagem"
-            width={80}
-            height={28.75}
-          />
+          <Link href="/">
+            <Image
+              src="/logo-arte-arena.webp"
+              alt="Descrição da imagem"
+              width={80}
+              height={28.75}
+            />
+          </Link>
 
-          <Typography component="div" sx={{ mr: 2, px: 2 }}>
-            Space
-          </Typography>
+          <Link href="/">
+            <Typography component="div" sx={{ mr: 2, px: 2 }}>
+              Space
+            </Typography>
+          </Link>
 
           <Box sx={{ flexGrow: 1 }} />
 
