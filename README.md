@@ -7,3 +7,7 @@ Devido ao uso de bibliotecas (por exemplo, o Material UI) que dependem de versõ
 # Criar imagem docker em ambiente de desenvolvimento
 
 sudo docker build -t space-frontend -f ./docker/Dockerfile . 
+
+sudo docker push artearenahub/space-frontend:latest
+
+

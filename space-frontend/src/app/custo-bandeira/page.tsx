@@ -33,54 +33,82 @@ function CustoBandeiraScreen() {
     const custoFinal = custoTotalTecido + custoTotalTinta + custoTotalPapel + custoTotalImposto;
 
     setResultado(custoFinal);
+
+    const data = {
+      altura: parseFloat(altura),
+      largura: parseFloat(largura),
+      custo_tecido: parseFloat(custoTecido),
+      custo_tinta: parseFloat(custoTinta),
+      custo_papel: parseFloat(custoPapel),
+      custo_imposto: parseFloat(custoImposto),
+      custo_final: custoFinal,
+    };
+
+    fetch('http://localhost:8000/api/calculo-bandeira', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer 1|1kzSFsZLFJ4KtS3G2AaRvhaqvDMnLYGqD8jK0rL3150e1cc9',
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log('Success:', data);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
   };
 
-  return (
-    <>
-      <Box sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
-        <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} sx={{ color: 'primary.contrastText' }}>
-          <Link underline="hover" key="1" color="inherit" href="/" sx={{ display: 'flex', alignItems: 'center' }}>
-            <HomeIcon sx={{ mr: 1 }} />
-            Início
-          </Link>
+};
 
-          <Link underline="hover" key="2" color="inherit" href="/custo-bandeira">
-            <AccountBalanceWalletIcon sx={{ mr: 1 }} />
-            Custo Bandeira
-          </Link>
-        </Breadcrumbs>
-      </Box>
+return (
+  <>
+    <Box sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
+      <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} sx={{ color: 'primary.contrastText' }}>
+        <Link underline="hover" key="1" color="inherit" href="/" sx={{ display: 'flex', alignItems: 'center' }}>
+          <HomeIcon sx={{ mr: 1 }} />
+          Início
+        </Link>
 
-      <Typography variant="body1" sx={{ color: 'primary.contrastText' }}>
-        Preencha os dados abaixo para calcular o custo da bandeira:
+        <Link underline="hover" key="2" color="inherit" href="/custo-bandeira">
+          <AccountBalanceWalletIcon sx={{ mr: 1 }} />
+          Custo Bandeira
+        </Link>
+      </Breadcrumbs>
+    </Box>
+
+    <Typography variant="body1" sx={{ color: 'primary.contrastText' }}>
+      Preencha os dados abaixo para calcular o custo da bandeira:
+    </Typography>
+
+    <Box
+      component="form"
+      sx={{
+        '& > :not(style)': { m: 1, width: '100%' },
+      }}
+      noValidate
+      autoComplete="off"
+    >
+      <TextField id="altura" label="Altura" variant="outlined" value={altura} onChange={(e) => setAltura(e.target.value)} />
+      <TextField id="largura" label="Largura" variant="outlined" value={largura} onChange={(e) => setLargura(e.target.value)} />
+      <TextField id="custoTecido" label="Custo do Tecido" variant="outlined" value={custoTecido} onChange={(e) => setCustoTecido(e.target.value)} />
+      <TextField id="custoTintresultadoa" label="Custo da Tinta" variant="outlined" value={custoTinta} onChange={(e) => setCustoTinta(e.target.value)} />
+      <TextField id="custoPapel" label="Custo do Papel" variant="outlined" value={custoPapel} onChange={(e) => setCustoPapel(e.target.value)} />
+      <TextField id="custoImposto" label="Custo do Imposto" variant="outlined" value={custoImposto} onChange={(e) => setCustoImposto(e.target.value)} />
+
+      <Button variant="contained" onClick={calcularCusto}>Calcular</Button>
+    </Box>
+
+    {resultado !== null && (
+      <Typography variant="h6" sx={{ color: 'primary.contrastText' }}>
+        O custo total da bandeira é: R$ {resultado}
       </Typography>
 
-      <Box
-        component="form"
-        sx={{
-          '& > :not(style)': { m: 1, width: '100%' },
-        }}
-        noValidate
-        autoComplete="off"
-      >
-        <TextField id="altura" label="Altura" variant="outlined" value={altura} onChange={(e) => setAltura(e.target.value)} />
-        <TextField id="largura" label="Largura" variant="outlined" value={largura} onChange={(e) => setLargura(e.target.value)} />
-        <TextField id="custoTecido" label="Custo do Tecido" variant="outlined" value={custoTecido} onChange={(e) => setCustoTecido(e.target.value)} />
-        <TextField id="custoTinta" label="Custo da Tinta" variant="outlined" value={custoTinta} onChange={(e) => setCustoTinta(e.target.value)} />
-        <TextField id="custoPapel" label="Custo do Papel" variant="outlined" value={custoPapel} onChange={(e) => setCustoPapel(e.target.value)} />
-        <TextField id="custoImposto" label="Custo do Imposto" variant="outlined" value={custoImposto} onChange={(e) => setCustoImposto(e.target.value)} />
-
-        <Button variant="contained" onClick={calcularCusto}>Calcular</Button>
-      </Box>
-
-      {resultado !== null && (
-        <Typography variant="h6" sx={{ color: 'primary.contrastText' }}>
-          O custo total da bandeira é: R$ {resultado}
-        </Typography>
-
-      )}
-    </>
-  );
+    )}
+  </>
+);
 }
 
 export default CustoBandeiraScreen;
