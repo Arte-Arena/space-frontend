@@ -81,12 +81,14 @@ export default function NavBar() {
 
           <Box sx={{ flexGrow: 1 }} />
 
-          <Button
-            startIcon={<AccountCircleIcon />}
-            color="inherit"
-          >
-            Login
-          </Button>
+          <Link href="/login">
+            <Button
+              startIcon={<AccountCircleIcon />}
+              color="inherit"
+            >
+              Login
+            </Button>
+          </Link>
         </Toolbar>
       </AppBar>
     </Box>
