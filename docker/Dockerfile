@@ -1,8 +1,8 @@
-FROM node:18
+FROM node:20
 WORKDIR /app
-COPY space-frontend/package*.json ./
-RUN npm install --legacy-peer-deps
-COPY space-frontend/ .
+COPY modernize/package*.json ./
+RUN npm install
+COPY modernize/ .
 RUN npm run build
 EXPOSE 3000
 CMD ["npm", "start"]
