@@ -1,0 +1,14 @@
+/* .leadership-carousel .slick-track {
+  display: flex;
+  gap: 25px;
+} */
+
+.leadership-carousel.slick-slider .slick-list {
+    margin: 0 -15px;
+  }
+
+
+
+/* .leadership-carousel  .slick-slide:first-child {
+    margin-left: 210px;
+} */

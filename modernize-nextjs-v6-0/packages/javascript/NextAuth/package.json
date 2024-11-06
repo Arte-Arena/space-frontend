@@ -1,0 +1,45 @@
+{
+  "name": "nextauth",
+  "version": "4.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@emotion/cache": "^11.11.0",
+    "@emotion/react": "^11.11.1",
+    "@emotion/server": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.14.13",
+    "@mui/lab": "^5.0.0-alpha.148",
+    "@mui/material": "^5.15.15",
+    "@mui/material-nextjs": "^5.15.11",
+    "@mui/x-date-pickers": "^5.0.15",
+    "@reduxjs/toolkit": "^1.9.7",
+    "@tabler/icons-react": "^2.39.0",
+    "apexcharts": "3.43.0",
+    "axios": "^1.5.1",
+    "axios-mock-adapter": "^1.22.0",
+    "i18next": "^23.5.1",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "next": "14.2.7",
+    "next-auth": "^4.24.7",
+    "prop-types": "^15.7.2",
+   "react": "^18.3.1",
+    "react-apexcharts": "^1.4.1",
+   "react-dom": "^18.3.1",
+    "react-i18next": "^13.2.2",
+    "react-redux": "^8.0.2",
+    "redux-persist": "^6.0.0",
+    "simplebar-react": "^3.2.4",
+    "stylis-plugin-rtl": "^2.1.1"
+  },
+  "devDependencies": {
+    "eslint": "latest",
+    "eslint-config-next": "latest"
+  }
+}
