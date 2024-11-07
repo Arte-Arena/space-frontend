@@ -170,8 +170,8 @@ const CustoBandeiraScreen = () => {
           </div>
           {resultado !== null && (
             <div style={{ marginTop: '20px' }}>
-              <Typography variant="h6">
-                O custo total da bandeira é: R$ {resultado}
+              <Typography variant="h5">
+                O custo total da bandeira é: <strong>R$ {resultado}</strong>
               </Typography>
             </div>
           )}

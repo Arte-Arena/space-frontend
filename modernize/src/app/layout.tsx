@@ -5,8 +5,8 @@ import "./global.css";
 
 
 export const metadata = {
-  title: "Modernize Main Demo",
-  description: "Modernize Main kit",
+  title: "Arte Arena - Space",
+  description: "Space é o espaço de trabalho colaborativo da Arte Arena",
 };
 
 export default function RootLayout({
