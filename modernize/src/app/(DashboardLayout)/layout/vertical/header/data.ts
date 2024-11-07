@@ -61,8 +61,8 @@ interface ProfileType {
 const profile: ProfileType[] = [
   {
     href: "/apps/user-profile/profile",
-    title: "My Profile",
-    subtitle: "Account Settings",
+    title: "Super Administrador",
+    subtitle: "Configurações do Sistema",
     icon: "/images/svgs/icon-account.svg",
   },
   // {

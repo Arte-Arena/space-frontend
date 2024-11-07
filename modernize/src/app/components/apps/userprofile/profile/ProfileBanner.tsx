@@ -1,25 +1,13 @@
 'use client'
+import React from "react";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import CardMedia from "@mui/material/CardMedia";
-import Fab from "@mui/material/Fab";
 import Grid from "@mui/material/Grid";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/material/styles";
-import {
-  IconBrandDribbble,
-  IconBrandFacebook,
-  IconBrandTwitter,
-  IconBrandYoutube,
-  IconFileDescription,
-  IconUserCheck,
-  IconUserCircle,
-} from "@tabler/icons-react";
-import ProfileTab from "./ProfileTab";
 import BlankCard from "../../../shared/BlankCard";
-import React from "react";
+import SuperAdminConfigs from "./SuperAdminConfigs";
 
 const ProfileBanner = () => {
   const ProfileImage = styled(Box)(() => ({
@@ -45,7 +33,7 @@ const ProfileBanner = () => {
         />
         <Grid container spacing={0} justifyContent="center" alignItems="center">
           {/* Post | Followers | Following */}
-          <Grid
+          {/* <Grid
             item
             lg={4}
             sm={12}
@@ -100,7 +88,7 @@ const ProfileBanner = () => {
                 </Typography>
               </Box>
             </Stack>
-          </Grid>
+          </Grid> */}
           {/* about profile */}
           <Grid
             item
@@ -153,7 +141,7 @@ const ProfileBanner = () => {
             </Box>
           </Grid>
           {/* friends following buttons */}
-          <Grid
+          {/* <Grid
             item
             lg={4}
             sm={12}
@@ -205,11 +193,12 @@ const ProfileBanner = () => {
                 Add To Story
               </Button>
             </Stack>
-          </Grid>
+          </Grid> */}
         </Grid>
         {/**TabbingPart**/}
-        <ProfileTab />
+        {/* <ProfileTab /> */}
       </BlankCard>
+      <SuperAdminConfigs />
     </>
   );
 };
