@@ -15,6 +15,14 @@ interface MenuitemsType {
   external?: boolean;
 }
 import {
+  IconBrandCashapp,
+  IconFlag,
+  IconReportMoney,
+  IconPrinter,
+  IconNeedleThread,
+  IconBrush,
+  IconReplace,
+  IconClipboardList,
   IconAward,
   IconBoxMultiple,
   IconPoint,
@@ -218,25 +226,25 @@ const Menuitems: MenuitemsType[] = [
   {
     id: uniqueId(),
     title: "Contas",
-    icon: IconMessage2,
+    icon: IconBrandCashapp,
     href: "/apps/contas-pagar-receber",
     children: [
       {
         id: uniqueId(),
         title: "Adicionar Conta",
-        icon: IconPoint,
+        icon: IconBrandCashapp,
         href: "/apps/contas-pagar-receber/adicionar",
       },
       {
         id: uniqueId(),
         title: "Buscar Conta",
-        icon: IconPoint,
+        icon: IconBrandCashapp,
         href: "/apps/contas-pagar-receber/buscar",
       },
       {
         id: uniqueId(),
         title: "Relatórios de Contas",
-        icon: IconPoint,
+        icon: IconBrandCashapp,
         href: "/apps/contas-pagar-receber/relatorios",
       },
     ],
@@ -244,43 +252,43 @@ const Menuitems: MenuitemsType[] = [
   {
     id: uniqueId(),
     title: "Custo de Bandeira",
-    icon: IconMessage2,
+    icon: IconFlag,
     href: "/apps/custo-bandeira",
   },
   {
     id: uniqueId(),
     title: "Orçamento",
-    icon: IconMessage2,
+    icon: IconReportMoney,
     href: "/apps/orcamento",
   },
   {
     id: uniqueId(),
     title: "Impressão",
-    icon: IconMessage2,
+    icon: IconPrinter,
     href: "/apps/impressao",
   },
   {
     id: uniqueId(),
     title: "Confecção",
-    icon: IconMessage2,
+    icon: IconNeedleThread,
     href: "/apps/confeccao",
   },
   {
     id: uniqueId(),
     title: "Arte Final",
-    icon: IconMessage2,
+    icon: IconBrush,
     href: "/apps/arte-final",
   },
   {
     id: uniqueId(),
     title: "Reposição",
-    icon: IconMessage2,
+    icon: IconReplace,
     href: "/apps/reposicao",
   },
   {
     id: uniqueId(),
     title: "Pedido Interno",
-    icon: IconMessage2,
+    icon: IconClipboardList,
     href: "/apps/pedido-interno",
   },
   {
