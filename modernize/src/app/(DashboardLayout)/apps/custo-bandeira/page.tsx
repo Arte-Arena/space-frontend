@@ -165,7 +165,7 @@ const CustoBandeiraScreen = () => {
             fullWidth
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustoImposto(e.target.value)}
           /> */}
-          <div>
+          <div style={{ marginTop: '20px' }}>
             <Button variant="contained" onClick={calcularCusto}>Calcular</Button>
           </div>
           {resultado !== null && (

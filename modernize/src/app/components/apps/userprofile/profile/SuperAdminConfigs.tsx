@@ -2,6 +2,7 @@ import React from 'react';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
 import Typography from '@mui/material/Typography';
+import { Button } from '@mui/material';
 
 const SuperAdminConfigs = () => {
   const [tecidoCost, setTecidoCost] = React.useState('');
@@ -25,87 +26,104 @@ const SuperAdminConfigs = () => {
     setImpostoCost(e.target.value);
   };
 
+  const salvarConfigs = () => {
+    const dataBody = {
+      tecidoCost: tecidoCost,
+      tintaCost: tintaCost,
+      papelCost: papelCost,
+      impostoCost: impostoCost,
+    };
+
+    console.log('DataBody:', dataBody);
+  };
+
   return (
-    <div>
+    <>
+      <div style={{ marginTop: '20px' }}>
+        <Typography
+          variant="h5"
+          align="center"
+          sx={{
+            mt: 2,
+            mb: 2,
+            fontWeight: 'bold',
+          }}
+        >
+          Configurações do Sistema
+        </Typography>
+      </div>
+      <div>
 
-      <Typography
-        variant="h5"
-        align="center"
-        sx={{
-          mt: 2,
-          mb: 2,
-          fontWeight: 'bold',
-        }}
-      >
-        Configurações do Sistema
-      </Typography>
+        <CustomFormLabel
+          sx={{
+            mt: 0,
+          }}
+          htmlFor="custo-tecido"
+        >
+          Custo do Tecido
+        </CustomFormLabel>
+        <CustomTextField
+          id="custo-tecido"
+          helperText="O custo em reais do tecido."
+          variant="outlined"
+          fullWidth
+          value={tecidoCost}
+          onChange={handleTecidoChange}
+        />
 
-      <CustomFormLabel
-        sx={{
-          mt: 0,
-        }}
-        htmlFor="custo-tecido"
-      >
-        Custo do Tecido
-      </CustomFormLabel>
-      <CustomTextField
-        id="custo-tecido"
-        helperText="O custo em reais do tecido."
-        variant="outlined"
-        fullWidth
-        value={tecidoCost}
-        onChange={handleTecidoChange}
-      />
-
-      <CustomFormLabel
-        sx={{
-          mt: 0,
-        }}
-        htmlFor="custo-tinta"
-      >
-        Custo da Tinta
-      </CustomFormLabel>
-      <CustomTextField
-        id="custo-tinta"
-        helperText="O custo em reais da tinta."
-        variant="outlined"
-        fullWidth
-        value={tintaCost}
-        onChange={handleTintaChange}
-      />
-      <CustomFormLabel
-        sx={{
-          mt: 0,
-        }}
-        htmlFor="custo-papel"
-      >
-        Custo do Papel
-      </CustomFormLabel>
-      <CustomTextField
-        id="custo-papel"
-        helperText="O custo em reais do papel."
-        variant="outlined"
-        fullWidth
-        value={papelCost}
-        onChange={handlePapelChange}
-      />
-      <CustomFormLabel
-        sx={{
-          mt: 0,
-        }}
-        htmlFor="custo-imposto"
-      >
-        Custo do Imposto
-      </CustomFormLabel>
-      <CustomTextField
-        id="custo-imposto"
-        helperText="O custo em reais do imposto."
-        variant="outlined"
-        fullWidth
-        value={impostoCost}
-        onChange={handleImpostoChange}
-      />
-    </div>
+        <CustomFormLabel
+          sx={{
+            mt: 0,
+          }}
+          htmlFor="custo-tinta"
+        >
+          Custo da Tinta
+        </CustomFormLabel>
+        <CustomTextField
+          id="custo-tinta"
+          helperText="O custo em reais da tinta."
+          variant="outlined"
+          fullWidth
+          value={tintaCost}
+          onChange={handleTintaChange}
+        />
+        <CustomFormLabel
+          sx={{
+            mt: 0,
+          }}
+          htmlFor="custo-papel"
+        >
+          Custo do Papel
+        </CustomFormLabel>
+        <CustomTextField
+          id="custo-papel"
+          helperText="O custo em reais do papel."
+          variant="outlined"
+          fullWidth
+          value={papelCost}
+          onChange={handlePapelChange}
+        />
+        <CustomFormLabel
+          sx={{
+            mt: 0,
+          }}
+          htmlFor="custo-imposto"
+        >
+          Custo do Imposto
+        </CustomFormLabel>
+        <CustomTextField
+          id="custo-imposto"
+          helperText="O custo em reais do imposto."
+          variant="outlined"
+          fullWidth
+          value={impostoCost}
+          onChange={handleImpostoChange}
+        />
+      </div>
+      <div style={{ marginTop: '20px' }}>
+        <Button variant="contained" onClick={salvarConfigs}>Salvar Configurações</Button>
+      </div>
+    </>
   );
 };
 
