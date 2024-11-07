@@ -1,4 +1,4 @@
-name: Cromo Frontend Production CI/CD Pipeline
+name: Arte Arena Space Frontend - Production CI/CD Pipeline
 
 on:
   push:
