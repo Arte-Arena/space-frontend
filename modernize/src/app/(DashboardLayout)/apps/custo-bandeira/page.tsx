@@ -20,7 +20,7 @@ const CustoBandeiraScreen = () => {
   const [resultado, setResultado] = useState<number | null>(null);
 
   const calcularCusto = () => {
-    if (!altura || !largura || !custoTecido || !custoTinta || !custoPapel || !custoImposto) {
+    if (!altura || !largura) {
       alert('Por favor, preencha todos os campos.');
       return;
     }
@@ -102,7 +102,7 @@ const CustoBandeiraScreen = () => {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLargura(e.target.value)}
           />
 
-          <CustomFormLabel
+          {/* <CustomFormLabel
             sx={{
               mt: 0,
             }}
@@ -164,7 +164,7 @@ const CustoBandeiraScreen = () => {
             variant="outlined"
             fullWidth
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustoImposto(e.target.value)}
-          />
+          /> */}
           <div>
             <Button variant="contained" onClick={calcularCusto}>Calcular</Button>
           </div>
