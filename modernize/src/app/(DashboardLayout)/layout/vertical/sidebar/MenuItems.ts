@@ -217,9 +217,29 @@ const Menuitems: MenuitemsType[] = [
   // },
   {
     id: uniqueId(),
-    title: "Contas a Pagar e Receber",
+    title: "Contas",
     icon: IconMessage2,
     href: "/apps/contas-pagar-receber",
+    children: [
+      {
+        id: uniqueId(),
+        title: "Adicionar Conta",
+        icon: IconPoint,
+        href: "/apps/contas-pagar-receber/adicionar",
+      },
+      {
+        id: uniqueId(),
+        title: "Buscar Conta",
+        icon: IconPoint,
+        href: "/apps/contas-pagar-receber/buscar",
+      },
+      {
+        id: uniqueId(),
+        title: "Relatórios de Contas",
+        icon: IconPoint,
+        href: "/apps/contas-pagar-receber/relatorios",
+      },
+    ],
   },
   {
     id: uniqueId(),
