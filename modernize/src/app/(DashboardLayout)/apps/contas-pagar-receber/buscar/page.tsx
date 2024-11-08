@@ -38,7 +38,7 @@ const ContasPagarReceberAdicionarScreen = () => {
     const fetchAccounts = async () => {
       try {
         const accessToken = localStorage.getItem('accessToken');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/conta`, {
+        const response = await fetch(`http://api-homolog.spacearena.net/api/conta`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
