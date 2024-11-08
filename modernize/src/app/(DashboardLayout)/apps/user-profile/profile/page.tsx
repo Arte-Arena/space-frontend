@@ -8,7 +8,7 @@ import Post from '@/app/components/apps/userprofile/profile/Post';
 
 const UserProfile = () => {
   return (
-    <PageContainer title="Profile" description="this is Profile">
+    <PageContainer title="Perfil" description="Perfil do Usuário">
 
       <Grid container spacing={3}>
         <Grid item sm={12}>

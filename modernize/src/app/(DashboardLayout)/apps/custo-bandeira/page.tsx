@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import { Button } from '@mui/material';
-import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
+import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import ParentCard from '@/app/components/shared/ParentCard';
 import Typography from '@mui/material/Typography';
 
@@ -102,69 +102,6 @@ const CustoBandeiraScreen = () => {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLargura(e.target.value)}
           />
 
-          {/* <CustomFormLabel
-            sx={{
-              mt: 0,
-            }}
-            htmlFor="custoTecido"
-          >
-            Custo do Tecido
-          </CustomFormLabel>
-          <CustomTextField
-            id="custoTecido"
-            helperText="O custo do tecido em R$ por metro."
-            variant="outlined"
-            fullWidth
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustoTecido(e.target.value)}
-          />
-
-          <CustomFormLabel
-            sx={{
-              mt: 0,
-            }}
-            htmlFor="custoTinta"
-          >
-            Custo da Tinta
-          </CustomFormLabel>
-          <CustomTextField
-            id="custoTinta"
-            helperText="O custo da tinta em R$ por metro."
-            variant="outlined"
-            fullWidth
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustoTinta(e.target.value)}
-          />
-
-          <CustomFormLabel
-            sx={{
-              mt: 0,
-            }}
-            htmlFor="custoPapel"
-          >
-            Custo do Papel
-          </CustomFormLabel>
-          <CustomTextField
-            id="custoPapel"
-            helperText="O custo do papel em R$ por metro."
-            variant="outlined"
-            fullWidth
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustoPapel(e.target.value)}
-          />
-
-          <CustomFormLabel
-            sx={{
-              mt: 0,
-            }}
-            htmlFor="custoImposto"
-          >
-            Custo do Imposto
-          </CustomFormLabel>
-          <CustomTextField
-            id="custoImposto"
-            helperText="O custo do imposto em %."
-            variant="outlined"
-            fullWidth
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustoImposto(e.target.value)}
-          /> */}
           <div style={{ marginTop: '20px' }}>
             <Button variant="contained" onClick={calcularCusto}>Calcular</Button>
           </div>
