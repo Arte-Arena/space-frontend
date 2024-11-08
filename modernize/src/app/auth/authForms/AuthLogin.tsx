@@ -25,7 +25,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
         email,
         password,
       });
-      const response = await fetch('http://abf47d2d8539140fbb162c08e4d144a2-1032230775.sa-east-1.elb.amazonaws.com/api/login', {
+      const response = await fetch('http://localhost:8000/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
