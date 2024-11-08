@@ -25,10 +25,14 @@ interface Account {
   tipo: string;
 }
 
+interface ApiResponse {
+  data: Account[];
+}
+
 const ContasPagarReceberAdicionarScreen = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>('');
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchAccounts = async () => {
@@ -46,7 +50,7 @@ const ContasPagarReceberAdicionarScreen = () => {
           throw new Error('Failed to fetch accounts');
         }
 
-        const data: Account[] = await response.json();
+        const data: ApiResponse = await response.json();
         setAccounts(data.data);
       } catch (error) {
         setError((error as Error).message);
