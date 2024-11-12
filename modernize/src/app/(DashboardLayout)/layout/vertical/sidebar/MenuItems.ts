@@ -23,6 +23,8 @@ import {
   IconBrush,
   IconReplace,
   IconClipboardList,
+  IconBuildingStore,
+  IconBuildingFactory,
   IconAward,
   IconBoxMultiple,
   IconPoint,
@@ -251,51 +253,95 @@ const Menuitems: MenuitemsType[] = [
   },
   {
     id: uniqueId(),
-    title: "Custo de Bandeira",
-    icon: IconFlag,
-    href: "/apps/custo-bandeira",
-  },
-  {
-    id: uniqueId(),
-    title: "Orçamento",
-    icon: IconReportMoney,
-    href: "/apps/orcamento",
-  },
-  {
-    id: uniqueId(),
-    title: "Impressão",
-    icon: IconPrinter,
-    href: "/apps/impressao",
-  },
-  {
-    id: uniqueId(),
-    title: "Confecção",
-    icon: IconNeedleThread,
-    href: "/apps/confeccao",
-  },
-  {
-    id: uniqueId(),
-    title: "Arte Final",
-    icon: IconBrush,
-    href: "/apps/arte-final",
-  },
-  {
-    id: uniqueId(),
-    title: "Reposição",
-    icon: IconReplace,
-    href: "/apps/reposicao",
-  },
-  {
-    id: uniqueId(),
-    title: "Pedido Interno",
-    icon: IconClipboardList,
-    href: "/apps/pedido-interno",
+    title: "Vendas",
+    icon: IconBuildingStore,
+    href: "/apps/vendas",
+    children: [
+      {
+        id: uniqueId(),
+        title: "CRM",
+        icon: IconBuildingStore,
+        href: "/apps/chats/chat-interno",
+      },
+      {
+        id: uniqueId(),
+        title: "Relatórios",
+        icon: IconBuildingStore,
+        href: "/apps/chats/chatbot",
+      },
+    ]
   },
   {
     id: uniqueId(),
     title: "Chats",
     icon: IconMessage2,
     href: "/apps/chats",
+    children: [
+      {
+        id: uniqueId(),
+        title: "Chat Interno",
+        icon: IconMessage2,
+        href: "/apps/chats/chat-interno",
+      },
+      {
+        id: uniqueId(),
+        title: "Atendimento Externo",
+        icon: IconMessage2,
+        href: "/apps/chats/chatbot",
+      },
+    ]
+  },
+  {
+    id: uniqueId(),
+    title: "Orçamento",
+    icon: IconReportMoney,
+    href: "/apps/orcamento",
+    children: [
+      {
+        id: uniqueId(),
+        title: "Custo de Bandeira",
+        icon: IconFlag,
+        href: "/apps/custo-bandeira",
+      },
+      {
+        id: uniqueId(),
+        title: "Pedido Interno",
+        icon: IconClipboardList,
+        href: "/apps/pedido-interno",
+      },
+    ]
+  },
+  {
+    id: uniqueId(),
+    title: "Produção",
+    icon: IconBuildingFactory,
+    href: "/apps/orcamento",
+    children: [
+      {
+        id: uniqueId(),
+        title: "Impressão",
+        icon: IconPrinter,
+        href: "/apps/impressao",
+      },
+      {
+        id: uniqueId(),
+        title: "Confecção",
+        icon: IconNeedleThread,
+        href: "/apps/confeccao",
+      },
+      {
+        id: uniqueId(),
+        title: "Arte Final",
+        icon: IconBrush,
+        href: "/apps/arte-final",
+      },
+    ]
+  },
+  {
+    id: uniqueId(),
+    title: "Reposição",
+    icon: IconReplace,
+    href: "/apps/reposicao",
   },
   // {
   //   id: uniqueId(),
@@ -309,24 +355,24 @@ const Menuitems: MenuitemsType[] = [
   //       icon: IconPoint,
   //       href: "/apps/user-profile/profile",
   //     },
-      // {
-      //   id: uniqueId(),
-      //   title: "Followers",
-      //   icon: IconPoint,
-      //   href: "/apps/user-profile/followers",
-      // },
-      // {
-      //   id: uniqueId(),
-      //   title: "Friends",
-      //   icon: IconPoint,
-      //   href: "/apps/user-profile/friends",
-      // },
-      // {
-      //   id: uniqueId(),
-      //   title: "Gallery",
-      //   icon: IconPoint,
-      //   href: "/apps/user-profile/gallery",
-      // },
+  // {
+  //   id: uniqueId(),
+  //   title: "Followers",
+  //   icon: IconPoint,
+  //   href: "/apps/user-profile/followers",
+  // },
+  // {
+  //   id: uniqueId(),
+  //   title: "Friends",
+  //   icon: IconPoint,
+  //   href: "/apps/user-profile/friends",
+  // },
+  // {
+  //   id: uniqueId(),
+  //   title: "Gallery",
+  //   icon: IconPoint,
+  //   href: "/apps/user-profile/gallery",
+  // },
   //   ],
   // },
   // {
