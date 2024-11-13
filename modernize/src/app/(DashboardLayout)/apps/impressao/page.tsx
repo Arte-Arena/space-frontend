@@ -25,7 +25,7 @@ interface Pedido {
 }
 
 const ImpressaoScreen = () => {
-  
+
   noStore();
 
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
@@ -41,7 +41,7 @@ const ImpressaoScreen = () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedido?page=${page}`, {
+      const response = await fetch(`http://api.spacearena.net/api/pedido?page=${page}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
