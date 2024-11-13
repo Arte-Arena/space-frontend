@@ -1,3 +1,9 @@
+'use client'
+
+import React, { useState, useEffect } from 'react';
+import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
+import PageContainer from '@/app/components/container/PageContainer';
+import ParentCard from '@/app/components/shared/ParentCard';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -5,25 +11,68 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 
+interface Pedido {
+  id: number;
+  numero_pedido: string;
+  data_prevista: string;
+  pedido_produto_categoria: string;
+  pedido_material: number;
+  medida_linear: number;
+  designer_id: number;
+  pedido_status_id: number;
+  pedido_tipo_id: number;
+}
+
 const ImpressaoScreen = () => {
-  const rows = [
-    {
-      pedido: 'Pedido 1',
-      dataPrevista: '01/01/2023',
-      tiposProdutos: 'Produtos A',
-      material: 'Material X',
-      medidaLinear: '100m',
-      designer: 'Designer 1',
-      status: 'Aberto',
-      tipoPedido: 'Pedido de Impressão',
-    },
-    // Add more rows as needed
-  ];
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+
+  useEffect(() => {
+    // Fetch the initial page of data from the API
+    fetchData(currentPage);
+  }, [currentPage]);
+
+  const fetchData = async (page: number) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedido?page=${page}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const data: { pedidos: Pedido[]; total_count: number; per_page: number } = await response.json();
+
+      console.log(data)
+
+      setPedidos(data.data);
+
+      console.log(pedidos)
+
+      setTotalPages(Math.ceil(data.total_count / data.per_page));
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   return (
     <PageContainer title="Contas a Pagar e a Receber / Adicionar" description="Contas a Pagar e a Receber da Arte Arena">
       <Breadcrumb title="Contas a Pagar e a Receber / Adicionar" subtitle="Gerencie as contas a pagar e a receber da Arte Arena / Adicionar" />
-      <ParentCard title="Impressão" >
+      <ParentCard title="Impressão">
         <div>
           Impressão
           <TableContainer>
@@ -41,16 +90,16 @@ const ImpressaoScreen = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.pedido}>
-                    <TableCell>{row.pedido}</TableCell>
-                    <TableCell>{row.dataPrevista}</TableCell>
-                    <TableCell>{row.tiposProdutos}</TableCell>
-                    <TableCell>{row.material}</TableCell>
-                    <TableCell>{row.medidaLinear}</TableCell>
-                    <TableCell>{row.designer}</TableCell>
-                    <TableCell>{row.status}</TableCell>
-                    <TableCell>{row.tipoPedido}</TableCell>
+                {pedidos?.map((pedido: Pedido) => (
+                  <TableRow key={pedido.id}>
+                    <TableCell>{pedido.numero_pedido}</TableCell>
+                    <TableCell>{pedido.data_prevista}</TableCell>
+                    <TableCell>{pedido.pedido_produto_categoria}</TableCell>
+                    <TableCell>{pedido.pedido_material}</TableCell>
+                    <TableCell>{pedido.medida_linear}</TableCell>
+                    <TableCell>{pedido.designer_id}</TableCell>
+                    <TableCell>{pedido.pedido_status_id}</TableCell>
+                    <TableCell>{pedido.pedido_tipo_id}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
