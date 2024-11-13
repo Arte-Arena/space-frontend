@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
+import { unstable_noStore as noStore } from 'next/cache';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
@@ -24,6 +25,9 @@ interface Pedido {
 }
 
 const ImpressaoScreen = () => {
+  
+  noStore();
+
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
