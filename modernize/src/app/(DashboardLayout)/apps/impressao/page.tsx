@@ -43,7 +43,7 @@ const ImpressaoScreen = () => {
         },
       });
 
-      const data: { pedidos: Pedido[]; total_count: number; per_page: number } = await response.json();
+      const data: { data: Pedido[]; total_count: number; per_page: number } = await response.json();
 
       console.log(data)
 
