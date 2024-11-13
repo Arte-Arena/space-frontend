@@ -25,7 +25,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
         email,
         password,
       });
-      const response = await fetch(`http://api.spacearena.net/api/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
