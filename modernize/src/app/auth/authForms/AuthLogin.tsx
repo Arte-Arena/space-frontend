@@ -40,7 +40,12 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
         localStorage.setItem('accessToken', data.access_token);
       }
       
-      // Pega nome, email e cargos do usuário
+      // Verifica o role do usuário
+      if (data.user_roles) {
+        localStorage.setItem('roles', data.user_roles);
+      }
+
+      // Grava nome, email e cargos do usuário
       if (data.user_name) {
         localStorage.setItem('name', data.user_name);
       }
