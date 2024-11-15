@@ -74,7 +74,14 @@ const ImpressaoScreen = () => {
       <Breadcrumb title="Contas a Pagar e a Receber / Adicionar" subtitle="Gerencie as contas a pagar e a receber da Arte Arena / Adicionar" />
       <ParentCard title="Impressão">
         <div>
-          Impressão
+        <div>
+          <div style={{marginTop: '10px'}}>
+            Medida Linear:
+          </div>
+          <div style={{marginTop: '10px'}}>
+          Tempo Estimado: 
+            </div> 
+        </div>
           <TableContainer>
             <Table>
               <TableHead>
