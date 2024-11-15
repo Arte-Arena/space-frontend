@@ -39,6 +39,18 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
       if (data.access_token) {
         localStorage.setItem('accessToken', data.access_token);
       }
+      
+      // Pega nome, email e cargos do usuário
+      if (data.user_name) {
+        localStorage.setItem('name', data.user_name);
+      }
+      if (data.user_email) {
+        localStorage.setItem('email', data.user_email);
+      }
+      if (data.user_cargos) {
+        localStorage.setItem('cargos', data.user_cargos);
+      }
+
       router.push('/');
     } catch (error) {
       console.error('Login error:', (error as Error).message);

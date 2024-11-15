@@ -49,11 +49,7 @@ const ImpressaoScreen = () => {
 
       const data: { data: Pedido[]; total_count: number; per_page: number } = await response.json();
 
-      console.log(data)
-
       setPedidos(data.data);
-
-      console.log(pedidos)
 
       setTotalPages(Math.ceil(data.total_count / data.per_page));
     } catch (error) {

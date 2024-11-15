@@ -59,12 +59,14 @@ interface ProfileType {
   icon: any;
 }
 const profile: ProfileType[] = [
-  {
-    href: "/apps/user-profile/profile",
-    title: "Super Administrador",
-    subtitle: "Configurações do Sistema",
-    icon: "/images/svgs/icon-account.svg",
-  },
+  ...(localStorage?.roles?.includes("1") ? [
+    {
+      href: "/apps/user-profile/profile",
+      title: "Super Administrador",
+      subtitle: "Configurações do Sistema",
+      icon: "/images/svgs/icon-account.svg",
+    },
+  ] : []),
   // {
   //   href: "/apps/email",
   //   title: "My Inbox",

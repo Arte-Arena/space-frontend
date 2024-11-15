@@ -25,7 +25,7 @@ const Profile = () => {
   const handleClose2 = () => {
     setAnchorEl2(null);
   };
-  
+
   const router = useRouter();
 
   const handleLogout = () => {
@@ -77,13 +77,13 @@ const Profile = () => {
       >
         <Typography variant="h5">Perfil do Usuário</Typography>
         <Stack direction="row" py={3} spacing={2} alignItems="center">
-        <Avatar src={"/images/profile/user-1.jpg"} alt={"ProfileImg"} sx={{ width: 95, height: 95 }} />
+          <Avatar src={"/images/profile/user-1.jpg"} alt={"ProfileImg"} sx={{ width: 95, height: 95 }} />
           <Box>
             <Typography variant="subtitle2" color="textPrimary" fontWeight={600}>
-              Mathew Anderson
+              {localStorage.getItem('name')}
             </Typography>
             <Typography variant="subtitle2" color="textSecondary">
-              Designer
+              {localStorage.getItem('cargos')}
             </Typography>
             <Typography
               variant="subtitle2"
@@ -93,7 +93,7 @@ const Profile = () => {
               gap={1}
             >
               <IconMail width={15} height={15} />
-              info@modernize.com
+              {localStorage.getItem('email')}
             </Typography>
           </Box>
         </Stack>
