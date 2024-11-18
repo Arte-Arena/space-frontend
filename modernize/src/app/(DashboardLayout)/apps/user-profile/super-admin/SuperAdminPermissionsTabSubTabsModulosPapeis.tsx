@@ -20,9 +20,15 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
 
+interface Module {
+  id: number;
+  name: string;
+}
+
 interface Role {
   id: number;
   name: string;
+  modules: Module[];
 }
 
 const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
@@ -31,7 +37,7 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
   useEffect(() => {
     const fetchRoles = async () => {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8000/api/super-admin/get-all-roles', {
+      const response = await fetch('http://localhost:8000/api/super-admin/get-all-roles-modules', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -43,7 +49,6 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
     };
     fetchRoles();
   }, []);
-
 
   return (
     <>
