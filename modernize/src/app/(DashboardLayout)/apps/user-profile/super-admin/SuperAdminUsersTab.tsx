@@ -56,7 +56,7 @@ const SuperAdminUsersTab = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch('http://localhost:8000/api/super-admin/get-all-users', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-all-users`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
