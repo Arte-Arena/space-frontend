@@ -7,20 +7,20 @@ import Tab from "@mui/material/Tab";
 import TabContext from "@mui/lab/TabContext";
 import TabPanel from "@mui/lab/TabPanel";
 import ChildCard from "@/app/components/shared/ChildCard";
-import { IconUser } from "@tabler/icons-react";
-import { IconShieldHalfFilled } from "@tabler/icons-react";
-import { IconCoins } from "@tabler/icons-react";
-import SuperAdminUsersTab from "./SuperAdminUsersTab";
-import SuperAdminPermissionsTab from "./SuperAdminPermissionsTab";
-import SuperAdminCostsTab from "./SuperAdminCostsTab";
+import { IconUserCircle, IconUserShield, IconShieldCheckeredFilled, IconApps } from "@tabler/icons-react";
+import SuperAdminPermissionsTabSubTabsPapeis from "./SuperAdminPermissionsTabSubTabsPapeis";
+import SuperAdminPermissionsTabSubTabsModulos from "./SuperAdminPermissionsTabSubTabsModulos";
+import SuperAdminPermissionsTabSubTabsPapeisUsuarios from "./SuperAdminPermissionsTabSubTabsPapeisUsuarios";
+import SuperAdminPermissionsTabSubTabsModulosPapeis from "./SuperAdminPermissionsTabSubTabsModulosPapeis";
 
 const SUPERADMIN_TAB = [
-  { value: "1", icon: <IconUser width={20} height={20} />, label: "Gerenciar Usuários" },
-  { value: "2", icon: <IconShieldHalfFilled width={20} height={20} />, label: "Gerenciar Permissões" },
-  { value: "3", icon: <IconCoins width={20} height={20} />, label: "Configurações de Custos" },
+  { value: "1", icon: <IconUserCircle width={20} height={20} />, label: "Papéis" },
+  { value: "2", icon: <IconApps width={20} height={20} />, label: "Módulos" },
+  { value: "3", icon: <IconUserShield width={20} height={20} />, label: "Papéis de Usuários" },
+  { value: "4", icon: <IconShieldCheckeredFilled width={20} height={20} />, label: "Módulos de Papéis" },
 ];
 
-const SuperAdminConfigsTabs = () => {
+const SuperAdminPermissionsTabSubTabs = () => {
   const [value, setValue] = React.useState("1");
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
@@ -54,9 +54,10 @@ const SuperAdminConfigsTabs = () => {
               <TabPanel key={panel.value} value={panel.value}>
                 <div style={{ marginBottom: '20px' }}>
 
-                {panel.value === "1" && <div><SuperAdminUsersTab /></div>}
-                {panel.value === "2" && <div><SuperAdminPermissionsTab /></div>}
-                {panel.value === "3" && <div><SuperAdminCostsTab /></div>}
+                {panel.value === "1" && <div><SuperAdminPermissionsTabSubTabsPapeis /></div>}
+                {panel.value === "2" && <div><SuperAdminPermissionsTabSubTabsModulos /></div>}
+                {panel.value === "3" && <div><SuperAdminPermissionsTabSubTabsPapeisUsuarios /></div>}
+                {panel.value === "4" && <div><SuperAdminPermissionsTabSubTabsModulosPapeis /></div>}
                </div>
               </TabPanel>
             ))}
@@ -67,4 +68,4 @@ const SuperAdminConfigsTabs = () => {
     </>
   );
 };
-export default SuperAdminConfigsTabs;
+export default SuperAdminPermissionsTabSubTabs;

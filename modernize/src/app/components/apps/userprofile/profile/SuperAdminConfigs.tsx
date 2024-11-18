@@ -20,7 +20,7 @@ const SuperAdminConfigs = () => {
             fontWeight: 'bold',
           }}
         >
-          Configurações do Sistema
+          Configurações do Space
         </Typography>
 
 

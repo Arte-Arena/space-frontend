@@ -319,6 +319,12 @@ const Menuitems: MenuitemsType[] = [
     children: [
       {
         id: uniqueId(),
+        title: "Arte Final",
+        icon: IconBrush,
+        href: "/apps/arte-final",
+      },
+      {
+        id: uniqueId(),
         title: "Impressão",
         icon: IconPrinter,
         href: "/apps/impressao",
@@ -328,12 +334,6 @@ const Menuitems: MenuitemsType[] = [
         title: "Confecção",
         icon: IconNeedleThread,
         href: "/apps/confeccao",
-      },
-      {
-        id: uniqueId(),
-        title: "Arte Final",
-        icon: IconBrush,
-        href: "/apps/arte-final",
       },
     ]
   },

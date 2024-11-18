@@ -26,7 +26,7 @@ interface User {
   email_verified_at: string;
 }
 
-const SuperAdminUsersTab = () => {
+const SuperAdminPermissionsTabSubTabsPapeisUsuarios = () => {
   const [users, setUsers] = useState<User[]>([]);
 
   const handleDeleteUser = (userId: number) => {
@@ -91,6 +91,7 @@ const SuperAdminUsersTab = () => {
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell>ID</TableCell>
                 <TableCell>Nome</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Data de Verificação de Email</TableCell>
@@ -100,6 +101,7 @@ const SuperAdminUsersTab = () => {
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id}>
+                  <TableCell>{user.id}</TableCell>
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.email_verified_at}</TableCell>
@@ -147,4 +149,4 @@ const SuperAdminUsersTab = () => {
   );
 };
 
-export default SuperAdminUsersTab;
+export default SuperAdminPermissionsTabSubTabsPapeisUsuarios;

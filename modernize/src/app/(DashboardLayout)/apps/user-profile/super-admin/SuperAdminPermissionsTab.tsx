@@ -1,5 +1,6 @@
 import React from 'react';
 import Typography from '@mui/material/Typography';
+import SuperAdminPermissionsTabSubTabs from './SuperAdminPermissionsTabSubTabs';
 
 const SuperAdminPermissionsTab = () => {
 
@@ -8,7 +9,7 @@ const SuperAdminPermissionsTab = () => {
     <>
       <div style={{ marginTop: '20px' }}>
         <Typography
-          variant="h2"
+          variant="h4"
           align="center"
           sx={{
             mt: 2,
@@ -16,8 +17,10 @@ const SuperAdminPermissionsTab = () => {
             fontWeight: 'bold',
           }}
         >
-          Configurações do Sistema 2
+          Controle de Acessos
         </Typography>
+
+        <SuperAdminPermissionsTabSubTabs />
 
       </div>
     </>
