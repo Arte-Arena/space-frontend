@@ -61,7 +61,7 @@ interface ProfileType {
 const profile: ProfileType[] = [
   ...(localStorage?.roles?.includes("1") ? [
     {
-      href: "/apps/user-profile/profile",
+      href: "/apps/user-profile/super-admin",
       title: "Super Administrador",
       subtitle: "Configurações do Sistema",
       icon: "/images/svgs/icon-account.svg",
