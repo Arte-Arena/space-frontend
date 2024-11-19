@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Typography from '@mui/material/Typography';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
@@ -29,16 +29,66 @@ const SuperAdminCostsTab = () => {
     setImpostoCost(e.target.value);
   };
 
-  const salvarConfigs = () => {
+  const salvarConfigs = async () => {
     const dataBody = {
-      tecidoCost: tecidoCost,
-      tintaCost: tintaCost,
-      papelCost: papelCost,
-      impostoCost: impostoCost,
+      user_id: 1,
+      custo_tecido: parseFloat(tecidoCost),
+      custo_tinta: parseFloat(tintaCost),
+      custo_papel: parseFloat(papelCost),
+      custo_imposto: parseFloat(impostoCost),
     };
 
-    console.log('DataBody:', dataBody);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/config`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('accessToken'),
+        },
+        body: JSON.stringify(dataBody),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error saving configurations: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Data:', data);
+      alert('Configurações salvas com sucesso.');
+    } catch (error) {
+      console.error('Error:', (error as Error).message);
+      alert('Falha ao salvar as configurações.');
+    }
   };
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-config`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('accessToken'),
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error fetching configurations: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setTecidoCost(data.custo_tecido.toString());
+        setTintaCost(data.custo_tinta.toString());
+        setPapelCost(data.custo_papel.toString());
+        setImpostoCost(data.custo_imposto.toString());
+      } catch (error) {
+        console.error('Error:', (error as Error).message);
+        alert('Falha ao buscar as configurações.');
+      }
+    };
+
+    fetchConfig();
+  }, []);
 
   return (
     <>
