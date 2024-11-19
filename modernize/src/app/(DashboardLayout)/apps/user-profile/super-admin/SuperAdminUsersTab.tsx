@@ -7,7 +7,6 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
@@ -18,6 +17,8 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import Link from 'next/link';
+import Box from '@mui/material/Box';
 
 interface User {
   id: number;
@@ -43,7 +44,7 @@ const SuperAdminUsersTab = () => {
         'Content-Type': 'application/json',
       },
     });
-    
+
     if (response.ok) {
       console.log('User deleted successfully');
     } else {
@@ -94,6 +95,15 @@ const SuperAdminUsersTab = () => {
 
   return (
     <>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Button
+          component={Link}
+          href="/auth/register"
+        >
+          Novo Usuário
+        </Button>
+      </Box>
+
       <div style={{ marginTop: '20px' }}>
         <Typography
           variant="h4"
@@ -158,7 +168,7 @@ const SuperAdminUsersTab = () => {
             <DialogContentText>
               {selectedUser && (
                 <>
-                  Tem certeza de que deseja excluir este usuário ({selectedUser.email})? 
+                  Tem certeza de que deseja excluir este usuário ({selectedUser.email})?
                   Esta ação não pode ser desfeita.
                 </>
               )}
