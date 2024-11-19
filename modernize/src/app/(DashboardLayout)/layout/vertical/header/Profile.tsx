@@ -80,10 +80,10 @@ const Profile = () => {
           <Avatar src={"/images/profile/user-1.jpg"} alt={"ProfileImg"} sx={{ width: 95, height: 95 }} />
           <Box>
             <Typography variant="subtitle2" color="textPrimary" fontWeight={600}>
-              {localStorage.getItem('name')}
+              {/* {localStorage.getItem('name')} */}
             </Typography>
             <Typography variant="subtitle2" color="textSecondary">
-              {localStorage.getItem('cargos')}
+              {/* {localStorage.getItem('cargos')} */}
             </Typography>
             <Typography
               variant="subtitle2"
@@ -93,7 +93,7 @@ const Profile = () => {
               gap={1}
             >
               <IconMail width={15} height={15} />
-              {localStorage.getItem('email')}
+              {/* {localStorage.getItem('email')} */}
             </Typography>
           </Box>
         </Stack>

@@ -127,14 +127,14 @@ const ProfileBanner = () => {
                 </ProfileImage>
                 <Box mt={1}>
                   <Typography fontWeight={600} variant="h5">
-                  {localStorage.getItem('name')}
+                  {/* {localStorage.getItem('name')} */}
                   </Typography>
                   <Typography
                     color="textSecondary"
                     variant="h6"
                     fontWeight={400}
                   >
-                    {localStorage.getItem('cargos')}
+                    {/* {localStorage.getItem('cargos')} */}
                   </Typography>
                 </Box>
               </Box>

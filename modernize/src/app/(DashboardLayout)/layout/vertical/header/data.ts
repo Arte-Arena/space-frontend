@@ -1,3 +1,5 @@
+import React, { useEffect } from "react";
+
 // Notifications dropdown
 
 interface notificationType {
@@ -58,30 +60,20 @@ interface ProfileType {
   subtitle: string;
   icon: any;
 }
-const profile: ProfileType[] = [
-  ...(localStorage?.roles?.includes("1") ? [
-    {
+
+const profile: ProfileType[] = [];
+
+useEffect(() => {
+  if (localStorage?.roles?.includes("1")) {
+    profile.push({
       href: "/apps/user-profile/super-admin",
       title: "Super Administrador",
       subtitle: "Configurações do Sistema",
       icon: "/images/svgs/icon-account.svg",
-    },
-  ] : []),
-  // {
-  //   href: "/apps/email",
-  //   title: "My Inbox",
-  //   subtitle: "Messages & Emails",
-  //   icon: "/images/svgs/icon-inbox.svg",
-  // },
-  // {
-  //   href: "/apps/notes",
-  //   title: "My Tasks",
-  //   subtitle: "To-do and Daily Tasks",
-  //   icon: "/images/svgs/icon-tasks.svg",
-  // },
-];
+    });
+  }
+}, []);
 
-// apps dropdown
 
 interface appsLinkType {
   href: string;
