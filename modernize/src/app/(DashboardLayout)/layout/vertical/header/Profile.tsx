@@ -33,7 +33,6 @@ const Profile = () => {
     }
   }
 
-  console.log(dropdownData.profile);  
   const [anchorEl2, setAnchorEl2] = useState(null);
   const handleClick2 = (event: any) => {
     setAnchorEl2(event.currentTarget);

@@ -1,26 +1,13 @@
+import { Grid, Box, Card, Typography, Stack } from "@mui/material";
 import Link from "next/link";
-import { Grid, Box, Typography, Stack } from "@mui/material";
-import PageContainer from "@/app/components/container/PageContainer";
 import Logo from "@/app/(DashboardLayout)/layout/shared/logo/Logo";
-
+import PageContainer from "@/app/components/container/PageContainer";
 import AuthRegister from "../authForms/AuthRegister";
-import Image from "next/image";
 
-export default function Register() {
+export default function Register2() {
   return (
-  <PageContainer title="Register Page" description="this is Sample page">
-    <Grid
-      container
-      spacing={0}
-      justifyContent="center"
-      sx={{ overflowX: "hidden" }}
-    >
-      <Grid
-        item
-        xs={12}
-        sm={12}
-        lg={7}
-        xl={8}
+    <PageContainer title="Register Page" description="this is Sample page">
+      <Box
         sx={{
           position: "relative",
           "&:before": {
@@ -35,72 +22,67 @@ export default function Register() {
           },
         }}
       >
-        <Box position="relative">
-          <Box px={3}>
-            <Logo />
-          </Box>
-          <Box
-            alignItems="center"
+        <Grid
+          container
+          spacing={0}
+          justifyContent="center"
+          sx={{ height: "100vh" }}
+        >
+          <Grid
+            item
+            xs={12}
+            sm={12}
+            lg={5}
+            xl={4}
+            display="flex"
             justifyContent="center"
-            height={"calc(100vh - 75px)"}
-            sx={{
-              display: {
-                xs: "none",
-                lg: "flex",
-              },
-            }}
+            alignItems="center"
           >
-            <Image
-              src={"/images/backgrounds/login-bg.svg"}
-              alt="bg" width={500} height={500}
-              style={{
-                width: "100%",
-                maxWidth: "500px",  maxHeight: '500px',
-              }}
-            />
-          </Box>
-        </Box>
-      </Grid>
-      <Grid
-        item
-        xs={12}
-        sm={12}
-        lg={5}
-        xl={4}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-      >
-        <Box p={4}>
-          <AuthRegister
-            title="Welcome to Modernize"
-            subtext={
-              <Typography variant="subtitle1" color="textSecondary" mb={1}>
-                Seu Painel Administrativo
-              </Typography>
-            }
-            subtitle={
-              <Stack direction="row" spacing={1} mt={3}>
-                <Typography color="textSecondary" variant="h6" fontWeight="400">
-                  Já possui uma conta?
-                </Typography>
-                <Typography
-                  component={Link}
-                  href="/auth/login"
-                  fontWeight="500"
-                  sx={{
-                    textDecoration: "none",
-                    color: "primary.main",
-                  }}
-                >
-                  Entrar
-                </Typography>
-              </Stack>
-            }
-          />
-        </Box>
-      </Grid>
-    </Grid>
-  </PageContainer>
-)};
-
+            <Card
+              elevation={9}
+              sx={{ p: 4, zIndex: 1, width: "100%", maxWidth: "450px" }}
+            >
+              <Box display="flex" alignItems="center" justifyContent="center">
+                <Logo />
+              </Box>
+              <AuthRegister
+                subtext={
+                  <Typography
+                    variant="subtitle1"
+                    textAlign="center"
+                    color="textSecondary"
+                    mb={1}
+                  >
+                    Your Social Campaigns
+                  </Typography>
+                }
+                subtitle={
+                  <Stack direction="row" spacing={1} mt={3}>
+                    <Typography
+                      color="textSecondary"
+                      variant="h6"
+                      fontWeight="400"
+                    >
+                      Already have an Account?
+                    </Typography>
+                    <Typography
+                      component={Link}
+                      href="/auth/auth2/login"
+                      fontWeight="500"
+                      sx={{
+                        textDecoration: "none",
+                        color: "primary.main",
+                      }}
+                    >
+                      Sign In
+                    </Typography>
+                  </Stack>
+                }
+              />
+            </Card>
+          </Grid>
+        </Grid>
+      </Box>
+    </PageContainer>
+  );
+}

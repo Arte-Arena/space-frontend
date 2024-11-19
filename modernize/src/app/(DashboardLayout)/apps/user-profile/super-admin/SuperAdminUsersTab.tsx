@@ -28,12 +28,30 @@ interface User {
 
 const SuperAdminUsersTab = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  const handleDeleteUser = (userId: number) => {
-    // Implement the logic to delete the user with the given ID
-    // For example:
-    // const updatedUsers = users.filter((user) => user.id !== userId);
-    // setUsers(updatedUsers);
+  const handleDeleteUser = async (userId: number) => {
+
+    const updatedUsers = users.filter((u) => u.id !== userId);
+    setUsers(updatedUsers);
+
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/delete-user/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      console.log('User deleted successfully');
+    } else {
+      console.log('Error deleting user');
+    }
+
+    setSelectedUser(null);
+    setOpenDeleteDialog(false);
   };
 
   const handleRequestEmailVerification = (userId: number) => {
@@ -53,6 +71,7 @@ const SuperAdminUsersTab = () => {
     // );
     // setUsers(updatedUsers);
   };
+
   useEffect(() => {
     const fetchUsers = async () => {
       const token = localStorage.getItem('accessToken');
@@ -65,6 +84,7 @@ const SuperAdminUsersTab = () => {
       });
       const data = await response.json();
       setUsers(data);
+      console.log(data);
     };
 
     fetchUsers();
@@ -107,22 +127,13 @@ const SuperAdminUsersTab = () => {
                   <TableCell>
                     <ButtonGroup>
                       <Tooltip title="Deletar">
-                        <Button onClick={() => setOpenDeleteDialog(true)}>
+                        <Button onClick={() => {
+                          setSelectedUser(user);
+                          setOpenDeleteDialog(true);
+                        }}>
                           <DeleteIcon />
                         </Button>
                       </Tooltip>
-                      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-                        <DialogTitle>Confirmar Exclusão</DialogTitle>
-                        <DialogContent>
-                          <DialogContentText>
-                            Tem certeza de que deseja excluir este usuário? Esta ação não pode ser desfeita.
-                          </DialogContentText>
-                        </DialogContent>
-                        <DialogActions>
-                          <Button onClick={() => setOpenDeleteDialog(false)}>Cancelar</Button>
-                          <Button onClick={() => handleDeleteUser(user.id)} color="secondary">Excluir</Button>
-                        </DialogActions>
-                      </Dialog>
                       <Tooltip title="Solicitar Verificação de Email">
                         <Button onClick={() => handleRequestEmailVerification(user.id)}>
                           <EmailIcon />
@@ -135,13 +146,31 @@ const SuperAdminUsersTab = () => {
                       </Tooltip>
                     </ButtonGroup>
                   </TableCell>
-
-
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
+
+        <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+          <DialogTitle>Confirmar Exclusão</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {selectedUser && (
+                <>
+                  Tem certeza de que deseja excluir este usuário ({selectedUser.email})? 
+                  Esta ação não pode ser desfeita.
+                </>
+              )}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDeleteDialog(false)}>Cancelar</Button>
+            {selectedUser && (
+              <Button onClick={() => handleDeleteUser(selectedUser.id)} color="secondary">Excluir</Button>
+            )}
+          </DialogActions>
+        </Dialog>
       </div>
     </>
   );
