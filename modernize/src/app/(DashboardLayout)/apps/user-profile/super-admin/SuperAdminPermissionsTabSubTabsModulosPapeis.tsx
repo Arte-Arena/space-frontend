@@ -153,11 +153,9 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
                   <TableCell>
                     {roleModules.modules.map((module) => (
                       <span key={module.id}>
-                        {/* {module.name}
-                        {roleModules.modules.indexOf(module) !== roleModules.modules.length - 1 && <span>, </span>} */}
                         <span style={{
                           display: 'inline-block',
-                          border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                          border: `1px solid gray`,
                           borderRadius: '2px',
                           padding: '2px 4px',
                           margin: '0 2px'
