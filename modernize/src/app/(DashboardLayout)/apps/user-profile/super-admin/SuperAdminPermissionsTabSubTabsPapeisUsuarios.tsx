@@ -6,6 +6,7 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import Tooltip from '@mui/material/Tooltip';
 
 interface Role {
   id: number;
@@ -58,16 +59,20 @@ const SuperAdminPermissionsTabSubTabsPapeisUsuarios = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Nome</TableCell>
-                <TableCell>Email</TableCell>
+                <TableCell>Usuário</TableCell>
                 <TableCell>Papéis</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
+
+                  <TableCell>
+                    <Tooltip title={user.email}>
+                      <span>{user.name}</span>
+                    </Tooltip>
+
+                  </TableCell>
                   <TableCell>
                     {user.roles.map((role) => (
                       <span key={role.id}>{role.name}, </span>
