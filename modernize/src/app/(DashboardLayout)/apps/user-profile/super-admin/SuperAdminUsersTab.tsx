@@ -19,6 +19,9 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Link from 'next/link';
 import Box from '@mui/material/Box';
+import { Snackbar } from '@mui/material';
+import { SnackbarCloseReason } from '@mui/material';
+import Alert from '@mui/material/Alert';
 
 interface User {
   id: number;
@@ -30,6 +33,8 @@ interface User {
 const SuperAdminUsersTab = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openFeat, setOpenFeat] = React.useState(false);
 
   const handleDeleteUser = async (userId: number) => {
 
@@ -56,21 +61,11 @@ const SuperAdminUsersTab = () => {
   };
 
   const handleRequestEmailVerification = (userId: number) => {
-    // Implement the logic to request email verification for the user with the given ID
-    // For example:
-    // const updatedUsers = users.map((user) =>
-    //   user.id === userId ? { ...user, email_verified_at: 'pending' } : user
-    // );
-    // setUsers(updatedUsers);
+    setOpenFeat(true);
   };
 
   const handleRequestPasswordReset = (userId: number) => {
-    // Implement the logic to request password reset for the user with the given ID
-    // For example:
-    // const updatedUsers = users.map((user) =>
-    //   user.id === userId ? { ...user, password_reset_requested_at: new Date().toISOString() } : user
-    // );
-    // setUsers(updatedUsers);
+    setOpenFeat(true);
   };
 
   useEffect(() => {
@@ -85,13 +80,23 @@ const SuperAdminUsersTab = () => {
       });
       const data = await response.json();
       setUsers(data);
-      console.log(data);
     };
 
     fetchUsers();
   }, []);
 
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const handleCloseFeat = (
+    event?: React.SyntheticEvent | Event,
+    reason?: SnackbarCloseReason,
+  ) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setOpenFeat(false);
+  };
+
+
 
   return (
     <>
@@ -182,6 +187,22 @@ const SuperAdminUsersTab = () => {
           </DialogActions>
         </Dialog>
       </div>
+
+      <Snackbar 
+        open={openFeat} 
+        autoHideDuration={1000} 
+        onClose={handleCloseFeat}
+        anchorOrigin={{vertical:'top', horizontal:'right'}}
+      >
+        <Alert
+          onClose={handleCloseFeat}
+          severity="warning"
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          Esta funcionalidade ainda não foi implementada.
+        </Alert>
+      </Snackbar>
     </>
   );
 };

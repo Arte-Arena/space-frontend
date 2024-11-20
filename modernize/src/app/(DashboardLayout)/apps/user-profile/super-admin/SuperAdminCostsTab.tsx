@@ -39,7 +39,7 @@ const SuperAdminCostsTab = () => {
     };
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/config`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/upsert-config`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -53,7 +53,6 @@ const SuperAdminCostsTab = () => {
       }
 
       const data = await response.json();
-      console.log('Data:', data);
       alert('Configurações salvas com sucesso.');
     } catch (error) {
       console.error('Error:', (error as Error).message);
