@@ -33,6 +33,7 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
   const [open, setOpen] = useState(false);
   const [currentRoleId, setCurrentRoleId] = useState<number | null>(null);
   const [selectedModules, setSelectedModules] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchRolesAndModules = async () => {
@@ -77,49 +78,33 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
   };
 
   const handleSave = async () => {
-    if (currentRoleId === null) return;
+    if (isLoading || currentRoleId === null) return;
 
-    // Atualizar os módulos associados ao papel no backend
+    setIsLoading(true);
     const token = localStorage.getItem('accessToken');
-    await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/update-role-modules/${currentRoleId}`, {
+    await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/upsert-role-module/`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ moduleIds: selectedModules }),
+      body: JSON.stringify({ 
+        role_id: currentRoleId, 
+        module_ids: selectedModules 
+      }),
     });
 
-    // Atualizar o estado local
-    setRolesModules(prevRoles =>
-      prevRoles.map(role => 
-        role.id === currentRoleId ? { ...role, modules: allModules.filter(module => selectedModules.includes(module.id)) } : role
+    setRolesModules((prevRoles) =>
+      prevRoles.map((role) =>
+        role.id === currentRoleId
+          ? { ...role, modules: allModules.filter((module) => selectedModules.includes(module.id)) }
+          : role
       )
     );
 
+    setIsLoading(false);
     handleClose();
-  };
-
-  const handleDeleteModuleFromRole = async (moduleId: number) => {
-    if (!currentRoleId) return;
-
-    // Remover o módulo da associação no backend
-    const token = localStorage.getItem('accessToken');
-    await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/remove-module-from-role`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ roleId: currentRoleId, moduleId }),
-    });
-
-    // Atualizar o estado local
-    setRolesModules(prevRoles =>
-      prevRoles.map(role => 
-        role.id === currentRoleId ? { ...role, modules: role.modules.filter(module => module.id !== moduleId) } : role
-      )
-    );
+    console.log("Salvando módulos", { currentRoleId, selectedModules });
   };
 
   return (
@@ -203,7 +188,7 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
             <Button onClick={handleClose} color="primary">
               Cancelar
             </Button>
-            <Button onClick={handleSave} color="primary">
+            <Button onClick={handleSave} disabled={isLoading} color="primary">
               Salvar
             </Button>
           </DialogActions>
