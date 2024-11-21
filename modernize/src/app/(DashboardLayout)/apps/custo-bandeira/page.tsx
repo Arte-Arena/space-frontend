@@ -11,12 +11,12 @@ import Typography from '@mui/material/Typography';
 
 const CustoBandeiraScreen = () => {
 
-  const [altura, setAltura] = useState('');
-  const [largura, setLargura] = useState('');
-  const [custoTecido, setCustoTecido] = useState('');
-  const [custoTinta, setCustoTinta] = useState('');
-  const [custoPapel, setCustoPapel] = useState('');
-  const [custoImposto, setCustoImposto] = useState('');
+  const [altura, setAltura] = useState(0);
+  const [largura, setLargura] = useState(0);
+  const [custoTecido, setCustoTecido] = useState(0);
+  const [custoTinta, setCustoTinta] = useState(0);
+  const [custoPapel, setCustoPapel] = useState(0);
+  const [custoImposto, setCustoImposto] = useState(0);
   const [resultado, setResultado] = useState<number | null>(null);
 
   const calcularCusto = () => {
@@ -24,24 +24,37 @@ const CustoBandeiraScreen = () => {
       alert('Por favor, preencha todos os campos.');
       return;
     }
+    const larguraTecido = 1.5;
+    var quantidadeTecido = 0;
 
-    const area = parseFloat(altura) * parseFloat(largura);
-    const custoTotalTecido = area * parseFloat(custoTecido);
-    const custoTotalTinta = area * parseFloat(custoTinta);
-    const custoTotalPapel = area * parseFloat(custoPapel);
-    const custoTotalImposto = (custoTotalTecido + custoTotalTinta + custoTotalPapel) * parseFloat(custoImposto);
-    const custoFinal = custoTotalTecido + custoTotalTinta + custoTotalPapel + custoTotalImposto;
+    if (altura <= larguraTecido || largura <= larguraTecido) {
+      quantidadeTecido = Math.min(altura, largura);
+    } else {
+      const faixas = Math.ceil(altura / larguraTecido);
+      quantidadeTecido = faixas * largura;
+    }
 
-    setResultado(custoFinal);
+    const custoMetro = custoTecido + custoTinta + custoPapel;
+
+    const custoSemImposto = custoMetro * quantidadeTecido;
+
+    const custoComImposto = custoSemImposto * (1 + custoImposto);
+
+    console.log('quantidadeTecido', quantidadeTecido);
+    console.log('custoMetro', custoMetro);
+    console.log('custoSemImposto', custoSemImposto);
+    console.log('custoComImposto', custoComImposto);
+    
+    setResultado(custoComImposto);
 
     const data = {
-      altura: parseFloat(altura),
-      largura: parseFloat(largura),
-      custo_tecido: parseFloat(custoTecido),
-      custo_tinta: parseFloat(custoTinta),
-      custo_papel: parseFloat(custoPapel),
-      custo_imposto: parseFloat(custoImposto),
-      custo_final: custoFinal,
+      altura: altura,
+      largura: largura,
+      custo_tecido: custoTecido,
+      custo_tinta: custoTinta,
+      custo_papel: custoPapel,
+      custo_imposto: custoImposto,
+      custo_final: custoComImposto,
     };
 
     const token = localStorage.getItem('accessToken') || '';
