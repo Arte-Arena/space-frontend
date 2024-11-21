@@ -127,7 +127,10 @@ const CustoBandeiraScreen = () => {
             helperText="A altura em metros da superfície da bandeira."
             variant="outlined"
             fullWidth
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAltura(e.target.value)}
+            onInput={(e: React.FormEvent<HTMLInputElement>) => {
+              const value = (e.target as HTMLInputElement).value.replace(',', '.');
+              setAltura(parseFloat(value));
+            }}
           />
 
           <CustomFormLabel
@@ -143,7 +146,10 @@ const CustoBandeiraScreen = () => {
             helperText="A largura em metros da superfície da bandeira."
             variant="outlined"
             fullWidth
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLargura(e.target.value)}
+            onInput={(e: React.FormEvent<HTMLInputElement>) => {
+              const value = (e.target as HTMLInputElement).value.replace(',', '.');
+              setLargura(parseFloat(value));
+            }}
           />
 
           <div style={{ marginTop: '20px' }}>
