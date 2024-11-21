@@ -46,7 +46,7 @@ const CustoBandeiraScreen = () => {
 
     const token = localStorage.getItem('accessToken') || '';
 
-    fetch('http://localhost:8000/api/custo-bandeira', {
+    fetch(`${process.env.NEXT_PUBLIC_API}/api/custo-bandeira`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ const CustoBandeiraScreen = () => {
       const token = localStorage.getItem('accessToken') || '';
 
       try {
-        const response = await fetch('http://localhost:8000/api/super-admin/get-config', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-config`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
