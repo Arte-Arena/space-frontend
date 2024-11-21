@@ -104,7 +104,6 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
 
     setIsLoading(false);
     handleClose();
-    console.log("Salvando módulos", { currentRoleId, selectedModules });
   };
 
   return (
@@ -161,7 +160,6 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
           </Table>
         </TableContainer>
 
-        {/* Diálogo de Edição */}
         <Dialog open={open} onClose={handleClose}>
           <DialogTitle>Selecionar Módulos</DialogTitle>
           <DialogContent>
