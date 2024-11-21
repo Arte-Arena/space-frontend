@@ -35,36 +35,6 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
   const [selectedModules, setSelectedModules] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchRolesAndModules = async () => {
-      const token = localStorage.getItem('accessToken');
-
-      // Buscar papéis e módulos
-      const rolesResponse = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-all-roles-modules`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      const rolesData = await rolesResponse.json();
-      setRolesModules(rolesData);
-
-      // Buscar todos os módulos
-      const modulesResponse = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-all-modules`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      const modulesData = await modulesResponse.json();
-      setAllModules(modulesData);
-    };
-
-    fetchRolesAndModules();
-  }, []);
-
   const handleEditClick = (roleId: number, modules: Module[]) => {
     setCurrentRoleId(roleId);
     setSelectedModules(modules.map(module => module.id));
@@ -105,6 +75,36 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
     setIsLoading(false);
     handleClose();
   };
+
+  useEffect(() => {
+    const fetchRolesAndModules = async () => {
+      const token = localStorage.getItem('accessToken');
+
+      // Buscar papéis e módulos
+      const rolesResponse = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-all-roles-modules`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const rolesData = await rolesResponse.json();
+      setRolesModules(rolesData);
+
+      // Buscar todos os módulos
+      const modulesResponse = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-all-modules`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const modulesData = await modulesResponse.json();
+      setAllModules(modulesData);
+    };
+
+    fetchRolesAndModules();
+  }, []);
 
   return (
     <>

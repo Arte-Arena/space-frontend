@@ -30,13 +30,9 @@ interface UserRoles {
 }
 
 const SuperAdminPermissionsTabSubTabsPapeisUsuarios = () => {
-  const [users, setUsers] = useState<UserRoles[]>([]);
-
-  const [rolesModules, setRolesModules] = useState<UserRoles[]>([]);
+  const [usersRoles, setUsersRoles] = useState<UserRoles[]>([]);
   const [allRoles, setAllRoles] = useState<Role[]>([]);
-
   const [open, setOpen] = useState(false);
-
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -70,11 +66,11 @@ const SuperAdminPermissionsTabSubTabsPapeisUsuarios = () => {
       }),
     });
 
-    setRolesModules((prevRoles) =>
-      prevRoles.map((role) =>
-        role.id === currentUserId
-          ? { ...role, modules: allRoles.filter((role) => selectedRoles.includes(role.id)) }
-          : role
+    setUsersRoles((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === currentUserId
+          ? { ...user, roles: allRoles.filter((role) => selectedRoles.includes(role.id)) }
+          : user
       )
     );
 
@@ -85,17 +81,16 @@ const SuperAdminPermissionsTabSubTabsPapeisUsuarios = () => {
   useEffect(() => {
     const fetchUsersAndRoles = async () => {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-all-users-roles`, {
+      const usersResponse = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-all-users-roles`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
-      const data: UserRoles[] = await response.json();
-      setUsers(data);
+      const data: UserRoles[] = await usersResponse.json();
+      setUsersRoles(data);
 
-      // Buscar todos os módulos
       const rolesResponse = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-all-roles`, {
         method: 'GET',
         headers: {
@@ -135,22 +130,30 @@ const SuperAdminPermissionsTabSubTabsPapeisUsuarios = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-
+              {usersRoles.map((userRoles) => (
+                <TableRow key={userRoles.id}>
                   <TableCell>
-                    <Tooltip title={user.email}>
-                      <span>{user.name}</span>
+                    <Tooltip title={userRoles.email}>
+                      <span>{userRoles.name}</span>
                     </Tooltip>
-
                   </TableCell>
                   <TableCell>
-                    {user.roles.map((role) => (
-                      <span key={role.id}>{role.name}, </span>
+                    {userRoles.roles.map((role) => (
+                      <span key={role.id}>
+                        <span style={{
+                          display: 'inline-block',
+                          border: `1px solid gray`,
+                          borderRadius: '2px',
+                          padding: '2px 4px',
+                          margin: '0 2px'
+                        }}>
+                          {role.name}
+                        </span>
+                      </span>
                     ))}
                   </TableCell>
                   <TableCell>
-                    <IconButton onClick={() => handleEditClick(user.id, user.roles)}>
+                    <IconButton onClick={() => handleEditClick(userRoles.id, userRoles.roles)}>
                       <EditIcon />
                     </IconButton>
                   </TableCell>
