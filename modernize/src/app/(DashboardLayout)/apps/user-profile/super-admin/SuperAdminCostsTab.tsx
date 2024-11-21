@@ -39,7 +39,7 @@ const SuperAdminCostsTab = () => {
     };
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/upsert-config000`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/upsert-config`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
