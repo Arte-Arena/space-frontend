@@ -31,7 +31,7 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
   const [editedModuleName, setEditedModuleName] = useState('');
   const [moduleToEditId, setModuleToEditId] = useState<number | null>(null);
 
-  
+
 
   useEffect(() => {
     const fetchModules = async () => {
@@ -50,54 +50,43 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
     fetchModules();
   }, []);
 
-  const handleEditModule = async (moduleId: number) => {
-    const module = modules.find((m) => m.id === moduleId);
-    if (module) {
-      setEditedModuleName(module.name);
-      setModuleToEditId(moduleId);
-      setOpenEditDialog(true);
-
-      try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/update-module/${moduleId}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: editedModuleName,
-          }),
-        });
-
-        if (response.ok) {
-          const updatedModules = await fetchModules();
-          setModules(updatedModules);
-        } else {
-          console.error('Error updating module:', await response.text());
-        }
-      } catch (error) {
-        console.error('Error:', (error as Error).message);
-      }
-    }
+  const handleEditModule = (moduleId: number, moduleName: string) => {
+    setModuleToEditId(moduleId);
+    setEditedModuleName(moduleName);
+    setOpenEditDialog(true);
   };
 
   const handleCloseEditDialog = () => {
     setOpenEditDialog(false);
+    setModuleToEditId(null);
+    setEditedModuleName('');
   };
 
   const handleConfirmEditModule = async () => {
-    if (moduleToEditId !== null && editedModuleName !== '') {
-
-      const updatedModules = modules.map((module) =>
-        module.id === moduleToEditId ? { ...module, name: editedModuleName } : module
-      );
-      setModules(updatedModules);
-
-      setOpenEditDialog(false);
+    if (moduleToEditId !== null) {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/upsert-module`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          module_id: moduleToEditId,
+          module_name: editedModuleName,
+        }),
+      });
+      if (response.ok) {
+        const updatedModules = await fetchModules();
+        setModules(updatedModules);
+      } else {
+        console.error('Error editing module:', await response.text());
+      }
     }
+    setOpenEditDialog(false);
+    setModuleToEditId(null);
+    setEditedModuleName('');
   };
-
 
 
   const handleDeleteModule = (moduleId: number) => {
@@ -174,7 +163,7 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
                   <TableCell align="center">
                     <IconButton
                       aria-label="edit"
-                      onClick={() => handleEditModule(module.id)}
+                      onClick={() => handleEditModule(module.id, module.name)}
                     >
                       <EditIcon />
                     </IconButton>
@@ -215,7 +204,7 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
             onChange={(e) => setEditedModuleName(e.target.value)}
             label="Nome do módulo"
             fullWidth
-            sx={{ mt: 2 }} 
+            sx={{ mt: 2 }}
           />
         </DialogContent>
         <DialogActions>
@@ -225,7 +214,7 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      
+
     </>
   );
 };
