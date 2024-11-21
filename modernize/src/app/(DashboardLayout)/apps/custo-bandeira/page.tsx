@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import { Button } from '@mui/material';
@@ -46,22 +46,53 @@ const CustoBandeiraScreen = () => {
 
     const token = localStorage.getItem('accessToken') || '';
 
-    // fetch('http://localhost:8000/api/custo-bandeira', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Authorization': 'Bearer ' + token,
-    //   },
-    //   body: JSON.stringify(data),
-    // })
-    //   .then((response) => response.json())
-    //   .then((data) => {
-    //     console.log('Success:', data);
-    //   })
-    //   .catch((error) => {
-    //     console.error('Error:', error);
-    //   });
+    fetch('http://localhost:8000/api/custo-bandeira', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log('Success:', data);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
   };
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      const token = localStorage.getItem('accessToken') || '';
+
+      try {
+        const response = await fetch('http://localhost:8000/api/super-admin/get-config', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch config');
+        }
+
+        const data = await response.json();
+
+        setCustoTecido(data.custo_tecido);
+        setCustoTinta(data.custo_tinta);
+        setCustoPapel(data.custo_papel);
+        setCustoImposto(data.custo_imposto);
+      } catch (error) {
+        console.error('Error fetching config:', error);
+      }
+    };
+
+    fetchConfig();
+  }, []);
 
   return (
     <PageContainer title="Cálculo do Custo de Bandeira" description="Cálculo do Custo de Bandeira da Arte Arena">
