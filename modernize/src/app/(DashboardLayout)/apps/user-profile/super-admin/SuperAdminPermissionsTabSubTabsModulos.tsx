@@ -215,6 +215,7 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
             onChange={(e) => setEditedModuleName(e.target.value)}
             label="Nome do módulo"
             fullWidth
+            sx={{ mt: 2 }} 
           />
         </DialogContent>
         <DialogActions>

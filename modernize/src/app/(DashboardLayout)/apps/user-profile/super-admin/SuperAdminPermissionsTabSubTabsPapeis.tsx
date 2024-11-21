@@ -184,6 +184,7 @@ const SuperAdminPermissionsTabSubTabsModulosPapeis = () => {
             onChange={(e) => setEditedRoleName(e.target.value)}
             label="Nome do papel"
             fullWidth
+            sx={{ mt: 2 }} 
           />
         </DialogContent>
         <DialogActions>
