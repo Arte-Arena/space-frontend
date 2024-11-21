@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import Typography from '@mui/material/Typography';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
-import { Button } from '@mui/material';
+import { Button, InputAdornment } from '@mui/material';
 
 
 const SuperAdminCostsTab = () => {
@@ -39,7 +39,7 @@ const SuperAdminCostsTab = () => {
     };
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/upsert-config`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/upsert-config000`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ const SuperAdminCostsTab = () => {
           </CustomFormLabel>
           <CustomTextField
             id="custo-tecido"
-            helperText="O custo em reais do tecido."
+            helperText="O custo em reais do tecido. (R$)"
             variant="outlined"
             fullWidth
             value={tecidoCost}
@@ -133,7 +133,7 @@ const SuperAdminCostsTab = () => {
           </CustomFormLabel>
           <CustomTextField
             id="custo-tinta"
-            helperText="O custo em reais da tinta."
+            helperText="O custo em reais da tinta. (R$)"
             variant="outlined"
             fullWidth
             value={tintaCost}
@@ -149,7 +149,7 @@ const SuperAdminCostsTab = () => {
           </CustomFormLabel>
           <CustomTextField
             id="custo-papel"
-            helperText="O custo em reais do papel."
+            helperText="O custo em reais do papel. (R$)"
             variant="outlined"
             fullWidth
             value={papelCost}
@@ -165,11 +165,14 @@ const SuperAdminCostsTab = () => {
           </CustomFormLabel>
           <CustomTextField
             id="custo-imposto"
-            helperText="O custo em reais do imposto."
+            helperText="O custo em percentagem do imposto. (%)"
             variant="outlined"
             fullWidth
             value={impostoCost}
             onChange={handleImpostoChange}
+            InputProps={{
+              endAdornment: <InputAdornment position="end">%</InputAdornment>,
+            }}
           />
         </div>
         <div style={{ marginTop: '20px' }}>
