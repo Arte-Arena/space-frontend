@@ -5,14 +5,15 @@ import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLab
 import { Button, InputAdornment } from '@mui/material';
 
 const SuperAdminCostsTab = () => {
-  const [tecidoCost, setTecidoCost] = React.useState('0.00');
-  const [tintaCost, setTintaCost] = React.useState('0.00');
-  const [papelCost, setPapelCost] = React.useState('0.00');
-  const [impostoCost, setImpostoCost] = React.useState('0.00');
+  const [tecidoCost, setTecidoCost] = React.useState('0,00');
+  const [tintaCost, setTintaCost] = React.useState('0,00');
+  const [papelCost, setPapelCost] = React.useState('0,00');
+  const [impostoCost, setImpostoCost] = React.useState('0');
 
   const formatValue = (value: string) => {
-    // Remove tudo exceto números e ponto
+    // Remove tudo exceto números e 1 ponto
     const cleanValue = value.replace(/[^\d.]/g, '');
+
     // Garante que há apenas um ponto decimal
     const parts = cleanValue.split('.');
     if (parts.length > 2) {
@@ -24,12 +25,26 @@ const SuperAdminCostsTab = () => {
     }
     // Junta as partes e retorna
     return parts.join('.');
+    return value;
+  };
+
+  const formatImposto = (value: string) => {
+    const cleanValue = value.replace(/[^\d]/g, '');
+    const numValue = parseInt(cleanValue, 10);
+    if (isNaN(numValue)) return '';
+    return Math.min(Math.max(numValue, 0), 100).toString();
   };
 
   const handleCostChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedValue = formatValue(e.target.value);
     setter(formattedValue);
   };
+
+  const handleImopstoCostChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedImposto = formatImposto(e.target.value);
+    setter(formattedImposto);
+  };
+
 
   const salvarConfigs = async () => {
     const dataBody = {
@@ -81,7 +96,7 @@ const SuperAdminCostsTab = () => {
         setTecidoCost(data.custo_tecido.toFixed(2));
         setTintaCost(data.custo_tinta.toFixed(2));
         setPapelCost(data.custo_papel.toFixed(2));
-        setImpostoCost(data.custo_imposto.toFixed(2));
+        setImpostoCost(data.custo_imposto);
       } catch (error) {
         console.error('Error:', (error as Error).message);
         alert('Falha ao buscar as configurações.');
@@ -172,9 +187,14 @@ const SuperAdminCostsTab = () => {
             variant="outlined"
             fullWidth
             value={impostoCost}
-            onChange={handleCostChange(setImpostoCost)}
+            onChange={handleImopstoCostChange(setImpostoCost)}
             InputProps={{
               endAdornment: <InputAdornment position="end">%</InputAdornment>,
+              inputProps: { 
+                min: 0, 
+                max: 100,
+                type: 'number'
+              }
             }}
           />
         </div>

@@ -38,7 +38,7 @@ const CustoBandeiraScreen = () => {
 
     const custoSemImposto = custoMetro * quantidadeTecido;
 
-    const custoComImposto = custoSemImposto * (1 + custoImposto);
+    const custoComImposto = custoSemImposto * (1 + (custoImposto / 100));
 
     console.log('quantidadeTecido', quantidadeTecido);
     console.log('custoMetro', custoMetro);
