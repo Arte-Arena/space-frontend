@@ -13,12 +13,8 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
-
 
 interface Account {
   id: number;
@@ -34,10 +30,6 @@ interface Account {
 interface ApiResponse {
   data: Account[];
 }
-
-const Alert = React.forwardRef<HTMLDivElement, MuiAlertProps>((props, ref) => (
-  <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />
-));
 
 const ContasPagarReceberAdicionarScreen = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -156,11 +148,6 @@ const ContasPagarReceberAdicionarScreen = () => {
           )}
         </div>
       </ParentCard>
-      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
-        <Alert onClose={handleCloseSnackbar} severity="success">
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </PageContainer>
   );
 };
