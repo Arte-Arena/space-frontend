@@ -2,17 +2,11 @@
 import React, { useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
-import { Button, Snackbar, Select, MenuItem, FormControl } from '@mui/material';
-import MuiAlert from '@mui/material/Alert';
+import { Button, Select, MenuItem, FormControl } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import ParentCard from '@/app/components/shared/ParentCard';
-
-
-const Alert = React.forwardRef(function Alert(props, ref) {
-  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
 
 const ContasPagarReceberAdicionarScreen = () => {
 
@@ -22,10 +16,8 @@ const ContasPagarReceberAdicionarScreen = () => {
   const [data_vencimento, setDataVencimento] = useState('');
   const [status, setStatus] = useState('');
   const [tipo, setTipo] = useState('');
-  const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
 
     const accessToken = localStorage.getItem('accessToken');
 
@@ -33,15 +25,6 @@ const ContasPagarReceberAdicionarScreen = () => {
       console.error('Access token not found');
       return;
     }
-
-    console.log({
-      titulo,
-      descricao,
-      valor: parseFloat(valor),
-      data_vencimento,
-      status,
-      tipo,
-    });
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/conta`, {
@@ -66,28 +49,16 @@ const ContasPagarReceberAdicionarScreen = () => {
       }
 
       console.log('Account created successfully');
-      setOpenSnackbar(true);
-
-
     } catch (error) {
       console.error('Error creating account:', error);
     }
-  };
-
-  const handleCloseSnackbar = (event?: React.SyntheticEvent, reason?: string) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setOpenSnackbar(false);
   };
 
   return (
     <PageContainer title="Contas a Pagar e a Receber / Adicionar" description="Contas a Pagar e a Receber da Arte Arena">
       <Breadcrumb title="Contas a Pagar e a Receber / Adicionar" subtitle="Gerencie as contas a pagar e a receber da Arte Arena / Adicionar" />
       <ParentCard title="Adicionar Nova Conta" >
-        <form style={{ maxWidth: '600px' }} action="" onSubmit={handleSubmit}>
-
-
+        <div>
           <CustomFormLabel
             sx={{
               mt: 0,
@@ -157,10 +128,10 @@ const ContasPagarReceberAdicionarScreen = () => {
             Status
           </CustomFormLabel>
           <FormControl fullWidth variant="outlined" sx={{ mb: '10px' }}>
-            <Select
+            <CustomSelect
               id="status"
               value={status}
-              onChange={(e) => setStatus(e.target.value as string)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStatus(e.target.value)}
               displayEmpty
             >
               <MenuItem value="" disabled>
@@ -169,28 +140,20 @@ const ContasPagarReceberAdicionarScreen = () => {
               <MenuItem value="pendente">Pendente</MenuItem>
               <MenuItem value="pago">Pago</MenuItem>
               <MenuItem value="recebido">Recebido</MenuItem>
-            </Select>
+            </CustomSelect>
           </FormControl>
-
           <div style={{ marginTop: '20px' }}>
             <Button
               color="primary"
               variant="contained"
-              type="submit"
               onClick={handleSubmit}
             >
               Adicionar Conta
             </Button>
           </div>
-        </form>
+        </div>
       </ParentCard>
-      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
-
-        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' , display: 'flex', justifyContent: 'center' }}>
-          Conta criada com sucesso!
-        </Alert>
-      </Snackbar>
-    </PageContainer>
+    </PageContainer >
   );
 };
 
