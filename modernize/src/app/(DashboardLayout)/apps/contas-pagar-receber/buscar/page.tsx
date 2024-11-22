@@ -14,6 +14,8 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 
@@ -138,9 +140,9 @@ const ContasPagarReceberAdicionarScreen = () => {
                       </TableCell>
                       <TableCell>{account.status.charAt(0).toUpperCase() + account.status.slice(1)}</TableCell>
                       <TableCell>
-                        <Button variant="contained" color="secondary" onClick={() => handleDeleteAccount(account.id)}>
-                          Deletar
-                        </Button>
+                        <IconButton aria-label="delete" onClick={() => handleDeleteAccount(account.id)}>
+                          <DeleteIcon />
+                        </IconButton>
                       </TableCell>
                     </TableRow>
                   ))}
