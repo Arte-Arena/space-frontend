@@ -13,6 +13,10 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import Button from '@mui/material/Button';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+
 
 interface Account {
   id: number;
@@ -29,10 +33,17 @@ interface ApiResponse {
   data: Account[];
 }
 
+const Alert = React.forwardRef<HTMLDivElement, MuiAlertProps>((props, ref) => (
+  <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />
+));
+
 const ContasPagarReceberAdicionarScreen = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [error, setError] = useState<string | null>('');
   const [loading, setLoading] = useState<boolean>(true);
+  const [openSnackbar, setOpenSnackbar] = useState<boolean>(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+
 
   useEffect(() => {
     const fetchAccounts = async () => {
@@ -61,6 +72,38 @@ const ContasPagarReceberAdicionarScreen = () => {
 
     fetchAccounts();
   }, []);
+
+
+  const handleDeleteAccount = async (accountId: number) => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/conta/${accountId}`,{
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete account');
+      }
+
+      setAccounts(accounts.filter((account) => account.id !== accountId));
+      setSnackbarMessage('Conta deletada com sucesso!');
+      setOpenSnackbar(true);
+    } catch (error) {
+      setSnackbarMessage((error as Error).message);
+      setOpenSnackbar(true);
+    }
+  };
+
+  const handleCloseSnackbar = (event?: React.SyntheticEvent, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpenSnackbar(false);
+  };
 
   return (
     <PageContainer title="Contas a Pagar e a Receber / Adicionar" description="Contas a Pagar e a Receber da Arte Arena">
@@ -94,6 +137,11 @@ const ContasPagarReceberAdicionarScreen = () => {
                         {account.tipo === 'a pagar' ? 'A Pagar' : account.tipo === 'a receber' ? 'A Receber' : ''}
                       </TableCell>
                       <TableCell>{account.status.charAt(0).toUpperCase() + account.status.slice(1)}</TableCell>
+                      <TableCell>
+                        <Button variant="contained" color="secondary" onClick={() => handleDeleteAccount(account.id)}>
+                          Deletar
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -106,6 +154,11 @@ const ContasPagarReceberAdicionarScreen = () => {
           )}
         </div>
       </ParentCard>
+      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity="success">
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </PageContainer>
   );
 };
