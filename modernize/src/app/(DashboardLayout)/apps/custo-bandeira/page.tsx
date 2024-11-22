@@ -40,12 +40,10 @@ const CustoBandeiraScreen = () => {
 
     const custoComImposto = custoSemImposto * (1 + (custoImposto / 100));
 
-    console.log('quantidadeTecido', quantidadeTecido);
-    console.log('custoMetro', custoMetro);
-    console.log('custoSemImposto', custoSemImposto);
-    console.log('custoComImposto', custoComImposto);
+    // Limita o resultado para no máximo duas casas decimais
+    const resultado = Math.round((custoComImposto + Number.EPSILON) * 100) / 100;
     
-    setResultado(custoComImposto);
+    setResultado(resultado);
 
     const data = {
       altura: altura,
@@ -158,7 +156,7 @@ const CustoBandeiraScreen = () => {
           {resultado !== null && (
             <div style={{ marginTop: '20px' }}>
               <Typography variant="h5">
-                O custo total da bandeira é: <strong>R$ {resultado}</strong>
+                O custo total da bandeira é: <strong>R$ {resultado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
               </Typography>
             </div>
           )}
