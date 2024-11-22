@@ -2,11 +2,17 @@
 import React, { useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
-import { Button } from '@mui/material';
+import { Button, Snackbar, Select, MenuItem, FormControl } from '@mui/material';
+import MuiAlert from '@mui/material/Alert';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import ParentCard from '@/app/components/shared/ParentCard';
+
+
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 const ContasPagarReceberAdicionarScreen = () => {
 
@@ -16,6 +22,7 @@ const ContasPagarReceberAdicionarScreen = () => {
   const [data_vencimento, setDataVencimento] = useState('');
   const [status, setStatus] = useState('');
   const [tipo, setTipo] = useState('');
+  const [openSnackbar, setOpenSnackbar] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,8 +34,17 @@ const ContasPagarReceberAdicionarScreen = () => {
       return;
     }
 
+    console.log({
+      titulo,
+      descricao,
+      valor: parseFloat(valor),
+      data_vencimento,
+      status,
+      tipo,
+    });
+
     try {
-      const response = await fetch('http://api-homolog.spacearena.net/api/conta', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/conta`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -45,13 +61,24 @@ const ContasPagarReceberAdicionarScreen = () => {
       });
 
       if (!response.ok) {
+        const errorDetails = await response.text();
         throw new Error('Failed to create account');
       }
 
       console.log('Account created successfully');
+      setOpenSnackbar(true);
+
+
     } catch (error) {
       console.error('Error creating account:', error);
     }
+  };
+
+  const handleCloseSnackbar = (event?: React.SyntheticEvent, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpenSnackbar(false);
   };
 
   return (
@@ -77,7 +104,7 @@ const ContasPagarReceberAdicionarScreen = () => {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitulo(e.target.value)}
           />
 
-          <CustomFormLabel 
+          <CustomFormLabel
             htmlFor="valor"
           >Valor</CustomFormLabel>
           <CustomTextField
@@ -108,55 +135,61 @@ const ContasPagarReceberAdicionarScreen = () => {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDataVencimento(e.target.value)}
           />
 
-          <CustomFormLabel
-            htmlFor="tipo"
-          >
+          <CustomFormLabel htmlFor="tipo">
             Tipo
           </CustomFormLabel>
-          <CustomSelect
-            fullWidth
-            id="tipo"
-            variant="outlined"
-            sx={{
-              mb: '10px',
-            }}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTipo(e.target.value)}
-          >
-            <option value="Pendente">A Pagar</option>
-            <option value="Pago">A Receber</option>
-          </CustomSelect>
+          <FormControl fullWidth variant="outlined" sx={{ mb: '10px' }}>
+            <Select
+              id="tipo"
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value as string)}
+              displayEmpty
+            >
+              <MenuItem value="" disabled>
+                Selecione um tipo
+              </MenuItem>
+              <MenuItem value="a pagar">A Pagar</MenuItem>
+              <MenuItem value="a receber">A Receber</MenuItem>
+            </Select>
+          </FormControl>
 
-          <CustomFormLabel
-            htmlFor="status"
-          >
+          <CustomFormLabel htmlFor="status">
             Status
           </CustomFormLabel>
-          <CustomSelect
-            fullWidth
-            id="status"
-            variant="outlined"
-            sx={{
-              mb: '10px',
-            }}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStatus(e.target.value)}
-          >
-            <option value="Pendente">Pendente</option>
-            <option value="Pago">Pago</option>
-            <option value="Recebido">Recebido</option>
-          </CustomSelect>
+          <FormControl fullWidth variant="outlined" sx={{ mb: '10px' }}>
+            <Select
+              id="status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as string)}
+              displayEmpty
+            >
+              <MenuItem value="" disabled>
+                Selecione um status
+              </MenuItem>
+              <MenuItem value="pendente">Pendente</MenuItem>
+              <MenuItem value="pago">Pago</MenuItem>
+              <MenuItem value="recebido">Recebido</MenuItem>
+            </Select>
+          </FormControl>
 
           <div style={{ marginTop: '20px' }}>
-            <Button 
-              color="primary" 
+            <Button
+              color="primary"
               variant="contained"
               type="submit"
-
+              onClick={handleSubmit}
             >
               Adicionar Conta
             </Button>
           </div>
         </form>
       </ParentCard>
+      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+
+        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' , display: 'flex', justifyContent: 'center' }}>
+          Conta criada com sucesso!
+        </Alert>
+      </Snackbar>
     </PageContainer>
   );
 };
