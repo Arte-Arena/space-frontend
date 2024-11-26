@@ -7,6 +7,10 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import ParentCard from '@/app/components/shared/ParentCard';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+
+
 
 const ContasPagarReceberAdicionarScreen = () => {
 
@@ -118,17 +122,39 @@ const ContasPagarReceberAdicionarScreen = () => {
           >
             Data de Vencimento
           </CustomFormLabel>
-          <CustomTextField
-            id="data_vencimento"
-            type="date"
-            helperText="Data de vencimento da conta a pagar ou a receber."
-            variant="outlined"
-            fullWidth
-            sx={{
-              mb: '10px',
-            }}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDataVencimento(e.target.value)}
-          />
+
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+              label="Data de Vencimentsss"
+              value={data_vencimento}
+              onChange={(newValue) => {
+                setDataVencimento(newValue ?? '');
+              }}
+              renderInput={(params) => <CustomTextField {...params} 
+              sx={{
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: (theme: any) =>
+                    `${
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(255, 255, 255, 0.12) !important'
+                        : '#dee3e9 !important'
+                    }`,
+                },
+
+                "& .MuiFormLabel-colorPrimary": { 
+                  color: (theme: any) =>
+                    `${
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(255, 255, 255, 0.12) !important'
+                        : '#dee3e9 !important'
+                    }`,
+                 },
+              }}
+              />}
+              inputFormat="dd/MM/yyyy"
+            />
+          </LocalizationProvider>
+
 
           <CustomFormLabel htmlFor="tipo">
             Tipo
