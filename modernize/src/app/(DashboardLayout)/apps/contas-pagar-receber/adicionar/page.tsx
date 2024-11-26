@@ -10,8 +10,6 @@ import ParentCard from '@/app/components/shared/ParentCard';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 
-
-
 const ContasPagarReceberAdicionarScreen = () => {
 
   const [titulo, setTitulo] = useState('');
