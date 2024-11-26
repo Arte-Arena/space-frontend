@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import { Button, Select, MenuItem, FormControl } from '@mui/material';
@@ -16,6 +16,15 @@ const ContasPagarReceberAdicionarScreen = () => {
   const [data_vencimento, setDataVencimento] = useState('');
   const [status, setStatus] = useState('');
   const [tipo, setTipo] = useState('');
+  const [statusOptions, setStatusOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (tipo === 'a pagar') {
+      setStatusOptions(['pendente', 'pago']);
+    } else if (tipo === 'a receber') {
+      setStatusOptions(['pendente', 'recebido']);
+    }
+  }, [tipo]);
 
   const handleSubmit = async () => {
 
@@ -28,18 +37,18 @@ const ContasPagarReceberAdicionarScreen = () => {
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/conta`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          titulo,
-          descricao,
-          valor: parseFloat(valor),
-          data_vencimento,
-          status,
-          tipo,
+          conta_titulo: titulo,
+          conta_descricao: descricao,
+          conta_valor: parseFloat(valor),
+          conta_data_vencimento: data_vencimento,
+          conta_status: status,
+          conta_tipo: tipo,
         }),
       });
 
@@ -73,6 +82,21 @@ const ContasPagarReceberAdicionarScreen = () => {
             variant="outlined"
             fullWidth
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitulo(e.target.value)}
+          />
+          <CustomFormLabel
+            sx={{
+              mt: 0,
+            }}
+            htmlFor="titulo"
+          >
+            Descrição
+          </CustomFormLabel>
+          <CustomTextField
+            id="descricao"
+            helperText="Descrição da conta."
+            variant="outlined"
+            fullWidth
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescricao(e.target.value)}
           />
 
           <CustomFormLabel
@@ -137,9 +161,11 @@ const ContasPagarReceberAdicionarScreen = () => {
               <MenuItem value="" disabled>
                 Selecione um status
               </MenuItem>
-              <MenuItem value="pendente">Pendente</MenuItem>
-              <MenuItem value="pago">Pago</MenuItem>
-              <MenuItem value="recebido">Recebido</MenuItem>
+              {statusOptions.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                </MenuItem>
+              ))}
             </CustomSelect>
           </FormControl>
           <div style={{ marginTop: '20px' }}>
