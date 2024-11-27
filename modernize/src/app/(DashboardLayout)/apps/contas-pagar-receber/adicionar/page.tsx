@@ -11,6 +11,7 @@ import { Grid } from "@mui/material";
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
+import { format } from 'date-fns';
 
 const ContasPagarReceberAdicionarScreen = () => {
 
@@ -24,6 +25,7 @@ const ContasPagarReceberAdicionarScreen = () => {
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequencia, setFrequencia] = useState('');
   const [vezes, setVezes] = useState('');
+  const [proximaRecorrencia, setProximaRecorrencia] = useState<Date | null>(null);
 
   useEffect(() => {
     if (tipo === 'a pagar') {
@@ -32,6 +34,62 @@ const ContasPagarReceberAdicionarScreen = () => {
       setStatusOptions(['pendente', 'recebido']);
     }
   }, [tipo]);
+
+
+  function calcularNovaData(dataVencimento: any, frequencia: string) {
+    const date = new Date(dataVencimento);
+
+    switch (frequencia) {
+      case 'diaria':
+        date.setDate(date.getDate() + 1);
+        break;
+      case 'semanal':
+        date.setDate(date.getDate() + 7);
+        break;
+      case 'quinzenal':
+        date.setDate(date.getDate() + 15);
+        break;
+      case 'mensal':
+        date.setMonth(date.getMonth() + 1);
+        break;
+      case 'anual':
+        date.setFullYear(date.getFullYear() + 1);
+        break;
+    }
+
+    return date;
+  }
+
+  const handleFrequecyChange = (value: string) => {
+    return new Promise<void>((resolve) => {
+      setFrequencia(value);
+      // Use setTimeout para garantir que o estado seja atualizado
+      setTimeout(() => {
+        console.log(typeof value);
+        console.log('frequencia (dentro da handleFrequencyChange):', value);
+
+        if (isRecurring && value && dataVencimento) {
+          console.log('dataVencimento', dataVencimento);
+          console.log('Data inicial:', dataVencimento);
+          // Testando diferentes frequências
+          console.log('Data com frequência diária:', calcularNovaData(dataVencimento, 'diaria'));
+          console.log('Data com frequência semanal:', calcularNovaData(dataVencimento, 'semanal'));
+          console.log('Data com frequência mensal:', calcularNovaData(dataVencimento, 'mensal'));
+          console.log('Data com frequência anual:', calcularNovaData(dataVencimento, 'anual'));
+
+          console.log(dataVencimento);
+          console.log(value);
+
+          const nextDate = calcularNovaData(dataVencimento, value);
+          console.log('nextDate', nextDate);
+
+          // Você pode definir proximaRecorrencia aqui se necessário
+          setProximaRecorrencia(nextDate);
+        }
+        resolve();
+      }, 0);
+    });
+  };
 
   const handleSubmit = async () => {
 
@@ -113,6 +171,7 @@ const ContasPagarReceberAdicionarScreen = () => {
             variant="outlined"
             fullWidth
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescricao(e.target.value)}
+            multiline
           />
 
           <Grid container spacing={3}>
@@ -144,6 +203,7 @@ const ContasPagarReceberAdicionarScreen = () => {
                   value={dataVencimento}
                   onChange={(newValue) => {
                     setDataVencimento(newValue);
+                    console.log('dataVencimento atualizada: ', dataVencimento);
                   }}
                   renderInput={(params) => <CustomTextField {...params}
                     sx={{
@@ -215,6 +275,7 @@ const ContasPagarReceberAdicionarScreen = () => {
             </Grid>
           </Grid>
 
+
           <Box
             sx={{
               border: isRecurring ? '1px solid #E5E9F2' : 'none',
@@ -226,6 +287,7 @@ const ContasPagarReceberAdicionarScreen = () => {
               marginBottom: '20px',
             }}
           >
+
             <div style={{ marginTop: '20px', marginBottom: '20px' }}>
               <FormControlLabel
                 control={
@@ -243,39 +305,83 @@ const ContasPagarReceberAdicionarScreen = () => {
 
             {isRecurring && (
               <div>
-                <CustomFormLabel htmlFor="frequencia">
-                  Frequencia
-                </CustomFormLabel>
-                <FormControl fullWidth variant="outlined" sx={{ mb: '10px' }}>
-                  <CustomSelect
-                    id="frequencia"
-                    value={frequencia}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFrequencia(e.target.value)}
-                    displayEmpty
-                  >
-                    <MenuItem value="" disabled>
-                      Selecione uma frequencia
-                    </MenuItem>
-                    <MenuItem value="diaria">Diaria</MenuItem>
-                    <MenuItem value="semanal">Semanal</MenuItem>
-                    <MenuItem value="quinzenal">Quinzenal</MenuItem>
-                    <MenuItem value="mensal">Mensal</MenuItem>
-                    <MenuItem value="anual">Anual</MenuItem>
-                  </CustomSelect>
-                </FormControl>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={4} md={4}>
+                    <CustomFormLabel htmlFor="frequencia">
+                      Frequencia
+                    </CustomFormLabel>
+                    <FormControl fullWidth variant="outlined" sx={{ mb: '10px' }}>
+                      <CustomSelect
+                        id="frequencia"
+                        value={frequencia}
+                        onChange={async (e: React.ChangeEvent<HTMLInputElement>) => {
+                          await handleFrequecyChange(e.target.value);
+                        }}
+                        displayEmpty
+                      >
+                        <MenuItem value="" disabled>
+                          Selecione uma frequencia
+                        </MenuItem>
+                        <MenuItem value="diaria">Diaria</MenuItem>
+                        <MenuItem value="semanal">Semanal</MenuItem>
+                        <MenuItem value="quinzenal">Quinzenal</MenuItem>
+                        <MenuItem value="mensal">Mensal</MenuItem>
+                        <MenuItem value="anual">Anual</MenuItem>
+                      </CustomSelect>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={4} md={4}>
+                    <CustomFormLabel
+                      htmlFor="proximaRecorrencia"
+                    >
+                      Data da Próxima Recorrência
+                    </CustomFormLabel>
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DatePicker
+                        label="Data da Próxima Recorrência"
+                        value={proximaRecorrencia}
+                        onChange={(newValue) => {
+                          setProximaRecorrencia(newValue);
+                        }}
+                        renderInput={(params) => <CustomTextField {...params}
+                          value={proximaRecorrencia}
+                          sx={{
+                            '& .MuiOutlinedInput-notchedOutline': {
+                              borderColor: (theme: any) =>
+                                `${theme.palette.mode === 'dark'
+                                  ? 'rgba(255, 255, 255, 0.12) !important'
+                                  : '#dee3e9 !important'
+                                }`,
+                            },
 
-                <CustomFormLabel htmlFor="vezes">
-                  Vezes
-                </CustomFormLabel>
-                <CustomTextField
-                  id="vezes"
-                  type="number"
-                  value={vezes}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setVezes(e.target.value)}
-                />
+                            "& .MuiFormLabel-colorPrimary": {
+                              color: (theme: any) =>
+                                `${theme.palette.mode === 'dark'
+                                  ? 'rgba(255, 255, 255, 0.12) !important'
+                                  : '#dee3e9 !important'
+                                }`,
+                            },
+                          }}
+                        />}
+                        inputFormat="dd/MM/yyyy"
+                      />
+                    </LocalizationProvider>
+                  </Grid>
+                  <Grid item xs={12} sm={4} md={4}>
+                    <CustomFormLabel htmlFor="vezes">
+                      Recorrências restantes
+                    </CustomFormLabel>
+                    <CustomTextField
+                      id="vezes"
+                      type="number"
+                      helperText="Quantas vezes esta conta deve ser recorrente."
+                      value={vezes}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setVezes(e.target.value)}
+                    />
+                  </Grid>
+                </Grid>
               </div>
             )}
-
           </Box>
 
           <div style={{ marginTop: '20px' }}>
