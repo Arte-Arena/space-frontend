@@ -15,11 +15,13 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { IconArrowIteration } from "@tabler/icons-react";
 
 interface Account {
   id: number;
   user_id: number;
   titulo: string;
+  isRecorrente: boolean;
   descricao: string;
   valor: number;
   data_vencimento: string;
@@ -43,7 +45,7 @@ const ContasPagarReceberAdicionarScreen = () => {
     const fetchAccounts = async () => {
       try {
         const accessToken = localStorage.getItem('accessToken');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/conta`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/contas-and-recorrentes`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -57,6 +59,7 @@ const ContasPagarReceberAdicionarScreen = () => {
 
         const data: ApiResponse = await response.json();
         setAccounts(data.data);
+        console.log(data.data);
       } catch (error) {
         setError((error as Error).message);
       } finally {
@@ -71,7 +74,7 @@ const ContasPagarReceberAdicionarScreen = () => {
   const handleDeleteAccount = async (accountId: number) => {
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/conta/${accountId}`,{
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/conta/${accountId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -115,6 +118,7 @@ const ContasPagarReceberAdicionarScreen = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Título</TableCell>
+                    <TableCell>Recorrência</TableCell>
                     <TableCell>Valor</TableCell>
                     <TableCell>Data de Vencimento</TableCell>
                     <TableCell>Tipo</TableCell>
@@ -125,6 +129,7 @@ const ContasPagarReceberAdicionarScreen = () => {
                   {accounts.map((account) => (
                     <TableRow key={account.id}>
                       <TableCell>{account.titulo}</TableCell>
+                      <TableCell>{account.isRecorrente ? <IconArrowIteration size={24} /> : ''}</TableCell>
                       <TableCell>{account.valor}</TableCell>
                       <TableCell>{account.data_vencimento}</TableCell>
                       <TableCell>
