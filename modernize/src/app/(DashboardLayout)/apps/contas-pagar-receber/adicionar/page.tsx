@@ -11,7 +11,8 @@ import { Grid } from "@mui/material";
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
-import { format } from 'date-fns';
+import { NumericFormat } from 'react-number-format';
+import { TextField } from '@mui/material';
 
 const ContasPagarReceberAdicionarScreen = () => {
 
@@ -35,6 +36,11 @@ const ContasPagarReceberAdicionarScreen = () => {
     }
   }, [tipo]);
 
+  const formatar = (value: string) => {
+    const valorNumerico = value.replace(/[^\d,]/g, '');
+    const valorFormatado = valorNumerico.replace(',', '.');
+    return valorFormatado;
+  };
 
   function calcularNovaData(dataVencimento: any, frequencia: string) {
     const date = new Date(dataVencimento);
@@ -63,27 +69,9 @@ const ContasPagarReceberAdicionarScreen = () => {
   const handleFrequecyChange = (value: string) => {
     return new Promise<void>((resolve) => {
       setFrequencia(value);
-      // Use setTimeout para garantir que o estado seja atualizado
       setTimeout(() => {
-        console.log(typeof value);
-        console.log('frequencia (dentro da handleFrequencyChange):', value);
-
         if (isRecurring && value && dataVencimento) {
-          console.log('dataVencimento', dataVencimento);
-          console.log('Data inicial:', dataVencimento);
-          // Testando diferentes frequências
-          console.log('Data com frequência diária:', calcularNovaData(dataVencimento, 'diaria'));
-          console.log('Data com frequência semanal:', calcularNovaData(dataVencimento, 'semanal'));
-          console.log('Data com frequência mensal:', calcularNovaData(dataVencimento, 'mensal'));
-          console.log('Data com frequência anual:', calcularNovaData(dataVencimento, 'anual'));
-
-          console.log(dataVencimento);
-          console.log(value);
-
           const nextDate = calcularNovaData(dataVencimento, value);
-          console.log('nextDate', nextDate);
-
-          // Você pode definir proximaRecorrencia aqui se necessário
           setProximaRecorrencia(nextDate);
         }
         resolve();
@@ -110,7 +98,7 @@ const ContasPagarReceberAdicionarScreen = () => {
         body: JSON.stringify({
           conta_titulo: titulo,
           conta_descricao: descricao,
-          conta_valor: parseFloat(valor),
+          conta_valor: formatar(valor),
           conta_data_vencimento: dataVencimento?.toISOString().split('T')[0],
           conta_status: status,
           conta_tipo: tipo,
@@ -179,17 +167,19 @@ const ContasPagarReceberAdicionarScreen = () => {
               <CustomFormLabel
                 htmlFor="valor"
               >Valor</CustomFormLabel>
-              <CustomTextField
-                id="valor"
+
+              <NumericFormat
                 value={valor}
-                helperText="Valor em reais da conta a pagar ou a receber."
-                variant="outlined"
-                fullWidth
-                sx={{
-                  mb: '10px',
-                }}
+                customInput={TextField}
+                thousandSeparator='.'
+                decimalSeparator=','
+                prefix='R$ '
+                allowNegative={false}
+                fixedDecimalScale={true}
+                decimalScale={2}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValor(e.target.value)}
               />
+
             </Grid>
             <Grid item xs={12} sm={6}>
               <CustomFormLabel
