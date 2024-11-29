@@ -25,6 +25,7 @@ import {
   IconClipboardList,
   IconBuildingStore,
   IconBuildingFactory,
+  IconZoomMoney,
   IconAward,
   IconBoxMultiple,
   IconPoint,
@@ -253,6 +254,38 @@ const Menuitems: MenuitemsType[] = [
   },
   {
     id: uniqueId(),
+    title: "Orçamento",
+    icon: IconReportMoney,
+    href: "/apps/orcamento",
+    children: [
+      {
+        id: uniqueId(),
+        title: "Gerar Orçamento",
+        icon: IconReportMoney,
+        href: "/apps/orcamento/gerar",
+      },
+      {
+        id: uniqueId(),
+        title: "Buscar Orçamento",
+        icon: IconZoomMoney,
+        href: "/apps/orcamento/buscar",
+      },
+      {
+        id: uniqueId(),
+        title: "Pedido Interno",
+        icon: IconClipboardList,
+        href: "/apps/pedido-interno",
+      },
+      {
+        id: uniqueId(),
+        title: "Custo de Bandeira",
+        icon: IconFlag,
+        href: "/apps/custo-bandeira",
+      },
+    ]
+  },
+  {
+    id: uniqueId(),
     title: "Vendas",
     icon: IconBuildingStore,
     href: "/apps/vendas",
@@ -288,26 +321,6 @@ const Menuitems: MenuitemsType[] = [
         title: "Atendimento Externo",
         icon: IconMessage2,
         href: "/apps/chats/chatbot",
-      },
-    ]
-  },
-  {
-    id: uniqueId(),
-    title: "Orçamento",
-    icon: IconReportMoney,
-    href: "/apps/orcamento",
-    children: [
-      {
-        id: uniqueId(),
-        title: "Custo de Bandeira",
-        icon: IconFlag,
-        href: "/apps/custo-bandeira",
-      },
-      {
-        id: uniqueId(),
-        title: "Pedido Interno",
-        icon: IconClipboardList,
-        href: "/apps/pedido-interno",
       },
     ]
   },
