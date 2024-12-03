@@ -28,9 +28,17 @@ import {
   DialogActions,
   DialogProps,
   Box,
+  FormControl,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
   Stack,
   Alert,
 } from '@mui/material';
+
+interface Cliente {
+  number: string;
+}
 
 interface Product {
   id: number;
@@ -39,19 +47,28 @@ interface Product {
   quantidade: number;
   peso: number;
   prazo: number;
-  total: number;
+  comprimento: number;
+  largura: number;
+  altura: number;
 }
 
 const OrcamentoGerarScreen = () => {
   const [clientId, setClientId] = useState('');
+  const [allClients, setAllClients] = useState<Cliente[]>([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [open, setOpen] = React.useState(false);
   const [scroll, setScroll] = React.useState<DialogProps['scroll']>('paper');
-  const [orçamentoTexto, setOrçamentoTexto] = useState(''); // Estado para armazenar o texto do orçamento
+  const [orçamentoTexto, setOrçamentoTexto] = useState('');
   const [cep, setCEP] = useState('');
   const [cepError, setCepError] = useState(false);
   const [address, setAddress] = useState('');
+  const [shippingOption, setShippingOption] = useState('');
+  const [precoPac, setPrecoPac] = useState('');
+  const [precoSedex, setPrecoSedex] = useState('');
+
+
   const [openAlert, setOpenAlert] = useState(false);
 
   const gerarOrcamento = () => {
@@ -108,7 +125,8 @@ Orçamento válido por 30 dias.
 
       if (response.ok && data.cep) {
         console.log('cep válido');
-        setAddress(data.logradouro);
+        console.log(data);
+        setAddress(data.logradouro + " " + data.localidade + " " + data.uf + " " + data.cep);
         return true;
       } else {
         console.log('CEP inválido');
@@ -162,77 +180,63 @@ Orçamento válido por 30 dias.
     setProductsList(updatedProductsList);
   };
 
-  const top100Films = [
-    { label: 'The Shawshank Redemption', year: 1994 },
-    { label: 'The Godfather', year: 1972 },
-    { label: 'The Godfather: Part II', year: 1974 },
-    { label: 'The Dark Knight', year: 2008 },
-    { label: '12 Angry Men', year: 1957 },
-    { label: "Schindler's List", year: 1993 },
-    { label: 'Pulp Fiction', year: 1994 },
-    {
-      label: 'The Lord of the Rings: The Return of the King',
-      year: 2003,
-    },
-    { label: 'The Good, the Bad and the Ugly', year: 1966 },
-    { label: 'Fight Club', year: 1999 },
-    {
-      label: 'The Lord of the Rings: The Fellowship of the Ring',
-      year: 2001,
-    },
-    {
-      label: 'Star Wars: Episode V - The Empire Strikes Back',
-      year: 1980,
-    },
-    { label: 'Forrest Gump', year: 1994 },
-    { label: 'Inception', year: 2010 },
-    {
-      label: 'The Lord of the Rings: The Two Towers',
-      year: 2002,
-    },
-    { label: "One Flew Over the Cuckoo's Nest", year: 1975 },
-    { label: 'Goodfellas', year: 1990 },
-    { label: 'The Matrix', year: 1999 },
-    { label: 'Seven Samurai', year: 1954 },
-  ];
+  function handleCEPBlur() {
 
-  const all_products = [
-    {
-      id: 1,
-      nome: 'Produto 1',
-      preco: 10.99,
-      quantidade: 10,
-      total: 109.9
+  }
+
+
+  const accessToken = localStorage.getItem('accessToken');
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API}/api/get-all-produtos`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        setAllProducts(prevState =>
+          prevState.concat(
+            data.map((item: Product) => ({
+              id: item.id,
+              nome: item.nome,
+              preco: item.preco,
+              quantidade: 0, // Set default quantity to 0
+            }))
+          )
+        );
+        console.log(allProducts);
+      })
+      .catch(error => {
+        console.error('Error fetching products:', error);
+      });
+  }, []);
+
+  fetch(`${process.env.NEXT_PUBLIC_API}/api/chat-octa`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
     },
-    {
-      id: 2,
-      nome: 'Produto 2',
-      preco: 20.99,
-      quantidade: 20,
-      total: 209.8
-    },
-    {
-      id: 3,
-      nome: 'Produto 3',
-      preco: 30.99,
-      quantidade: 30,
-      total: 309.7
-    },
-    {
-      id: 4,
-      nome: 'Produto 4',
-      preco: 30.99,
-      quantidade: 30,
-      total: 309.7
-    },
-    {
-      id: 5,
-      nome: 'Produto 5',
-      preco: 30.99,
-      quantidade: 30,
-      total: 309.7
-    }
-  ];
+  })
+    .then(response => response.json())
+    .then((data) => {
+      if (Array.isArray(data)) {
+        console.log(data);
+        setAllClients(data.map((item: Cliente) => ({ number: item.number })));
+      } else {
+        console.error('Invalid data received from API:', data);
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching chats:', error);
+    });
+
+
+
 
   useEffect(() => {
     console.log('O valor de products mudou para:', productsList);
@@ -260,12 +264,10 @@ Orçamento válido por 30 dias.
           <Autocomplete
             disablePortal
             id="cliente"
-            // helperText="Pesquise por ID do Cliente, nome, e-mail, CPF ou outra informação."
-            options={top100Films}
+            options={allClients}
+            getOptionLabel={(option) => option.number} // Tells Autocomplete how to render each option
             fullWidth
-            // onChange={(event: React.ChangeEvent<{}>, value: string | null) => setClientId(value)}
-            onChange={(event, value) => setClientId(value ? value.label : '')} // Atualiza o estado do cliente selecionado
-
+            onChange={(event, value) => setClientId(value ? value.number : '')} // Updates the client ID
             renderInput={(params) => (
               <CustomTextField {...params} placeholder="Selecione um cliente" aria-label="Selecione um cliente" />
             )}
@@ -282,8 +284,8 @@ Orçamento válido por 30 dias.
               <div style={{ flex: 1 }}>
                 <Autocomplete
                   id="product-select"
-                  options={all_products}
-                  getOptionLabel={(option) => option.nome}
+                  options={allProducts}
+                  getOptionLabel={(option: Product) => option.nome}
                   onChange={(event, value) => {
                     if (value) {
                       const produtoComValoresPadrao: Product = {
@@ -413,6 +415,7 @@ Orçamento válido por 30 dias.
                 label="CEP do cliente"
                 value={cep}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => setCEP(event.target.value)}
+                onBlur={handleCEPBlur}
                 variant="outlined"
                 size="small"
                 sx={{ width: '200px' }}
@@ -449,8 +452,24 @@ Orçamento válido por 30 dias.
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => setAddress(event.target.value)}
                 variant="outlined"
                 size="small"
-                sx={{ width: '300px' }}
+                fullWidth
               />
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'left', mt: 2, flexDirection: 'row' }}>
+              <FormControl>
+                <RadioGroup
+                  aria-labelledby="demo-controlled-radio-buttons-group"
+                  name="controlled-radio-buttons-group"
+                  value={shippingOption}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => setShippingOption(event.target.value)}
+                  row
+                >
+                  <FormControlLabel value={"Retirada - R$ 0,00"} control={<Radio />} label="Retirada" />
+                  <FormControlLabel value={"PAC - R$ " + precoPac} control={<Radio />} label="PAC" />
+                  <FormControlLabel value={"SEDEX R$ " + precoSedex} control={<Radio />} label="SEDEX" />
+                </RadioGroup>
+              </FormControl>
             </Box>
 
             <div style={{ marginTop: '20px' }}>
