@@ -205,8 +205,8 @@ Orçamento válido por 30 dias.
               nome: item.nome,
               preco: item.preco ?? 0,
               quantidade: 0, // Set default quantity to 0
-              peso: item.peso ?? 0,  // Default peso to 0 if missing
-              prazo: item.prazo ?? 0,  // Default prazo to 0 if missing
+              // peso: item.peso ?? 0,  // Default peso to 0 if missing
+              // prazo: item.prazo ?? 0,  // Default prazo to 0 if missing
               comprimento: item.comprimento ?? 0,
               largura: item.largura ?? 0,
               altura: item.altura ?? 0,
