@@ -46,10 +46,10 @@ interface Product {
   preco: number;
   quantidade: number;
   peso: number;
-  prazo: number;
   comprimento: number;
   largura: number;
   altura: number;
+  prazo: number;
 }
 
 const OrcamentoGerarScreen = () => {
@@ -377,7 +377,8 @@ Orçamento válido por 30 dias.
                         <CustomTextField
                           value={product.prazo}
                           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                            const updatedProduct = { ...product, prazo: +event.target.value };
+                            const newValue = Math.max(0, +event.target.value);
+                            const updatedProduct = { ...product, prazo: newValue };
                             atualizarProduto(updatedProduct);
                           }}
                           type="number"
@@ -391,7 +392,8 @@ Orçamento válido por 30 dias.
                         <CustomTextField
                           value={product.peso}
                           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                            const updatedProduct = { ...product, peso: +event.target.value };
+                            const newValue = Math.max(0, +event.target.value);
+                            const updatedProduct = { ...product, peso: newValue };
                             atualizarProduto(updatedProduct);
                           }}
                           type="number"
