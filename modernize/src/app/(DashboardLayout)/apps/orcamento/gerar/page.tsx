@@ -197,7 +197,7 @@ Orçamento válido por 30 dias.
     })
       .then(response => response.json())
       .then(data => {
-        console.log(data);
+        console.log('Carregando dados de produtos...', data);
         setAllProducts(prevState =>
           prevState.concat(
             data.map((item: Product) => ({
@@ -213,7 +213,7 @@ Orçamento válido por 30 dias.
             }))
           )
         );
-        console.log(allProducts);
+        console.log('Carregando produtos...', allProducts);
       })
       .catch(error => {
         console.error('Error fetching products:', error);
@@ -230,7 +230,6 @@ Orçamento válido por 30 dias.
     .then(response => response.json())
     .then((data) => {
       if (Array.isArray(data)) {
-        console.log(data);
         setAllClients(data.map((item: Cliente) => ({ number: item.number })));
       } else {
         console.error('Invalid data received from API:', data);
@@ -295,8 +294,8 @@ Orçamento válido por 30 dias.
                     if (value) {
                       const produtoComValoresPadrao: Product = {
                         ...value,
-                        peso: value.peso ?? 0,
-                        prazo: value.prazo ?? 0
+                        peso: value?.peso || 0, // Garante um valor padrão se 'peso' não existir
+                        prazo: value?.prazo || 0 // Garante um valor padrão se 'prazo' não existir
                       };
                       setSelectedProduct(produtoComValoresPadrao);
                     }
