@@ -39,6 +39,9 @@ import {
 
 interface Cliente {
   number: string;
+  contact_name: string;
+  channel: string;
+  agent_name: string;
 }
 
 interface Product {
@@ -235,7 +238,7 @@ Orçamento válido por 30 dias.
         const data = await response.json();
 
         if (Array.isArray(data)) {
-          setAllClients(data.map((item: Cliente) => ({ number: item.number })));
+          setAllClients(data.map((item: Cliente) => ({ number: item.number, contact_name: item.contact_name, channel: item.channel, agent_name: item.agent_name})));
         } else {
           console.error('Dados inválidos recebidos da API:', data);
         }
@@ -285,9 +288,9 @@ Orçamento válido por 30 dias.
             disablePortal
             id="cliente"
             options={allClients}
-            getOptionLabel={(option) => option.number} // Tells Autocomplete how to render each option
+            getOptionLabel={(option) => `${option.number} - ${option.contact_name} - ${option.channel} - ${option.agent_name}`}
             fullWidth
-            onChange={(event, value) => setClientId(value ? value.number : '')} // Updates the client ID
+            onChange={(event, value) => setClientId(value ? value.number : '')}
             renderInput={(params) => (
               <CustomTextField {...params} placeholder="Selecione um cliente" aria-label="Selecione um cliente" />
             )}
