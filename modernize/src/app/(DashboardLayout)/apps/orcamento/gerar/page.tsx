@@ -294,8 +294,8 @@ Orçamento válido por 30 dias.
                     if (value) {
                       const produtoComValoresPadrao: Product = {
                         ...value,
-                        peso: value?.peso || 0, // Garante um valor padrão se 'peso' não existir
-                        prazo: value?.prazo || 0 // Garante um valor padrão se 'prazo' não existir
+                        // peso: value?.peso || 0, // Garante um valor padrão se 'peso' não existir
+                        // prazo: value?.prazo || 0 // Garante um valor padrão se 'prazo' não existir
                       };
                       setSelectedProduct(produtoComValoresPadrao);
                     }
