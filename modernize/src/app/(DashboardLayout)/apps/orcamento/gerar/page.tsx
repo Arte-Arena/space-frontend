@@ -180,9 +180,8 @@ Orçamento válido por 30 dias.
     setProductsList(updatedProductsList);
   };
 
-  function handleCEPBlur() {
-
-  }
+  // function handleCEPBlur() {
+  // }
 
 
   const accessToken = localStorage.getItem('accessToken');
@@ -205,8 +204,8 @@ Orçamento válido por 30 dias.
               nome: item.nome,
               preco: item.preco ?? 0,
               quantidade: 0, // Set default quantity to 0
-              // peso: item.peso ?? 0,  // Default peso to 0 if missing
-              // prazo: item.prazo ?? 0,  // Default prazo to 0 if missing
+              peso: item.peso ?? 0,  // Default peso to 0 if missing
+              prazo: item.prazo ?? 0,  // Default prazo to 0 if missing
               comprimento: item.comprimento ?? 0,
               largura: item.largura ?? 0,
               altura: item.altura ?? 0,
@@ -294,8 +293,8 @@ Orçamento válido por 30 dias.
                     if (value) {
                       const produtoComValoresPadrao: Product = {
                         ...value,
-                        // peso: value?.peso || 0, // Garante um valor padrão se 'peso' não existir
-                        // prazo: value?.prazo || 0 // Garante um valor padrão se 'prazo' não existir
+                        peso: value?.peso || 0, // Garante um valor padrão se 'peso' não existir
+                        prazo: value?.prazo || 0 // Garante um valor padrão se 'prazo' não existir
                       };
                       setSelectedProduct(produtoComValoresPadrao);
                     }
@@ -417,35 +416,12 @@ Orçamento válido por 30 dias.
                 label="CEP do cliente"
                 value={cep}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => setCEP(event.target.value)}
-                onBlur={handleCEPBlur}
+                // onBlur={handleCEPBlur}
                 variant="outlined"
                 size="small"
                 sx={{ width: '200px' }}
               />
             </Box>
-
-            {/* <Alert
-              variant="filled"
-              severity="error"
-              sx={{ mb: 2 }}
-              action={
-                <IconButton
-                  aria-label="close"
-                  color="inherit"
-                  size="small"
-                  onClick={() => {
-                    setOpenAlert(false);
-                    setTimeout(() => setOpenAlert(true), 5000);
-                  }}
-                >
-                  <CloseIcon fontSize="inherit" />
-                </IconButton>
-              }
-              onClose={() => setOpenAlert(false)}
-              open={openAlert}
-            >
-              CEP não encontrado ou inválido.
-            </Alert> */}
 
             <Box sx={{ display: 'flex', justifyContent: 'left', mt: 2 }}>
               <CustomTextField
