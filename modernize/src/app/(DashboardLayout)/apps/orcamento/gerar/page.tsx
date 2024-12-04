@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/utils/useAuth';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
@@ -53,6 +54,8 @@ interface Product {
 }
 
 const OrcamentoGerarScreen = () => {
+  const isLoggedIn = useAuth();
+  const [isLoading, setLoading] = useState(true);
   const [clientId, setClientId] = useState('');
   const [allClients, setAllClients] = useState<Cliente[]>([]);
   const [allProducts, setAllProducts] = useState([]);
@@ -196,7 +199,7 @@ Orçamento válido por 30 dias.
     })
       .then(response => response.json())
       .then(data => {
-        console.log('Carregando dados de produtos...', data);
+        console.log('Carregando dados de produtos...');
         setAllProducts(prevState =>
           prevState.concat(
             data.map((item: Product) => ({
@@ -219,27 +222,30 @@ Orçamento válido por 30 dias.
       });
   }, []);
 
-  fetch(`${process.env.NEXT_PUBLIC_API}/api/chat-octa`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
-  })
-    .then(response => response.json())
-    .then((data) => {
-      if (Array.isArray(data)) {
-        setAllClients(data.map((item: Cliente) => ({ number: item.number })));
-      } else {
-        console.error('Invalid data received from API:', data);
+  useEffect(() => {
+    const fetchChatData = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/chat-octa`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const data = await response.json();
+
+        if (Array.isArray(data)) {
+          setAllClients(data.map((item: Cliente) => ({ number: item.number })));
+        } else {
+          console.error('Dados inválidos recebidos da API:', data);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados do chat:', error);
       }
-    })
-    .catch(error => {
-      console.error('Error fetching chats:', error);
-    });
+    };
 
-
-
+    fetchChatData();
+  }, []); // Executa apenas na montagem do componente
 
   useEffect(() => {
     console.log('O valor de products mudou para:', productsList);
@@ -248,6 +254,17 @@ Orçamento válido por 30 dias.
   useEffect(() => {
     console.log('CEP não encontrado.', cep);
   }, [cepError]);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+    setLoading(false);
+  }, [isLoggedIn]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <PageContainer title="Orçamento / Gerar" description="Gerar Orçamento da Arte Arena">
