@@ -38,7 +38,6 @@ import {
   CircularProgress
 } from '@mui/material';
 
-import { debounce } from 'lodash'; // Importando a função debounce do lodash
 
 interface Cliente {
   number: string;
@@ -60,37 +59,86 @@ interface Product {
 }
 
 const OrcamentoGerarScreen = () => {
-
-  // Definindo o tipo Produto
-  interface Produto {
-    id: string;
-    nome: string;
-    tipoVariacao: string;
-    cor?: string; // Cor opcional
-    tamanho?: string; // Tamanho opcional
-  }
-  const [open, setOpen] = useState(false);
+  const isLoggedIn = useAuth();
+  const [clientId, setClientId] = useState('');
+  const [allClients, setAllClients] = useState<Cliente[]>([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [productsList, setProductsList] = useState<Product[]>([]);
+  const [openProduct, setOpenProduct] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
-  // const [produtosData, setProdutosData] = useState<Produto[]>([]); // Todos os dados da API
-  const [options, setOptions] = useState<Produto[]>([]); // Opções filtradas para o autocomplete
-  const produtosData: Produto[] = [
-    { id: "708195908", nome: "Camiseta Silhueta Cristo Redentor", tipoVariacao: "P" },
-    { id: "708195933", nome: "Camiseta Silhueta Cristo Redentor - G - Branca", tipoVariacao: "V", cor: "Branca", tamanho: "G" },
-    { id: "708195921", nome: "Camiseta Silhueta Cristo Redentor - G - Preto", tipoVariacao: "V", cor: "Preto", tamanho: "G" },
-    { id: "708197364", nome: "Camiseta São Paulo - Capital - P - Branca", tipoVariacao: "V", cor: "Branca", tamanho: "P" },
-    { id: "708197352", nome: "Camiseta São Paulo - Capital - P - Preto", tipoVariacao: "V", cor: "Preto", tamanho: "P" }
-  ];
-  const [selectedProduct, setSelectedProduct] = useState<Produto | null>(null); // Armazenando o produto selecionado
+  const [produtosData, setProdutosData] = useState<Product[]>([]); // Todos os dados da API
+  const [options, setOptions] = useState<Product[]>([]); // Opções filtradas para o autocomplete
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // Armazenando o produto selecionado
+  // const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [openBudget, setOpenBudget] = React.useState(false);
+  const [scroll, setScroll] = React.useState<DialogProps['scroll']>('paper');
+  const [orçamentoTexto, setOrçamentoTexto] = useState('');
+  const [cep, setCEP] = useState('');
+  const [cepError, setCepError] = useState(false);
+  const [address, setAddress] = useState('');
+  const [shippingOption, setShippingOption] = useState('');
+  const [precoPac, setPrecoPac] = useState('');
+  const [precoSedex, setPrecoSedex] = useState('');
+  const [openAlert, setOpenAlert] = useState(false);
+
+  const accessToken = localStorage.getItem('accessToken');
+
+  // useEffect(() => {
+  //   fetch(`${process.env.NEXT_PUBLIC_API}/api/get-all-produtos`, {
+  //     method: 'GET',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       Authorization: `Bearer ${accessToken}`,
+  //     },
+  //   })
+  //     .then(response => response.json())
+  //     .then(data => {
+  //       console.log('Carregando dados de produtos...');
+  //       setAllProducts(prevState =>
+  //         prevState.concat(
+  //           data.map((item: Product) => ({
+  //             id: item.id,
+  //             nome: item.nome,
+  //             preco: item.preco ?? 0,
+  //             quantidade: 0, // Set default quantity to 0
+  //             peso: item.peso ?? 0,  // Default peso to 0 if missing
+  //             prazo: item.prazo ?? 0,  // Default prazo to 0 if missing
+  //             comprimento: item.comprimento ?? 0,
+  //             largura: item.largura ?? 0,
+  //             altura: item.altura ?? 0,
+  //           }))
+  //         )
+  //       );
+  //       console.log('Carregando produtos...', allProducts);
+  //     })
+  //     .catch(error => {
+  //       console.error('Error fetching products:', error);
+  //     });
+  // }, []);
 
 
+  const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+  
+  const fetchProdutos = async (page = 1, perPage = 500) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/produto?page=${page}&per_page=${perPage}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const data = await response.json();
+      setProdutosData(prevProdutos => [...prevProdutos, ...data.data]);
 
-
-
-
-
-
-
+      if (data.current_page < data.last_page) {
+        await fetchProdutos(data.current_page + 1, perPage);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+    }
+    await delay(7000);
+  };
 
   // Função para filtrar os produtos com base no valor de input
   const filterProducts = (input: string) => {
@@ -115,34 +163,7 @@ const OrcamentoGerarScreen = () => {
   };
 
 
-
-
-
-
-
-
-
-  const isLoggedIn = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
-  const [clientId, setClientId] = useState('');
-  const [allClients, setAllClients] = useState<Cliente[]>([]);
-  const [allProducts, setAllProducts] = useState([]);
-  const [productsList, setProductsList] = useState<Product[]>([]);
-  // const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [openOrcamento, setOpenOrcamento] = React.useState(false);
-  const [scroll, setScroll] = React.useState<DialogProps['scroll']>('paper');
-  const [orçamentoTexto, setOrçamentoTexto] = useState('');
-  const [cep, setCEP] = useState('');
-  const [cepError, setCepError] = useState(false);
-  const [address, setAddress] = useState('');
-  const [shippingOption, setShippingOption] = useState('');
-  const [precoPac, setPrecoPac] = useState('');
-  const [precoSedex, setPrecoSedex] = useState('');
-  const [openAlert, setOpenAlert] = useState(false);
-
-
   const gerarOrcamento = () => {
-
     let totalOrçamento = 0;
     let produtosTexto = '';
     const larguraMaxima = 40;
@@ -159,7 +180,6 @@ const OrcamentoGerarScreen = () => {
 
       // Concatena as informações do produto
       produtosTexto += `${quantidade} ${nomeProduto} ${precoUnitario} ${totalProduto}\n`;
-
       totalOrçamento += produtoTotal;
     });
 
@@ -171,8 +191,7 @@ const OrcamentoGerarScreen = () => {
     const prazoParaConfecao = 10; // prazo fixo para confecção
     const prazoEnvio = 3; // dias úteis para envio via Correios
 
-    const textoOrcamento =
-      `
+    const textoOrcamento = `
 ${produtosTexto.trim()}
 Frete:        R$${frete.toFixed(2)} - (Dia da postagem + ${prazoEnvio} dias úteis via Correios Sedex)
   
@@ -185,7 +204,7 @@ Orçamento válido por 30 dias.
 `.trim();
 
     setOrçamentoTexto(textoOrcamento);
-    setOpenOrcamento(true);
+    setOpenBudget(true);
   }
 
   const validateCEP = async (cep: string) => {
@@ -218,19 +237,19 @@ Orçamento válido por 30 dias.
     }
   };
 
-  const handleClose = () => {
-    setOpenOrcamento(false);
+  const handleCloseBudget = () => {
+    setOpenBudget(false);
   };
 
   const descriptionElementRef = React.useRef<HTMLElement>(null);
   React.useEffect(() => {
-    if (openOrcamento) {
+    if (openBudget) {
       const { current: descriptionElement } = descriptionElementRef;
       if (descriptionElement !== null) {
         descriptionElement.focus();
       }
     }
-  }, [openOrcamento]);
+  }, [openBudget]);
 
   function adicionarItem(novoItem: Product) {
     setProductsList([...productsList, novoItem]);
@@ -252,42 +271,6 @@ Orçamento válido por 30 dias.
 
   // function handleCEPBlur() {
   // }
-
-
-  const accessToken = localStorage.getItem('accessToken');
-
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API}/api/get-all-produtos`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Carregando dados de produtos...');
-        setAllProducts(prevState =>
-          prevState.concat(
-            data.map((item: Product) => ({
-              id: item.id,
-              nome: item.nome,
-              preco: item.preco ?? 0,
-              quantidade: 0, // Set default quantity to 0
-              peso: item.peso ?? 0,  // Default peso to 0 if missing
-              prazo: item.prazo ?? 0,  // Default prazo to 0 if missing
-              comprimento: item.comprimento ?? 0,
-              largura: item.largura ?? 0,
-              altura: item.altura ?? 0,
-            }))
-          )
-        );
-        console.log('Carregando produtos...', allProducts);
-      })
-      .catch(error => {
-        console.error('Error fetching products:', error);
-      });
-  }, []);
 
   useEffect(() => {
     const fetchChatData = async () => {
@@ -314,6 +297,12 @@ Orçamento válido por 30 dias.
     fetchChatData();
   }, []); // Executa apenas na montagem do componente
 
+
+  useEffect(() => {
+    fetchProdutos();
+  }, []);
+
+
   useEffect(() => {
     console.log('O valor de products mudou para:', productsList);
   }, [productsList]);
@@ -328,10 +317,6 @@ Orçamento válido por 30 dias.
     }
     setLoading(false);
   }, [isLoggedIn]);
-
-  // if (isLoading) {
-  //   return <div>Loading...</div>;
-  // }
 
   return (
     <PageContainer title="Orçamento / Gerar" description="Gerar Orçamento da Arte Arena">
@@ -383,9 +368,9 @@ Orçamento válido por 30 dias.
                   <Autocomplete
                     fullWidth
                     id="produto-autocomplete"
-                    open={open}
-                    onOpen={() => setOpen(true)}
-                    onClose={() => setOpen(false)}
+                    open={openProduct}
+                    onOpen={() => setOpenProduct(true)}
+                    onClose={() => setOpenProduct(false)}
                     value={selectedProduct} // Produto selecionado
                     onChange={(event, newValue) => setSelectedProduct(newValue)} // Atualiza o produto selecionado
                     inputValue={inputValue}
@@ -412,11 +397,6 @@ Orçamento válido por 30 dias.
                     renderOption={(props, option) => (
                       <li {...props}> {/* Passando a key diretamente */}
                         {option.nome}
-                        {option.tipoVariacao === 'V' && (
-                          <span style={{ marginLeft: '8px', color: 'gray' }}>
-                            {option.cor} - {option.tamanho}
-                          </span>
-                        )}
                       </li>
                     )}
                   />
@@ -618,8 +598,8 @@ Orçamento válido por 30 dias.
           </div>
 
           <Dialog
-            open={openOrcamento}
-            onClose={handleClose}
+            open={openBudget}
+            onClose={handleCloseBudget}
             scroll={scroll}
             maxWidth="lg"
             fullWidth
@@ -634,7 +614,7 @@ Orçamento válido por 30 dias.
               </DialogContentText>
             </DialogContent>
             <DialogActions>
-              <Button autoFocus onClick={handleClose} color="primary">
+              <Button autoFocus onClick={handleCloseBudget} color="primary">
                 Fechar
               </Button>
             </DialogActions>
