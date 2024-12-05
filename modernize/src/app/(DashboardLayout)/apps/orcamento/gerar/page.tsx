@@ -381,8 +381,8 @@ Orçamento válido por 30 dias.
 
                 <Box sx={{ width: '100%' }}>
                   <Autocomplete
+                    fullWidth
                     id="produto-autocomplete"
-                    sx={{ width: 400 }}
                     open={open}
                     onOpen={() => setOpen(true)}
                     onClose={() => setOpen(false)}
