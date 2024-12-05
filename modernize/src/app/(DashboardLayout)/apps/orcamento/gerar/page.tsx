@@ -35,7 +35,10 @@ import {
   FormControlLabel,
   Stack,
   Alert,
+  CircularProgress
 } from '@mui/material';
+
+import { debounce } from 'lodash'; // Importando a função debounce do lodash
 
 interface Cliente {
   number: string;
@@ -57,14 +60,76 @@ interface Product {
 }
 
 const OrcamentoGerarScreen = () => {
+
+  // Definindo o tipo Produto
+  interface Produto {
+    id: string;
+    nome: string;
+    tipoVariacao: string;
+    cor?: string; // Cor opcional
+    tamanho?: string; // Tamanho opcional
+  }
+  const [open, setOpen] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [loading, setLoading] = useState(false);
+  // const [produtosData, setProdutosData] = useState<Produto[]>([]); // Todos os dados da API
+  const [options, setOptions] = useState<Produto[]>([]); // Opções filtradas para o autocomplete
+  const produtosData: Produto[] = [
+    { id: "708195908", nome: "Camiseta Silhueta Cristo Redentor", tipoVariacao: "P" },
+    { id: "708195933", nome: "Camiseta Silhueta Cristo Redentor - G - Branca", tipoVariacao: "V", cor: "Branca", tamanho: "G" },
+    { id: "708195921", nome: "Camiseta Silhueta Cristo Redentor - G - Preto", tipoVariacao: "V", cor: "Preto", tamanho: "G" },
+    { id: "708197364", nome: "Camiseta São Paulo - Capital - P - Branca", tipoVariacao: "V", cor: "Branca", tamanho: "P" },
+    { id: "708197352", nome: "Camiseta São Paulo - Capital - P - Preto", tipoVariacao: "V", cor: "Preto", tamanho: "P" }
+  ];
+  const [selectedProduct, setSelectedProduct] = useState<Produto | null>(null); // Armazenando o produto selecionado
+
+
+
+
+
+
+
+
+
+
+  // Função para filtrar os produtos com base no valor de input
+  const filterProducts = (input: string) => {
+    const searchWords = input.trim().toLowerCase().split(/\s+/); // Dividir o input em palavras
+    if (!input) return produtosData; // Se o campo de busca estiver vazio, retorna todos os produtos
+
+    // Filtra os produtos onde todas as palavras de pesquisa aparecem no nome
+    const filteredOptions = produtosData.filter((produto) => {
+      return searchWords.every((word) => produto.nome.toLowerCase().includes(word));
+    });
+
+    return filteredOptions;
+  };
+
+  // Função para lidar com a mudança de input
+  const handleInputChange = (event: React.SyntheticEvent<Element, Event>, newInputValue: string) => {
+    setInputValue(newInputValue); // Atualiza o valor do input
+
+    // Filtra os produtos com base no input
+    const filteredOptions = filterProducts(newInputValue);
+    setOptions(filteredOptions); // Atualiza as opções filtradas
+  };
+
+
+
+
+
+
+
+
+
   const isLoggedIn = useAuth();
-  const [isLoading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [clientId, setClientId] = useState('');
   const [allClients, setAllClients] = useState<Cliente[]>([]);
   const [allProducts, setAllProducts] = useState([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [open, setOpen] = React.useState(false);
+  // const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [openOrcamento, setOpenOrcamento] = React.useState(false);
   const [scroll, setScroll] = React.useState<DialogProps['scroll']>('paper');
   const [orçamentoTexto, setOrçamentoTexto] = useState('');
   const [cep, setCEP] = useState('');
@@ -73,9 +138,8 @@ const OrcamentoGerarScreen = () => {
   const [shippingOption, setShippingOption] = useState('');
   const [precoPac, setPrecoPac] = useState('');
   const [precoSedex, setPrecoSedex] = useState('');
-
-
   const [openAlert, setOpenAlert] = useState(false);
+
 
   const gerarOrcamento = () => {
 
@@ -121,7 +185,7 @@ Orçamento válido por 30 dias.
 `.trim();
 
     setOrçamentoTexto(textoOrcamento);
-    setOpen(true);
+    setOpenOrcamento(true);
   }
 
   const validateCEP = async (cep: string) => {
@@ -155,18 +219,18 @@ Orçamento válido por 30 dias.
   };
 
   const handleClose = () => {
-    setOpen(false);
+    setOpenOrcamento(false);
   };
 
   const descriptionElementRef = React.useRef<HTMLElement>(null);
   React.useEffect(() => {
-    if (open) {
+    if (openOrcamento) {
       const { current: descriptionElement } = descriptionElementRef;
       if (descriptionElement !== null) {
         descriptionElement.focus();
       }
     }
-  }, [open]);
+  }, [openOrcamento]);
 
   function adicionarItem(novoItem: Product) {
     setProductsList([...productsList, novoItem]);
@@ -238,7 +302,7 @@ Orçamento válido por 30 dias.
         const data = await response.json();
 
         if (Array.isArray(data)) {
-          setAllClients(data.map((item: Cliente) => ({ number: item.number, contact_name: item.contact_name, channel: item.channel, agent_name: item.agent_name})));
+          setAllClients(data.map((item: Cliente) => ({ number: item.number, contact_name: item.contact_name, channel: item.channel, agent_name: item.agent_name })));
         } else {
           console.error('Dados inválidos recebidos da API:', data);
         }
@@ -265,9 +329,9 @@ Orçamento válido por 30 dias.
     setLoading(false);
   }, [isLoggedIn]);
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  // if (isLoading) {
+  //   return <div>Loading...</div>;
+  // }
 
   return (
     <PageContainer title="Orçamento / Gerar" description="Gerar Orçamento da Arte Arena">
@@ -288,7 +352,7 @@ Orçamento válido por 30 dias.
             disablePortal
             id="cliente"
             options={allClients}
-            getOptionLabel={(option) => `${option.number} - ${option.contact_name} - ${option.channel} - ${option.agent_name}`}
+            getOptionLabel={(option) => `${option.number} :: ${option.contact_name} :: (${option.channel} ${option.agent_name ? ` - ${option.agent_name}` : ''})`}
             fullWidth
             onChange={(event, value) => setClientId(value ? value.number : '')}
             renderInput={(params) => (
@@ -305,7 +369,68 @@ Orçamento válido por 30 dias.
               marginBottom: '20px'
             }}>
               <div style={{ flex: 1 }}>
-                <Autocomplete
+
+
+
+
+
+
+
+
+
+
+                <Box sx={{ width: '100%' }}>
+                  <Autocomplete
+                    id="produto-autocomplete"
+                    sx={{ width: 400 }}
+                    open={open}
+                    onOpen={() => setOpen(true)}
+                    onClose={() => setOpen(false)}
+                    value={selectedProduct} // Produto selecionado
+                    onChange={(event, newValue) => setSelectedProduct(newValue)} // Atualiza o produto selecionado
+                    inputValue={inputValue}
+                    onInputChange={handleInputChange} // Chama a função de filtragem sem debounce
+                    options={options} // Opções filtradas de produtos
+                    getOptionLabel={(option) => option.nome} // Como exibir o nome das opções
+                    loading={loading} // Indicador de carregamento
+                    renderInput={(params) => (
+                      <CustomTextField
+                        {...params}
+                        label="Buscar Produto"
+                        variant="outlined"
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <>
+                              {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
+                      />
+                    )}
+                    renderOption={(props, option) => (
+                      <li {...props}> {/* Passando a key diretamente */}
+                        {option.nome}
+                        {option.tipoVariacao === 'V' && (
+                          <span style={{ marginLeft: '8px', color: 'gray' }}>
+                            {option.cor} - {option.tamanho}
+                          </span>
+                        )}
+                      </li>
+                    )}
+                  />
+                </Box>
+
+
+
+
+
+
+
+
+
+                {/* <Autocomplete
                   id="product-select"
                   options={allProducts}
                   getOptionLabel={(option: Product) => option.nome}
@@ -320,21 +445,25 @@ Orçamento válido por 30 dias.
                     }
                   }}
                   renderInput={(params) => (
-                    <CustomTextField {...params} placeholder="Selecione um produto" aria-label="Selecione um produto" />
+                    <CustomTextField
+                      {...params}
+                      placeholder="Selecione um produto"
+                      aria-label="Selecione um produto"
+                    />
                   )}
-                />
+                /> */}
               </div>
               <div style={{ marginLeft: '20px' }}>
                 <Button
                   color="primary"
                   variant="contained"
-                  onClick={() => {
-                    if (selectedProduct) {
-                      adicionarItem(selectedProduct);
-                    } else {
-                      alert('Por favor, selecione um produto');
-                    }
-                  }}
+                // onClick={() => {
+                //   if (selectedProduct) {
+                //     adicionarItem(selectedProduct);
+                //   } else {
+                //     alert('Por favor, selecione um produto');
+                //   }
+                // }}
                 >
                   Adicionar
                 </Button>
@@ -489,7 +618,7 @@ Orçamento válido por 30 dias.
           </div>
 
           <Dialog
-            open={open}
+            open={openOrcamento}
             onClose={handleClose}
             scroll={scroll}
             maxWidth="lg"
