@@ -39,6 +39,7 @@ import {
 } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import useDebounce from '@/utils/useDebounce';
+import Fuse from 'fuse.js';
 
 interface Cliente {
   number: string;
@@ -63,25 +64,15 @@ const OrcamentoGerarScreen = () => {
   const isLoggedIn = useAuth();
   const [clientId, setClientId] = useState('');
   const [allClients, setAllClients] = useState<Cliente[]>([]);
-
-
-
-
-
-  const [productsList, setProductsList] = useState<Product[]>([]);
+  const [produtosData, setProdutosData] = useState<Product[]>([]); // Todos os dados da API
   const [openProduct, setOpenProduct] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [inputValue, setInputValue] = useState('');
-  const [produtosData, setProdutosData] = useState<Product[]>([]); // Todos os dados da API
-  const [options, setOptions] = useState<Product[]>([]); // Opções filtradas para o autocomplete
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // Armazenando o produto selecionado
   const debouncedInputValue = useDebounce(inputValue, 300); // Atraso de 300ms para processamento de filtragem
-
-
-
-
-
+  const [options, setOptions] = useState<Product[]>([]); // Opções filtradas para o autocomplete
+  const [filteredOptions, setFilteredOptions] = useState<Product[]>([]); // Declare filteredOptions
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // Armazenando o produto selecionado
+  const [productsList, setProductsList] = useState<Product[]>([]);
   const [openBudget, setOpenBudget] = React.useState(false);
   const [scroll, setScroll] = React.useState<DialogProps['scroll']>('paper');
   const [orçamentoTexto, setOrçamentoTexto] = useState('');
@@ -92,14 +83,32 @@ const OrcamentoGerarScreen = () => {
   const [precoPac, setPrecoPac] = useState('');
   const [precoSedex, setPrecoSedex] = useState('');
   const [openAlert, setOpenAlert] = useState(false);
-
+  const descriptionElementRef = React.useRef<HTMLElement>(null);
   const accessToken = localStorage.getItem('accessToken');
+  console.log('Options in Autocomplete:', options);
+  const [fuse, setFuse] = useState<Fuse<Product> | null>(null);
 
+  const fuseOptions = {
+    keys: ['nome'], // Campo do objeto a ser buscado
+    threshold: 0.5, // Permite maior flexibilidade nas correspondências
+    distance: 100,
+    includeScore: true, // Pontua a relevância, mas não é necessário exibir
+    useExtendedSearch: true, // Habilita correspondências mais complexas
+    tokenize: true, // Divide o texto em palavras (tokens)
+    shouldSort: true, // Ordena os resultados por relevância
+    findAllMatches: true, // Encontra todas as correspondências possíveis
+    minMatchCharLength: 2, // Tamanho mínimo de caracteres por token para considerar uma correspondência
+  };
 
-
-
-
-
+//   const fuseOptions = {
+//   keys: ['nome'],
+//   threshold: 0.3,
+//   distance: 100,
+//   minMatchCharLength: 2,
+//   shouldSort: true,
+//   includeScore: true,
+//   useExtendedSearch: true,
+// };
 
   const fetchProdutos = async (page = 1, perPage = 500) => {
     const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -124,19 +133,21 @@ const OrcamentoGerarScreen = () => {
 
   // Função para filtrar os produtos com base no valor de input
   const filterProducts = (input: string) => {
-    const searchWords = input.trim().toLowerCase().split(/\s+/); // Dividir o input em palavras
-    if (!input) return produtosData; // Se o campo de busca estiver vazio, retorna todos os produtos
+    if (!input || !fuse) return produtosData;
 
-    // Filtra os produtos onde todas as palavras de pesquisa aparecem no nome
-    return produtosData.filter((produto) =>
-      searchWords.every((word) => produto.nome.toLowerCase().includes(word))
-    );
+    // Tokeniza o input do usuário para busca multi-palavra
+    const searchQuery = input
+      .trim()
+      .toLowerCase()
+      .split(/\s+/) // Divide em palavras
+      .join(' '); // Une como uma string novamente para Fuse.js
+
+    // Realiza a busca fuzzy com Fuse.js
+    const results = fuse.search(searchQuery);
+
+    // Retorna os produtos correspondentes
+    return results.map((result) => result.item);
   };
-
-  useEffect(() => {
-    const filteredOptions = filterProducts(debouncedInputValue); // Filtra após o debounce
-    setOptions(filteredOptions); // Atualiza as opções filtradas
-  }, [debouncedInputValue, produtosData]);
 
   // Função para lidar com a mudança de input
   const handleInputChange = useCallback(
@@ -149,10 +160,19 @@ const OrcamentoGerarScreen = () => {
   const handleOpenProduct = useCallback(() => setOpenProduct(true), []);
   const handleCloseProduct = useCallback(() => setOpenProduct(false), []);
 
+  const handleSubmit = async () => {
+    const isValidCEP = await validateCEP(cep);
+    if (isValidCEP) {
+      gerarOrcamento();
+    } else {
+      setCepError(true);
+      gerarOrcamento();
+    }
+  };
 
-
-
-
+  const handleCloseBudget = () => {
+    setOpenBudget(false);
+  };
 
   const gerarOrcamento = () => {
     let totalOrçamento = 0;
@@ -218,30 +238,6 @@ Orçamento válido por 30 dias.
     }
   };
 
-  const handleSubmit = async () => {
-    const isValidCEP = await validateCEP(cep);
-    if (isValidCEP) {
-      gerarOrcamento();
-    } else {
-      setCepError(true);
-      gerarOrcamento();
-    }
-  };
-
-  const handleCloseBudget = () => {
-    setOpenBudget(false);
-  };
-
-  const descriptionElementRef = React.useRef<HTMLElement>(null);
-  React.useEffect(() => {
-    if (openBudget) {
-      const { current: descriptionElement } = descriptionElementRef;
-      if (descriptionElement !== null) {
-        descriptionElement.focus();
-      }
-    }
-  }, [openBudget]);
-
   function adicionarItem(novoItem: Product) {
     setProductsList([...productsList, novoItem]);
   }
@@ -262,6 +258,31 @@ Orçamento válido por 30 dias.
 
   // function handleCEPBlur() {
   // }
+
+  useEffect(() => {
+    if (openBudget) {
+      const { current: descriptionElement } = descriptionElementRef;
+      if (descriptionElement !== null) {
+        descriptionElement.focus();
+      }
+    }
+  }, [openBudget]);
+
+  useEffect(() => {
+    if (debouncedInputValue.trim() === '') {
+      setOptions([]); // Esvazia as opções se o campo de busca estiver vazio
+    } else {
+      const filteredOptions = filterProducts(debouncedInputValue); // Busca produtos
+      console.log('Filtered Options:', filteredOptions); // Para debug
+      setOptions(filteredOptions.slice(0, 50)); // Atualiza e Mostra no máximo 50 opções
+    }
+  }, [debouncedInputValue, fuse]);
+
+  useEffect(() => {
+    if (produtosData.length) {
+      setFuse(new Fuse(produtosData, fuseOptions));
+    }
+  }, [produtosData]);
 
   useEffect(() => {
     const fetchChatData = async () => {
@@ -306,6 +327,21 @@ Orçamento válido por 30 dias.
     }
     setLoading(false);
   }, [isLoggedIn]);
+
+  // Lógica de filtragem usando Fuse.js
+  useEffect(() => {
+    const result = fuse?.search(inputValue)?.map(({ item }) => item) || [];
+    setFilteredOptions(result); // Atualiza filteredOptions com os resultados da busca
+  }, [inputValue, produtosData]); // Refiltra sempre que o input ou os produtos mudam
+
+  // Atualiza as opções a serem exibidas
+  useEffect(() => {
+    setOptions(filteredOptions); // Atualiza options com filteredOptions
+  }, [filteredOptions]);
+
+  // Indicador de carregamento baseado no input e nas opções filtradas
+  // const loading = filteredOptions.length === 0 && inputValue.length > 0;
+
 
   return (
     <PageContainer title="Orçamento / Gerar" description="Gerar Orçamento da Arte Arena">
@@ -356,11 +392,15 @@ Orçamento válido por 30 dias.
                     onOpen={handleOpenProduct}
                     onClose={handleCloseProduct}
                     value={selectedProduct} // Produto selecionado
-                    // onChange={(event, newValue) => setSelectedProduct(newValue)} // Atualiza o produto selecionado
                     inputValue={inputValue}
+                    loading={filteredOptions.length === 0 && inputValue.length > 0}
+                    filterOptions={(x) => x}
                     onInputChange={handleInputChange} // Chama a função de filtragem sem debounce
                     options={options} // Opções filtradas de produtos
                     getOptionLabel={(option) => (typeof option === 'string' ? option : option.nome)} // Garante compatibilidade com freeSolo
+                    noOptionsText="Nenhum produto encontrado"
+                    loadingText="Carregando produtos..."
+                    // onChange={(event, newValue) => setSelectedProduct(newValue)} // Atualiza o produto selecionado
                     renderInput={(params) => (
                       <CustomTextField
                         {...params}
@@ -377,13 +417,11 @@ Orçamento válido por 30 dias.
                         }}
                       />
                     )}
-                    renderOption={(props, option) => (
-                      <li {...props}>
-                        {option.nome}
-                      </li>
-                    )}
-                    
-                    // loading={loading} // Indicador de carregamento
+                    renderOption={(props, option) => {
+                      console.log('Renderizando opção:', option);
+                      return <li {...props}>{option?.nome || ''}</li>;
+                    }}
+
 
                   />
                 </Box>
