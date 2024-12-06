@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/utils/useAuth';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
@@ -35,9 +35,10 @@ import {
   FormControlLabel,
   Stack,
   Alert,
-  CircularProgress
+  // CircularProgress
 } from '@mui/material';
-
+import CircularProgress from '@mui/material/CircularProgress';
+import useDebounce from '@/utils/useDebounce';
 
 interface Cliente {
   number: string;
@@ -62,15 +63,25 @@ const OrcamentoGerarScreen = () => {
   const isLoggedIn = useAuth();
   const [clientId, setClientId] = useState('');
   const [allClients, setAllClients] = useState<Cliente[]>([]);
-  const [allProducts, setAllProducts] = useState([]);
+
+
+
+
+
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [openProduct, setOpenProduct] = useState(false);
-  const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const [inputValue, setInputValue] = useState('');
   const [produtosData, setProdutosData] = useState<Product[]>([]); // Todos os dados da API
   const [options, setOptions] = useState<Product[]>([]); // Opções filtradas para o autocomplete
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // Armazenando o produto selecionado
-  // const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const debouncedInputValue = useDebounce(inputValue, 300); // Atraso de 300ms para processamento de filtragem
+
+
+
+
+
   const [openBudget, setOpenBudget] = React.useState(false);
   const [scroll, setScroll] = React.useState<DialogProps['scroll']>('paper');
   const [orçamentoTexto, setOrçamentoTexto] = useState('');
@@ -84,43 +95,14 @@ const OrcamentoGerarScreen = () => {
 
   const accessToken = localStorage.getItem('accessToken');
 
-  // useEffect(() => {
-  //   fetch(`${process.env.NEXT_PUBLIC_API}/api/get-all-produtos`, {
-  //     method: 'GET',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       Authorization: `Bearer ${accessToken}`,
-  //     },
-  //   })
-  //     .then(response => response.json())
-  //     .then(data => {
-  //       console.log('Carregando dados de produtos...');
-  //       setAllProducts(prevState =>
-  //         prevState.concat(
-  //           data.map((item: Product) => ({
-  //             id: item.id,
-  //             nome: item.nome,
-  //             preco: item.preco ?? 0,
-  //             quantidade: 0, // Set default quantity to 0
-  //             peso: item.peso ?? 0,  // Default peso to 0 if missing
-  //             prazo: item.prazo ?? 0,  // Default prazo to 0 if missing
-  //             comprimento: item.comprimento ?? 0,
-  //             largura: item.largura ?? 0,
-  //             altura: item.altura ?? 0,
-  //           }))
-  //         )
-  //       );
-  //       console.log('Carregando produtos...', allProducts);
-  //     })
-  //     .catch(error => {
-  //       console.error('Error fetching products:', error);
-  //     });
-  // }, []);
 
 
-  const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-  
+
+
+
+
   const fetchProdutos = async (page = 1, perPage = 500) => {
+    const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/produto?page=${page}&per_page=${perPage}`, {
         headers: {
@@ -146,21 +128,30 @@ const OrcamentoGerarScreen = () => {
     if (!input) return produtosData; // Se o campo de busca estiver vazio, retorna todos os produtos
 
     // Filtra os produtos onde todas as palavras de pesquisa aparecem no nome
-    const filteredOptions = produtosData.filter((produto) => {
-      return searchWords.every((word) => produto.nome.toLowerCase().includes(word));
-    });
-
-    return filteredOptions;
+    return produtosData.filter((produto) =>
+      searchWords.every((word) => produto.nome.toLowerCase().includes(word))
+    );
   };
+
+  useEffect(() => {
+    const filteredOptions = filterProducts(debouncedInputValue); // Filtra após o debounce
+    setOptions(filteredOptions); // Atualiza as opções filtradas
+  }, [debouncedInputValue, produtosData]);
 
   // Função para lidar com a mudança de input
-  const handleInputChange = (event: React.SyntheticEvent<Element, Event>, newInputValue: string) => {
-    setInputValue(newInputValue); // Atualiza o valor do input
+  const handleInputChange = useCallback(
+    (event: React.SyntheticEvent<Element, Event>, newInputValue: string) => {
+      setInputValue(newInputValue);
+    },
+    []
+  );
 
-    // Filtra os produtos com base no input
-    const filteredOptions = filterProducts(newInputValue);
-    setOptions(filteredOptions); // Atualiza as opções filtradas
-  };
+  const handleOpenProduct = useCallback(() => setOpenProduct(true), []);
+  const handleCloseProduct = useCallback(() => setOpenProduct(false), []);
+
+
+
+
 
 
   const gerarOrcamento = () => {
@@ -297,11 +288,9 @@ Orçamento válido por 30 dias.
     fetchChatData();
   }, []); // Executa apenas na montagem do componente
 
-
   useEffect(() => {
     fetchProdutos();
   }, []);
-
 
   useEffect(() => {
     console.log('O valor de products mudou para:', productsList);
@@ -332,7 +321,6 @@ Orçamento válido por 30 dias.
             Cliente
           </CustomFormLabel>
 
-
           <Autocomplete
             disablePortal
             id="cliente"
@@ -344,7 +332,6 @@ Orçamento válido por 30 dias.
               <CustomTextField {...params} placeholder="Selecione um cliente" aria-label="Selecione um cliente" />
             )}
           />
-
 
           <div style={{ marginTop: '20px' }}>
             <div style={{
@@ -360,24 +347,20 @@ Orçamento válido por 30 dias.
 
 
 
-
-
-
-
                 <Box sx={{ width: '100%' }}>
                   <Autocomplete
+                    freeSolo
                     fullWidth
                     id="produto-autocomplete"
                     open={openProduct}
-                    onOpen={() => setOpenProduct(true)}
-                    onClose={() => setOpenProduct(false)}
+                    onOpen={handleOpenProduct}
+                    onClose={handleCloseProduct}
                     value={selectedProduct} // Produto selecionado
-                    onChange={(event, newValue) => setSelectedProduct(newValue)} // Atualiza o produto selecionado
+                    // onChange={(event, newValue) => setSelectedProduct(newValue)} // Atualiza o produto selecionado
                     inputValue={inputValue}
                     onInputChange={handleInputChange} // Chama a função de filtragem sem debounce
                     options={options} // Opções filtradas de produtos
-                    getOptionLabel={(option) => option.nome} // Como exibir o nome das opções
-                    loading={loading} // Indicador de carregamento
+                    getOptionLabel={(option) => (typeof option === 'string' ? option : option.nome)} // Garante compatibilidade com freeSolo
                     renderInput={(params) => (
                       <CustomTextField
                         {...params}
@@ -395,10 +378,13 @@ Orçamento válido por 30 dias.
                       />
                     )}
                     renderOption={(props, option) => (
-                      <li {...props}> {/* Passando a key diretamente */}
+                      <li {...props}>
                         {option.nome}
                       </li>
                     )}
+                    
+                    // loading={loading} // Indicador de carregamento
+
                   />
                 </Box>
 
@@ -408,30 +394,6 @@ Orçamento válido por 30 dias.
 
 
 
-
-
-                {/* <Autocomplete
-                  id="product-select"
-                  options={allProducts}
-                  getOptionLabel={(option: Product) => option.nome}
-                  onChange={(event, value) => {
-                    if (value) {
-                      const produtoComValoresPadrao: Product = {
-                        ...value,
-                        peso: value?.peso || 0, // Garante um valor padrão se 'peso' não existir
-                        prazo: value?.prazo || 0 // Garante um valor padrão se 'prazo' não existir
-                      };
-                      setSelectedProduct(produtoComValoresPadrao);
-                    }
-                  }}
-                  renderInput={(params) => (
-                    <CustomTextField
-                      {...params}
-                      placeholder="Selecione um produto"
-                      aria-label="Selecione um produto"
-                    />
-                  )}
-                /> */}
               </div>
               <div style={{ marginLeft: '20px' }}>
                 <Button
