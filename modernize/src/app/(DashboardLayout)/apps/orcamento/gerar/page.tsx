@@ -248,7 +248,10 @@ Orçamento válido por 30 dias.
   };
 
   function adicionarProduto(novoProduto: Product) {
-    console.log('add item');
+    // Se o produto não tiver nenhuma quantidade, então atribua (ou atualize) quantidade para 1 ao adicioná-lo na lista
+    if (isNaN(novoProduto.quantidade) || novoProduto.quantidade === 0) {
+      novoProduto.quantidade = 1;
+    }
     // Se já está na productsList, não adiciona novamente, soma 1 na sua quantidade.
     const existingProduct = productsList.find((product) => product.id === novoProduto.id);
     if (existingProduct) {
@@ -261,7 +264,7 @@ Orçamento válido por 30 dias.
       );
       setProductsList(updatedProductsList);
     } else {
-    setProductsList([...productsList, novoProduto]);
+      setProductsList([...productsList, novoProduto]);
     }
   }
 
@@ -278,9 +281,9 @@ Orçamento válido por 30 dias.
       }
       return product;
     });
-  
+
     // Remove os elementos null (produtos removidos) do array
-    setProductsList(updatedProductsList.filter((product) => product !== null));
+    setProductsList(updatedProductsList.filter((product): product is Product => product !== null));
   };
 
   const atualizarProduto = (updatedProduct: Product) => {
@@ -446,11 +449,15 @@ Orçamento válido por 30 dias.
                       />
                     )}
                     renderOption={(props, option) => {
-                      // console.log('Renderizando opção:', option);
-                      return <li {...props}>{option?.nome || ''}</li>;
+                      // Generate a unique key for each option, even if it's a freeSolo entry
+                      const key = typeof option === 'string' ? option : option.id; // Replace 'id' with the actual unique identifier
+
+                      return (
+                        <li {...props} key={key}>
+                          {option?.nome || ''}
+                        </li>
+                      );
                     }}
-
-
                   />
                 </Box>
               </div>
