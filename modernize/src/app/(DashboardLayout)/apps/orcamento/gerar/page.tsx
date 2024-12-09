@@ -53,11 +53,11 @@ interface Product {
   nome: string;
   preco: number;
   quantidade: number;
+  prazo: number;
   peso: number;
   comprimento: number;
   largura: number;
   altura: number;
-  prazo: number;
 }
 
 const OrcamentoGerarScreen = () => {
@@ -85,8 +85,9 @@ const OrcamentoGerarScreen = () => {
   const [openAlert, setOpenAlert] = useState(false);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
   const accessToken = localStorage.getItem('accessToken');
-  console.log('Options in Autocomplete:', options);
   const [fuse, setFuse] = useState<Fuse<Product> | null>(null);
+
+  // console.log('Options in Autocomplete:', options);
 
   const fuseOptions = {
     keys: ['nome'], // Campo do objeto a ser buscado
@@ -100,15 +101,15 @@ const OrcamentoGerarScreen = () => {
     minMatchCharLength: 2, // Tamanho mínimo de caracteres por token para considerar uma correspondência
   };
 
-//   const fuseOptions = {
-//   keys: ['nome'],
-//   threshold: 0.3,
-//   distance: 100,
-//   minMatchCharLength: 2,
-//   shouldSort: true,
-//   includeScore: true,
-//   useExtendedSearch: true,
-// };
+  //   const fuseOptions = {
+  //   keys: ['nome'],
+  //   threshold: 0.3,
+  //   distance: 100,
+  //   minMatchCharLength: 2,
+  //   shouldSort: true,
+  //   includeScore: true,
+  //   useExtendedSearch: true,
+  // };
 
   const fetchProdutos = async (page = 1, perPage = 500) => {
     const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -150,12 +151,20 @@ const OrcamentoGerarScreen = () => {
   };
 
   // Função para lidar com a mudança de input
-  const handleInputChange = useCallback(
+  const handleProductInputChange = useCallback(
     (event: React.SyntheticEvent<Element, Event>, newInputValue: string) => {
       setInputValue(newInputValue);
     },
     []
   );
+
+  const handleProductChange = (event: any, newProductValue: any) => {
+    if (typeof newProductValue === 'string') {
+      setSelectedProduct(null);
+    } else {
+      setSelectedProduct(newProductValue);
+    }
+  }
 
   const handleOpenProduct = useCallback(() => setOpenProduct(true), []);
   const handleCloseProduct = useCallback(() => setOpenProduct(false), []);
@@ -238,15 +247,40 @@ Orçamento válido por 30 dias.
     }
   };
 
-  function adicionarItem(novoItem: Product) {
-    setProductsList([...productsList, novoItem]);
+  function adicionarProduto(novoProduto: Product) {
+    console.log('add item');
+    // Se já está na productsList, não adiciona novamente, soma 1 na sua quantidade.
+    const existingProduct = productsList.find((product) => product.id === novoProduto.id);
+    if (existingProduct) {
+      const updatedProduct = {
+        ...existingProduct,
+        quantidade: isNaN(existingProduct.quantidade) ? 1 : existingProduct.quantidade + 1,
+      };
+      const updatedProductsList = productsList.map((product) =>
+        product.id === existingProduct.id ? updatedProduct : product
+      );
+      setProductsList(updatedProductsList);
+    } else {
+    setProductsList([...productsList, novoProduto]);
+    }
   }
 
-  const removerItem = (productToRemove: Product) => {
-    const updatedProductsList = productsList.filter(
-      (product) => product.id !== productToRemove.id
-    );
-    setProductsList(updatedProductsList);
+  const removerProduto = (productToRemove: Product) => {
+    const updatedProductsList = productsList.map((product) => {
+      if (product.id === productToRemove.id) {
+        if (product.quantidade > 1) {
+          // Reduz a quantidade em 1 unidade
+          return { ...product, quantidade: product.quantidade - 1 };
+        } else {
+          // Remove o produto completamente
+          return null;
+        }
+      }
+      return product;
+    });
+  
+    // Remove os elementos null (produtos removidos) do array
+    setProductsList(updatedProductsList.filter((product) => product !== null));
   };
 
   const atualizarProduto = (updatedProduct: Product) => {
@@ -273,7 +307,7 @@ Orçamento válido por 30 dias.
       setOptions([]); // Esvazia as opções se o campo de busca estiver vazio
     } else {
       const filteredOptions = filterProducts(debouncedInputValue); // Busca produtos
-      console.log('Filtered Options:', filteredOptions); // Para debug
+      // console.log('Filtered Options:', filteredOptions); // Para debug
       setOptions(filteredOptions.slice(0, 50)); // Atualiza e Mostra no máximo 50 opções
     }
   }, [debouncedInputValue, fuse]);
@@ -314,7 +348,7 @@ Orçamento válido por 30 dias.
   }, []);
 
   useEffect(() => {
-    console.log('O valor de products mudou para:', productsList);
+    console.log('O valor de productsList mudou para:', productsList);
   }, [productsList]);
 
   useEffect(() => {
@@ -377,12 +411,6 @@ Orçamento válido por 30 dias.
               marginBottom: '20px'
             }}>
               <div style={{ flex: 1 }}>
-
-
-
-
-
-
                 <Box sx={{ width: '100%' }}>
                   <Autocomplete
                     freeSolo
@@ -395,12 +423,12 @@ Orçamento válido por 30 dias.
                     inputValue={inputValue}
                     loading={filteredOptions.length === 0 && inputValue.length > 0}
                     filterOptions={(x) => x}
-                    onInputChange={handleInputChange} // Chama a função de filtragem sem debounce
+                    onInputChange={handleProductInputChange} // Chama a função de filtragem sem debounce
                     options={options} // Opções filtradas de produtos
                     getOptionLabel={(option) => (typeof option === 'string' ? option : option.nome)} // Garante compatibilidade com freeSolo
                     noOptionsText="Nenhum produto encontrado"
                     loadingText="Carregando produtos..."
-                    // onChange={(event, newValue) => setSelectedProduct(newValue)} // Atualiza o produto selecionado
+                    onChange={handleProductChange} // Atualiza o produto selecionado
                     renderInput={(params) => (
                       <CustomTextField
                         {...params}
@@ -418,32 +446,26 @@ Orçamento válido por 30 dias.
                       />
                     )}
                     renderOption={(props, option) => {
-                      console.log('Renderizando opção:', option);
+                      // console.log('Renderizando opção:', option);
                       return <li {...props}>{option?.nome || ''}</li>;
                     }}
 
 
                   />
                 </Box>
-
-
-
-
-
-
-
               </div>
+
               <div style={{ marginLeft: '20px' }}>
                 <Button
                   color="primary"
                   variant="contained"
-                // onClick={() => {
-                //   if (selectedProduct) {
-                //     adicionarItem(selectedProduct);
-                //   } else {
-                //     alert('Por favor, selecione um produto');
-                //   }
-                // }}
+                  onClick={() => {
+                    if (selectedProduct) {
+                      adicionarProduto(selectedProduct);
+                    } else {
+                      alert('Por favor, selecione um produto');
+                    }
+                  }}
                 >
                   Adicionar
                 </Button>
@@ -491,8 +513,8 @@ Orçamento válido por 30 dias.
                         <CustomTextField
                           value={product.quantidade}
                           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                            const newValue = Math.max(0, +event.target.value);
-                            const updatedProduct = { ...product, quantidade: newValue };
+                            const newProductValue = Math.max(0, +event.target.value);
+                            const updatedProduct = { ...product, quantidade: newProductValue };
                             atualizarProduto(updatedProduct);
                           }}
                           type="number"
@@ -506,8 +528,8 @@ Orçamento válido por 30 dias.
                         <CustomTextField
                           value={product.prazo}
                           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                            const newValue = Math.max(0, +event.target.value);
-                            const updatedProduct = { ...product, prazo: newValue };
+                            const newProductValue = Math.max(0, +event.target.value);
+                            const updatedProduct = { ...product, prazo: newProductValue };
                             atualizarProduto(updatedProduct);
                           }}
                           type="number"
@@ -521,8 +543,8 @@ Orçamento válido por 30 dias.
                         <CustomTextField
                           value={product.peso}
                           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                            const newValue = Math.max(0, +event.target.value);
-                            const updatedProduct = { ...product, peso: newValue };
+                            const newProductValue = Math.max(0, +event.target.value);
+                            const updatedProduct = { ...product, peso: newProductValue };
                             atualizarProduto(updatedProduct);
                           }}
                           type="number"
@@ -532,7 +554,7 @@ Orçamento válido por 30 dias.
                         />
                       </TableCell>
                       <TableCell align="right">
-                        <IconButton onClick={() => removerItem(product)}>
+                        <IconButton onClick={() => removerProduto(product)}>
                           <DeleteIcon />
                         </IconButton>
                       </TableCell>
