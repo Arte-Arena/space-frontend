@@ -16,6 +16,8 @@ jobs:
       - name: Setup Environment and Tags
         id: setup_env
         run: |
+          echo "Current directory: $(pwd)"
+          ls -la
           if [[ "${{ github.ref_name }}" == "homolog" ]]; then
             echo "NEXT_PUBLIC_API=https://api-homolog.spacearena.net" > .env
             echo "tags=artearenahub/space-frontend-homolog:0.0.${{ github.run_number }}" >> $GITHUB_ENV
@@ -25,13 +27,16 @@ jobs:
             echo "tags=artearenahub/space-frontend:0.0.${{ github.run_number }}" >> $GITHUB_ENV
             echo "tags_latest=artearenahub/space-frontend:latest" >> $GITHUB_ENV
           fi
-          echo "Generated .env file:"
+          echo "Environment file content:"
           cat .env
 
-      - name: Replace .env in repository context
+      - name: Ensure .env is included
         run: |
-          cp .env $GITHUB_WORKSPACE/.env
-          echo "Replaced .env in repository context."
+          ls -la
+          if [ ! -f ".env" ]; then
+            echo "Error: .env file was not created"
+            exit 1
+          fi
 
       - name: Docker Login
         uses: docker/login-action@v3.0.0
