@@ -2,7 +2,9 @@ name: Arte Arena Space Frontend - Production CI/CD Pipeline
 
 on:
   push:
-    branches: [main, homolog]
+    branches: 
+      - "main"
+      - "homolog"
 
 jobs:
   CI:
@@ -11,18 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.1
 
-      - name: Set environment based on branch
+      - name: Setup Environment
         run: |
-          if [[ "${GITHUB_REF#refs/heads/} " == "homolog" ]]; then
-            echo "IMAGE_NAME=artearenahub/space-frontend-homolog"
-            echo "IMAGE_TAG=latest"
-          else
-            echo "IMAGE_NAME=artearenahub/space-frontend"
-            echo "IMAGE_TAG=0.0.${{github.run_number}}"
+          if [[ "${{ github.ref_name }}" == "homolog" ]]; then
+            echo "NEXT_PUBLIC_API=https://api-homolog.spacearena.net" > .env
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "NEXT_PUBLIC_API=https://api.spacearena.net" > .env
           fi
-          echo "## Set additional tags if needed"  # Add more tags here (optional)
-          echo "ADDITIONAL_TAGS="  # Define a variable for additional tags (optional)
-          
 
       - name: Docker Login
         uses: docker/login-action@v3.0.0
@@ -31,11 +28,14 @@ jobs:
           password: ${{secrets.DOCKERHUB_PWD}}
 
       - name: Build and push Docker frontend image
-        run: |
-          docker buildx build --file ./docker/Dockerfile \
-            --tag "${IMAGE_NAME}:${IMAGE_TAG}" \
-            $ADDITIONAL_TAGS  # Add additional tags using the variable (optional)
-            --push .
+        uses: docker/build-push-action@v5.0.0
+        with: 
+          context: .
+          file: ./docker/Dockerfile
+          push: true
+          tags: | 
+            artearenahub/space-frontend:0.0.${{github.run_number}}
+            artearenahub/space-frontend:latest
         env:
           ACTIONS_RUNNER_DEBUG: true
           ACTIONS_STEP_DEBUG: true
