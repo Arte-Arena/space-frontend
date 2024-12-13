@@ -15,6 +15,7 @@ interface MenuitemsType {
   external?: boolean;
 }
 import {
+  IconBrandProducthunt,
   IconBrandCashapp,
   IconFlag,
   IconReportMoney,
@@ -226,6 +227,12 @@ const Menuitems: MenuitemsType[] = [
   //     },
   //   ],
   // },
+  {
+    id: uniqueId(),
+    title: "Produtos",
+    icon: IconBrandProducthunt,
+    href: "/apps/produtos/buscar",
+  },
   {
     id: uniqueId(),
     title: "Contas",

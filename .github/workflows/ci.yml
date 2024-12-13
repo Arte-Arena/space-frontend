@@ -11,6 +11,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.1
 
+      - name: Set up .env file
+        run: |
+          if [[ "${GITHUB_REF#refs/heads/} " == "homolog" ]]; then
+            echo "NEXT_PUBLIC_API=https://api-homolog.spacearena.net" > .env
+          else
+            echo "NEXT_PUBLIC_API=https://api.spacearena.net" > .env
+          fi
+
       - name: Docker Login
         uses: docker/login-action@v3.0.0
         with:
@@ -23,9 +31,14 @@ jobs:
           context: .
           file: ./docker/Dockerfile
           push: true
-          tags: | 
-            artearenahub/space-frontend:0.0.${{github.run_number}}
-            artearenahub/space-frontend:latest
+          tags: |
+            if [[ "${GITHUB_REF#refs/heads/} " == "homolog" ]]; then
+              artearenahub/space-frontend-homolog:0.0.${{github.run_number}}
+              artearenahub/space-frontend-homolog:latest
+            else
+              artearenahub/space-frontend:0.0.${{github.run_number}}
+              artearenahub/space-frontend:latest
+            fi
         env:
           ACTIONS_RUNNER_DEBUG: true
           ACTIONS_STEP_DEBUG: true

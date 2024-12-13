@@ -293,8 +293,9 @@ Orçamento válido por 30 dias.
     setProductsList(updatedProductsList);
   };
 
-  // function handleCEPBlur() {
-  // }
+  const handleCEPBlur = useCallback(() => {
+    console.log('CEP: ', cep);
+  }, [cep]);
 
   useEffect(() => {
     if (openBudget) {
@@ -576,7 +577,7 @@ Orçamento válido por 30 dias.
                 label="CEP do cliente"
                 value={cep}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => setCEP(event.target.value)}
-                // onBlur={handleCEPBlur}
+                onBlur={handleCEPBlur}
                 variant="outlined"
                 size="small"
                 sx={{ width: '200px' }}
