@@ -13,6 +13,10 @@ import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Button, Snackbar, Alert } from '@mui/material';
+import Stack from '@mui/material/Stack';
+import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import { IconSearch } from '@tabler/icons-react';
 
 // Interface para os dados de paginação
 interface PaginationMeta {
@@ -140,6 +144,23 @@ const ProdutosBuscarScreen = () => {
       <ParentCard title="Buscar Produto">
         <div>
           <h1>Buscar Produto</h1>
+
+          <Stack direction="row" spacing={2} my={2}>
+            <CustomTextField
+              label="Buscar"
+              variant="outlined"
+              value={query}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <IconSearch />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Stack>
+          
 
           {loading ? (
             <CircularProgress />
