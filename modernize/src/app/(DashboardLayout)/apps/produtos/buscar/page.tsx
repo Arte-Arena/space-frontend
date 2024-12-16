@@ -52,15 +52,6 @@ const ProdutosBuscarScreen = () => {
       }).then((res) => res.json()),
   });
 
-  useEffect(() => {
-    if (data) {
-      console.log('Total:', data.total);
-      console.log('Itens por página:', data.per_page);
-      console.log('Total de páginas:', Math.ceil(data.total / data.per_page));
-      console.log('Página atual:', data.current_page);
-    }
-  }, [data]);
-
   const handleSearch = () => {
     setSearchQuery(query); // Atualiza a busca
     setPage(1); // Reseta para a primeira página ao realizar uma nova busca
