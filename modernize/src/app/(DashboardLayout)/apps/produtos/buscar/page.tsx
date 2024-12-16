@@ -95,7 +95,7 @@ const ProdutosBuscarScreen = () => {
           <CustomTextField
             fullWidth
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
             onKeyPress={handleSearchKeyPress}
             placeholder="Buscar produto..."
             InputProps={{
