@@ -20,7 +20,6 @@ import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { NumericFormat } from 'react-number-format';
 import { IconCopy } from '@tabler/icons-react';
-import CloseIcon from '@mui/icons-material/Close';
 import {
   Button,
   Dialog,
@@ -34,13 +33,8 @@ import {
   Radio,
   RadioGroup,
   FormControlLabel,
-  Stack,
-  CircularProgress,
-  Alert,
-  Pagination
+  Stack
 } from '@mui/material';
-import InputAdornment from '@mui/material/InputAdornment';
-import { IconSearch } from '@tabler/icons-react';
 
 interface Cliente {
   number: string;
@@ -77,7 +71,6 @@ const OrcamentoGerarScreen = () => {
   const [shippingOption, setShippingOption] = useState('');
   const [precoPac, setPrecoPac] = useState('');
   const [precoSedex, setPrecoSedex] = useState('');
-  const [openAlert, setOpenAlert] = useState(false);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
 
 
@@ -217,6 +210,42 @@ const OrcamentoGerarScreen = () => {
     );
     setProductsList(updatedProductsList);
   };
+  
+  const validateCEP = async (cep: string) => {
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+  
+      if (response.ok && data.cep) {
+        console.log('cep válido');
+        console.log(data);
+        setAddress(data.logradouro + " " + data.localidade + " " + data.uf + " " + data.cep);
+        return true;
+      } else {
+        console.log('CEP inválido');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error validating CEP:', error);
+      return false;
+    }
+  };
+
+  const handleCEPBlur = async (event: React.FocusEvent<HTMLInputElement>) => {
+    const cep = event.target.value;
+    const isValidCEP = await validateCEP(cep);
+    if (!isValidCEP) {
+      setCepError(true);
+    } else {
+      setCepError(false);
+    }
+  };
+
+  useEffect(() => {
+    if (cepError) {
+      console.log('cepError:', cepError);
+    }
+  }, [cepError]);
 
   const handleSubmit = async () => {
     const isValidCEP = await validateCEP(cep);
@@ -276,25 +305,6 @@ Orçamento válido por 30 dias.
     setOpenBudget(true);
   }
 
-  const validateCEP = async (cep: string) => {
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data = await response.json();
-
-      if (response.ok && data.cep) {
-        console.log('cep válido');
-        console.log(data);
-        setAddress(data.logradouro + " " + data.localidade + " " + data.uf + " " + data.cep);
-        return true;
-      } else {
-        console.log('CEP inválido');
-        return false;
-      }
-    } catch (error) {
-      console.error('Error validating CEP:', error);
-      return false;
-    }
-  };
 
 
   return (
@@ -497,7 +507,7 @@ Orçamento válido por 30 dias.
                 label="CEP do cliente"
                 value={cep}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => setCEP(event.target.value)}
-                // onBlur={handleCEPBlur}
+                onBlur={handleCEPBlur}
                 variant="outlined"
                 size="small"
                 sx={{ width: '200px' }}
