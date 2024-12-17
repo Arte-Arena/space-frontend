@@ -8,6 +8,7 @@ import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLab
 import ParentCard from '@/app/components/shared/ParentCard';
 import Autocomplete from '@mui/material/Autocomplete';
 import Typography from '@mui/material/Typography';
+import { useQuery } from '@tanstack/react-query';
 import TableContainer from '@mui/material/TableContainer';
 import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
@@ -34,12 +35,12 @@ import {
   RadioGroup,
   FormControlLabel,
   Stack,
+  CircularProgress,
   Alert,
-  // CircularProgress
+  Pagination
 } from '@mui/material';
-import CircularProgress from '@mui/material/CircularProgress';
-import useDebounce from '@/utils/useDebounce';
-import Fuse from 'fuse.js';
+import InputAdornment from '@mui/material/InputAdornment';
+import { IconSearch } from '@tabler/icons-react';
 
 interface Cliente {
   number: string;
@@ -68,8 +69,7 @@ const OrcamentoGerarScreen = () => {
   const [openProduct, setOpenProduct] = useState(false);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
-  const debouncedInputValue = useDebounce(inputValue, 300); // Atraso de 300ms para processamento de filtragem
-  const [options, setOptions] = useState<Product[]>([]); // Opções filtradas para o autocomplete
+  const [options, setOptions] = useState<Product[]>([]);
   const [filteredOptions, setFilteredOptions] = useState<Product[]>([]); // Declare filteredOptions
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // Armazenando o produto selecionado
   const [productsList, setProductsList] = useState<Product[]>([]);
@@ -85,89 +85,99 @@ const OrcamentoGerarScreen = () => {
   const [openAlert, setOpenAlert] = useState(false);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
   const accessToken = localStorage.getItem('accessToken');
-  const [fuse, setFuse] = useState<Fuse<Product> | null>(null);
-
-  // console.log('Options in Autocomplete:', options);
-
-  const fuseOptions = {
-    keys: ['nome'], // Campo do objeto a ser buscado
-    threshold: 0.5, // Permite maior flexibilidade nas correspondências
-    distance: 100,
-    includeScore: true, // Pontua a relevância, mas não é necessário exibir
-    useExtendedSearch: true, // Habilita correspondências mais complexas
-    tokenize: true, // Divide o texto em palavras (tokens)
-    shouldSort: true, // Ordena os resultados por relevância
-    findAllMatches: true, // Encontra todas as correspondências possíveis
-    minMatchCharLength: 2, // Tamanho mínimo de caracteres por token para considerar uma correspondência
-  };
-
-  //   const fuseOptions = {
-  //   keys: ['nome'],
-  //   threshold: 0.3,
-  //   distance: 100,
-  //   minMatchCharLength: 2,
-  //   shouldSort: true,
-  //   includeScore: true,
-  //   useExtendedSearch: true,
-  // };
-
-  const fetchProdutos = async (page = 1, perPage = 500) => {
-    const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/produto?page=${page}&per_page=${perPage}`, {
+  const [query, setQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>(''); // Mantém a query atual usada na API
+  const [page, setPage] = useState<number>(1);
+  
+  // Consulta para clientes (sem parâmetros)
+  const { isFetching: isFetchingClients, error: errorClients, data: dataClients } = useQuery({
+    queryKey: ['clientData'],
+    queryFn: () =>
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/chat-octa`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-      });
-      const data = await response.json();
-      setProdutosData(prevProdutos => [...prevProdutos, ...data.data]);
+      }).then((res) => res.json()),
+  });
 
-      if (data.current_page < data.last_page) {
-        await fetchProdutos(data.current_page + 1, perPage);
+  // Log dos dados recebidos de clientes
+  useEffect(() => {
+    if (dataClients) {
+      console.log('dataClients:', dataClients); // Log para ver a estrutura completa
+      if (dataClients) {
+        console.log('Dados de Clientes:', dataClients);
+
+        if (Array.isArray(dataClients)) {
+          setAllClients(dataClients.map((item: Cliente) => ({ number: item.number, contact_name: item.contact_name, channel: item.channel, agent_name: item.agent_name})));
+        } else {
+          console.error('Dados inválidos recebidos da API:', dataClients);
+        }
+      } else {
+        console.warn('A propriedade "data" não foi encontrada na resposta.');
       }
-    } catch (error) {
-      console.error('Erro ao buscar produtos:', error);
     }
-    await delay(7000);
+  }, [dataClients]);
+  
+  // Log do estado allClients
+  useEffect(() => {
+    if (allClients) {
+      console.log('allClients:', allClients);
+    }
+  }, [allClients]);
+
+
+  // Consulta para produtos
+  const { isFetching: isFetchingProducts, error: errorProducts, data: dataProducts } = useQuery({
+    queryKey: ['repoData', searchQuery, page],
+    queryFn: () =>
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/produto?q=${encodeURIComponent(searchQuery)}&page=${page}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }).then((res) => res.json()),
+  });
+
+
+  // Verificação de carregamento e erro
+  if (isFetchingProducts || isFetchingClients) return <CircularProgress />;
+  if (errorProducts) return <p>Ocorreu um erro ao buscar produtos: {errorProducts.message}</p>;
+  if (errorClients) return <p>Ocorreu um erro ao buscar clientes: {errorClients.message}</p>;
+
+  // Atualiza opções com base nos dados obtidos
+  // useEffect(() => {
+  //   if (dataProducts?.produtos) {
+  //     setOptions(dataProducts.produtos);
+  //   } else {
+  //     setOptions([]);
+  //   }
+  // }, [dataProducts]);
+
+  const handleSearch = () => {
+    setSearchQuery(query); // Update search query
+    setPage(1); // Reset to first page on new search
   };
 
-  // Função para filtrar os produtos com base no valor de input
-  const filterProducts = (input: string) => {
-    if (!input || !fuse) return produtosData;
-
-    // Tokeniza o input do usuário para busca multi-palavra
-    const searchQuery = input
-      .trim()
-      .toLowerCase()
-      .split(/\s+/) // Divide em palavras
-      .join(' '); // Une como uma string novamente para Fuse.js
-
-    // Realiza a busca fuzzy com Fuse.js
-    const results = fuse.search(searchQuery);
-
-    // Retorna os produtos correspondentes
-    return results.map((result) => result.item);
+  const handleSearchKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleSearch();
+    }
   };
 
-  // Função para lidar com a mudança de input
-  const handleProductInputChange = useCallback(
-    (event: React.SyntheticEvent<Element, Event>, newInputValue: string) => {
-      setInputValue(newInputValue);
-    },
-    []
-  );
+  const handleOptionChange = (event: React.ChangeEvent<{}>, newValue: Product) => {
+    setSelectedProduct(newValue);
+  };
 
-  const handleProductChange = (event: any, newProductValue: any) => {
-    if (typeof newProductValue === 'string') {
-      setSelectedProduct(null);
-    } else {
-      setSelectedProduct(newProductValue);
-    }
-  }
+  const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {
+    setPage(newPage);
+  };
 
-  const handleOpenProduct = useCallback(() => setOpenProduct(true), []);
-  const handleCloseProduct = useCallback(() => setOpenProduct(false), []);
+  const handleDeleteProduct = async (productId: number) => {
+    console.log(`handleDeleteProduct: ${productId}`);
+  };
 
   const handleSubmit = async () => {
     const isValidCEP = await validateCEP(cep);
@@ -293,99 +303,11 @@ Orçamento válido por 30 dias.
     setProductsList(updatedProductsList);
   };
 
-  const handleCEPBlur = useCallback(() => {
-    console.log('CEP: ', cep);
-  }, [cep]);
-
-  useEffect(() => {
-    if (openBudget) {
-      const { current: descriptionElement } = descriptionElementRef;
-      if (descriptionElement !== null) {
-        descriptionElement.focus();
-      }
-    }
-  }, [openBudget]);
-
-  useEffect(() => {
-    if (debouncedInputValue.trim() === '') {
-      setOptions([]); // Esvazia as opções se o campo de busca estiver vazio
-    } else {
-      const filteredOptions = filterProducts(debouncedInputValue); // Busca produtos
-      // console.log('Filtered Options:', filteredOptions); // Para debug
-      setOptions(filteredOptions.slice(0, 50)); // Atualiza e Mostra no máximo 50 opções
-    }
-  }, [debouncedInputValue, fuse]);
-
-  useEffect(() => {
-    if (produtosData.length) {
-      setFuse(new Fuse(produtosData, fuseOptions));
-    }
-  }, [produtosData]);
-
-  useEffect(() => {
-    const fetchChatData = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/chat-octa`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const data = await response.json();
-
-        if (Array.isArray(data)) {
-          setAllClients(data.map((item: Cliente) => ({ number: item.number, contact_name: item.contact_name, channel: item.channel, agent_name: item.agent_name })));
-        } else {
-          console.error('Dados inválidos recebidos da API:', data);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar dados do chat:', error);
-      }
-    };
-
-    fetchChatData();
-  }, []); // Executa apenas na montagem do componente
-
-  useEffect(() => {
-    fetchProdutos();
-  }, []);
-
-  useEffect(() => {
-    console.log('O valor de productsList mudou para:', productsList);
-  }, [productsList]);
-
-  useEffect(() => {
-    console.log('CEP não encontrado.', cep);
-  }, [cepError]);
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      return;
-    }
-    setLoading(false);
-  }, [isLoggedIn]);
-
-  // Lógica de filtragem usando Fuse.js
-  useEffect(() => {
-    const result = fuse?.search(inputValue)?.map(({ item }) => item) || [];
-    setFilteredOptions(result); // Atualiza filteredOptions com os resultados da busca
-  }, [inputValue, produtosData]); // Refiltra sempre que o input ou os produtos mudam
-
-  // Atualiza as opções a serem exibidas
-  useEffect(() => {
-    setOptions(filteredOptions); // Atualiza options com filteredOptions
-  }, [filteredOptions]);
-
-  // Indicador de carregamento baseado no input e nas opções filtradas
-  // const loading = filteredOptions.length === 0 && inputValue.length > 0;
-
-
   return (
     <PageContainer title="Orçamento / Gerar" description="Gerar Orçamento da Arte Arena">
       <Breadcrumb title="Orçamento / Gerar" subtitle="Gerencie os Orçamentos da Arte Arena / Adicionar" />
       <ParentCard title="Gerar Novo Orçamento" >
-        <div>
+        <>
           <CustomFormLabel
             sx={{
               mt: 0,
@@ -396,11 +318,11 @@ Orçamento válido por 30 dias.
           </CustomFormLabel>
 
           <Autocomplete
+            fullWidth
             disablePortal
             id="cliente"
             options={allClients}
             getOptionLabel={(option) => `${option.number} :: ${option.contact_name} :: (${option.channel} ${option.agent_name ? ` - ${option.agent_name}` : ''})`}
-            fullWidth
             onChange={(event, value) => setClientId(value ? value.number : '')}
             renderInput={(params) => (
               <CustomTextField {...params} placeholder="Selecione um cliente" aria-label="Selecione um cliente" />
@@ -408,75 +330,59 @@ Orçamento válido por 30 dias.
           />
 
           <div style={{ marginTop: '20px' }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              marginBottom: '20px'
-            }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '20px' }}>
               <div style={{ flex: 1 }}>
-                <Box sx={{ width: '100%' }}>
-                  <Autocomplete
-                    freeSolo
+                {/* Campo de busca com botão */}
+                <Stack spacing={2} direction="row" alignItems="center" mb={2}>
+                  {/* <Autocomplete
                     fullWidth
-                    id="produto-autocomplete"
-                    open={openProduct}
-                    onOpen={handleOpenProduct}
-                    onClose={handleCloseProduct}
-                    value={selectedProduct} // Produto selecionado
-                    inputValue={inputValue}
-                    loading={filteredOptions.length === 0 && inputValue.length > 0}
-                    filterOptions={(x) => x}
-                    onInputChange={handleProductInputChange} // Chama a função de filtragem sem debounce
-                    options={options} // Opções filtradas de produtos
-                    getOptionLabel={(option) => (typeof option === 'string' ? option : option.nome)} // Garante compatibilidade com freeSolo
-                    noOptionsText="Nenhum produto encontrado"
-                    loadingText="Carregando produtos..."
-                    onChange={handleProductChange} // Atualiza o produto selecionado
-                    renderInput={(params) => (
-                      <CustomTextField
-                        {...params}
-                        label="Buscar Produto"
-                        variant="outlined"
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment: (
-                            <>
-                              {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                              {params.InputProps.endAdornment}
-                            </>
-                          ),
-                        }}
-                      />
-                    )}
-                    renderOption={(props, option) => {
-                      // Generate a unique key for each option, even if it's a freeSolo entry
-                      const key = typeof option === 'string' ? option : option.id; // Replace 'id' with the actual unique identifier
-
-                      return (
-                        <li {...props} key={key}>
-                          {option?.nome || ''}
-                        </li>
-                      );
+                    // value={inputValue}
+                    onChange={(event, selectedValue) => {
+                      if (selectedValue) {
+                        setInputValue(selectedValue.nome); // Update input value with selected product name
+                        setSelectedProduct(selectedValue); // Set selected product for adding
+                      } else {
+                        setInputValue(query); // Update input value with search query on clear
+                        setSelectedProduct(null); // Reset selected product
+                      }
                     }}
-                  />
-                </Box>
-              </div>
-
-              <div style={{ marginLeft: '20px' }}>
-                <Button
-                  color="primary"
-                  variant="contained"
-                  onClick={() => {
-                    if (selectedProduct) {
-                      adicionarProduto(selectedProduct);
-                    } else {
-                      alert('Por favor, selecione um produto');
-                    }
-                  }}
-                >
-                  Adicionar
-                </Button>
+                    onInputChange={(event, newInputValue) => {
+                      setInputValue(newInputValue); // Update input value on user input
+                    }}
+                    options={}
+                    getOptionLabel={(option) => option.nome}
+                    renderInput={(params) => (
+                      <CustomTextField {...params} placeholder="Buscar produto..." aria-label="Buscar produto" />
+                    )}
+                  /> */}
+                  <div>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleSearch}
+                      startIcon={<IconSearch />}
+                    >
+                      Buscar
+                    </Button>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ marginLeft: '20px' }}>
+                      <Button
+                        color="primary"
+                        variant="contained"
+                        onClick={() => {
+                          if (selectedProduct) {
+                            adicionarProduto(selectedProduct);
+                          } else {
+                            alert('Por favor, selecione um produto');
+                          }
+                        }}
+                      >
+                        Adicionar
+                      </Button>
+                    </div>
+                  </div>
+                </Stack>
               </div>
             </div>
 
@@ -577,7 +483,7 @@ Orçamento válido por 30 dias.
                 label="CEP do cliente"
                 value={cep}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => setCEP(event.target.value)}
-                onBlur={handleCEPBlur}
+                // onBlur={handleCEPBlur}
                 variant="outlined"
                 size="small"
                 sx={{ width: '200px' }}
@@ -650,7 +556,7 @@ Orçamento válido por 30 dias.
             </DialogActions>
           </Dialog>
 
-        </div>
+        </>
       </ParentCard>
     </PageContainer >
   );

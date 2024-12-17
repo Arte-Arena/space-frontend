@@ -1,16 +1,11 @@
-'use client'
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { unstable_noStore as noStore } from 'next/cache';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
+import { DataGrid } from '@mui/x-data-grid';
 
 interface Pedido {
   id: number;
@@ -25,7 +20,6 @@ interface Pedido {
 }
 
 const ImpressaoScreen = () => {
-
   noStore();
 
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
@@ -33,7 +27,8 @@ const ImpressaoScreen = () => {
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
-    // Fetch the initial page of data from the API
+    // Log fetching data for current page
+    console.log(`Fetching data for page: ${currentPage}`);
     fetchData(currentPage);
   }, [currentPage]);
 
@@ -41,17 +36,23 @@ const ImpressaoScreen = () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedido?page=${page}`, {
+      const response = await fetch(`process.env.NEXT_PUBLIC_API/api/pedido?page=${page}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
 
+      if (!response.ok) {
+        throw new Error(`API request failed with status: ${response.status}`);
+      }
+
       const data: { data: Pedido[]; total_count: number; per_page: number } = await response.json();
 
       setPedidos(data.data);
-
       setTotalPages(Math.ceil(data.total_count / data.per_page));
+
+      // Log successful data fetch
+      console.log(`Successfully fetched data for page: ${currentPage}`);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -69,53 +70,39 @@ const ImpressaoScreen = () => {
     }
   };
 
+  const columns = [
+    { field: 'numero_pedido', headerName: 'Pedido', width: 150 },
+    { field: 'data_prevista', headerName: 'Data Prevista', width: 150 },
+    { field: 'pedido_produto_categoria', headerName: 'Tipos de Produtos', width: 200 },
+    { field: 'pedido_material', headerName: 'Material', width: 100 },
+    { field: 'medida_linear', headerName: 'Medida Linear', width: 100 },
+    { field: 'designer_id', headerName: 'Designer', width: 150 },
+    { field: 'pedido_status_id', headerName: 'Status', width: 100 },
+    { field: 'pedido_tipo_id', headerName: 'Tipo de Pedido', width: 150 },
+  ];
+
   return (
     <PageContainer title="Contas a Pagar e a Receber / Adicionar" description="Contas a Pagar e a Receber da Arte Arena">
       <Breadcrumb title="Contas a Pagar e a Receber / Adicionar" subtitle="Gerencie as contas a pagar e a receber da Arte Arena / Adicionar" />
       <ParentCard title="Impressão">
         <div>
-        <div>
-          <div style={{marginTop: '10px'}}>
+          <div style={{ marginTop: '10px' }}>
             Medida Linear:
           </div>
-          <div style={{marginTop: '10px'}}>
-          Tempo Estimado: 
-            </div> 
-        </div>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Pedido</TableCell>
-                  <TableCell>Data Prevista</TableCell>
-                  <TableCell>Tipos de Produtos</TableCell>
-                  <TableCell>Material</TableCell>
-                  <TableCell>Medida Linear</TableCell>
-                  <TableCell>Designer</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Tipo de Pedido</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {pedidos?.map((pedido: Pedido) => (
-                  <TableRow key={pedido.id}>
-                    <TableCell>{pedido.numero_pedido}</TableCell>
-                    <TableCell>{pedido.data_prevista}</TableCell>
-                    <TableCell>{pedido.pedido_produto_categoria}</TableCell>
-                    <TableCell>{pedido.pedido_material}</TableCell>
-                    <TableCell>{pedido.medida_linear}</TableCell>
-                    <TableCell>{pedido.designer_id}</TableCell>
-                    <TableCell>{pedido.pedido_status_id}</TableCell>
-                    <TableCell>{pedido.pedido_tipo_id}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <div style={{ marginTop: '10px' }}>
+            Tempo Estimado:
+          </div>
+          <DataGrid
+            rows={pedidos}
+            columns={columns}
+            // pageSize={10} // Adjust as needed
+            // rowsPerPageOptions={[5, 10, 20]}
+          // Additional features like sorting, filtering can be added here
+          />
         </div>
       </ParentCard>
     </PageContainer>
   );
 };
 
-export default ImpressaoScreen;
+export default ImpressaoScreen
