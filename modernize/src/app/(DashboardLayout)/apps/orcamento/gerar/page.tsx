@@ -159,7 +159,7 @@ const OrcamentoGerarScreen = () => {
         console.error('Dados inválidos recebidos da API:', dataProducts);
       }
     } else {
-      console.warn('Os dados de produtos não foram enconrtados.');
+      console.warn('Os dados de produtos não foram encontrados.');
     }
   }, [dataProducts]);
 
