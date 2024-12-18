@@ -27,6 +27,7 @@ import {
   IconBuildingStore,
   IconBuildingFactory,
   IconZoomMoney,
+  IconStack3,
   IconAward,
   IconBoxMultiple,
   IconPoint,
@@ -406,6 +407,12 @@ const Menuitems: MenuitemsType[] = [
     title: "Calendar",
     icon: IconCalendar,
     href: "/apps/calendar",
+  },
+  {
+    id: uniqueId(),
+    title: "Estoque",
+    icon: IconStack3,
+    href: "/apps/estoque",
   },
   // {
   //   id: uniqueId(),

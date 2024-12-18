@@ -59,6 +59,7 @@ const OrcamentoGerarScreen = () => {
   const isLoggedIn = useAuth();
   const [clientId, setClientId] = useState('');
   const [allClients, setAllClients] = useState<Cliente[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // Armazenando o produto selecionado
@@ -91,17 +92,13 @@ const OrcamentoGerarScreen = () => {
   useEffect(() => {
     if (dataClients) {
       console.log('dataClients:', dataClients);
-      if (dataClients) {
-        console.log('Dados de Clientes:', dataClients);
-
-        if (Array.isArray(dataClients)) {
-          setAllClients(dataClients.map((item: Cliente) => ({ number: item.number, contact_name: item.contact_name, channel: item.channel, agent_name: item.agent_name })));
-        } else {
-          console.error('Dados inválidos recebidos da API:', dataClients);
-        }
+      if (Array.isArray(dataClients)) {
+        setAllClients(dataClients.map((item: Cliente) => ({ number: item.number, contact_name: item.contact_name, channel: item.channel, agent_name: item.agent_name })));
       } else {
-        console.warn('A propriedade "data" não foi encontrada na resposta.');
+        console.error('Dados inválidos recebidos da API:', dataClients);
       }
+    } else {
+      console.warn('Os dados de clientes não foram encontrados.');
     }
   }, [dataClients]);
 
@@ -123,38 +120,56 @@ const OrcamentoGerarScreen = () => {
     }
   }, [allClients]);
 
-  const optionsProducts = [
-    { id: 1, nome: 'Bandeira Personalizada', preco: 10.99, prazo: 3, peso: 0.5, comprimento: 10, largura: 5, altura: 5, quantidade: 1 },
-    { id: 2, nome: 'Uniformes Personalizados', preco: 20.99, prazo: 5, peso: 1, comprimento: 20, largura: 10, altura: 10, quantidade: 1 },
-    { id: 3, nome: 'Bandeiras Politicas', preco: 30.99, prazo: 7, peso: 1.5, comprimento: 30, largura: 15, altura: 15, quantidade: 1 },
-    { id: 4, nome: 'Bandeiras Politicas para Carros', preco: 40.99, prazo: 10, peso: 2, comprimento: 40, largura: 20, altura: 20, quantidade: 1 },
-    { id: 5, nome: 'Windbanners', preco: 50.99, prazo: 15, peso: 2.5, comprimento: 50, largura: 25, altura: 25, quantidade: 1 },
-    { id: 6, nome: 'Faixas de Mão', preco: 60.99, prazo: 20, peso: 3, comprimento: 60, largura: 30, altura: 30, quantidade: 1 },
-    { id: 7, nome: 'Bandanas', preco: 70.99, prazo: 25, peso: 3.5, comprimento: 70, largura: 35, altura: 35, quantidade: 1 },
-    { id: 8, nome: 'Balaclavas', preco: 80.99, prazo: 30, peso: 4, comprimento: 80, largura: 40, altura: 40, quantidade: 1 },
-    { id: 9, nome: 'Flâmulas', preco: 90.99, prazo: 35, peso: 4.5, comprimento: 90, largura: 45, altura: 45, quantidade: 1 },
-    { id: 10, nome: 'Estandartes', preco: 100.99, prazo: 40, peso: 5, comprimento: 100, largura: 50, altura: 50, quantidade: 1 },
-    { id: 11, nome: 'Canecas de Porcelana', preco: 110.99, prazo: 45, peso: 5.5, comprimento: 110, largura: 55, altura: 55, quantidade: 1 },
-    { id: 12, nome: 'Canecas de Alumínio', preco: 120.99, prazo: 50, peso: 6, comprimento: 120, largura: 60, altura: 60, quantidade: 1 },
-    { id: 13, nome: 'Tirantes de Caneca', preco: 130.99, prazo: 55, peso: 6.5, comprimento: 130, largura: 65, altura: 65, quantidade: 1 },
-    { id: 14, nome: 'Faixa de Campeão', preco: 140.99, prazo: 60, peso: 7, comprimento: 140, largura: 70, altura: 70, quantidade: 1 },
-    { id: 15, nome: 'Chinelo Slide', preco: 150.99, prazo: 65, peso: 7.5, comprimento: 150, largura: 75, altura: 75, quantidade: 1 },
-    { id: 16, nome: 'Chinelo de Dedo', preco: 160.99, prazo: 70, peso: 8, comprimento: 160, largura: 80, altura: 80, quantidade: 1 },
-    { id: 17, nome: 'Faixa de Capitão', preco: 170.99, prazo: 75, peso: 8.5, comprimento: 170, largura: 85, altura: 85, quantidade: 1 },
-    { id: 18, nome: 'Samba Canção', preco: 180.99, prazo: 80, peso: 9, comprimento: 180, largura: 90, altura: 90, quantidade: 1 },
-    { id: 19, nome: 'Short Doll', preco: 190.99, prazo: 85, peso: 9.5, comprimento: 190, largura: 95, altura: 95, quantidade: 1 },
-    { id: 20, nome: 'Sacochila', preco: 200.99, prazo: 90, peso: 10, comprimento: 200, largura: 100, altura: 100, quantidade: 1 },
-    { id: 21, nome: 'Coletes', preco: 210.99, prazo: 95, peso: 10.5, comprimento: 210, largura: 105, altura: 105, quantidade: 1 },
-    { id: 22, nome: 'Abadás', preco: 220.99, prazo: 100, peso: 11, comprimento: 220, largura: 110, altura: 110, quantidade: 1 },
-    { id: 23, nome: 'Cachecol', preco: 230.99, prazo: 105, peso: 11.5, comprimento: 230, largura: 115, altura: 115, quantidade: 1 },
-    { id: 24, nome: 'Bandeiras de Mesa', preco: 240.99, prazo: 110, peso: 12, comprimento: 240, largura: 120, altura: 120, quantidade: 1 },
-    { id: 26, nome: 'Bandeiras para Carros', preco: 260.99, prazo: 120, peso: 13, comprimento: 260, largura: 130, altura: 130, quantidade: 1 },
-    { id: 27, nome: 'Almofadas', preco: 270.99, prazo: 125, peso: 13.5, comprimento: 270, largura: 135, altura: 135, quantidade: 1 },
-    { id: 28, nome: 'Roupão', preco: 280.99, prazo: 130, peso: 14, comprimento: 280, largura: 140, altura: 140, quantidade: 1 },
-    { id: 29, nome: 'Toalhas', preco: 290.99, prazo: 135, peso: 14.5, comprimento: 290, largura: 145, altura: 145, quantidade: 1 }
-  ];
 
-  const productNames = optionsProducts.map((product) => product.nome);
+  // em vez de usar essa lista, 
+  // puxar do Tiny, apenas os que estão
+  // personalizado.
+  // query: Personalizado
+
+
+  const { isFetching: isFetchingProducts, error: errorProducts, data: dataProducts } = useQuery({
+    queryKey: ['productData'],
+    queryFn: () =>
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/produto-orcamento`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }).then((res) => res.json()),
+  });
+
+  useEffect(() => {
+    if (dataProducts) {
+      console.log('productData:', dataProducts);
+      if (Array.isArray(dataProducts)) {
+        const transformedProducts = dataProducts.map((item: Product) => ({
+          id: item.id,
+          nome: item.nome,
+          preco: item.preco,
+          prazo: (item as any).dias_preparacao,
+          peso: (item as any).peso_liquido,
+          largura: (item as any).largururaEmbalagem,
+          altura: (item as any).alturaEmbalagem,
+          comprimento: (item as any).comprimentoEmbalagem,
+          quantidade: 1
+        }));
+        setAllProducts(transformedProducts);
+      } else {
+        console.error('Dados inválidos recebidos da API:', dataProducts);
+      }
+    } else {
+      console.warn('Os dados de produtos não foram enconrtados.');
+    }
+  }, [dataProducts]);
+
+  useEffect(() => {
+    if (allProducts) {
+      console.log('allProducts:', allProducts);
+    }
+  }, [allProducts]);
+
+  const productNames = allProducts.map((product) => product.nome);
 
   useEffect(() => {
     if (selectedProduct) {
@@ -210,12 +225,12 @@ const OrcamentoGerarScreen = () => {
     );
     setProductsList(updatedProductsList);
   };
-  
+
   const validateCEP = async (cep: string) => {
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
-  
+
       if (response.ok && data.cep) {
         console.log('cep válido');
         console.log(data);
@@ -357,7 +372,7 @@ Orçamento válido por 30 dias.
                     // value={inputValue}
                     onChange={(event, selectedValue) => {
                       if (selectedValue) {
-                        const selectedProduct = optionsProducts.find((product) => product.nome === selectedValue);
+                        const selectedProduct = dataProducts.find((product: Product) => product.nome === selectedValue) as Product | undefined;
                         setSelectedProduct(selectedProduct ? selectedProduct : null); // Set selected product for adding
                       } else {
                         setSelectedProduct(null); // Reset selected product
@@ -399,6 +414,9 @@ Orçamento válido por 30 dias.
                     <TableCell align="right">Quantidade</TableCell>
                     <TableCell align="right">Prazo</TableCell>
                     <TableCell align="right">Peso</TableCell>
+                    <TableCell align="right">Largura</TableCell>
+                    <TableCell align="right">Altura</TableCell>
+                    <TableCell align="right">Comprimento</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -433,7 +451,7 @@ Orçamento válido por 30 dias.
                           }}
                           variant="outlined"
                           size="small"
-                          sx={{ width: '150px' }}
+                          sx={{ width: '110px' }}
                         />
                       </TableCell>
 
@@ -448,7 +466,7 @@ Orçamento válido por 30 dias.
                           type="number"
                           variant="outlined"
                           size="small"
-                          sx={{ width: '90px' }}
+                          sx={{ width: '70px' }}
                         />
                       </TableCell>
 
@@ -463,7 +481,7 @@ Orçamento válido por 30 dias.
                           type="number"
                           variant="outlined"
                           size="small"
-                          sx={{ width: '80px' }}
+                          sx={{ width: '70px' }}
                         />
                       </TableCell>
 
@@ -478,9 +496,55 @@ Orçamento válido por 30 dias.
                           type="number"
                           variant="outlined"
                           size="small"
-                          sx={{ width: '100px' }}
+                          sx={{ width: '70px' }}
                         />
                       </TableCell>
+
+                      <TableCell align="right">
+                        <CustomTextField
+                          value={product.largura}
+                          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                            const newProductValue = Math.max(0, +event.target.value);
+                            const updatedProduct = { ...product, largura: newProductValue };
+                            atualizarProduto(updatedProduct);
+                          }}
+                          type="number"
+                          variant="outlined"
+                          size="small"
+                          sx={{ width: '70px' }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="right">
+                        <CustomTextField
+                          value={product.altura}
+                          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                            const newProductValue = Math.max(0, +event.target.value);
+                            const updatedProduct = { ...product, altura: newProductValue };
+                            atualizarProduto(updatedProduct);
+                          }}
+                          type="number"
+                          variant="outlined"
+                          size="small"
+                          sx={{ width: '70px' }}
+                        />
+                      </TableCell>
+
+                      <TableCell align="right">
+                        <CustomTextField
+                          value={product.comprimento}
+                          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                            const newProductValue = Math.max(0, +event.target.value);
+                            const updatedProduct = { ...product, peso: newProductValue };
+                            atualizarProduto(updatedProduct);
+                          }}
+                          type="number"
+                          variant="outlined"
+                          size="small"
+                          sx={{ width: '70px' }}
+                        />
+                      </TableCell>
+
                       <TableCell align="right">
                         <IconButton onClick={() => removerProduto(product)}>
                           <DeleteIcon />
@@ -537,6 +601,8 @@ Orçamento válido por 30 dias.
                   <FormControlLabel value={"Retirada - R$ 0,00"} control={<Radio />} label="Retirada" />
                   <FormControlLabel value={"PAC - R$ " + precoPac} control={<Radio />} label="PAC" />
                   <FormControlLabel value={"SEDEX R$ " + precoSedex} control={<Radio />} label="SEDEX" />
+                  (sedex 10, sedex 12... (ver se tem disponível pra esse)
+                  essas opções, somente depois do blur do CEP.
                 </RadioGroup>
               </FormControl>
             </Box>
