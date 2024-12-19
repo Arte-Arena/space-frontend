@@ -19,7 +19,7 @@ import Paper from '@mui/material/Paper';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { NumericFormat } from 'react-number-format';
-import { IconCopy } from '@tabler/icons-react';
+import { IconCopy, IconPlus, IconMinus } from '@tabler/icons-react';
 import {
   Button,
   Dialog,
@@ -120,13 +120,6 @@ const OrcamentoGerarScreen = () => {
     }
   }, [allClients]);
 
-
-  // em vez de usar essa lista, 
-  // puxar do Tiny, apenas os que estão
-  // personalizado.
-  // query: Personalizado
-
-
   const { isFetching: isFetchingProducts, error: errorProducts, data: dataProducts } = useQuery({
     queryKey: ['productData'],
     queryFn: () =>
@@ -173,6 +166,7 @@ const OrcamentoGerarScreen = () => {
 
   useEffect(() => {
     if (selectedProduct) {
+      adicionarProduto(selectedProduct);
       console.log('selectedProduct:', selectedProduct);
     }
   }, [selectedProduct]);
@@ -202,7 +196,7 @@ const OrcamentoGerarScreen = () => {
     }
   }
 
-  const removerProduto = (productToRemove: Product) => {
+  const removerProdutoUnidade = (productToRemove: Product) => {
     const updatedProductsList = productsList.map((product) => {
       if (product.id === productToRemove.id) {
         if (product.quantidade > 1) {
@@ -218,6 +212,11 @@ const OrcamentoGerarScreen = () => {
 
     // Remove os elementos null (produtos removidos) do array
     setProductsList(updatedProductsList.filter((product): product is Product => product !== null));
+  };
+
+  const removerProduto = (productToRemove: Product) => {
+    const updatedProductsList = productsList.filter((product) => product.id !== productToRemove.id);
+    setProductsList(updatedProductsList);
   };
 
   const atualizarProduto = (updatedProduct: Product) => {
@@ -384,24 +383,6 @@ Orçamento válido por 30 dias.
                     )}
                   />
 
-                  <div style={{ flex: 1 }}>
-                    <div style={{ marginLeft: '20px' }}>
-                      <Button
-                        color="primary"
-                        variant="contained"
-                        onClick={() => {
-                          if (selectedProduct) {
-                            adicionarProduto(selectedProduct);
-                          } else {
-                            alert('Por favor, selecione um produto');
-                          }
-                        }}
-                        disabled={!selectedProduct}
-                      >
-                        Adicionar
-                      </Button>
-                    </div>
-                  </div>
                 </Stack>
               </div>
             </div>
@@ -546,9 +527,15 @@ Orçamento válido por 30 dias.
                         />
                       </TableCell>
 
-                      <TableCell align="right">
+                      <TableCell align="right" sx={{ display: 'flex', gap: 1 }}>
                         <IconButton onClick={() => removerProduto(product)}>
                           <DeleteIcon />
+                        </IconButton>
+                        <IconButton onClick={() => removerProdutoUnidade(product)}>
+                          <IconMinus />
+                        </IconButton>
+                        <IconButton onClick={() => adicionarProduto(product)}>
+                          <IconPlus />
                         </IconButton>
                       </TableCell>
                     </TableRow>
