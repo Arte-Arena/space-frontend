@@ -130,7 +130,7 @@ const OrcamentoGerarScreen = () => {
   const { isFetching: isFetchingProducts, error: errorProducts, data: dataProducts } = useQuery({
     queryKey: ['productData'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/produto-orcamento`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/produto-personalizad`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -184,9 +184,9 @@ const OrcamentoGerarScreen = () => {
   }, [productsList]);
 
   function adicionarProduto(novoProduto: Product) {
-
     // Se já está na productsList, não adiciona novamente, soma 1 na sua quantidade.
     const existingProduct = productsList.find((product) => product.id === novoProduto.id);
+
     if (existingProduct) {
       const updatedProduct = {
         ...existingProduct,
@@ -197,7 +197,8 @@ const OrcamentoGerarScreen = () => {
       );
       setProductsList(updatedProductsList);
     } else {
-      setProductsList([...productsList, novoProduto]);
+      // Adiciona o novo produto com quantidade 1
+      setProductsList([...productsList, { ...novoProduto, quantidade: 1 }]);
     }
   }
 
