@@ -72,6 +72,8 @@ const OrcamentoGerarScreen = () => {
   const [shippingOption, setShippingOption] = useState('');
   const [precoPac, setPrecoPac] = useState('');
   const [precoSedex, setPrecoSedex] = useState('');
+  const [precoSedex10, setPrecoSedex10] = useState('');
+  const [precoSedex12, setPrecoSedex12] = useState('');
   const descriptionElementRef = React.useRef<HTMLElement>(null);
 
 
@@ -191,8 +193,7 @@ const OrcamentoGerarScreen = () => {
       );
       setProductsList(updatedProductsList);
     } else {
-      // Adiciona o novo produto com quantidade 1
-      setProductsList([...productsList, { ...novoProduto, quantidade: 1 }]);
+      setProductsList([...productsList, { ...novoProduto, quantidade: 1, preco: Number(novoProduto.preco) }]);
     }
   }
 
@@ -283,13 +284,14 @@ const OrcamentoGerarScreen = () => {
     const larguraPrecoTotal = 15;
 
     productsList.forEach((product) => {
+
       const produtoTotal = product.preco * product.quantidade;
 
       // Formatação da linha do produto para garantir alinhamento
       const quantidade = `${product.quantidade} un`.padEnd(larguraMaxima, ' ');
       const nomeProduto = product.nome.padEnd(larguraMaxima, ' ');
-      const precoUnitario = `R$${product.preco.toFixed(2)}`.padStart(larguraPrecoTotal, ' ');
-      const totalProduto = `R$${produtoTotal.toFixed(2)}`.padStart(larguraPrecoTotal, ' ');
+      const precoUnitario = `R$ ${product.preco.toFixed(2)}`.padStart(larguraPrecoTotal, ' ');
+      const totalProduto = `R$ ${produtoTotal.toFixed(2)}`.padStart(larguraPrecoTotal, ' ');
 
       // Concatena as informações do produto
       produtosTexto += `${quantidade} ${nomeProduto} ${precoUnitario} ${totalProduto}\n`;
@@ -306,9 +308,9 @@ const OrcamentoGerarScreen = () => {
 
     const textoOrcamento = `
 ${produtosTexto.trim()}
-Frete:        R$${frete.toFixed(2)} - (Dia da postagem + ${prazoEnvio} dias úteis via Correios Sedex)
+Frete:        R$ ${frete.toFixed(2)} - (Dia da postagem + ${prazoEnvio} dias úteis via Correios Sedex)
   
-Total:        R$${totalOrçamento.toFixed(2)}
+Total:        R$ ${totalOrçamento.toFixed(2)}
   
 Prazo para confecção é de ${prazoParaConfecao} dias úteis + prazo de envio.
 Prazo inicia-se após aprovação da arte e pagamento confirmado.
@@ -448,7 +450,18 @@ Orçamento válido por 30 dias.
                           type="number"
                           variant="outlined"
                           size="small"
-                          sx={{ width: '70px' }}
+                          sx={{
+                            width: '50px',
+                            '& input[type=number]::-webkit-inner-spin-button': {
+                              display: 'none',
+                            },
+                            '& input[type=number]::-webkit-outer-spin-button': {
+                              display: 'none',
+                            },
+                            '& input[type=number]': {
+                              MozAppearance: 'textfield', // Para Firefox
+                            },
+                          }}
                         />
                       </TableCell>
 
@@ -463,7 +476,18 @@ Orçamento válido por 30 dias.
                           type="number"
                           variant="outlined"
                           size="small"
-                          sx={{ width: '70px' }}
+                          sx={{
+                            width: '50px',
+                            '& input[type=number]::-webkit-inner-spin-button': {
+                              display: 'none',
+                            },
+                            '& input[type=number]::-webkit-outer-spin-button': {
+                              display: 'none',
+                            },
+                            '& input[type=number]': {
+                              MozAppearance: 'textfield', // Para Firefox
+                            },
+                          }}
                         />
                       </TableCell>
 
@@ -478,7 +502,18 @@ Orçamento válido por 30 dias.
                           type="number"
                           variant="outlined"
                           size="small"
-                          sx={{ width: '70px' }}
+                          sx={{
+                            width: '70px',
+                            '& input[type=number]::-webkit-inner-spin-button': {
+                              display: 'none',
+                            },
+                            '& input[type=number]::-webkit-outer-spin-button': {
+                              display: 'none',
+                            },
+                            '& input[type=number]': {
+                              MozAppearance: 'textfield', // Para Firefox
+                            },
+                          }}
                         />
                       </TableCell>
 
@@ -493,7 +528,18 @@ Orçamento válido por 30 dias.
                           type="number"
                           variant="outlined"
                           size="small"
-                          sx={{ width: '70px' }}
+                          sx={{
+                            width: '70px',
+                            '& input[type=number]::-webkit-inner-spin-button': {
+                              display: 'none',
+                            },
+                            '& input[type=number]::-webkit-outer-spin-button': {
+                              display: 'none',
+                            },
+                            '& input[type=number]': {
+                              MozAppearance: 'textfield', // Para Firefox
+                            },
+                          }}
                         />
                       </TableCell>
 
@@ -508,7 +554,18 @@ Orçamento válido por 30 dias.
                           type="number"
                           variant="outlined"
                           size="small"
-                          sx={{ width: '70px' }}
+                          sx={{
+                            width: '70px',
+                            '& input[type=number]::-webkit-inner-spin-button': {
+                              display: 'none',
+                            },
+                            '& input[type=number]::-webkit-outer-spin-button': {
+                              display: 'none',
+                            },
+                            '& input[type=number]': {
+                              MozAppearance: 'textfield', // Para Firefox
+                            },
+                          }}
                         />
                       </TableCell>
 
@@ -523,7 +580,18 @@ Orçamento válido por 30 dias.
                           type="number"
                           variant="outlined"
                           size="small"
-                          sx={{ width: '70px' }}
+                          sx={{
+                            width: '70px',
+                            '& input[type=number]::-webkit-inner-spin-button': {
+                              display: 'none',
+                            },
+                            '& input[type=number]::-webkit-outer-spin-button': {
+                              display: 'none',
+                            },
+                            '& input[type=number]': {
+                              MozAppearance: 'textfield', // Para Firefox
+                            },
+                          }}
                         />
                       </TableCell>
 
@@ -586,11 +654,11 @@ Orçamento válido por 30 dias.
                   onChange={(event: React.ChangeEvent<HTMLInputElement>) => setShippingOption(event.target.value)}
                   row
                 >
-                  <FormControlLabel value={"Retirada - R$ 0,00"} control={<Radio />} label="Retirada" />
-                  <FormControlLabel value={"PAC - R$ " + precoPac} control={<Radio />} label="PAC" />
-                  <FormControlLabel value={"SEDEX R$ " + precoSedex} control={<Radio />} label="SEDEX" />
-                  (sedex 10, sedex 12... (ver se tem disponível pra esse)
-                  essas opções, somente depois do blur do CEP.
+                  <FormControlLabel value={"Retirada - R$ 0,00"} control={<Radio />} label="Retirada - R$ 0,00" />
+                  <FormControlLabel value={"PAC - R$ " + (precoPac ? precoPac : '')} control={<Radio disabled />} label={precoPac ? "PAC - R$ " + precoPac : "PAC"} />
+                  <FormControlLabel value={"SEDEX - R$ " + precoSedex} control={<Radio disabled />} label={precoSedex ? "SEDEX - R$ " + precoSedex : "SEDEX"} />
+                  <FormControlLabel value={"SEDEX 10 - R$ " + precoSedex10} control={<Radio disabled />} label={precoSedex10 ? "SEDEX 10 - R$ " + precoSedex10 : "SEDEX 10"} />
+                  <FormControlLabel value={"SEDEX 12 - R$ " + precoSedex12} control={<Radio disabled />} label={precoSedex12 ? "SEDEX 12 - R$ " + precoSedex12 : "SEDEX 12"} />
                 </RadioGroup>
               </FormControl>
             </Box>
@@ -602,13 +670,13 @@ Orçamento válido por 30 dias.
                 onClick={handleSubmit}
                 disabled={!shippingOption || !clientId || productsList.length === 0}
               >
-                Visualizar Orçamento
+                Gerar Orçamento
               </Button>
 
-              <IconButton>
+              {/* <IconButton>
                 <IconCopy />
                 <Typography variant="body2">Copiar Orçamento</Typography>
-              </IconButton>
+              </IconButton> */}
             </div>
           </div>
 
