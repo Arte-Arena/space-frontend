@@ -600,6 +600,7 @@ Orçamento válido por 30 dias.
                 color="primary"
                 variant="contained"
                 onClick={handleSubmit}
+                disabled={!shippingOption || !clientId || productsList.length === 0}
               >
                 Visualizar Orçamento
               </Button>
