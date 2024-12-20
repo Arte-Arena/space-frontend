@@ -149,7 +149,7 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>{row.nome_cliente}</TableCell>
                       <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>{new Date(row.updated_at).toLocaleDateString()}</TableCell>
-                      <TableCell>{row.status}</TableCell>
+                      <TableCell>{row.status === "aprovado" || row.status === "reprovado" ? row.status : "pendente"}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
