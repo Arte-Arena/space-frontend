@@ -19,6 +19,8 @@ import { IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import { IconProgressCheck, IconEdit } from '@tabler/icons-react';
+import Tooltip from '@mui/material/Tooltip';
 
 interface Orcamento {
   id: number;
@@ -129,6 +131,7 @@ const OrcamentoBuscarScreen = () => {
                   <TableCell>Data de Criação</TableCell>
                   <TableCell>Data de Última Atualização</TableCell>
                   <TableCell>Status</TableCell>
+                  <TableCell>Ações</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -136,9 +139,9 @@ const OrcamentoBuscarScreen = () => {
                   <React.Fragment key={row.id}>
                     <TableRow>
                       <TableCell>
-                        <IconButton 
-                          aria-label="expand row" 
-                          size="small" 
+                        <IconButton
+                          aria-label="expand row"
+                          size="small"
                           onClick={() => handleToggleRow(row.id)}
                         >
                           {openRow[row.id] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -150,6 +153,31 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>{new Date(row.updated_at).toLocaleDateString()}</TableCell>
                       <TableCell>{row.status === "aprovado" || row.status === "reprovado" ? row.status : "pendente"}</TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1}>
+                          <Tooltip title="Definir Status">
+                            <IconButton
+                              aria-label="set status"
+                              onClick={() => console.log(`Set Status: ${row.id}`)}
+                            >
+                              <IconProgressCheck />
+                            </IconButton>
+                          </Tooltip>
+                          <IconButton
+                            aria-label="edit"
+                            onClick={() => console.log(`Edit: ${row.id}`)}
+                          >
+                            <IconEdit />
+                          </IconButton>
+                          <IconButton
+                            aria-label="delete"
+                            onClick={() => handleDeleteOrcamento(row.id)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Stack>
+                      </TableCell>
+
                     </TableRow>
                     <TableRow>
                       <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
