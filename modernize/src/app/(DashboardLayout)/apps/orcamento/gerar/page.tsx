@@ -7,7 +7,6 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
 import ParentCard from '@/app/components/shared/ParentCard';
 import Autocomplete from '@mui/material/Autocomplete';
-import Typography from '@mui/material/Typography';
 import { useQuery } from '@tanstack/react-query';
 import TableContainer from '@mui/material/TableContainer';
 import TableCell from '@mui/material/TableCell';
@@ -19,7 +18,7 @@ import Paper from '@mui/material/Paper';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { NumericFormat } from 'react-number-format';
-import { IconCopy, IconPlus, IconMinus } from '@tabler/icons-react';
+import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy } from '@tabler/icons-react';
 import {
   Button,
   Dialog,
@@ -33,7 +32,8 @@ import {
   Radio,
   RadioGroup,
   FormControlLabel,
-  Stack
+  Stack,
+  Typography
 } from '@mui/material';
 
 interface Cliente {
@@ -320,8 +320,41 @@ Orçamento válido por 30 dias.
 
     setOrçamentoTexto(textoOrcamento);
     setOpenBudget(true);
+    salvarOrcamento();
   }
 
+  const salvarOrcamento = async () => {
+    const dataBody = {
+      cliente_octa_number: clientId,
+      nome_cliente: clientId,
+      lista_produtos: JSON.stringify(productsList),
+      texto_orcamento: orçamentoTexto,
+      endereco_cep: cep,
+      endereco: address,
+      opcao_entrega: shippingOption,
+      prazo_opcao_entrega: 1,
+      preco_opcao_entrega: 50.66,
+    };
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/upsert-orcamento`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(dataBody),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao salvar orçamento');
+      }
+
+      console.log('Orçamento salvo com sucesso');
+    } catch (error) {
+      console.error('Erro:', error);
+    }
+  };
 
 
   return (
@@ -670,13 +703,9 @@ Orçamento válido por 30 dias.
                 onClick={handleSubmit}
                 disabled={!shippingOption || !clientId || productsList.length === 0}
               >
+                <IconDeviceFloppy style={{ marginRight: '8px' }} />
                 Gerar Orçamento
               </Button>
-
-              {/* <IconButton>
-                <IconCopy />
-                <Typography variant="body2">Copiar Orçamento</Typography>
-              </IconButton> */}
             </div>
           </div>
 
@@ -697,6 +726,10 @@ Orçamento válido por 30 dias.
               </DialogContentText>
             </DialogContent>
             <DialogActions>
+              <IconButton>
+                <IconCopy />
+                <Typography variant="body2">Copiar Orçamento</Typography>
+              </IconButton>
               <Button autoFocus onClick={handleCloseBudget} color="primary">
                 Fechar
               </Button>

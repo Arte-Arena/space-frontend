@@ -34,6 +34,7 @@ import {
   IconAlertCircle,
   IconNotes,
   IconCalendar,
+  IconBuilding,
   IconMail,
   IconTicket,
   IconEdit,
@@ -283,6 +284,12 @@ const Menuitems: MenuitemsType[] = [
         title: "Pedido Interno",
         icon: IconClipboardList,
         href: "/apps/pedido-interno",
+      },
+      {
+        id: uniqueId(),
+        title: "Backoffice",
+        icon: IconBuilding,
+        href: "/apps/orcamento/backoffice",
       },
       {
         id: uniqueId(),
