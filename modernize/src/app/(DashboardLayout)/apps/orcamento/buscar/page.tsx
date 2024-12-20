@@ -19,8 +19,9 @@ import { IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import { IconProgressCheck, IconEdit } from '@tabler/icons-react';
+import { IconProgressCheck, IconEdit, IconCircleCheck, IconBan, IconProgressHelp } from '@tabler/icons-react';
 import Tooltip from '@mui/material/Tooltip';
+import { } from '@tabler/icons-react';
 
 interface Orcamento {
   id: number;
@@ -152,10 +153,29 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>{row.nome_cliente}</TableCell>
                       <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>{new Date(row.updated_at).toLocaleDateString()}</TableCell>
-                      <TableCell>{row.status === "aprovado" || row.status === "reprovado" ? row.status : "pendente"}</TableCell>
+                      <TableCell>
+                        {row.status === "aprovado" ? (
+                          <Stack direction="row" alignItems="center" spacing={1}>
+                            <IconCircleCheck />
+                            <Typography>Aprovado</Typography>
+                          </Stack>
+                        ) : (
+                          row.status === "reprovado" ? (
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <IconBan />
+                              <Typography>Reprovado</Typography>
+                            </Stack>
+                          ) : (
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <IconProgressHelp />
+                              <Typography>Pendente</Typography>
+                            </Stack>
+                          )
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Stack direction="row" spacing={1}>
-                          <Tooltip title="Definir Status">
+                          <Tooltip title="Alterar Status">
                             <IconButton
                               aria-label="set status"
                               onClick={() => console.log(`Set Status: ${row.id}`)}
