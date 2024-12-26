@@ -94,6 +94,7 @@ const OrcamentoGerarScreen = () => {
   const [precoMiniEnvios, setPrecoMiniEnvios] = useState<string | null>(null);
   const [prazoMiniEnvios, setPrazoMiniEnvios] = useState<number | null>(null);
   const [shippingOption, setShippingOption] = useState('');
+  const [previsaoEntrega, setPrevisaoEntrega] = useState<Date | null>(null);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
 
 
@@ -287,7 +288,7 @@ const OrcamentoGerarScreen = () => {
         qtd: productsList.length
       };
 
-      const response = await fetch('http://localhost:8000/api/frete-melhorenvio', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}:8000/api/frete-melhorenvio`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -377,6 +378,30 @@ const OrcamentoGerarScreen = () => {
     }
   };
 
+  // const calcPrevisaoEntrega = (shippingOption: string) => {
+  //   const today = getBrazilTime();
+  //   let days = 0;
+  //   switch (shippingOption) {
+  //     case 'pac':
+  //       days = prazoPac;
+  //       break;
+  //     case 'sedex':
+  //       days = prazoSedex;
+  //       break;
+  //     case 'sedex10':
+  //       days = prazoSedex10;
+  //       break;
+  //     case 'sedex12':
+  //       days = prazoSedex12;
+  //       break;
+  //     case 'minienvios':
+  //       days = prazoMiniEnvios;
+  //       break;
+  //   }
+  //   const previsaoEntrega = new Date(today.getTime() + days * 24 * 60 * 60 * 1000);
+  //   return previsaoEntrega;
+  // };
+
   const handleCloseBudget = () => {
     setOpenBudget(false);
   };
@@ -409,16 +434,29 @@ const OrcamentoGerarScreen = () => {
     // Montando o texto do orçamento
     const prazoParaConfecao = 10; // prazo fixo para confecção
     const prazoEnvio = 3; // dias úteis para envio via Correios
+    const previsaoEntrega = (() => {
+      const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+      return prazoMiniEnvios !== null
+        ? (maxPrazo + prazoMiniEnvios) + " dias."
+        : "não disponível";
+    })();
 
     const textoOrcamento = `
+Lista de Produtos:
+
 ${produtosTexto.trim()}
-Frete:        R$ ${frete.toFixed(2)} - (Dia da postagem + ${prazoEnvio} dias úteis via Correios Sedex)
-  
+
+Frete:        R$ ${frete.toFixed(2)} - (Dia da postagem + ${prazoEnvio} dias úteis via ${shippingOption})
+
 Total:        R$ ${totalOrçamento.toFixed(2)}
-  
+
+Previsão de Entrega: 
+
 Prazo para confecção é de ${prazoParaConfecao} dias úteis + prazo de envio.
 Prazo inicia-se após aprovação da arte e pagamento confirmado.
-  
+
+Considerando confirmação agora, a previsão de envio é de x dias (data da previsao)
+
 Orçamento válido por 30 dias.
 `.trim();
 
@@ -510,7 +548,12 @@ Orçamento válido por 30 dias.
               </LocalizationProvider>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setOpenAnticipation(false)}>Cancelar</Button>
+              <Button onClick={() => {
+                setOpenAnticipation(false);
+                setIsAnticipation(false);
+              }}>
+                Cancelar
+              </Button>
               <Button onClick={() => setOpenAnticipation(false)} autoFocus>
                 Salvar
               </Button>
@@ -851,7 +894,7 @@ Orçamento válido por 30 dias.
                   <Stack direction="column" spacing={1}> {/* Use o Stack para espaçamento */}
                     <FormControlLabel value={"retirada"} control={<Radio />} label="Retirada - R$ 0,00" />
                     <FormControlLabel
-                      value={"pac"}
+                      value={"PAC"}
                       control={<Radio disabled={!precoPac} />}
                       label={precoPac ? (
                         "PAC - R$ " + precoPac +
@@ -867,7 +910,7 @@ Orçamento válido por 30 dias.
                       ) : "PAC"} />
 
                     <FormControlLabel
-                      value={"sedex"}
+                      value={"SEDEX"}
                       control={<Radio disabled={!precoSedex} />}
                       label={precoSedex ? (
                         "SEDEX - R$ " + precoSedex +
@@ -883,7 +926,7 @@ Orçamento válido por 30 dias.
                       ) : "SEDEX"} />
 
                     <FormControlLabel
-                      value={"sedex10"}
+                      value={"SEDEX 10"}
                       control={<Radio disabled={!precoSedex10} />}
                       label={precoSedex10 ? (
                         "SEDEX 10 - R$ " + precoSedex10 +
@@ -899,7 +942,7 @@ Orçamento válido por 30 dias.
                       ) : "SEDEX 10"} />
 
                     <FormControlLabel
-                      value={"sedex12"}
+                      value={"SEDEX 12"}
                       control={<Radio disabled={!precoSedex12} />}
                       label={precoSedex12 ? (
                         "SEDEX 12 - R$ " + precoSedex12 +
@@ -915,7 +958,7 @@ Orçamento válido por 30 dias.
                       ) : "SEDEX 12"} />
 
                     <FormControlLabel
-                      value={"minienvios"}
+                      value={"MINI ENVIOS"}
                       control={<Radio disabled={!precoMiniEnvios} />}
                       label={precoMiniEnvios ? (
                         "Mini Envios - R$ " + precoMiniEnvios +
