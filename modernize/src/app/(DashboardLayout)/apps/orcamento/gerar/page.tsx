@@ -288,7 +288,7 @@ const OrcamentoGerarScreen = () => {
         qtd: productsList.length
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}:8000/api/frete-melhorenvio`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/frete-melhorenvio`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
