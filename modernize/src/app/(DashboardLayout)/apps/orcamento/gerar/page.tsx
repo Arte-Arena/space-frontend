@@ -33,8 +33,13 @@ import {
   RadioGroup,
   FormControlLabel,
   Stack,
-  Typography
+  Typography,
+  Checkbox
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import getBrazilTime from '@/utils/brazilTime';
 
 interface Cliente {
   number: string;
@@ -55,8 +60,17 @@ interface Product {
   altura: number;
 }
 
+interface FreteData {
+  name: string;
+  price: string;
+  delivery_time: number;
+}
+
 const OrcamentoGerarScreen = () => {
   const isLoggedIn = useAuth();
+  const [openAnticipation, setOpenAnticipation] = useState(false);
+  const [isAnticipation, setIsAnticipation] = useState(false);
+  const [dataDesejadaEntrega, setDataDesejadaEntrega] = useState<Date | null>(null);
   const [clientId, setClientId] = useState('');
   const [allClients, setAllClients] = useState<Cliente[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -69,11 +83,17 @@ const OrcamentoGerarScreen = () => {
   const [cep, setCEP] = useState('');
   const [cepError, setCepError] = useState(false);
   const [address, setAddress] = useState('');
+  const [precoPac, setPrecoPac] = useState<string | null>(null);
+  const [prazoPac, setPrazoPac] = useState<number | null>(null);
+  const [precoSedex, setPrecoSedex] = useState<string | null>(null);
+  const [prazoSedex, setPrazoSedex] = useState<number | null>(null);
+  const [precoSedex10, setPrecoSedex10] = useState<string | null>(null);
+  const [prazoSedex10, setPrazoSedex10] = useState<number | null>(null);
+  const [precoSedex12, setPrecoSedex12] = useState<string | null>(null);
+  const [prazoSedex12, setPrazoSedex12] = useState<number | null>(null);
+  const [precoMiniEnvios, setPrecoMiniEnvios] = useState<string | null>(null);
+  const [prazoMiniEnvios, setPrazoMiniEnvios] = useState<number | null>(null);
   const [shippingOption, setShippingOption] = useState('');
-  const [precoPac, setPrecoPac] = useState('');
-  const [precoSedex, setPrecoSedex] = useState('');
-  const [precoSedex10, setPrecoSedex10] = useState('');
-  const [precoSedex12, setPrecoSedex12] = useState('');
   const descriptionElementRef = React.useRef<HTMLElement>(null);
 
 
@@ -193,7 +213,15 @@ const OrcamentoGerarScreen = () => {
       );
       setProductsList(updatedProductsList);
     } else {
-      setProductsList([...productsList, { ...novoProduto, quantidade: 1, preco: Number(novoProduto.preco) }]);
+      setProductsList([
+        ...productsList,
+        {
+          ...novoProduto,
+          quantidade: 1,
+          preco: Number(novoProduto.preco),
+          prazo: novoProduto.prazo ? novoProduto.prazo : 0,
+        },
+      ]);
     }
   }
 
@@ -247,6 +275,80 @@ const OrcamentoGerarScreen = () => {
     }
   };
 
+  const getFrete = async (cepTo: string) => {
+    try {
+      const body = {
+        cepTo,
+        largura: productsList.reduce((max, product) => Math.max(max, product.largura), 0),
+        altura: productsList.reduce((max, product) => Math.max(max, product.altura), 0),
+        comprimento: productsList.reduce((max, product) => Math.max(max, product.comprimento), 0),
+        peso: productsList.reduce((total, product) => total + product.peso * product.quantidade, 0),
+        valor: productsList.reduce((total, product) => total + product.preco * product.quantidade, 0),
+        qtd: productsList.length
+      };
+
+      const response = await fetch('http://localhost:8000/api/frete-melhorenvio', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch frete');
+      }
+
+      const data: FreteData[] = await response.json(); // Type the data
+
+      const fretesByName: { [key: string]: FreteData } = {};
+
+      data.forEach(frete => {
+        fretesByName[frete.name.toLowerCase().replace(/\s/g, '')] = frete; // Use lowercase and remove spaces for consistent keys
+      });
+
+      console.log('Fretes by name:', fretesByName);
+
+      // Example usage with state updates:
+      if (fretesByName.pac) {
+        setPrecoPac(fretesByName.pac.price);
+        setPrazoPac(fretesByName.pac.delivery_time);
+      }
+
+      if (fretesByName.sedex) {
+        setPrecoSedex(fretesByName.sedex.price);
+        setPrazoSedex(fretesByName.sedex.delivery_time);
+      }
+
+      if (fretesByName.sedex10) {
+        setPrecoSedex10(fretesByName.sedex10.price);
+        setPrazoSedex10(fretesByName.sedex10.delivery_time);
+      }
+
+      if (fretesByName.sedex12) {
+        setPrecoSedex12(fretesByName.sedex12.price);
+        setPrazoSedex12(fretesByName.sedex12.delivery_time);
+      }
+
+      if (fretesByName.minienvios) {
+        setPrecoMiniEnvios(fretesByName.minienvios.price);
+        setPrazoMiniEnvios(fretesByName.minienvios.delivery_time);
+      }
+
+      return fretesByName; // Return the object for other uses if needed
+    } catch (error) {
+      console.error('Error fetching frete:', error);
+    }
+  };
+
+
+  const calcPrevisao = () => {
+    const today = getBrazilTime();
+    console.log('today:', today);
+    return today;
+  };
+
   const handleCEPBlur = async (event: React.FocusEvent<HTMLInputElement>) => {
     const cep = event.target.value;
     const isValidCEP = await validateCEP(cep);
@@ -254,6 +356,8 @@ const OrcamentoGerarScreen = () => {
       setCepError(true);
     } else {
       setCepError(false);
+      getFrete(cep);
+      calcPrevisao();
     }
   };
 
@@ -362,9 +466,67 @@ Orçamento válido por 30 dias.
       <Breadcrumb title="Orçamento / Gerar" subtitle="Gerencie os Orçamentos da Arte Arena / Adicionar" />
       <ParentCard title="Gerar Novo Orçamento" >
         <>
-          <CustomFormLabel
+        <CustomFormLabel
             sx={{
               mt: 0,
+            }}
+            htmlFor="cliente"
+          >
+            Urgência de Entrega
+          </CustomFormLabel>
+
+          <FormControl>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={isAnticipation}
+                  onChange={(event) => {
+                    setIsAnticipation(event.target.checked);
+                    setOpenAnticipation(event.target.checked);
+                  }}
+                />
+              }
+              label="Antecipação"
+            />
+          </FormControl>
+
+          <Dialog
+            open={openAnticipation}
+            onClose={() => setIsAnticipation(false)}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title">
+              {"Defina a data de entrega desejada"}
+            </DialogTitle>
+            <DialogContent>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="Data de entrega"
+                  value={dataDesejadaEntrega}
+                  onChange={(newValue) => setDataDesejadaEntrega(newValue)}
+                  renderInput={(params) => <CustomTextField {...params} />}
+                />
+              </LocalizationProvider>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setOpenAnticipation(false)}>Cancelar</Button>
+              <Button onClick={() => setOpenAnticipation(false)} autoFocus>
+                Salvar
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {isAnticipation && (
+            <Typography variant="body2" color="text Secondary" sx={{ mt: 2 }}>
+              Data de entrega desejada: {dataDesejadaEntrega ? dataDesejadaEntrega.toLocaleDateString('pt-BR') : 'Nenhuma data selecionada'}
+            </Typography>
+          )}
+          
+
+          <CustomFormLabel
+            sx={{
+              mt: 5,
             }}
             htmlFor="cliente"
           >
@@ -429,7 +591,7 @@ Orçamento válido por 30 dias.
                     <TableCell>Produto</TableCell>
                     <TableCell align="right">Preço</TableCell>
                     <TableCell align="right">Quantidade</TableCell>
-                    <TableCell align="right">Prazo</TableCell>
+                    <TableCell align="right">Prazo de Produção</TableCell>
                     <TableCell align="right">Peso</TableCell>
                     <TableCell align="right">Largura</TableCell>
                     <TableCell align="right">Altura</TableCell>
@@ -685,13 +847,90 @@ Orçamento válido por 30 dias.
                   name="controlled-radio-buttons-group"
                   value={shippingOption}
                   onChange={(event: React.ChangeEvent<HTMLInputElement>) => setShippingOption(event.target.value)}
-                  row
                 >
-                  <FormControlLabel value={"Retirada - R$ 0,00"} control={<Radio />} label="Retirada - R$ 0,00" />
-                  <FormControlLabel value={"PAC - R$ " + (precoPac ? precoPac : '')} control={<Radio disabled />} label={precoPac ? "PAC - R$ " + precoPac : "PAC"} />
-                  <FormControlLabel value={"SEDEX - R$ " + precoSedex} control={<Radio disabled />} label={precoSedex ? "SEDEX - R$ " + precoSedex : "SEDEX"} />
-                  <FormControlLabel value={"SEDEX 10 - R$ " + precoSedex10} control={<Radio disabled />} label={precoSedex10 ? "SEDEX 10 - R$ " + precoSedex10 : "SEDEX 10"} />
-                  <FormControlLabel value={"SEDEX 12 - R$ " + precoSedex12} control={<Radio disabled />} label={precoSedex12 ? "SEDEX 12 - R$ " + precoSedex12 : "SEDEX 12"} />
+                  <Stack direction="column" spacing={1}> {/* Use o Stack para espaçamento */}
+                    <FormControlLabel value={"retirada"} control={<Radio />} label="Retirada - R$ 0,00" />
+                    <FormControlLabel
+                      value={"pac"}
+                      control={<Radio disabled={!precoPac} />}
+                      label={precoPac ? (
+                        "PAC - R$ " + precoPac +
+                        " - Tempo de transporte: " +
+                        (prazoPac !== null ? prazoPac : "não disponível") +
+                        " dias. Previsão: " +
+                        (() => {
+                          const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                          return prazoPac !== null
+                            ? (maxPrazo + prazoPac) + " dias."
+                            : "não disponível";
+                        })()
+                      ) : "PAC"} />
+
+                    <FormControlLabel
+                      value={"sedex"}
+                      control={<Radio disabled={!precoSedex} />}
+                      label={precoSedex ? (
+                        "SEDEX - R$ " + precoSedex +
+                        " - Tempo de transporte: " +
+                        (prazoSedex !== null ? prazoSedex : "não disponível") +
+                        " dias. Previsão: " +
+                        (() => {
+                          const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                          return prazoSedex !== null
+                            ? (maxPrazo + prazoSedex) + " dias."
+                            : "não disponível";
+                        })()
+                      ) : "SEDEX"} />
+
+                    <FormControlLabel
+                      value={"sedex10"}
+                      control={<Radio disabled={!precoSedex10} />}
+                      label={precoSedex10 ? (
+                        "SEDEX 10 - R$ " + precoSedex10 +
+                        " - Tempo de transporte: " +
+                        (prazoSedex10 !== null ? prazoSedex10 : "não disponível") +
+                        " dias. Previsão: " +
+                        (() => {
+                          const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                          return prazoSedex10 !== null
+                            ? (maxPrazo + prazoSedex10) + " dias."
+                            : "não disponível";
+                        })()
+                      ) : "SEDEX 10"} />
+
+                    <FormControlLabel
+                      value={"sedex12"}
+                      control={<Radio disabled={!precoSedex12} />}
+                      label={precoSedex12 ? (
+                        "SEDEX 12 - R$ " + precoSedex12 +
+                        " - Tempo de transporte: " +
+                        (prazoSedex12 !== null ? prazoSedex12 : "não disponível") +
+                        " dias. Previsão: " +
+                        (() => {
+                          const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                          return prazoSedex12 !== null
+                            ? (maxPrazo + prazoSedex12) + " dias."
+                            : "não disponível";
+                        })()
+                      ) : "SEDEX 12"} />
+
+                    <FormControlLabel
+                      value={"minienvios"}
+                      control={<Radio disabled={!precoMiniEnvios} />}
+                      label={precoMiniEnvios ? (
+                        "Mini Envios - R$ " + precoMiniEnvios +
+                        " - Tempo de transporte: " +
+                        (prazoMiniEnvios !== null ? prazoMiniEnvios : "não disponível") +
+                        " dias. Previsão: " +
+                        (() => {
+                          const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                          return prazoMiniEnvios !== null
+                            ? (maxPrazo + prazoMiniEnvios) + " dias."
+                            : "não disponível";
+                        })()
+                      ) : "Mini Envios"}
+                    />
+                  </Stack>
                 </RadioGroup>
               </FormControl>
             </Box>
