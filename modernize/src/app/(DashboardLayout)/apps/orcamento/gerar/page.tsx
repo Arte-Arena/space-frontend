@@ -68,15 +68,14 @@ interface FreteData {
 
 const OrcamentoGerarScreen = () => {
   const isLoggedIn = useAuth();
-  const [isUrgentDeliverySelected, setIsUrgentDeliverySelected] = useState(false);
-  const [isAnticipation, setIsAnticipation] = useState(false);
-  const [openAnticipation, setOpenAnticipation] = useState(false);
-  const [dataDesejadaEntrega, setDataDesejadaEntrega] = useState<Date | null>(null);
-  const [clientId, setClientId] = useState('');
+  const [isLoadedClients, setIsLoadedClients] = useState(false);
   const [allClients, setAllClients] = useState<Cliente[]>([]);
+  const [clientId, setClientId] = useState('');
+  const [isLoadedProducts, setIsLoadedProducts] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
-  const [inputValue, setInputValue] = useState('');
+  const [produtosComAtributoZerado, setProdutosComAtributoZerado] = useState(false);
+  // const [inputValue, setInputValue] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // Armazenando o produto selecionado
   const [openBudget, setOpenBudget] = React.useState(false);
   const [scroll, setScroll] = React.useState<DialogProps['scroll']>('paper');
@@ -97,7 +96,11 @@ const OrcamentoGerarScreen = () => {
   const [precoMiniEnvios, setPrecoMiniEnvios] = useState<string | null>(null);
   const [prazoMiniEnvios, setPrazoMiniEnvios] = useState<number | null>(null);
   const [shippingOption, setShippingOption] = useState('');
-  const [previsaoEntrega, setPrevisaoEntrega] = useState<Date | null>(null);
+  const [isUrgentDeliverySelected, setIsUrgentDeliverySelected] = useState(false);
+  const [isAnticipation, setIsAnticipation] = useState(false);
+  const [openAnticipation, setOpenAnticipation] = useState(false);
+  const [dataDesejadaEntrega, setDataDesejadaEntrega] = useState<Date | null>(null);
+  const [previsaoEntrega, setPrevisaoEntrega] = useState<number | null>(null);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
 
   const accessToken = localStorage.getItem('accessToken');
@@ -126,6 +129,12 @@ const OrcamentoGerarScreen = () => {
       console.warn('Os dados de clientes não foram encontrados.');
     }
   }, [dataClients]);
+
+  useEffect(() => {
+    if (allClients.length > 0 && !isFetchingClients && !errorClients) {
+      setIsLoadedClients(true);
+    }
+  }, [allClients, isFetchingClients, errorClients]);
 
   useEffect(() => {
     if (allClients) {
@@ -180,6 +189,12 @@ const OrcamentoGerarScreen = () => {
       console.warn('Os dados de produtos não foram encontrados.');
     }
   }, [dataProducts]);
+
+  useEffect(() => {
+    if (allProducts.length > 0 && !isFetchingProducts && !errorProducts) {
+      setIsLoadedProducts(true);
+    }
+  }, [allProducts, isFetchingProducts, errorProducts]);
 
   useEffect(() => {
     if (allProducts) {
@@ -257,6 +272,24 @@ const OrcamentoGerarScreen = () => {
     );
     setProductsList(updatedProductsList);
   };
+
+useEffect(() => {
+  const checkZeroAttribute = () => {
+    return productsList.some((product) =>
+      Object.values(product).some((value) => value === 0)
+    );
+  };
+
+  setProdutosComAtributoZerado(checkZeroAttribute());
+}, [productsList]);
+
+useEffect(() => {
+  console.log(
+    `produtosComAtributoZerado (após atualização): ${produtosComAtributoZerado ? 'SIM' : 'NÃO'}`
+  );
+
+}, [produtosComAtributoZerado]); // Executa este useEffect quando produtosComAtributoZerado mudar
+
 
   const validateCEP = async (cep: string) => {
     try {
@@ -350,8 +383,60 @@ const OrcamentoGerarScreen = () => {
 
   const calcPrevisao = () => {
     const today = getBrazilTime();
-    console.log('today:', today);
-    return today;
+
+    console.log('Iniciando calculo de previs o de entrega');
+
+    let prazoFrete: number | null = null;
+    if (shippingOption) {
+      switch (shippingOption) {
+        case 'RETIRADA':
+          prazoFrete = 0;
+          break;
+        case 'MINIENVIOS':
+          prazoFrete = prazoMiniEnvios;
+          break;
+        case 'PAC':
+          prazoFrete = prazoPac;
+          break;
+        case 'SEDEX':
+          prazoFrete = prazoSedex;
+          break;
+        case 'SEDEX10':
+          prazoFrete = prazoSedex10;
+          break;
+        case 'SEDEX12':
+          prazoFrete = prazoSedex12;
+          break;
+        default:
+          console.error('Invalid shipping option:', shippingOption);
+          prazoFrete = 0; // Set a default value or handle the error
+      }
+    }
+
+    if (shippingOption) {
+      console.log('Opção de entrega definida pelo usuário:', shippingOption);
+      console.log('prazo do frete é', prazoFrete);
+    }
+
+
+
+    const prazoProducao = Math.max(...productsList.map(product => product.prazo ?? 0));
+    let prevEntrega: number | boolean;
+
+    if (prazoFrete !== null) {
+      prevEntrega = prazoProducao + prazoFrete;
+    } else {
+      console.error('prazoFrete is null');
+      prevEntrega = false;
+    }
+
+    if (typeof prevEntrega === 'number') {
+      setPrevisaoEntrega(prevEntrega);
+      console.log('Previsão de entrega definida!', prevEntrega);
+    } else {
+      console.error('Falta Error: Invalid type for prevEntrega');
+    }
+    return prevEntrega;
   };
 
   const handleCEPBlur = async (event: React.FocusEvent<HTMLInputElement>) => {
@@ -362,7 +447,6 @@ const OrcamentoGerarScreen = () => {
     } else {
       setCepError(false);
       getFrete(cep);
-      calcPrevisao();
     }
   };
 
@@ -381,30 +465,6 @@ const OrcamentoGerarScreen = () => {
       gerarOrcamento();
     }
   };
-
-  // const calcPrevisaoEntrega = (shippingOption: string) => {
-  //   const today = getBrazilTime();
-  //   let days = 0;
-  //   switch (shippingOption) {
-  //     case 'pac':
-  //       days = prazoPac;
-  //       break;
-  //     case 'sedex':
-  //       days = prazoSedex;
-  //       break;
-  //     case 'sedex10':
-  //       days = prazoSedex10;
-  //       break;
-  //     case 'sedex12':
-  //       days = prazoSedex12;
-  //       break;
-  //     case 'minienvios':
-  //       days = prazoMiniEnvios;
-  //       break;
-  //   }
-  //   const previsaoEntrega = new Date(today.getTime() + days * 24 * 60 * 60 * 1000);
-  //   return previsaoEntrega;
-  // };
 
   const handleCloseBudget = () => {
     setOpenBudget(false);
@@ -514,85 +574,6 @@ Orçamento válido por 30 dias.
             }}
             htmlFor="cliente"
           >
-            Urgência de Entrega
-          </CustomFormLabel>
-
-          <FormControl>
-            <RadioGroup
-              aria-label="urgencia"
-              name="urgencia"
-              value={isAnticipation ? 'antecipacao' : 'prazoNormal'}
-              onChange={(event) => {
-                if (event.target.value === 'antecipacao') {
-
-                  setIsAnticipation(true);
-                  setOpenAnticipation(true);
-                } else {
-                  setIsAnticipation(false);
-                }
-              }}
-              onClick={() => setIsUrgentDeliverySelected(true)}
-            >
-              <FormControlLabel
-                value="prazoNormal"
-                control={<Radio />}
-                label="Prazo Normal"
-                checked={isUrgentDeliverySelected && !isAnticipation}
-              />
-              <FormControlLabel
-                value="antecipacao"
-                control={<Radio />}
-                label="Antecipação"
-                onClick={() => setOpenAnticipation(false)}
-                checked={isUrgentDeliverySelected && isAnticipation}
-              />
-            </RadioGroup>
-          </FormControl>
-
-          <Dialog
-            open={openAnticipation}
-            onClose={() => setIsAnticipation(false)}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-          >
-            <DialogTitle id="alert-dialog-title">
-              {"Defina a data de entrega desejada"}
-            </DialogTitle>
-            <DialogContent>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  label="Data de entrega"
-                  value={dataDesejadaEntrega}
-                  onChange={(newValue) => setDataDesejadaEntrega(newValue)}
-                  renderInput={(params) => <CustomTextField {...params} />}
-                />
-              </LocalizationProvider>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => {
-                setOpenAnticipation(false);
-                setIsAnticipation(false);
-              }}>
-                Cancelar
-              </Button>
-              <Button onClick={() => setOpenAnticipation(false)} autoFocus>
-                Salvar
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {isAnticipation && (
-            <Typography variant="body2" color="text Secondary" sx={{ mt: 2 }}>
-              Data de entrega desejada: {dataDesejadaEntrega ? dataDesejadaEntrega.toLocaleDateString('pt-BR') : 'Nenhuma data selecionada'}
-            </Typography>
-          )}
-
-          <CustomFormLabel
-            sx={{
-              mt: 5,
-            }}
-            htmlFor="cliente"
-          >
             Cliente
           </CustomFormLabel>
 
@@ -600,7 +581,8 @@ Orçamento válido por 30 dias.
             fullWidth
             disablePortal
             id="cliente"
-            disabled={!isUrgentDeliverySelected}
+            loading={!isLoadedClients}
+            disabled={!isLoadedClients}
             options={allClients}
             getOptionLabel={(option) => `${option.number} :: ${option.contact_name} :: (${option.channel} ${option.agent_name ? ` - ${option.agent_name}` : ''})`}
             onChange={(event, value) => setClientId(value ? value.number : '')}
@@ -627,7 +609,7 @@ Orçamento válido por 30 dias.
                     id="produto"
                     options={productNames}
                     getOptionLabel={(option) => option}
-                    disabled={!isUrgentDeliverySelected || !clientId}
+                    disabled={!isLoadedProducts || !clientId}
                     onChange={(event, selectedValue) => {
                       if (selectedValue) {
                         const selectedProduct = dataProducts.find((product: Product) => product.nome === selectedValue) as Product | undefined;
@@ -894,7 +876,7 @@ Orçamento válido por 30 dias.
                 variant="outlined"
                 size="small"
                 sx={{ width: '200px' }}
-                disabled={clientId === null || productsList.length === 0}
+                disabled={!clientId || productsList.length === 0 || produtosComAtributoZerado}
               />
             </Box>
 
@@ -929,13 +911,13 @@ Orçamento válido por 30 dias.
                   <Stack direction="column" spacing={1}>
 
                     <FormControlLabel
-                      value={"retirada"}
+                      value={"RETIRADA"}
                       control={<Radio disabled={!clientId || productsList.length === 0} />}
                       label="Retirada - R$ 0,00"
                     />
 
                     <FormControlLabel
-                      value={"MINI ENVIOS"}
+                      value={"MINIENVIOS"}
                       control={<Radio disabled={!precoMiniEnvios} />}
                       label={precoMiniEnvios ? (
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -953,7 +935,12 @@ Orçamento válido por 30 dias.
                             })()}
                           </Typography>
                         </Box>
-                      ) : "Mini Envios"}
+                      ) : (
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                          <Typography sx={{ ml: 1 }}>Mini Envios</Typography>
+                        </Box>
+                      )}
                     />
 
                     <FormControlLabel
@@ -964,18 +951,24 @@ Orçamento válido por 30 dias.
                           <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
                           <Typography sx={{ ml: 1 }}>
                             {"PAC - R$ " + precoPac +
-                            " - Tempo de transporte: " +
-                            (prazoPac !== null ? prazoPac : "não disponível") +
-                            " dias. Previsão: " +
-                            (() => {
-                              const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                              return prazoPac !== null
-                                ? (maxPrazo + prazoPac) + " dias."
-                                : "não disponível";
-                            })()}
+                              " - Tempo de transporte: " +
+                              (prazoPac !== null ? prazoPac : "não disponível") +
+                              " dias. Previsão: " +
+                              (() => {
+                                const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                                return prazoPac !== null
+                                  ? (maxPrazo + prazoPac) + " dias."
+                                  : "não disponível";
+                              })()}
                           </Typography>
                         </Box>
-                      ) : "PAC"} />
+                      ) : (
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                          <Typography sx={{ ml: 1 }}>PAC</Typography>
+                        </Box>
+                      )}
+                    />
 
                     <FormControlLabel
                       value={"SEDEX"}
@@ -985,72 +978,177 @@ Orçamento válido por 30 dias.
                           <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
                           <Typography sx={{ ml: 1 }}>
                             {"SEDEX - R$ " + precoSedex +
-                            " - Tempo de transporte: " +
-                            (prazoSedex !== null ? prazoSedex : "não disponível") +
-                            " dias. Previsão: " +
-                            (() => {
-                              const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                              return prazoSedex !== null
-                                ? (maxPrazo + prazoSedex) + " dias."
-                                : "não disponível";
-                            })()}
+                              " - Tempo de transporte: " +
+                              (prazoSedex !== null ? prazoSedex : "não disponível") +
+                              " dias. Previsão: " +
+                              (() => {
+                                const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                                return prazoSedex !== null
+                                  ? (maxPrazo + prazoSedex) + " dias."
+                                  : "não disponível";
+                              })()}
                           </Typography>
                         </Box>
-                      ) : "SEDEX"} />
+                      ) : (
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                          <Typography sx={{ ml: 1 }}>SEDEX</Typography>
+                        </Box>
+                      )}
+                    />
 
                     <FormControlLabel
-                      value={"SEDEX 10"}
+                      value={"SEDEX10"}
                       control={<Radio disabled={!precoSedex10} />}
                       label={precoSedex10 ? (
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
                           <Typography sx={{ ml: 1 }}>
                             {"SEDEX 10 - R$ " + precoSedex10 +
-                            " - Tempo de transporte: " +
-                            (prazoSedex10 !== null ? prazoSedex10 : "não disponível") +
-                            " dias. Previsão: " +
-                            (() => {
-                              const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                              return prazoSedex10 !== null
-                                ? (maxPrazo + prazoSedex10) + " dias."
-                                : "não disponível";
-                            })()}
+                              " - Tempo de transporte: " +
+                              (prazoSedex10 !== null ? prazoSedex10 : "não disponível") +
+                              " dias. Previsão: " +
+                              (() => {
+                                const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                                return prazoSedex10 !== null
+                                  ? (maxPrazo + prazoSedex10) + " dias."
+                                  : "não disponível";
+                              })()}
                           </Typography>
                         </Box>
-                      ) : "SEDEX 10"} />
+                      ) : (
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                          <Typography sx={{ ml: 1 }}>SEDEX 10</Typography>
+                        </Box>
+                      )}
+                    />
 
                     <FormControlLabel
-                      value={"SEDEX 12"}
+                      value={"SEDEX12"}
                       control={<Radio disabled={!precoSedex12} />}
                       label={precoSedex12 ? (
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
                           <Typography sx={{ ml: 1 }}>
                             {"SEDEX 12 - R$ " + precoSedex12 +
-                            " - Tempo de transporte: " +
-                            (prazoSedex12 !== null ? prazoSedex12 : "não disponível") +
-                            " dias. Previsão: " +
-                            (() => {
-                              const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                              return prazoSedex12 !== null
-                                ? (maxPrazo + prazoSedex12) + " dias."
-                                : "não disponível";
-                            })()}
+                              " - Tempo de transporte: " +
+                              (prazoSedex12 !== null ? prazoSedex12 : "não disponível") +
+                              " dias. Previsão: " +
+                              (() => {
+                                const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                                return prazoSedex12 !== null
+                                  ? (maxPrazo + prazoSedex12) + " dias."
+                                  : "não disponível";
+                              })()}
                           </Typography>
                         </Box>
-                      ) : "SEDEX 12"} />
+                      ) : (
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                          <Typography sx={{ ml: 1 }}>SEDEX 12</Typography>
+                        </Box>
+                      )}
+                    />
 
                   </Stack>
                 </RadioGroup>
               </FormControl>
             </Box>
 
+            <CustomFormLabel
+              sx={{
+                mt: 4,
+              }}
+              htmlFor="cliente"
+            >
+              Urgência de Entrega
+            </CustomFormLabel>
+
+            <FormControl>
+              <RadioGroup
+                aria-label="urgencia"
+                name="urgencia"
+                value={isAnticipation ? 'antecipacao' : 'prazoNormal'}
+                onClick={() => {
+                  setIsUrgentDeliverySelected(true);
+                  calcPrevisao();
+                }}
+              >
+                <FormControlLabel
+                  value="prazoNormal"
+                  control={<Radio />}
+                  label="Prazo Normal"
+                  checked={isUrgentDeliverySelected && !isAnticipation}
+                  disabled={!shippingOption}
+                  onClick={() => {
+                    setIsAnticipation(false);
+                  }}
+                />
+                <FormControlLabel
+                  value="antecipacao"
+                  control={<Radio />}
+                  label="Antecipação"
+                  onClick={() => {
+                    setIsAnticipation(true);
+                    setOpenAnticipation(true);
+                  }}
+                  checked={isUrgentDeliverySelected && isAnticipation}
+                  disabled={!shippingOption}
+                />
+              </RadioGroup>
+            </FormControl>
+
+            <Dialog
+              open={openAnticipation}
+              onClose={() => setIsAnticipation(false)}
+              aria-labelledby="alert-dialog-title"
+              aria-describedby="alert-dialog-description"
+            >
+              <DialogTitle id="alert-dialog-title">
+                {"Defina a data de entrega desejada"}
+              </DialogTitle>
+              <DialogContent>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    label="Data de entrega"
+                    value={dataDesejadaEntrega}
+                    onChange={(newValue) => setDataDesejadaEntrega(newValue)}
+                    renderInput={(params) => <CustomTextField {...params} />}
+                  />
+                </LocalizationProvider>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => {
+                  setOpenAnticipation(false);
+                  setIsAnticipation(false);
+                }}>
+                  Cancelar
+                </Button>
+                <Button onClick={() => setOpenAnticipation(false)} autoFocus>
+                  Salvar
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            {isAnticipation && (
+              <Typography variant="body2" color="text Secondary" sx={{ mt: 2 }}>
+                Data de entrega desejada: {dataDesejadaEntrega ? dataDesejadaEntrega.toLocaleDateString('pt-BR') : 'Nenhuma data selecionada'}
+              </Typography>
+            )}
+
+            {isUrgentDeliverySelected && (
+              <Typography variant="body2" color="text Secondary" sx={{ mt: 2 }}>
+                Data de entrega prevista: {previsaoEntrega ? previsaoEntrega : 'Nenhuma data prevista'}
+              </Typography>
+            )}
+
             <div style={{ marginTop: '20px' }}>
               <Button
                 color="primary"
                 variant="contained"
                 onClick={handleSubmit}
-                disabled={!shippingOption || !clientId || productsList.length === 0}
+                disabled={!isUrgentDeliverySelected || !shippingOption || !clientId || productsList.length === 0}
               >
                 <IconDeviceFloppy style={{ marginRight: '8px' }} />
                 Gerar Orçamento
