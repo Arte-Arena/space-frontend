@@ -3,9 +3,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/utils/useAuth';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
-import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
-import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
 import ParentCard from '@/app/components/shared/ParentCard';
+import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
+import CircularProgress from '@mui/material/CircularProgress';
+import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
 import Autocomplete from '@mui/material/Autocomplete';
 import { useQuery } from '@tanstack/react-query';
 import TableContainer from '@mui/material/TableContainer';
@@ -40,6 +41,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import getBrazilTime from '@/utils/brazilTime';
 import Image from "next/image";
+import Snackbar from '@mui/material/Snackbar';
 
 interface Cliente {
   number: string;
@@ -75,8 +77,8 @@ const OrcamentoGerarScreen = () => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [produtosComAtributoZerado, setProdutosComAtributoZerado] = useState(false);
-  // const [inputValue, setInputValue] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // Armazenando o produto selecionado
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [openSnackbarProdutosComAtributoZerado, setOpenSnackbarProdutosComAtributoZerado] = useState(false);
   const [openBudget, setOpenBudget] = React.useState(false);
   const [scroll, setScroll] = React.useState<DialogProps['scroll']>('paper');
   const [orçamentoTexto, setOrçamentoTexto] = useState('');
@@ -102,6 +104,7 @@ const OrcamentoGerarScreen = () => {
   const [dataDesejadaEntrega, setDataDesejadaEntrega] = useState<Date | null>(null);
   const [previsaoEntrega, setPrevisaoEntrega] = useState<number | null>(null);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
+
 
   const accessToken = localStorage.getItem('accessToken');
 
@@ -273,25 +276,38 @@ const OrcamentoGerarScreen = () => {
     setProductsList(updatedProductsList);
   };
 
-useEffect(() => {
-  const checkZeroAttribute = () => {
-    return productsList.some((product) =>
-      Object.values(product).some((value) => value === 0)
+  useEffect(() => {
+    const checkZeroAttribute = () => {
+      return productsList.some((product) =>
+        Object.values(product).some((value) => value === 0)
+      );
+    };
+
+    setProdutosComAtributoZerado(checkZeroAttribute());
+  }, [productsList]);
+
+  useEffect(() => {
+    console.log(
+      `produtosComAtributoZerado (após atualização): ${produtosComAtributoZerado ? 'SIM' : 'NÃO'}`
     );
-  };
 
-  setProdutosComAtributoZerado(checkZeroAttribute());
-}, [productsList]);
+    if (produtosComAtributoZerado) {
+      setOpenSnackbarProdutosComAtributoZerado(true);
+    }
 
-useEffect(() => {
-  console.log(
-    `produtosComAtributoZerado (após atualização): ${produtosComAtributoZerado ? 'SIM' : 'NÃO'}`
-  );
+  }, [produtosComAtributoZerado]); // Executa este useEffect quando produtosComAtributoZerado mudar
 
-}, [produtosComAtributoZerado]); // Executa este useEffect quando produtosComAtributoZerado mudar
-
+  const handleCloseSnackbarProdutosComAtributoZerado = () => {
+    setOpenSnackbarProdutosComAtributoZerado(false);
+  }
 
   const validateCEP = async (cep: string) => {
+
+    if (!cep) {
+      console.log('CEP não fornecido');
+      return false;
+    }
+
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
@@ -581,13 +597,26 @@ Orçamento válido por 30 dias.
             fullWidth
             disablePortal
             id="cliente"
-            loading={!isLoadedClients}
+            loading={isFetchingClients}
             disabled={!isLoadedClients}
             options={allClients}
             getOptionLabel={(option) => `${option.number} :: ${option.contact_name} :: (${option.channel} ${option.agent_name ? ` - ${option.agent_name}` : ''})`}
             onChange={(event, value) => setClientId(value ? value.number : '')}
             renderInput={(params) => (
-              <CustomTextField {...params} placeholder="Selecione um cliente" aria-label="Selecione um cliente" />
+              <CustomTextField
+                {...params}
+                placeholder="Selecione um cliente"
+                aria-label="Selecione um cliente"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {isFetchingClients ? <CircularProgress size={24} /> : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
             )}
           />
 
@@ -609,7 +638,8 @@ Orçamento válido por 30 dias.
                     id="produto"
                     options={productNames}
                     getOptionLabel={(option) => option}
-                    disabled={!isLoadedProducts || !clientId}
+                    disabled={!isLoadedProducts || !clientId || isFetchingProducts}
+                    loading={isFetchingProducts}
                     onChange={(event, selectedValue) => {
                       if (selectedValue) {
                         const selectedProduct = dataProducts.find((product: Product) => product.nome === selectedValue) as Product | undefined;
@@ -619,7 +649,20 @@ Orçamento válido por 30 dias.
                       }
                     }}
                     renderInput={(params) => (
-                      <CustomTextField {...params} placeholder="Buscar produto..." aria-label="Buscar produto" />
+                      <CustomTextField
+                        {...params}
+                        placeholder="Buscar produto..."
+                        aria-label="Buscar produto"
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <>
+                              {isFetchingProducts ? <CircularProgress size={24} /> : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
+                      />
                     )}
                   />
                 </Stack>
@@ -849,6 +892,14 @@ Orçamento válido por 30 dias.
               </Table>
             </TableContainer>
 
+            <Snackbar
+              anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+              open={openSnackbarProdutosComAtributoZerado}
+              onClose={handleCloseSnackbarProdutosComAtributoZerado}
+              message="Algum produto está compelo menos um atributo zerado..."
+              key={'top' + 'center'}
+            />
+
             <CustomFormLabel
               sx={{
                 mt: 5,
@@ -908,150 +959,166 @@ Orçamento válido por 30 dias.
                   value={shippingOption}
                   onChange={(event: React.ChangeEvent<HTMLInputElement>) => setShippingOption(event.target.value)}
                 >
-                  <Stack direction="column" spacing={1}>
 
-                    <FormControlLabel
-                      value={"RETIRADA"}
-                      control={<Radio disabled={!clientId || productsList.length === 0} />}
-                      label="Retirada - R$ 0,00"
-                    />
+                  <FormControlLabel
+                    value={"RETIRADA"}
+                    control={<Radio disabled={!clientId || productsList.length === 0} />}
+                    label="Retirada - R$ 0,00"
+                  />
 
-                    <FormControlLabel
-                      value={"MINIENVIOS"}
-                      control={<Radio disabled={!precoMiniEnvios} />}
-                      label={precoMiniEnvios ? (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                          <Typography sx={{ ml: 1 }}>
-                            Mini Envios - R$ {precoMiniEnvios}{" "}
-                            - Tempo de transporte:{" "}
-                            {prazoMiniEnvios !== null ? prazoMiniEnvios : "não disponível"} dias.{" "}
-                            Previsão:{" "}
-                            {(() => {
+                  <FormControlLabel
+                    sx={{
+                      display: !precoMiniEnvios && !prazoMiniEnvios ? 'none' : 'flex',
+                      alignItems: 'center'
+                    }}
+                    value={"MINIENVIOS"}
+                    control={<Radio disabled={!precoMiniEnvios} />}
+                    label={precoMiniEnvios ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                        <Typography sx={{ ml: 1 }}>
+                          Mini Envios - R$ {precoMiniEnvios}{" "}
+                          - Tempo de transporte:{" "}
+                          {prazoMiniEnvios !== null ? prazoMiniEnvios : "não disponível"} dias.{" "}
+                          Previsão:{" "}
+                          {(() => {
+                            const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                            return prazoMiniEnvios !== null
+                              ? (maxPrazo + prazoMiniEnvios) + " dias."
+                              : "não disponível";
+                          })()}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                        <Typography sx={{ ml: 1 }}>Mini Envios</Typography>
+                      </Box>
+                    )}
+                  />
+
+                  <FormControlLabel
+                    sx={{
+                      display: !precoPac && !prazoPac ? 'none' : 'flex',
+                      alignItems: 'center'
+                    }}
+                    value={"PAC"}
+                    control={<Radio disabled={!precoPac} />}
+                    label={precoPac ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                        <Typography sx={{ ml: 1 }}>
+                          {"PAC - R$ " + precoPac +
+                            " - Tempo de transporte: " +
+                            (prazoPac !== null ? prazoPac : "não disponível") +
+                            " dias. Previsão: " +
+                            (() => {
                               const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                              return prazoMiniEnvios !== null
-                                ? (maxPrazo + prazoMiniEnvios) + " dias."
+                              return prazoPac !== null
+                                ? (maxPrazo + prazoPac) + " dias."
                                 : "não disponível";
                             })()}
-                          </Typography>
-                        </Box>
-                      ) : (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                          <Typography sx={{ ml: 1 }}>Mini Envios</Typography>
-                        </Box>
-                      )}
-                    />
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                        <Typography sx={{ ml: 1 }}>PAC</Typography>
+                      </Box>
+                    )}
+                  />
 
-                    <FormControlLabel
-                      value={"PAC"}
-                      control={<Radio disabled={!precoPac} />}
-                      label={precoPac ? (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                          <Typography sx={{ ml: 1 }}>
-                            {"PAC - R$ " + precoPac +
-                              " - Tempo de transporte: " +
-                              (prazoPac !== null ? prazoPac : "não disponível") +
-                              " dias. Previsão: " +
-                              (() => {
-                                const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                                return prazoPac !== null
-                                  ? (maxPrazo + prazoPac) + " dias."
-                                  : "não disponível";
-                              })()}
-                          </Typography>
-                        </Box>
-                      ) : (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                          <Typography sx={{ ml: 1 }}>PAC</Typography>
-                        </Box>
-                      )}
-                    />
+                  <FormControlLabel
+                    sx={{
+                      display: !precoSedex && !prazoSedex ? 'none' : 'flex',
+                      alignItems: 'center'
+                    }}
+                    value={"SEDEX"}
+                    control={<Radio disabled={!precoSedex} />}
+                    label={precoSedex ? (
+                      <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}>
+                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                        <Typography sx={{ ml: 1, whiteSpace: 'nowrap' }}>
+                          {"SEDEX - R$ " + precoSedex +
+                            " - Tempo de transporte: " +
+                            (prazoSedex !== null ? prazoSedex : "não disponível") +
+                            " dias. Previsão: " +
+                            (() => {
+                              const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                              return prazoSedex !== null
+                                ? (maxPrazo + prazoSedex) + " dias."
+                                : "não disponível";
+                            })()}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Box sx={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
+                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                        <Typography sx={{ ml: 1, whiteSpace: 'nowrap' }}>SEDEX</Typography>
+                      </Box>
+                    )}
+                  />
 
-                    <FormControlLabel
-                      value={"SEDEX"}
-                      control={<Radio disabled={!precoSedex} />}
-                      label={precoSedex ? (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                          <Typography sx={{ ml: 1 }}>
-                            {"SEDEX - R$ " + precoSedex +
-                              " - Tempo de transporte: " +
-                              (prazoSedex !== null ? prazoSedex : "não disponível") +
-                              " dias. Previsão: " +
-                              (() => {
-                                const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                                return prazoSedex !== null
-                                  ? (maxPrazo + prazoSedex) + " dias."
-                                  : "não disponível";
-                              })()}
-                          </Typography>
-                        </Box>
-                      ) : (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                          <Typography sx={{ ml: 1 }}>SEDEX</Typography>
-                        </Box>
-                      )}
-                    />
 
-                    <FormControlLabel
-                      value={"SEDEX10"}
-                      control={<Radio disabled={!precoSedex10} />}
-                      label={precoSedex10 ? (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                          <Typography sx={{ ml: 1 }}>
-                            {"SEDEX 10 - R$ " + precoSedex10 +
-                              " - Tempo de transporte: " +
-                              (prazoSedex10 !== null ? prazoSedex10 : "não disponível") +
-                              " dias. Previsão: " +
-                              (() => {
-                                const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                                return prazoSedex10 !== null
-                                  ? (maxPrazo + prazoSedex10) + " dias."
-                                  : "não disponível";
-                              })()}
-                          </Typography>
-                        </Box>
-                      ) : (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                          <Typography sx={{ ml: 1 }}>SEDEX 10</Typography>
-                        </Box>
-                      )}
-                    />
+                  <FormControlLabel
+                    style={{ display: 'none' }}
+                    value={"SEDEX10"}
+                    control={<Radio disabled={!precoSedex10} />}
+                    label={precoSedex10 ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                        <Typography sx={{ ml: 1 }}>
+                          {"SEDEX 10 - R$ " + precoSedex10 +
+                            " - Tempo de transporte: " +
+                            (prazoSedex10 !== null ? prazoSedex10 : "não disponível") +
+                            " dias. Previsão: " +
+                            (() => {
+                              const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                              return prazoSedex10 !== null
+                                ? (maxPrazo + prazoSedex10) + " dias."
+                                : "não disponível";
+                            })()}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                        <Typography sx={{ ml: 1 }}>SEDEX 10</Typography>
+                      </Box>
+                    )}
+                  />
 
-                    <FormControlLabel
-                      value={"SEDEX12"}
-                      control={<Radio disabled={!precoSedex12} />}
-                      label={precoSedex12 ? (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                          <Typography sx={{ ml: 1 }}>
-                            {"SEDEX 12 - R$ " + precoSedex12 +
-                              " - Tempo de transporte: " +
-                              (prazoSedex12 !== null ? prazoSedex12 : "não disponível") +
-                              " dias. Previsão: " +
-                              (() => {
-                                const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                                return prazoSedex12 !== null
-                                  ? (maxPrazo + prazoSedex12) + " dias."
-                                  : "não disponível";
-                              })()}
-                          </Typography>
-                        </Box>
-                      ) : (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                          <Typography sx={{ ml: 1 }}>SEDEX 12</Typography>
-                        </Box>
-                      )}
-                    />
+                  <FormControlLabel
+                    style={{ display: 'none' }}
+                    value={"SEDEX12"}
+                    control={<Radio disabled={!precoSedex12} />}
+                    label={precoSedex12 ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                        <Typography sx={{ ml: 1 }}>
+                          {"SEDEX 12 - R$ " + precoSedex12 +
+                            " - Tempo de transporte: " +
+                            (prazoSedex12 !== null ? prazoSedex12 : "não disponível") +
+                            " dias. Previsão: " +
+                            (() => {
+                              const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                              return prazoSedex12 !== null
+                                ? (maxPrazo + prazoSedex12) + " dias."
+                                : "não disponível";
+                            })()}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                        <Typography sx={{ ml: 1 }}>SEDEX 12</Typography>
+                      </Box>
+                    )}
+                  />
 
-                  </Stack>
                 </RadioGroup>
               </FormControl>
             </Box>
