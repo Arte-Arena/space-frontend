@@ -42,6 +42,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import getBrazilTime from '@/utils/brazilTime';
 import Image from "next/image";
 import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 
 interface Cliente {
   number: string;
@@ -84,7 +85,7 @@ const OrcamentoGerarScreen = () => {
   const [orçamentoTexto, setOrçamentoTexto] = useState('');
   const [cep, setCEP] = useState('');
   const [cepError, setCepError] = useState(false);
-  const [isLoadingFrete, setIsLoadingFrete] = useState(false);
+  const [isFetchingFrete, setIsFetchingFrete] = useState(false);
   const [cepSuccess, setCepSuccess] = useState(false);
   const [address, setAddress] = useState('');
   const [precoPac, setPrecoPac] = useState<string | null>(null);
@@ -283,17 +284,19 @@ const OrcamentoGerarScreen = () => {
       );
     };
 
-    setProdutosComAtributoZerado(checkZeroAttribute());
+    const hasZeroAttribute = checkZeroAttribute();
+    setProdutosComAtributoZerado(hasZeroAttribute);
+
+    if (hasZeroAttribute) {
+      setOpenSnackbarProdutosComAtributoZerado(true);
+    }
+
   }, [productsList]);
 
   useEffect(() => {
     console.log(
       `produtosComAtributoZerado (após atualização): ${produtosComAtributoZerado ? 'SIM' : 'NÃO'}`
     );
-
-    if (produtosComAtributoZerado) {
-      setOpenSnackbarProdutosComAtributoZerado(true);
-    }
 
   }, [produtosComAtributoZerado]); // Executa este useEffect quando produtosComAtributoZerado mudar
 
@@ -328,6 +331,7 @@ const OrcamentoGerarScreen = () => {
   };
 
   const getFrete = async (cepTo: string) => {
+    setIsFetchingFrete(true);
     try {
       const body = {
         cepTo,
@@ -389,10 +393,11 @@ const OrcamentoGerarScreen = () => {
       }
 
       setCepSuccess(true);
-      setIsLoadingFrete(false);
 
     } catch (error) {
       console.error('Error fetching frete:', error);
+    } finally {
+      setIsFetchingFrete(false);
     }
   };
 
@@ -896,9 +901,12 @@ Orçamento válido por 30 dias.
               anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
               open={openSnackbarProdutosComAtributoZerado}
               onClose={handleCloseSnackbarProdutosComAtributoZerado}
-              message="Algum produto está compelo menos um atributo zerado..."
               key={'top' + 'center'}
-            />
+            >
+              <Alert onClose={handleCloseSnackbarProdutosComAtributoZerado} severity="error" sx={{ width: '100%' }}>
+                Cuidado: produto contém algum atributo zerado!
+              </Alert>
+            </Snackbar>
 
             <CustomFormLabel
               sx={{
@@ -952,6 +960,8 @@ Orçamento válido por 30 dias.
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'left', mt: 2, flexDirection: 'row' }}>
+              {isFetchingFrete && <><CircularProgress size={20} sx={{ mr: 1 }} /><br /></>}
+
               <FormControl>
                 <RadioGroup
                   aria-labelledby="demo-controlled-radio-buttons-group"
