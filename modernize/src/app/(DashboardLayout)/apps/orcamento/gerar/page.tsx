@@ -43,6 +43,7 @@ import getBrazilTime from '@/utils/brazilTime';
 import Image from "next/image";
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import { DateTime } from 'luxon';
 
 interface Cliente {
   number: string;
@@ -88,24 +89,28 @@ const OrcamentoGerarScreen = () => {
   const [isFetchingFrete, setIsFetchingFrete] = useState(false);
   const [cepSuccess, setCepSuccess] = useState(false);
   const [address, setAddress] = useState('');
-  const [precoPac, setPrecoPac] = useState<string | null>(null);
+  const [precoPac, setPrecoPac] = useState<number | null>(null);
   const [prazoPac, setPrazoPac] = useState<number | null>(null);
-  const [precoSedex, setPrecoSedex] = useState<string | null>(null);
+  const [precoSedex, setPrecoSedex] = useState<number | null>(null);
   const [prazoSedex, setPrazoSedex] = useState<number | null>(null);
-  const [precoSedex10, setPrecoSedex10] = useState<string | null>(null);
+  const [precoSedex10, setPrecoSedex10] = useState<number | null>(null);
   const [prazoSedex10, setPrazoSedex10] = useState<number | null>(null);
-  const [precoSedex12, setPrecoSedex12] = useState<string | null>(null);
+  const [precoSedex12, setPrecoSedex12] = useState<number | null>(null);
   const [prazoSedex12, setPrazoSedex12] = useState<number | null>(null);
-  const [precoMiniEnvios, setPrecoMiniEnvios] = useState<string | null>(null);
+  const [precoMiniEnvios, setPrecoMiniEnvios] = useState<number | null>(null);
   const [prazoMiniEnvios, setPrazoMiniEnvios] = useState<number | null>(null);
   const [shippingOption, setShippingOption] = useState('');
   const [isUrgentDeliverySelected, setIsUrgentDeliverySelected] = useState(false);
   const [isAnticipation, setIsAnticipation] = useState(false);
   const [openAnticipation, setOpenAnticipation] = useState(false);
-  const [dataDesejadaEntrega, setDataDesejadaEntrega] = useState<Date | null>(null);
-  const [previsaoEntrega, setPrevisaoEntrega] = useState<number | null>(null);
+  const [dataDesejadaEntrega, setDataDesejadaEntrega] = useState<DateTime | null>(null);
+  const [precoFrete, setPrecoFrete] = useState<number | null>(null);
+  const [prazoFrete, setPrazoFrete] = useState<number | null>(null);
+  const [prazoProducao, setPrazoProducao] = useState<number | null>(null);
+  const [freteAtualizado, setFreteAtualizado] = useState<boolean>(false);
+  const [prazoEntrega, setPrazoEntrega] = useState<number | null>(null);
+  const [previsaoEntrega, setPrevisaoEntrega] = useState<DateTime>(DateTime.now())
   const descriptionElementRef = React.useRef<HTMLElement>(null);
-
 
   const accessToken = localStorage.getItem('accessToken');
 
@@ -218,6 +223,7 @@ const OrcamentoGerarScreen = () => {
   useEffect(() => {
     if (productsList) {
       console.log('productsList:', productsList);
+      setPrazoProducao(Math.max(...productsList.map(product => product.prazo ?? 0)));
     }
   }, [productsList]);
 
@@ -368,27 +374,27 @@ const OrcamentoGerarScreen = () => {
 
       // Example usage with state updates:
       if (fretesByName.pac) {
-        setPrecoPac(fretesByName.pac.price);
+        setPrecoPac(Number(fretesByName.pac.price));
         setPrazoPac(fretesByName.pac.delivery_time);
       }
 
       if (fretesByName.sedex) {
-        setPrecoSedex(fretesByName.sedex.price);
+        setPrecoSedex(Number(fretesByName.sedex.price));
         setPrazoSedex(fretesByName.sedex.delivery_time);
       }
 
       if (fretesByName.sedex10) {
-        setPrecoSedex10(fretesByName.sedex10.price);
+        setPrecoSedex10(Number(fretesByName.sedex10.price));
         setPrazoSedex10(fretesByName.sedex10.delivery_time);
       }
 
       if (fretesByName.sedex12) {
-        setPrecoSedex12(fretesByName.sedex12.price);
+        setPrecoSedex12(Number(fretesByName.sedex12.price));
         setPrazoSedex12(fretesByName.sedex12.delivery_time);
       }
 
       if (fretesByName.minienvios) {
-        setPrecoMiniEnvios(fretesByName.minienvios.price);
+        setPrecoMiniEnvios(Number(fretesByName.minienvios.price));
         setPrazoMiniEnvios(fretesByName.minienvios.delivery_time);
       }
 
@@ -401,64 +407,87 @@ const OrcamentoGerarScreen = () => {
     }
   };
 
-
-  const calcPrevisao = () => {
-    const today = getBrazilTime();
-
-    console.log('Iniciando calculo de previs o de entrega');
-
-    let prazoFrete: number | null = null;
+  useEffect(() => {
     if (shippingOption) {
       switch (shippingOption) {
         case 'RETIRADA':
-          prazoFrete = 0;
+          setPrazoFrete(0);
+          setPrecoFrete(0);
           break;
         case 'MINIENVIOS':
-          prazoFrete = prazoMiniEnvios;
+          setPrazoFrete(prazoMiniEnvios);
+          setPrecoFrete(precoMiniEnvios);
           break;
         case 'PAC':
-          prazoFrete = prazoPac;
+          setPrazoFrete(prazoPac);
+          setPrecoFrete(precoPac);
           break;
         case 'SEDEX':
-          prazoFrete = prazoSedex;
+          setPrazoFrete(prazoSedex);
+          setPrecoFrete(precoSedex);
           break;
         case 'SEDEX10':
-          prazoFrete = prazoSedex10;
+          setPrazoFrete(prazoSedex10);
+          setPrecoFrete(precoSedex10);
           break;
         case 'SEDEX12':
-          prazoFrete = prazoSedex12;
+          setPrazoFrete(prazoSedex12);
+          setPrecoFrete(precoSedex12);
           break;
         default:
           console.error('Invalid shipping option:', shippingOption);
-          prazoFrete = 0; // Set a default value or handle the error
+          setPrazoFrete(0);
+          setPrecoFrete(0);
       }
+      setFreteAtualizado(true);
+    } else {
+      setFreteAtualizado(false); // Reseta o estado se shippingOption for null
     }
+  }, [shippingOption]);
 
+  const calcPrevisao = () => {
+
+    const avancarDias = (days: number) => {
+      console.log("Somando dias para previsão de entrega: ", days);
+      setPrevisaoEntrega(previsaoEntrega.plus({ days: days }));
+    };
+
+    console.log('Iniciando calculo de previsão de entrega');
+
+    const today = getBrazilTime();
+    console.log('Dia no Brasil: ', today);
+    
     if (shippingOption) {
       console.log('Opção de entrega definida pelo usuário:', shippingOption);
-      console.log('prazo do frete é', prazoFrete);
     }
-
-
-
-    const prazoProducao = Math.max(...productsList.map(product => product.prazo ?? 0));
-    let prevEntrega: number | boolean;
-
-    if (prazoFrete !== null) {
-      prevEntrega = prazoProducao + prazoFrete;
+    
+    if (prazoEntrega) {
+      console.log('Prazo de Entrega: ', prazoEntrega);
+      avancarDias(prazoEntrega);
     } else {
-      console.error('prazoFrete is null');
-      prevEntrega = false;
+      console.log('Erro crítico: prazoEntrega não definido ao prever a entrega');
     }
 
-    if (typeof prevEntrega === 'number') {
-      setPrevisaoEntrega(prevEntrega);
-      console.log('Previsão de entrega definida!', prevEntrega);
-    } else {
-      console.error('Falta Error: Invalid type for prevEntrega');
-    }
-    return prevEntrega;
+    return;
   };
+
+  useEffect(() => {
+    if (freteAtualizado && prazoFrete && precoFrete) {
+      console.log("Frete atualizado!", prazoFrete, precoFrete);
+
+      let prazoEntrega = 0;
+      if (prazoProducao) {
+        prazoEntrega = prazoFrete + prazoProducao;
+        console.log('prazoEntrega: ', prazoEntrega);
+        setPrazoEntrega(prazoEntrega);
+        calcPrevisao()
+      } else {
+        console.log('Erro crítico: prazoProducao não definido para calculo de previsão de entrega.');
+      }
+
+    }
+  }, [freteAtualizado]);
+
 
   const handleCEPBlur = async (event: React.FocusEvent<HTMLInputElement>) => {
     const cep = event.target.value;
@@ -512,35 +541,27 @@ const OrcamentoGerarScreen = () => {
       totalOrçamento += produtoTotal;
     });
 
-    // Definindo o frete fixo
-    const frete = 38.00;
-    totalOrçamento += frete;
+    if (prazoFrete) {
+      totalOrçamento += prazoFrete;
+    }
 
-    // Montando o texto do orçamento
-    const prazoParaConfecao = 10; // prazo fixo para confecção
-    const prazoEnvio = 3; // dias úteis para envio via Correios
-    const previsaoEntrega = (() => {
-      const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-      return prazoMiniEnvios !== null
-        ? (maxPrazo + prazoMiniEnvios) + " dias."
-        : "não disponível";
-    })();
+    const precoFrete = typeof prazoFrete === 'number' ? prazoFrete : 0;
 
     const textoOrcamento = `
 Lista de Produtos:
 
 ${produtosTexto.trim()}
 
-Frete:        R$ ${frete.toFixed(2)} - (Dia da postagem + ${prazoEnvio} dias úteis via ${shippingOption})
+Frete:        R$ ${precoFrete.toFixed(2)} - (Dia da postagem + ${prazoFrete} dias úteis via ${shippingOption})
 
 Total:        R$ ${totalOrçamento.toFixed(2)}
 
-Previsão de Entrega: 
+Prazo de Produção: ${prazoProducao} dias úteis
+Prazo de Frete: ${prazoFrete} dias úteis
 
-Prazo para confecção é de ${prazoParaConfecao} dias úteis + prazo de envio.
+Previsão de Entrega: ${previsaoEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy')}
+
 Prazo inicia-se após aprovação da arte e pagamento confirmado.
-
-Considerando confirmação agora, a previsão de envio é de x dias (data da previsao)
 
 Orçamento válido por 30 dias.
 `.trim();
@@ -1210,13 +1231,13 @@ Orçamento válido por 30 dias.
 
             {isAnticipation && (
               <Typography variant="body2" color="text Secondary" sx={{ mt: 2 }}>
-                Data de entrega desejada: {dataDesejadaEntrega ? dataDesejadaEntrega.toLocaleDateString('pt-BR') : 'Nenhuma data selecionada'}
+                Data de entrega desejada: {dataDesejadaEntrega ? dataDesejadaEntrega.toLocaleString() : 'Nenhuma data selecionada'}
               </Typography>
             )}
 
             {isUrgentDeliverySelected && (
               <Typography variant="body2" color="text Secondary" sx={{ mt: 2 }}>
-                Data de entrega prevista: {previsaoEntrega ? previsaoEntrega : 'Nenhuma data prevista'}
+                Data de entrega prevista: {previsaoEntrega ? previsaoEntrega.toLocaleString() : 'Nenhuma data prevista'}
               </Typography>
             )}
 

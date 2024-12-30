@@ -1,8 +1,9 @@
 import { DateTime } from 'luxon';
 
-function getBrazilTime(): string {
+function getBrazilTime(): Date {
   const brazilTime = DateTime.now().setZone('America/Sao_Paulo');
-  return brazilTime.toFormat('yyyy-MM-dd HH:mm:ss');
+  const jsDate = brazilTime.toJSDate();
+  return jsDate;
 }
 
 export default getBrazilTime;
