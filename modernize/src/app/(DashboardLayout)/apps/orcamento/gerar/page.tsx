@@ -108,7 +108,7 @@ const OrcamentoGerarScreen = () => {
   const [prazoFrete, setPrazoFrete] = useState<number | null>(null);
   const [prazoProducao, setPrazoProducao] = useState<number | null>(null);
   const [freteAtualizado, setFreteAtualizado] = useState<boolean>(false);
-  const [prazoEntrega, setPrazoEntrega] = useState<number | null>(null);
+  const [loadingPrevisao, setLoadingPrevisao] = useState(false);
   const [previsaoEntrega, setPrevisaoEntrega] = useState<DateTime>(DateTime.now())
   const descriptionElementRef = React.useRef<HTMLElement>(null);
 
@@ -408,86 +408,76 @@ const OrcamentoGerarScreen = () => {
   };
 
   useEffect(() => {
-    if (shippingOption) {
-      switch (shippingOption) {
-        case 'RETIRADA':
-          setPrazoFrete(0);
-          setPrecoFrete(0);
-          break;
-        case 'MINIENVIOS':
-          setPrazoFrete(prazoMiniEnvios);
-          setPrecoFrete(precoMiniEnvios);
-          break;
-        case 'PAC':
-          setPrazoFrete(prazoPac);
-          setPrecoFrete(precoPac);
-          break;
-        case 'SEDEX':
-          setPrazoFrete(prazoSedex);
-          setPrecoFrete(precoSedex);
-          break;
-        case 'SEDEX10':
-          setPrazoFrete(prazoSedex10);
-          setPrecoFrete(precoSedex10);
-          break;
-        case 'SEDEX12':
-          setPrazoFrete(prazoSedex12);
-          setPrecoFrete(precoSedex12);
-          break;
-        default:
-          console.error('Invalid shipping option:', shippingOption);
-          setPrazoFrete(0);
-          setPrecoFrete(0);
-      }
-      setFreteAtualizado(true);
-    } else {
-      setFreteAtualizado(false); // Reseta o estado se shippingOption for null
+    console.log('Opção de entrega atualizada', shippingOption);
+    setFreteAtualizado(true);
+    switch (shippingOption) {
+      case 'RETIRADA':
+        setPrazoFrete(1);
+        setPrecoFrete(0.00);
+        break;
+      case 'MINIENVIOS':
+        setPrazoFrete(prazoMiniEnvios);
+        setPrecoFrete(precoMiniEnvios);
+        break;
+      case 'PAC':
+        setPrazoFrete(prazoPac);
+        setPrecoFrete(precoPac);
+        break;
+      case 'SEDEX':
+        setPrazoFrete(prazoSedex);
+        setPrecoFrete(precoSedex);
+        break;
+      case 'SEDEX10':
+        setPrazoFrete(prazoSedex10);
+        setPrecoFrete(precoSedex10);
+        break;
+      case 'SEDEX12':
+        setPrazoFrete(prazoSedex12);
+        setPrecoFrete(precoSedex12);
+        break;
+      default:
+        console.error('Invalid shipping option:', shippingOption);
+        setPrazoFrete(0);
+        setPrecoFrete(0);
     }
   }, [shippingOption]);
 
+  useEffect(() => {
+    setLoadingPrevisao(true);
+    calcPrevisao();
+    setLoadingPrevisao(false);
+  }, [prazoFrete]);
+
   const calcPrevisao = () => {
 
+    
+
     const avancarDias = (days: number) => {
-      console.log("Somando dias para previsão de entrega: ", days);
-      setPrevisaoEntrega(previsaoEntrega.plus({ days: days }));
+      const today = DateTime.fromJSDate(getBrazilTime());
+      console.log('Calculando a previsão... Avançando os dias... Dia no Brasil: ', today);
+      console.log("Calculando a previsão... Avançando os dias... Somando dias para previsão de entrega: ", days);
+      const dataPrevistaEntrega = today.plus({ days: days });
+      console.log('Calculando a previsão... Avançando os dias... dataPrevistaEntrega: ', dataPrevistaEntrega);
+      console.log('Calculando a previsão... Avançando os dias... dataPrevistaEntrega (pt-BR): ', dataPrevistaEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy'));
+      setPrevisaoEntrega(dataPrevistaEntrega);
     };
 
-    console.log('Iniciando calculo de previsão de entrega');
+    console.log('Calculando a previsão... Iniciando calculo de previsão de entrega');
 
-    const today = getBrazilTime();
-    console.log('Dia no Brasil: ', today);
-    
     if (shippingOption) {
-      console.log('Opção de entrega definida pelo usuário:', shippingOption);
+      console.log('Calculando a previsão... Opção de entrega definida pelo usuário:', shippingOption);
     }
-    
-    if (prazoEntrega) {
-      console.log('Prazo de Entrega: ', prazoEntrega);
-      avancarDias(prazoEntrega);
+
+    if (prazoProducao && prazoFrete) {
+      console.log('Calculando a previsão... prazoProducao: ', prazoProducao);
+      console.log('Calculando a previsão... prazoFrete: ', prazoFrete);
+      avancarDias(prazoFrete + prazoProducao);
     } else {
-      console.log('Erro crítico: prazoEntrega não definido ao prever a entrega');
+      console.log('Calculando a previsão... Erro crítico: prazoFrete ou prazoProducao não definido(s)');
     }
 
     return;
   };
-
-  useEffect(() => {
-    if (freteAtualizado && prazoFrete && precoFrete) {
-      console.log("Frete atualizado!", prazoFrete, precoFrete);
-
-      let prazoEntrega = 0;
-      if (prazoProducao) {
-        prazoEntrega = prazoFrete + prazoProducao;
-        console.log('prazoEntrega: ', prazoEntrega);
-        setPrazoEntrega(prazoEntrega);
-        calcPrevisao()
-      } else {
-        console.log('Erro crítico: prazoProducao não definido para calculo de previsão de entrega.');
-      }
-
-    }
-  }, [freteAtualizado]);
-
 
   const handleCEPBlur = async (event: React.FocusEvent<HTMLInputElement>) => {
     const cep = event.target.value;
@@ -541,18 +531,25 @@ const OrcamentoGerarScreen = () => {
       totalOrçamento += produtoTotal;
     });
 
-    if (prazoFrete) {
-      totalOrçamento += prazoFrete;
+    if (precoFrete) {
+      totalOrçamento += precoFrete;
     }
 
-    const precoFrete = typeof prazoFrete === 'number' ? prazoFrete : 0;
+    let precoFreteTexto = '0.00';
+    if (precoFrete) {
+      precoFreteTexto = precoFrete.toFixed(2);
+    } else {
+      console.log("Erro crítico precoFrete não existe ao compor o texto do orçamento.")
+    }
+
+    console.log('Testando o estado previsaoEntrega: ', previsaoEntrega);
 
     const textoOrcamento = `
 Lista de Produtos:
 
 ${produtosTexto.trim()}
 
-Frete:        R$ ${precoFrete.toFixed(2)} - (Dia da postagem + ${prazoFrete} dias úteis via ${shippingOption})
+Frete:        R$ ${precoFreteTexto}
 
 Total:        R$ ${totalOrçamento.toFixed(2)}
 
@@ -988,7 +985,10 @@ Orçamento válido por 30 dias.
                   aria-labelledby="demo-controlled-radio-buttons-group"
                   name="controlled-radio-buttons-group"
                   value={shippingOption}
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => setShippingOption(event.target.value)}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                    console.log('event', event);
+                    setShippingOption(event.target.value)
+                  }}
                 >
 
                   <FormControlLabel
@@ -1237,7 +1237,11 @@ Orçamento válido por 30 dias.
 
             {isUrgentDeliverySelected && (
               <Typography variant="body2" color="text Secondary" sx={{ mt: 2 }}>
-                Data de entrega prevista: {previsaoEntrega ? previsaoEntrega.toLocaleString() : 'Nenhuma data prevista'}
+                Data de entrega prevista: {loadingPrevisao ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  previsaoEntrega ? previsaoEntrega.setLocale('pt-BR').toLocaleString({ day: 'numeric', month: 'long', year: 'numeric' }) : 'Nenhuma data prevista'
+                )}
               </Typography>
             )}
 
