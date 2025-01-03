@@ -1,14 +1,16 @@
 import { DateTime } from 'luxon';
 
-export default function contarFinaisDeSemana(initial: DateTime, days: number, extenso: boolean = false) {
+export default function avancarDias(initial: DateTime, days: number): DateTime<boolean> {
+
+  console.log('Avançando dias... Initial date:', initial.toFormat('dd \'de\' MMMM \'de\' yyyy'));
+  console.log('Avançando dias... Days to add:', days);
+
 
     const novaData = initial.plus({ days: days });
-    const novaDataPorExtenso = novaData.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy');
+    // const novaDataPorExtenso = novaData.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy');
 
-    if (extenso) {
-      return novaDataPorExtenso;
-    } else {
-      return novaData;
-    }
+    console.log(typeof novaData);
+
+    return novaData;
 
 }

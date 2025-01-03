@@ -28,6 +28,8 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { DateTime } from 'luxon';
 import contarFinaisDeSemana from '@/utils/contarFinaisDeSemana';
+import contarFeriados from '@/utils/contarFeriados';
+import avancarDias from '@/utils/avancarDias';
 import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy } from '@tabler/icons-react';
 import {
   Button,
@@ -225,6 +227,10 @@ const OrcamentoGerarScreen = () => {
     if (productsList) {
       console.log('productsList:', productsList);
       setPrazoProducao(Math.max(...productsList.map(product => product.prazo ?? 0)));
+
+      if (cep) {
+        getFrete(cep);
+      }
     }
   }, [productsList]);
 
@@ -447,10 +453,9 @@ const OrcamentoGerarScreen = () => {
     setLoadingPrevisao(true);
     calcPrevisao();
     setLoadingPrevisao(false);
-  }, [prazoFrete]);
+  }, [prazoProducao, prazoFrete]);
 
-  const calcPrevisao = () => {
-
+  const calcPrevisao = async () => {
     console.log('Calculando a previsão... Iniciando calculo de previsão de entrega');
     const today = DateTime.fromJSDate(getBrazilTime());
     console.log('Calculando a previsão... Avançando os dias... Dia no Brasil: ', today);
@@ -465,15 +470,17 @@ const OrcamentoGerarScreen = () => {
       
       const prazoProducaoFinsSemana = contarFinaisDeSemana(getBrazilTime(), prazoProducao);
       console.log('Calculando a previsão... prazoProducaoFinsSemana: ', prazoProducaoFinsSemana);
+
+      const prazoProducaoFeriados = await contarFeriados(getBrazilTime(), prazoProducao);
+      console.log('Calculando a previsão... prazoProducaoFeriados: ', prazoProducaoFeriados);
+
+      const prazoProducaoTotal = prazoProducao + prazoProducaoFinsSemana + prazoProducaoFeriados;
+      console.log('Calculando a previsão... prazoProducaoTotal: ', prazoProducaoTotal);
       
-      const prazoFreteFinsSemana = contarFinaisDeSemana(getBrazilTime(), prazoFrete);
-      console.log('Calculando a previsão... prazoFreteFinsSemana: ', prazoFreteFinsSemana);
-      
-      // console.log('Calculando a previsão... prazoProducaoFeriados: ', prazoProducaoFeriados);
-      // console.log('Calculando a previsão... prazoFreteFeriados: ', prazoFreteFeriados);
-      // console.log('Calculando a previsão... prazoFinal:', prazoFinal);
-      // avancarDias(today, prazoFrete + prazoProducao);
-      // setPrevisaoEntrega(dataPrevistaEntrega);
+      const dataPrevistaEntrega = avancarDias(today, prazoFrete + prazoProducaoTotal);
+      console.log('dataPrevistaEntrega', dataPrevistaEntrega);
+
+      setPrevisaoEntrega(dataPrevistaEntrega);
     } else {
       console.log('Calculando a previsão... Erro crítico: prazoFrete ou prazoProducao não definido(s)');
     }
