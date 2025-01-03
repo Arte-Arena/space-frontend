@@ -19,6 +19,15 @@ import Paper from '@mui/material/Paper';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { NumericFormat } from 'react-number-format';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import getBrazilTime from '@/utils/brazilTime';
+import Image from "next/image";
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import { DateTime } from 'luxon';
+import contarFinaisDeSemana from '@/utils/contarFinaisDeSemana';
 import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy } from '@tabler/icons-react';
 import {
   Button,
@@ -36,14 +45,6 @@ import {
   Stack,
   Typography
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import getBrazilTime from '@/utils/brazilTime';
-import Image from "next/image";
-import Snackbar from '@mui/material/Snackbar';
-import Alert from '@mui/material/Alert';
-import { DateTime } from 'luxon';
 
 interface Cliente {
   number: string;
@@ -450,19 +451,9 @@ const OrcamentoGerarScreen = () => {
 
   const calcPrevisao = () => {
 
-    
-
-    const avancarDias = (days: number) => {
-      const today = DateTime.fromJSDate(getBrazilTime());
-      console.log('Calculando a previsão... Avançando os dias... Dia no Brasil: ', today);
-      console.log("Calculando a previsão... Avançando os dias... Somando dias para previsão de entrega: ", days);
-      const dataPrevistaEntrega = today.plus({ days: days });
-      console.log('Calculando a previsão... Avançando os dias... dataPrevistaEntrega: ', dataPrevistaEntrega);
-      console.log('Calculando a previsão... Avançando os dias... dataPrevistaEntrega (pt-BR): ', dataPrevistaEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy'));
-      setPrevisaoEntrega(dataPrevistaEntrega);
-    };
-
     console.log('Calculando a previsão... Iniciando calculo de previsão de entrega');
+    const today = DateTime.fromJSDate(getBrazilTime());
+    console.log('Calculando a previsão... Avançando os dias... Dia no Brasil: ', today);
 
     if (shippingOption) {
       console.log('Calculando a previsão... Opção de entrega definida pelo usuário:', shippingOption);
@@ -471,7 +462,18 @@ const OrcamentoGerarScreen = () => {
     if (prazoProducao && prazoFrete) {
       console.log('Calculando a previsão... prazoProducao: ', prazoProducao);
       console.log('Calculando a previsão... prazoFrete: ', prazoFrete);
-      avancarDias(prazoFrete + prazoProducao);
+      
+      const prazoProducaoFinsSemana = contarFinaisDeSemana(getBrazilTime(), prazoProducao);
+      console.log('Calculando a previsão... prazoProducaoFinsSemana: ', prazoProducaoFinsSemana);
+      
+      const prazoFreteFinsSemana = contarFinaisDeSemana(getBrazilTime(), prazoFrete);
+      console.log('Calculando a previsão... prazoFreteFinsSemana: ', prazoFreteFinsSemana);
+      
+      // console.log('Calculando a previsão... prazoProducaoFeriados: ', prazoProducaoFeriados);
+      // console.log('Calculando a previsão... prazoFreteFeriados: ', prazoFreteFeriados);
+      // console.log('Calculando a previsão... prazoFinal:', prazoFinal);
+      // avancarDias(today, prazoFrete + prazoProducao);
+      // setPrevisaoEntrega(dataPrevistaEntrega);
     } else {
       console.log('Calculando a previsão... Erro crítico: prazoFrete ou prazoProducao não definido(s)');
     }
@@ -877,7 +879,7 @@ Orçamento válido por 30 dias.
                           value={product.comprimento}
                           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                             const newProductValue = Math.max(0, +event.target.value);
-                            const updatedProduct = { ...product, peso: newProductValue };
+                            const updatedProduct = { ...product, comprimento: newProductValue };
                             atualizarProduto(updatedProduct);
                           }}
                           type="number"
