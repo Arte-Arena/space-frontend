@@ -10,4 +10,10 @@ sudo docker build -t space-frontend -f ./docker/Dockerfile .
 
 sudo docker push artearenahub/space-frontend:latest
 
+# Rodar o backend em ambiente de desenvolvimento
+
+APP_ENV=development php artisan serve
+
+
+
 

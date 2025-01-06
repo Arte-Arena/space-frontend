@@ -25,14 +25,14 @@ const CustoBandeiraScreen = () => {
       return;
     }
     const larguraTecido = 1.5;
-    var quantidadeTecido = 0;
 
-    if (altura <= larguraTecido || largura <= larguraTecido) {
-      quantidadeTecido = Math.min(altura, largura);
-    } else {
-      const faixas = Math.ceil(altura / larguraTecido);
-      quantidadeTecido = faixas * largura;
-    }
+    // Determinar a quantidade de faixas
+    const menorDimensao = Math.min(altura, largura);
+    const faixas = Math.ceil(menorDimensao / larguraTecido);    
+    
+    // Calcular a quantidade total de tecido
+    const maiorDimensao = Math.max(altura, largura);
+    const quantidadeTecido = faixas * maiorDimensao;
 
     const custoMetro = custoTecido + custoTinta + custoPapel;
 
@@ -45,33 +45,6 @@ const CustoBandeiraScreen = () => {
     
     setResultado(resultado);
 
-    const data = {
-      altura: altura,
-      largura: largura,
-      custo_tecido: custoTecido,
-      custo_tinta: custoTinta,
-      custo_papel: custoPapel,
-      custo_imposto: custoImposto,
-      custo_final: custoComImposto,
-    };
-
-    const token = localStorage.getItem('accessToken') || '';
-
-    fetch(`${process.env.NEXT_PUBLIC_API}/api/custo-bandeira`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token,
-      },
-      body: JSON.stringify(data),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log('Success:', data);
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
   };
 
   useEffect(() => {

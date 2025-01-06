@@ -1,10 +1,7 @@
-'use client'
+'use client';
 import React, { useState, useEffect } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
-// import { Button } from '@mui/material';
-// import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
-// import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
 import ParentCard from '@/app/components/shared/ParentCard';
 import CircularProgress from '@mui/material/CircularProgress';
 import Table from '@mui/material/Table';
@@ -15,7 +12,11 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { IconArrowIteration } from "@tabler/icons-react";
+import { Pagination, Stack, Button } from '@mui/material';
+import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import { IconSearch } from '@tabler/icons-react';
+import { useQuery } from '@tanstack/react-query';
 
 interface Product {
   id: number;
@@ -29,131 +30,135 @@ interface Product {
   peso: number;
 }
 
-interface ApiResponse {
-  data: Product[];
-}
-
 const ProdutosBuscarScreen = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [error, setError] = useState<string | null>('');
-  const [loading, setLoading] = useState<boolean>(true);
-  const [openSnackbar, setOpenSnackbar] = useState<boolean>(false);
-  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+  const [query, setQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>(''); // Mantém a query atual usada na API
+  const [page, setPage] = useState<number>(1);
 
+  const accessToken = localStorage.getItem('accessToken');
+  if (!accessToken) {
+    throw new Error('Access token is missing');
+  }
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const accessToken = localStorage.getItem('accessToken');
-        const response = await fetch(`#`, {
-        // const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/contas-and-recorrentes`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
-        }
-
-        const data: ApiResponse = await response.json();
-        setProducts(data.data);
-        console.log(data.data);
-      } catch (error) {
-        setError((error as Error).message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
-
-  const handleDeleteProduct = async (productId: number) => {
-    try {
-      const accessToken = localStorage.getItem('accessToken');
-      const response = await fetch(`#`, {
-      // const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/conta/${productId}`, {
-        method: 'DELETE',
+  const { isFetching, error, data } = useQuery({
+    queryKey: ['repoData', searchQuery, page],
+    queryFn: () =>
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/produto?q=${encodeURIComponent(searchQuery)}&page=${page}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
-      });
+      }).then((res) => res.json()),
+  });
 
-      if (!response.ok) {
-        throw new Error('Failed to delete product');
-      }
+  const handleSearch = () => {
+    setSearchQuery(query); // Atualiza a busca
+    setPage(1); // Reseta para a primeira página ao realizar uma nova busca
+  };
 
-      setProducts(products.filter((product) => product.id !== productId));
-      setSnackbarMessage('Produto deletado com sucesso!');
-      setOpenSnackbar(true);
-    } catch (error) {
-      setSnackbarMessage((error as Error).message);
-      setOpenSnackbar(true);
+  const handleSearchKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleSearch();
     }
   };
 
-  const handleCloseSnackbar = (event?: React.SyntheticEvent, reason?: string) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setOpenSnackbar(false);
+  const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {
+    setPage(newPage);
   };
+
+  const handleDeleteProduct = async (productId: number) => {
+    console.log(`handleDeleteProduct: ${productId}`);
+  };
+
+  if (isFetching) return <CircularProgress />;
+  if (error) return <p>Ocorreu um erro: {error.message}</p>;
 
   return (
     <PageContainer title="Produtos / Buscar" description="Produtos da Arte Arena">
       <Breadcrumb title="Produtos / Buscar" subtitle="Gerencie Produtos da Arte Arena / Buscar" />
       <ParentCard title="Buscar Produto">
-        <div>
-          <h1>Buscar Produto</h1>
 
-          {loading ? (
-            <CircularProgress />
-          ) : products.length > 0 ? (
+        <>
 
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Nome</TableCell>
-                    <TableCell>Categoria</TableCell>
-                    <TableCell>Código</TableCell>
-                    <TableCell>Preço</TableCell>
-                    <TableCell>Altura</TableCell>
-                    <TableCell>Largura</TableCell>
-                    <TableCell>Comprimento</TableCell>
-                    <TableCell>Peso</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {products.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell>{product.nome}</TableCell>
-                      <TableCell>{product.categoria}</TableCell>
-                      <TableCell>{product.preco}</TableCell>
-                      <TableCell>{product.altura}</TableCell>
-                      <TableCell>{product.largura}</TableCell>
-                      <TableCell>{product.comprimento}</TableCell>
-                      <TableCell>{product.peso}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : error ? (
-            <p>{error}</p>
-          ) : (
-            <p>Nenhuma conta encontrada.</p>
-          )}
-        </div>
+        {/* Campo de busca com botão */}
+        <Stack spacing={2} direction="row" alignItems="center" mb={2}>
+          <CustomTextField
+            fullWidth
+            value={query}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
+            onKeyPress={handleSearchKeyPress}
+            placeholder="Buscar produto..."
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <IconSearch />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSearch}
+            startIcon={<IconSearch />}
+          >
+            Buscar
+          </Button>
+        </Stack>
+
+        {/* Tabela */}
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Nome</TableCell>
+                <TableCell>Categoria</TableCell>
+                <TableCell>Código</TableCell>
+                <TableCell>Preço</TableCell>
+                <TableCell>Altura</TableCell>
+                <TableCell>Largura</TableCell>
+                <TableCell>Comprimento</TableCell>
+                <TableCell>Peso</TableCell>
+                <TableCell>Ações</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {data?.data.map((product: Product) => (
+                <TableRow key={product.id}>
+                  <TableCell>{product.nome}</TableCell>
+                  <TableCell>{product.categoria}</TableCell>
+                  <TableCell>{product.codigo}</TableCell>
+                  <TableCell>{product.preco}</TableCell>
+                  <TableCell>{product.altura}</TableCell>
+                  <TableCell>{product.largura}</TableCell>
+                  <TableCell>{product.comprimento}</TableCell>
+                  <TableCell>{product.peso}</TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => handleDeleteProduct(product.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Paginação */}
+        <Stack spacing={2} mt={2} alignItems="center">
+          <Pagination
+            count={Math.ceil(data.total / data.per_page)}
+            page={data.current_page}
+            onChange={handlePageChange}
+          />
+        </Stack>
+
+        </>
+
       </ParentCard>
     </PageContainer>
   );
 };
 
 export default ProdutosBuscarScreen;
-
