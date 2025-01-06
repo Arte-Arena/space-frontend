@@ -279,12 +279,12 @@ const Menuitems: MenuitemsType[] = [
         icon: IconZoomMoney,
         href: "/apps/orcamento/buscar",
       },
-      {
-        id: uniqueId(),
-        title: "Pedido Interno",
-        icon: IconClipboardList,
-        href: "/apps/pedido-interno",
-      },
+      // {
+      //   id: uniqueId(),
+      //   title: "Pedido Interno",
+      //   icon: IconClipboardList,
+      //   href: "/apps/pedido-interno",
+      // },
       {
         id: uniqueId(),
         title: "Backoffice",

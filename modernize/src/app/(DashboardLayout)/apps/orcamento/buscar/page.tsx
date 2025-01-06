@@ -11,8 +11,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { Pagination, Stack, Button, Box, Typography, Collapse } from '@mui/material';
+import { Pagination, Stack, Button, Box, Typography, Collapse, Popover } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { IconSearch } from '@tabler/icons-react';
@@ -21,7 +20,6 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { IconProgressCheck, IconEdit, IconCircleCheck, IconBan, IconProgressHelp } from '@tabler/icons-react';
 import Tooltip from '@mui/material/Tooltip';
-import { } from '@tabler/icons-react';
 
 interface Orcamento {
   id: number;
@@ -45,6 +43,7 @@ const OrcamentoBuscarScreen = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
+  const [statusPopoverAnchor, setStatusPopoverAnchor] = useState<null | HTMLElement>(null);
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -82,13 +81,26 @@ const OrcamentoBuscarScreen = () => {
     setOpenRow(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleDeleteOrcamento = async (orcamentoId: number) => {
-    console.log(`handleDeleteOrcamento: ${orcamentoId}`);
-  };
-
   if (isFetchingOrcamentos) return <CircularProgress />;
   if (errorOrcamentos) return <p>Ocorreu um erro: {errorOrcamentos.message}</p>;
 
+  const handleOpenStatusPopover = (event: React.MouseEvent<HTMLElement>) => {
+    setStatusPopoverAnchor(event.currentTarget);
+  };
+
+  const handleCloseStatusPopover = () => {
+    setStatusPopoverAnchor(null);
+  };
+
+  const handleSetStatus = (statusAction: 'approve' | 'reject', orcamentoId: number) => {
+    // console.log(`Status Action: ${statusAction} for Row ID: ${row.id}`);
+    console.log(`Status Action: ${statusAction}`);
+    console.log(`Id do Orçamento: ${orcamentoId}`);
+    handleCloseStatusPopover();
+  };
+
+  const isStatusPopoverOpen = Boolean(statusPopoverAnchor);
+  const popoverId = isStatusPopoverOpen ? 'status-action-popover' : undefined;
 
   return (
     <PageContainer title="Orçamento / Buscar" description="Buscar Orçamento da Arte Arena">
@@ -148,7 +160,7 @@ const OrcamentoBuscarScreen = () => {
                           {openRow[row.id] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                         </IconButton>
                       </TableCell>
-                      <TableCell>{row.id}</TableCell>
+                      <TableCell>{row.id} teste</TableCell>
                       <TableCell>{row.cliente_octa_number}</TableCell>
                       <TableCell>{row.nome_cliente}</TableCell>
                       <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
@@ -177,23 +189,37 @@ const OrcamentoBuscarScreen = () => {
                         <Stack direction="row" spacing={1}>
                           <Tooltip title="Alterar Status">
                             <IconButton
-                              aria-label="set status"
-                              onClick={() => console.log(`Set Status: ${row.id}`)}
+                              aria-label="alterar status"
+                              aria-describedby={popoverId}
+                              onClick={handleOpenStatusPopover}
                             >
                               <IconProgressCheck />
                             </IconButton>
                           </Tooltip>
+                          <Popover
+                            id={popoverId}
+                            open={isStatusPopoverOpen}
+                            anchorEl={statusPopoverAnchor}
+                            onClose={handleCloseStatusPopover}
+                            anchorOrigin={{
+                              vertical: 'bottom',
+                              horizontal: 'center',
+                            }}
+                            transformOrigin={{
+                              vertical: 'top',
+                              horizontal: 'center',
+                            }}
+                            sx={{
+                              boxShadow: 'none',
+                            }}
+                          >
+                            {/* <PopoverContent rowId={row.id} handleSetStatus={handleSetStatus} /> */}
+                          </Popover>
                           <IconButton
                             aria-label="edit"
                             onClick={() => console.log(`Edit: ${row.id}`)}
                           >
                             <IconEdit />
-                          </IconButton>
-                          <IconButton
-                            aria-label="delete"
-                            onClick={() => handleDeleteOrcamento(row.id)}
-                          >
-                            <DeleteIcon />
                           </IconButton>
                         </Stack>
                       </TableCell>
@@ -233,9 +259,15 @@ const OrcamentoBuscarScreen = () => {
               </TableBody>
             </Table>
           </TableContainer>
-          {/* <Stack spacing={2} direction="row" justifyContent="flex-end" sx={{ mt: 2 }}> */}
-          {/* <Pagination count={meta?.pageCount} page={25} /> */}
-          {/* </Stack> */}
+
+        {/* Paginação */}
+        <Stack spacing={2} mt={2} alignItems="center">
+          <Pagination
+            count={Math.ceil(dataOrcamentos.total / dataOrcamentos.per_page)}
+            page={dataOrcamentos.current_page}
+            onChange={handlePageChange}
+          />
+        </Stack>
 
         </>
       </ParentCard>
