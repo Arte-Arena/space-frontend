@@ -7,7 +7,7 @@ export default async function contarFeriados(dataInicio: Date, days: number) {
 
     // console.log('Contando feriados... dataFinal: ', dataFinal);
 
-    const url = `http://localhost:8000/api/calendar/feriados?datainicio=${dataInicio.toISOString().split('T')[0]}&datafim=${dataFinal.toISOString().split('T')[0]}`;
+    const url = `${process.env.NEXT_PUBLIC_API}/api/calendar/feriados?datainicio=${dataInicio.toISOString().split('T')[0]}&datafim=${dataFinal.toISOString().split('T')[0]}`;
     const response = await fetch(url, {
         method: 'GET',
         headers: {
