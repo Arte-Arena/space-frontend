@@ -1,10 +1,11 @@
 export default async function contarFeriados(dataInicio: Date, days: number) {
+    
+    const accessToken = localStorage.getItem('accessToken');
     // console.log('Contando feriados...');
     // console.log('Contando feriados... dataInicio: ', dataInicio);
     // console.log('Contando feriados... days: ', days);
 
     const dataFinal = new Date(dataInicio.getTime() + (days * 24 * 60 * 60 * 1000));
-
     // console.log('Contando feriados... dataFinal: ', dataFinal);
 
     const url = `${process.env.NEXT_PUBLIC_API}/api/calendar/feriados?datainicio=${dataInicio.toISOString().split('T')[0]}&datafim=${dataFinal.toISOString().split('T')[0]}`;
@@ -12,7 +13,7 @@ export default async function contarFeriados(dataInicio: Date, days: number) {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer 23|jhZYmBGECTZFY8Fzyaec5DsEslKCTvC82IFsN2LYd36ca661`
+            'Authorization': `Bearer ${accessToken}`,
         }
     });
     
