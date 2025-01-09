@@ -1,7 +1,7 @@
 export default function contarFinaisDeSemana(dataInicio: Date, days: number) {
-    console.log('Contando finais de semana...')
-    console.log('Contando finais de semana... dataInicio: ', dataInicio);
-    console.log('Contando finais de semana... days: ', days);
+    // console.log('Contando finais de semana...')
+    // console.log('Contando finais de semana... dataInicio: ', dataInicio);
+    // console.log('Contando finais de semana... days: ', days);
     let contador = 0;
     let dataFim = new Date(dataInicio);
     dataFim.setDate(dataFim.getDate() + days);
@@ -14,6 +14,6 @@ export default function contarFinaisDeSemana(dataInicio: Date, days: number) {
         dataInicio.setDate(dataInicio.getDate() + 1); // Avança para o próximo dia
     }
     
-    console.log('Contando finais de semana... resultado: ', contador)
+    // console.log('Contando finais de semana... resultado: ', contador)
     return contador;
 }
