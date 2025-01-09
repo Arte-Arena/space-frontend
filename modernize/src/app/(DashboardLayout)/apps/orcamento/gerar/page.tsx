@@ -30,6 +30,8 @@ import { DateTime } from 'luxon';
 import contarFinaisDeSemana from '@/utils/contarFinaisDeSemana';
 import contarFeriados from '@/utils/contarFeriados';
 import avancarDias from '@/utils/avancarDias';
+import encontrarProximoDiaUtil from '@/utils/encontrarProximoDiaUtil';
+// import gerarNumeroAleatorioDe4Digitos from '@/utils/gerarNumeroAleatorio4Digitos';
 import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy } from '@tabler/icons-react';
 import {
   Button,
@@ -48,11 +50,21 @@ import {
   Typography
 } from '@mui/material';
 
+interface ApiResponseClientes {
+  status: string;
+  data: Cliente[];
+  pagination?: {
+    current_page: number;
+    total_pages: number;
+    total_items: number;
+  };
+}
+
 interface Cliente {
-  number: string;
-  contact_name: string;
-  channel: string;
-  agent_name: string;
+  id: number;
+  nome: string | null;
+  telefone: string | null;
+  email: string | null;
 }
 
 interface Product {
@@ -77,7 +89,11 @@ const OrcamentoGerarScreen = () => {
   const isLoggedIn = useAuth();
   const [isLoadedClients, setIsLoadedClients] = useState(false);
   const [allClients, setAllClients] = useState<Cliente[]>([]);
-  const [clientId, setClientId] = useState('');
+  const [currentPageClients, setCurrentPageClients] = useState(1);
+  const [totalPagesClients, setTotalPagesClients] = useState<number | null>(null);
+  const [searchQueryClients, setSearchQueryClients] = useState<string>('');
+  const [clientInputValue, setClientInputValue] = useState<string | null>(null);
+  const [clientId, setClientId] = useState<number | ''>('');
   const [isLoadedProducts, setIsLoadedProducts] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
@@ -117,28 +133,47 @@ const OrcamentoGerarScreen = () => {
 
   const accessToken = localStorage.getItem('accessToken');
 
-  const { isFetching: isFetchingClients, error: errorClients, data: dataClients } = useQuery({
-    queryKey: ['clientData'],
-    queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/chat-octa`, {
+  const { isFetching: isFetchingClients, error: errorClients, data: dataClients } = useQuery<ApiResponseClientes>({
+    queryKey: ['clientData', currentPageClients], // Chave da query
+    queryFn: async () => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/clientes-consolidados?page=${currentPageClients}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-      }).then((res) => res.json()),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro ao buscar clientes: ${response.statusText}`);
+      }
+
+      return response.json();
+    }
   });
 
+  // useEffect para processar a resposta da API
   useEffect(() => {
     if (dataClients) {
-      console.log('dataClients:', dataClients);
-      if (Array.isArray(dataClients)) {
-        setAllClients(dataClients.map((item: Cliente) => ({ number: item.number, contact_name: item.contact_name, channel: item.channel, agent_name: item.agent_name })));
+      console.log('Resposta da API:', dataClients);
+      if (dataClients.status === 'success' && Array.isArray(dataClients.data)) {
+        setAllClients((prevClients) => [
+          ...prevClients,
+          ...dataClients.data.map(({ id, nome, telefone, email }) => ({
+            id,
+            nome,
+            telefone,
+            email,
+          })),
+        ]);
+
+        // Atualiza o total de páginas (se for a primeira resposta)
+        if (dataClients.pagination) {
+          setTotalPagesClients(dataClients.pagination.total_pages);
+        }
       } else {
-        console.error('Dados inválidos recebidos da API:', dataClients);
+        console.error('Formato inesperado nos dados da API:', dataClients);
       }
-    } else {
-      console.warn('Os dados de clientes não foram encontrados.');
     }
   }, [dataClients]);
 
@@ -148,15 +183,24 @@ const OrcamentoGerarScreen = () => {
     }
   }, [allClients, isFetchingClients, errorClients]);
 
+  const handleScrollClients = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    const isBottom = scrollHeight - scrollTop === clientHeight;
+
+    if (isBottom && totalPagesClients !== null && currentPageClients < totalPagesClients) {
+      setCurrentPageClients((prevPage) => prevPage + 1);
+    }
+  };
+
   useEffect(() => {
-    if (allClients) {
-      console.log('allClients:', allClients);
+    if (allClients.length > 0) {
+      console.log('Clientes consolidados carregados:', allClients);
     }
   }, [allClients]);
 
   useEffect(() => {
     if (clientId) {
-      console.log('clientId:', clientId);
+      console.log('Cliente selecionado:', clientId);
     }
   }, [clientId]);
 
@@ -165,6 +209,56 @@ const OrcamentoGerarScreen = () => {
       console.log('allClients:', allClients);
     }
   }, [allClients]);
+
+  const handleChangeClientesConsolidadosInput = (
+    event: React.ChangeEvent<{}>,
+    value: Cliente | null
+  ) => {
+    setClientId(value ? value.id : '');
+    setClientInputValue(value ? value.nome : '');
+  };
+
+  const handleSearchClientes = () => {
+    setIsLoadedClients(false);
+
+    fetch(`${process.env.NEXT_PUBLIC_API}/api/clientes-consolidados?search=${searchQueryClients}&page=${currentPageClients}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (Array.isArray(data.data) && data.data.length === 0) {
+          console.log('Sem opções disponíveis para essa busca [clientes]')
+          setAllClients([
+            {
+              id: 1,
+              nome: searchQueryClients,
+              telefone: searchQueryClients,
+              email: searchQueryClients,
+            },
+          ]);
+          setIsLoadedClients(true);
+        } else {
+          console.log('Opções encontradas [busca de clientes]');
+          setAllClients(data.data);
+          setIsLoadedClients(true);
+        }
+      })
+      .catch((error) => console.error('Erro ao buscar clientes:', error));
+  };
+
+  // Função para reiniciar a pesquisa ao pressionar Enter
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      setCurrentPageClients(1); // Reset para a primeira página
+      setAllClients([]); // Limpar resultados anteriores
+      handleSearchClientes();
+    }
+  };
+
 
   const { isFetching: isFetchingProducts, error: errorProducts, data: dataProducts } = useQuery({
     queryKey: ['productData'],
@@ -419,7 +513,7 @@ const OrcamentoGerarScreen = () => {
     setFreteAtualizado(true);
     switch (shippingOption) {
       case 'RETIRADA':
-        setPrazoFrete(1);
+        setPrazoFrete(0);
         setPrecoFrete(0.00);
         break;
       case 'MINIENVIOS':
@@ -458,16 +552,16 @@ const OrcamentoGerarScreen = () => {
   const calcPrevisao = async () => {
     console.log('Calculando a previsão... Iniciando calculo de previsão de entrega');
     const today = DateTime.fromJSDate(getBrazilTime());
-    console.log('Calculando a previsão... Avançando os dias... Dia no Brasil: ', today);
+    // console.log('Calculando a previsão... Avançando os dias... Dia no Brasil: ', today);
 
     if (shippingOption) {
-      console.log('Calculando a previsão... Opção de entrega definida pelo usuário:', shippingOption);
+      // console.log('Calculando a previsão... Opção de entrega definida pelo usuário:', shippingOption);
     }
 
     if (prazoProducao && prazoFrete) {
       console.log('Calculando a previsão... prazoProducao: ', prazoProducao);
       console.log('Calculando a previsão... prazoFrete: ', prazoFrete);
-      
+
       const prazoProducaoFinsSemana = contarFinaisDeSemana(getBrazilTime(), prazoProducao);
       console.log('Calculando a previsão... prazoProducaoFinsSemana: ', prazoProducaoFinsSemana);
 
@@ -476,11 +570,20 @@ const OrcamentoGerarScreen = () => {
 
       const prazoProducaoTotal = prazoProducao + prazoProducaoFinsSemana + prazoProducaoFeriados;
       console.log('Calculando a previsão... prazoProducaoTotal: ', prazoProducaoTotal);
-      
-      const dataPrevistaEntrega = avancarDias(today, prazoFrete + prazoProducaoTotal);
+
+      const prazoFreteFinsSemana = contarFinaisDeSemana(getBrazilTime(), prazoFrete);
+      console.log('Calculando a previsão... prazoFreteFinsSemana: ', prazoFreteFinsSemana);
+
+      const prazoFreteFeriados = await contarFeriados(getBrazilTime(), prazoFrete);
+      console.log('Calculando a previsão... prazoFreteFeriados: ', prazoFreteFeriados);
+
+      const prazoFreteTotal = prazoFrete + prazoFreteFinsSemana + prazoFreteFeriados;
+      console.log('Calculando a previsão... prazoFreteTotal: ', prazoProducaoTotal);
+
+      const dataPrevistaEntrega = avancarDias(today, prazoFreteTotal + prazoProducaoTotal);
       console.log('dataPrevistaEntrega', dataPrevistaEntrega);
 
-      setPrevisaoEntrega(dataPrevistaEntrega);
+      setPrevisaoEntrega(await encontrarProximoDiaUtil(dataPrevistaEntrega));
     } else {
       console.log('Calculando a previsão... Erro crítico: prazoFrete ou prazoProducao não definido(s)');
     }
@@ -625,32 +728,39 @@ Orçamento válido por 30 dias.
             Cliente
           </CustomFormLabel>
 
-          <Autocomplete
-            fullWidth
-            disablePortal
-            id="cliente"
-            loading={isFetchingClients}
-            disabled={!isLoadedClients}
-            options={allClients}
-            getOptionLabel={(option) => `${option.number} :: ${option.contact_name} :: (${option.channel} ${option.agent_name ? ` - ${option.agent_name}` : ''})`}
-            onChange={(event, value) => setClientId(value ? value.number : '')}
-            renderInput={(params) => (
-              <CustomTextField
-                {...params}
-                placeholder="Selecione um cliente"
-                aria-label="Selecione um cliente"
-                InputProps={{
-                  ...params.InputProps,
-                  endAdornment: (
-                    <>
-                      {isFetchingClients ? <CircularProgress size={24} /> : null}
-                      {params.InputProps.endAdornment}
-                    </>
-                  ),
-                }}
-              />
-            )}
-          />
+          <div onScroll={handleScrollClients} style={{ maxHeight: 300, overflowY: 'auto' }}>
+            <Autocomplete
+              fullWidth
+              disablePortal
+              id="cliente"
+              loading={isFetchingClients || !isLoadedClients}
+              disabled={isFetchingClients}
+              options={allClients}
+              getOptionLabel={(option) =>
+                `${option.id} :: ${option.nome} :: (${option.telefone} ${option.email ? ` - ${option.email}` : ''})`
+              }
+              onChange={handleChangeClientesConsolidadosInput}
+              onKeyDown={handleKeyPress}
+              renderInput={(params) => (
+                <CustomTextField
+                  {...params}
+                  placeholder="Selecione um cliente"
+                  aria-label="Selecione um cliente"
+                  value={searchQueryClients} // Controla o valor da pesquisa
+                  onChange={(e: any) => setSearchQueryClients(e.target.value)}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {isFetchingClients ? <CircularProgress size={24} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+            />
+          </div>
 
           <div style={{ marginTop: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '20px' }}>
@@ -1019,12 +1129,12 @@ Orçamento válido por 30 dias.
                         <Typography sx={{ ml: 1 }}>
                           Mini Envios - R$ {precoMiniEnvios}{" "}
                           - Tempo de transporte:{" "}
-                          {prazoMiniEnvios !== null ? prazoMiniEnvios : "não disponível"} dias.{" "}
+                          {prazoMiniEnvios !== null ? prazoMiniEnvios : "não disponível"} dias úteis.{" "}
                           Previsão:{" "}
                           {(() => {
                             const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
                             return prazoMiniEnvios !== null
-                              ? (maxPrazo + prazoMiniEnvios) + " dias."
+                              ? (maxPrazo + prazoMiniEnvios) + " dias úteis úteis."
                               : "não disponível";
                           })()}
                         </Typography>
@@ -1051,11 +1161,11 @@ Orçamento válido por 30 dias.
                           {"PAC - R$ " + precoPac +
                             " - Tempo de transporte: " +
                             (prazoPac !== null ? prazoPac : "não disponível") +
-                            " dias. Previsão: " +
+                            " dias úteis. Previsão: " +
                             (() => {
                               const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
                               return prazoPac !== null
-                                ? (maxPrazo + prazoPac) + " dias."
+                                ? (maxPrazo + prazoPac) + " dias úteis."
                                 : "não disponível";
                             })()}
                         </Typography>
@@ -1085,11 +1195,11 @@ Orçamento válido por 30 dias.
                           {"SEDEX - R$ " + precoSedex +
                             " - Tempo de transporte: " +
                             (prazoSedex !== null ? prazoSedex : "não disponível") +
-                            " dias. Previsão: " +
+                            " dias úteis. Previsão: " +
                             (() => {
                               const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
                               return prazoSedex !== null
-                                ? (maxPrazo + prazoSedex) + " dias."
+                                ? (maxPrazo + prazoSedex) + " dias úteis."
                                 : "não disponível";
                             })()}
                         </Typography>
@@ -1114,11 +1224,11 @@ Orçamento válido por 30 dias.
                           {"SEDEX 10 - R$ " + precoSedex10 +
                             " - Tempo de transporte: " +
                             (prazoSedex10 !== null ? prazoSedex10 : "não disponível") +
-                            " dias. Previsão: " +
+                            " dias úteis. Previsão: " +
                             (() => {
                               const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
                               return prazoSedex10 !== null
-                                ? (maxPrazo + prazoSedex10) + " dias."
+                                ? (maxPrazo + prazoSedex10) + " dias úteis."
                                 : "não disponível";
                             })()}
                         </Typography>
@@ -1142,11 +1252,11 @@ Orçamento válido por 30 dias.
                           {"SEDEX 12 - R$ " + precoSedex12 +
                             " - Tempo de transporte: " +
                             (prazoSedex12 !== null ? prazoSedex12 : "não disponível") +
-                            " dias. Previsão: " +
+                            " dias úteis. Previsão: " +
                             (() => {
                               const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
                               return prazoSedex12 !== null
-                                ? (maxPrazo + prazoSedex12) + " dias."
+                                ? (maxPrazo + prazoSedex12) + " dias úteis."
                                 : "não disponível";
                             })()}
                         </Typography>
