@@ -130,6 +130,7 @@ const OrcamentoGerarScreen = () => {
   const [loadingPrevisao, setLoadingPrevisao] = useState(false);
   const [previsaoEntrega, setPrevisaoEntrega] = useState<DateTime>(DateTime.now())
   const descriptionElementRef = React.useRef<HTMLElement>(null);
+  const [openSnackbarCopiarOrcamento, setOpenSnackbarCopiarOrcamento] = useState(false);
 
   const accessToken = localStorage.getItem('accessToken');
 
@@ -544,12 +545,13 @@ const OrcamentoGerarScreen = () => {
   }, [shippingOption]);
 
   useEffect(() => {
-    setLoadingPrevisao(true);
     calcPrevisao();
-    setLoadingPrevisao(false);
   }, [prazoProducao, prazoFrete]);
 
   const calcPrevisao = async () => {
+
+    setLoadingPrevisao(true);
+
     console.log('Calculando a previsão... Iniciando calculo de previsão de entrega');
     const today = DateTime.fromJSDate(getBrazilTime());
     // console.log('Calculando a previsão... Avançando os dias... Dia no Brasil: ', today);
@@ -587,6 +589,8 @@ const OrcamentoGerarScreen = () => {
     } else {
       console.log('Calculando a previsão... Erro crítico: prazoFrete ou prazoProducao não definido(s)');
     }
+
+    setLoadingPrevisao(false);
 
     return;
   };
@@ -713,6 +717,9 @@ Orçamento válido por 30 dias.
     }
   };
 
+  const handleCloseSnackbarCopiarOrcamento = () => {
+    setOpenSnackbarCopiarOrcamento(false);
+  }
 
   return (
     <PageContainer title="Orçamento / Gerar" description="Gerar Orçamento da Arte Arena">
@@ -1369,7 +1376,7 @@ Orçamento válido por 30 dias.
                 color="primary"
                 variant="contained"
                 onClick={handleSubmit}
-                disabled={!isUrgentDeliverySelected || !shippingOption || !clientId || productsList.length === 0}
+                disabled={!isUrgentDeliverySelected || !shippingOption || !clientId || productsList.length === 0 || loadingPrevisao}
               >
                 <IconDeviceFloppy style={{ marginRight: '8px' }} />
                 Gerar Orçamento
@@ -1394,15 +1401,28 @@ Orçamento válido por 30 dias.
               </DialogContentText>
             </DialogContent>
             <DialogActions>
-              <IconButton>
+
+              <IconButton onClick={() => { navigator.clipboard.writeText(orçamentoTexto); setOpenSnackbarCopiarOrcamento(true); }}>
                 <IconCopy />
                 <Typography variant="body2">Copiar Orçamento</Typography>
               </IconButton>
+
               <Button autoFocus onClick={handleCloseBudget} color="primary">
                 Fechar
               </Button>
             </DialogActions>
           </Dialog>
+
+          <Snackbar
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            open={openSnackbarCopiarOrcamento}
+            onClose={handleCloseSnackbarCopiarOrcamento}
+            key={'top' + 'center'}
+          >
+            <Alert onClose={handleCloseSnackbarCopiarOrcamento} severity="success" sx={{ width: '100%' }}>
+              Orçamento copiado com sucesso!
+            </Alert>
+          </Snackbar>
 
         </>
       </ParentCard>
