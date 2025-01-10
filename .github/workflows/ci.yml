@@ -3,7 +3,7 @@ name: Arte Arena Space Frontend - Production CI/CD Pipeline
 on:
   push:
     branches:
-      - homolog  # Only trigger on pushes to homolog branch
+      - homolog # Only trigger on pushes to homolog branch
 
 jobs:
   build_and_push_homolog:
@@ -13,15 +13,14 @@ jobs:
 
       - name: Setup Environment for Homolog
         run: |
-          echo "Current directory: $(pwd)"
-          ls -la
-          image_name=artearenahub/space-frontend  # Base image name
-
+          image_name=artearenahub/space-frontend
+          echo "image_name=$image_name" >> $GITHUB_ENV
+          tag_name="$image_name-homolog:0.0.${{ github.run_number }}"
+          echo "tag_name=$tag_name" >> $GITHUB_ENV
           echo "NEXT_PUBLIC_API=https://api-homolog.spacearena.net" > .env
-          echo "image_tag=<span class="math-inline">image\_name\-homolog\:0\.0\.</span>{{ github.run_number }}" >> $GITHUB_ENV  # Tag for homolog
-          echo "image_tag_latest=$image_name-homolog:latest" >> $GITHUB_ENV  # Tag latest for homolog
-          echo "Environment: Homolog"
-          echo "Image Tag: ${{ env.image_tag }}"
+          echo "image_tag=$image_name-homolog:0.0.${{ github.run_number }}" >> $GITHUB_ENV
+          echo "image_tag_latest=$image_name-homolog:latest" >> $GITHUB_ENV
+          echo "Image Tag: ${{ env.tag_name }}"
           echo "Image Tag Latest: ${{ env.image_tag_latest }}"
           echo "Environment file content:"
           cat .env
@@ -47,8 +46,8 @@ jobs:
           file: ./docker/Dockerfile
           push: true
           tags: |
-            ${{ env.image_tag }}
-            ${{ env.image_tag_latest }}
+            ${{ env.tag_name }}
+            ${{ env.image_name }}-homolog:latest
         env:
           ACTIONS_RUNNER_DEBUG: true
           ACTIONS_STEP_DEBUG: true
@@ -56,22 +55,22 @@ jobs:
   # Separate job for Pull Requests merged to main
   deploy_to_production:
     runs-on: ubuntu-latest
-    needs: build_and_push_homolog  # This job depends on the successful completion of build_and_push_homolog
+    needs: build_and_push_homolog
     if: github.event.name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
     steps:
       - uses: actions/checkout@v4.1.1
 
       - name: Setup Environment for Production
         run: |
-          echo "Current directory: $(pwd)"
-          ls -la
-          image_name=artearenahub/space-frontend  # Base image name
-
+          image_name=artearenahub/space-frontend
+          echo "image_name=$image_name" >> $GITHUB_ENV
+          tag_name="$image_name:0.0.${{ github.run_number }}" # Usando variável intermediária
+          echo "tag_name=$tag_name" >> $GITHUB_ENV
           echo "NEXT_PUBLIC_API=https://api.spacearena.net" > .env
-          echo "image_tag=<span class="math-inline">image\_name\:0\.0\.</span>{{ github.run_number }}" >> $GITHUB_ENV  # Tag for production
-          echo "image_tag_latest=$image_name:latest" >> $GITHUB_ENV  # Tag latest for production
+          echo "image_tag=$image_name:0.0.${{ github.run_number }}" >> $GITHUB_ENV
+          echo "image_tag_latest=$image_name:latest" >> $GITHUB_ENV
           echo "Environment: Production"
-          echo "Image Tag: ${{ env.image_tag }}"
+          echo "Image Tag: ${{ env.tag_name }}"
           echo "Image Tag Latest: ${{ env.image_tag_latest }}"
           echo "Environment file content:"
           cat .env
@@ -97,8 +96,8 @@ jobs:
           file: ./docker/Dockerfile
           push: true
           tags: |
-            ${{ env.image_tag }}
-            ${{ env.image_tag_latest }}
+            ${{ env.tag_name }}
+            ${{ env.image_name }}:latest # Usando a variável image_name aqui
         env:
           ACTIONS_RUNNER_DEBUG: true
           ACTIONS_STEP_DEBUG: true
