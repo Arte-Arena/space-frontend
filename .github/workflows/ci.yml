@@ -10,97 +10,98 @@ on:
     types: [closed] # Especifica que é quando o PR é fechado
     
 jobs:
-  build_and_push_homolog:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4.1.1
+  CI:
+    build_and_push_homolog:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4.1.1
 
-      - name: Setup Environment for Homolog
-        run: |
-          image_name=artearenahub/space-frontend
-          echo "image_name=$image_name" >> $GITHUB_ENV
-          tag_name="$image_name-homolog:0.0.${{ github.run_number }}"
-          echo "tag_name=$tag_name" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_API=https://api-homolog.spacearena.net" > .env
-          echo "image_tag=$image_name-homolog:0.0.${{ github.run_number }}" >> $GITHUB_ENV
-          echo "image_tag_latest=$image_name-homolog:latest" >> $GITHUB_ENV
-          echo "Image Tag: ${{ env.tag_name }}"
-          echo "Image Tag Latest: ${{ env.image_tag_latest }}"
-          echo "Environment file content:"
-          cat .env
+        - name: Setup Environment for Homolog
+          run: |
+            image_name=artearenahub/space-frontend
+            echo "image_name=$image_name" >> $GITHUB_ENV
+            tag_name="$image_name-homolog:0.0.${{ github.run_number }}"
+            echo "tag_name=$tag_name" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_API=https://api-homolog.spacearena.net" > .env
+            echo "image_tag=$image_name-homolog:0.0.${{ github.run_number }}" >> $GITHUB_ENV
+            echo "image_tag_latest=$image_name-homolog:latest" >> $GITHUB_ENV
+            echo "Image Tag: ${{ env.tag_name }}"
+            echo "Image Tag Latest: ${{ env.image_tag_latest }}"
+            echo "Environment file content:"
+            cat .env
 
-      - name: Ensure .env is included
-        run: |
-          ls -la
-          if [ ! -f ".env" ]; then
-            echo "Error: .env file was not created"
-            exit 1
-          fi
+        - name: Ensure .env is included
+          run: |
+            ls -la
+            if [ ! -f ".env" ]; then
+              echo "Error: .env file was not created"
+              exit 1
+            fi
 
-      - name: Docker Login
-        uses: docker/login-action@v3.0.0
-        with:
-          username: ${{secrets.DOCKERHUB_USER}}
-          password: ${{secrets.DOCKERHUB_PWD}}
+        - name: Docker Login
+          uses: docker/login-action@v3.0.0
+          with:
+            username: ${{secrets.DOCKERHUB_USER}}
+            password: ${{secrets.DOCKERHUB_PWD}}
 
-      - name: Build and push Docker frontend image (Homolog)
-        uses: docker/build-push-action@v5.0.0
-        with:
-          context: .
-          file: ./docker/Dockerfile
-          push: true
-          tags: |
-            ${{ env.tag_name }}
-            ${{ env.image_name }}-homolog:latest
-        env:
-          ACTIONS_RUNNER_DEBUG: true
-          ACTIONS_STEP_DEBUG: true
+        - name: Build and push Docker frontend image (Homolog)
+          uses: docker/build-push-action@v5.0.0
+          with:
+            context: .
+            file: ./docker/Dockerfile
+            push: true
+            tags: |
+              ${{ env.tag_name }}
+              ${{ env.image_name }}-homolog:latest
+          env:
+            ACTIONS_RUNNER_DEBUG: true
+            ACTIONS_STEP_DEBUG: true
 
-  # Separate job for Pull Requests merged to main
-  deploy_to_production:
-    runs-on: ubuntu-latest
-    needs: build_and_push_homolog
-    if: github.event.name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true # Condição correta    steps:
-      - uses: actions/checkout@v4.1.1
+    # Separate job for Pull Requests merged to main
+    deploy_to_production:
+      runs-on: ubuntu-latest
+      needs: build_and_push_homolog
+      if: github.event.name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true # Condição correta    steps:
+        - uses: actions/checkout@v4.1.1
 
-      - name: Setup Environment for Production
-        run: |
-          image_name=artearenahub/space-frontend
-          echo "image_name=$image_name" >> $GITHUB_ENV
-          tag_name="$image_name:0.0.${{ github.run_number }}" # Usando variável intermediária
-          echo "tag_name=$tag_name" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_API=https://api.spacearena.net" > .env
-          echo "image_tag=$image_name:0.0.${{ github.run_number }}" >> $GITHUB_ENV
-          echo "image_tag_latest=$image_name:latest" >> $GITHUB_ENV
-          echo "Environment: Production"
-          echo "Image Tag: ${{ env.tag_name }}"
-          echo "Image Tag Latest: ${{ env.image_tag_latest }}"
-          echo "Environment file content:"
-          cat .env
+        - name: Setup Environment for Production
+          run: |
+            image_name=artearenahub/space-frontend
+            echo "image_name=$image_name" >> $GITHUB_ENV
+            tag_name="$image_name:0.0.${{ github.run_number }}" # Usando variável intermediária
+            echo "tag_name=$tag_name" >> $GITHUB_ENV
+            echo "NEXT_PUBLIC_API=https://api.spacearena.net" > .env
+            echo "image_tag=$image_name:0.0.${{ github.run_number }}" >> $GITHUB_ENV
+            echo "image_tag_latest=$image_name:latest" >> $GITHUB_ENV
+            echo "Environment: Production"
+            echo "Image Tag: ${{ env.tag_name }}"
+            echo "Image Tag Latest: ${{ env.image_tag_latest }}"
+            echo "Environment file content:"
+            cat .env
 
-      - name: Ensure .env is included
-        run: |
-          ls -la
-          if [ ! -f ".env" ]; then
-            echo "Error: .env file was not created"
-            exit 1
-          fi
+        - name: Ensure .env is included
+          run: |
+            ls -la
+            if [ ! -f ".env" ]; then
+              echo "Error: .env file was not created"
+              exit 1
+            fi
 
-      - name: Docker Login
-        uses: docker/login-action@v3.0.0
-        with:
-          username: ${{secrets.DOCKERHUB_USER}}
-          password: ${{secrets.DOCKERHUB_PWD}}
+        - name: Docker Login
+          uses: docker/login-action@v3.0.0
+          with:
+            username: ${{secrets.DOCKERHUB_USER}}
+            password: ${{secrets.DOCKERHUB_PWD}}
 
-      - name: Build and push Docker frontend image (Production)
-        uses: docker/build-push-action@v5.0.0
-        with:
-          context: .
-          file: ./docker/Dockerfile
-          push: true
-          tags: |
-            ${{ env.tag_name }}
-            ${{ env.image_name }}:latest # Usando a variável image_name aqui
-        env:
-          ACTIONS_RUNNER_DEBUG: true
-          ACTIONS_STEP_DEBUG: true
+        - name: Build and push Docker frontend image (Production)
+          uses: docker/build-push-action@v5.0.0
+          with:
+            context: .
+            file: ./docker/Dockerfile
+            push: true
+            tags: |
+              ${{ env.tag_name }}
+              ${{ env.image_name }}:latest # Usando a variável image_name aqui
+          env:
+            ACTIONS_RUNNER_DEBUG: true
+            ACTIONS_STEP_DEBUG: true
