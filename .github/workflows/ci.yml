@@ -61,7 +61,8 @@ jobs:
     deploy_to_production:
       runs-on: ubuntu-latest
       needs: build_and_push_homolog
-      if: github.event.name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true # Condição correta    steps:
+      if: github.event.name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true # Condição correta    
+      steps:
         - uses: actions/checkout@v4.1.1
 
         - name: Setup Environment for Production
