@@ -462,6 +462,8 @@ const OrcamentoGerarScreen = () => {
 
       if (!response.ok) {
         throw new Error('Failed to fetch frete');
+      } else {
+        console.log(body);
       }
 
       const data: FreteData[] = await response.json();
