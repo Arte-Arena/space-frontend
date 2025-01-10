@@ -12,6 +12,7 @@ on:
 jobs:
   build_and_push_homolog:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged != true # Não executar se for um merge PR
     steps:
       - uses: actions/checkout@v4.1.1
 
