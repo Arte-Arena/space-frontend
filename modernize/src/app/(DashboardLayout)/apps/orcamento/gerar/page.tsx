@@ -674,7 +674,7 @@ Total:        R$ ${totalOrçamento.toFixed(2)}
 Prazo de Produção: ${prazoProducao} dias úteis
 Prazo de Frete: ${prazoFrete} dias úteis
 
-Previsão de Entrega: ${previsaoEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy')}
+Previsão de ${shippingOption === 'RETIRADA' ? 'Retirada' : 'Entrega'}: ${previsaoEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy')}
 
 Prazo inicia-se após aprovação da arte e pagamento confirmado.
 
