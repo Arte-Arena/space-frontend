@@ -641,8 +641,8 @@ const OrcamentoGerarScreen = () => {
       // Formatação da linha do produto para garantir alinhamento
       const quantidade = `${product.quantidade} un`;
       const nomeProduto = product.nome;
-      const precoUnitario = `R$ ${product.preco.toFixed(2)}`;
-      const totalProduto = `R$ ${produtoTotal.toFixed(2)}`;
+      const precoUnitario = `R$ ${product.preco.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`;
+      const totalProduto = `R$ ${produtoTotal.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`;
 
       // Concatena as informações do produto
       produtosTexto += `${quantidade} ${nomeProduto} ${precoUnitario} (${totalProduto})\n`;
@@ -655,7 +655,7 @@ const OrcamentoGerarScreen = () => {
 
     let precoFreteTexto = '0.00';
     if (precoFrete) {
-      precoFreteTexto = precoFrete.toFixed(2);
+      precoFreteTexto = precoFrete.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
     } else {
       console.log("Erro crítico precoFrete não existe ao compor o texto do orçamento.")
     }
@@ -668,7 +668,7 @@ Lista de Produtos:
 ${produtosTexto.trim()}
 ${shippingOption === 'RETIRADA' ? 'Frete: R$ 0,00 (Retirada)' : `Frete: R$ ${precoFreteTexto} (Dia da postagem + ${prazoFrete} dias úteis via ${shippingOption})`}
 
-Total: R$ ${totalOrçamento.toFixed(2)}
+Total: R$ ${totalOrçamento.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}
 
 Prazo de Produção: ${prazoProducao} dias úteis
 Previsão de ${shippingOption === 'RETIRADA' ? 'Retirada' : 'Entrega'}: ${previsaoEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy')}
