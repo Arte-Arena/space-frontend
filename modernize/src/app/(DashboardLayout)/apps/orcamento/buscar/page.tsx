@@ -38,12 +38,13 @@ interface Orcamento {
   updated_at: string;
 }
 
-const OrcamentoBuscarScreen = () => {
+const OrcamentoBuscarScreen: React.FC<{ row: { id: string | number } }> = ({ row }) => {
   const [query, setQuery] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [statusPopoverAnchor, setStatusPopoverAnchor] = useState<null | HTMLElement>(null);
+  const [currentRowId, setCurrentRowId] = useState<number | null>(null);
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -84,18 +85,22 @@ const OrcamentoBuscarScreen = () => {
   if (isFetchingOrcamentos) return <CircularProgress />;
   if (errorOrcamentos) return <p>Ocorreu um erro: {errorOrcamentos.message}</p>;
 
-  const handleOpenStatusPopover = (event: React.MouseEvent<HTMLElement>) => {
+  const handleOpenStatusPopover = (event: React.MouseEvent<HTMLElement>, rowId: number) => {
     setStatusPopoverAnchor(event.currentTarget);
+    setCurrentRowId(rowId); // Fixed: rowId is now of type number
   };
 
   const handleCloseStatusPopover = () => {
     setStatusPopoverAnchor(null);
   };
 
-  const handleSetStatus = (statusAction: 'approve' | 'reject', orcamentoId: number) => {
-    // console.log(`Status Action: ${statusAction} for Row ID: ${row.id}`);
-    console.log(`Status Action: ${statusAction}`);
-    console.log(`Id do Orçamento: ${orcamentoId}`);
+  const handleSetStatus = (statusAction: 'approve' | 'reject', orcamentoId: number | null) => {
+    if (orcamentoId !== null) {
+      console.log(`Id do Orçamento: ${orcamentoId}`);
+    } else {
+      console.error("orcamentoId is null");
+    }
+    console.log(statusAction);
     handleCloseStatusPopover();
   };
 
@@ -160,7 +165,7 @@ const OrcamentoBuscarScreen = () => {
                           {openRow[row.id] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                         </IconButton>
                       </TableCell>
-                      <TableCell>{row.id} teste</TableCell>
+                      <TableCell>{row.id}</TableCell>
                       <TableCell>{row.cliente_octa_number}</TableCell>
                       <TableCell>{row.nome_cliente}</TableCell>
                       <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
@@ -191,7 +196,7 @@ const OrcamentoBuscarScreen = () => {
                             <IconButton
                               aria-label="alterar status"
                               aria-describedby={popoverId}
-                              onClick={handleOpenStatusPopover}
+                              onClick={(event) => handleOpenStatusPopover(event, row.id)}
                             >
                               <IconProgressCheck />
                             </IconButton>
@@ -213,7 +218,16 @@ const OrcamentoBuscarScreen = () => {
                               boxShadow: 'none',
                             }}
                           >
-                            {/* <PopoverContent rowId={row.id} handleSetStatus={handleSetStatus} /> */}
+                            <div>
+                              <Typography sx={{ p: 2 }}>
+                                Aprovar Orçamento?
+                              </Typography>
+                              <Stack direction="row" spacing={1} padding={1}>
+                                <Button variant="contained" color="primary" onClick={() => handleSetStatus('approve', currentRowId)}>
+                                  Aprovar
+                                </Button>
+                              </Stack>
+                            </div>
                           </Popover>
                           <IconButton
                             aria-label="edit"
@@ -260,14 +274,14 @@ const OrcamentoBuscarScreen = () => {
             </Table>
           </TableContainer>
 
-        {/* Paginação */}
-        <Stack spacing={2} mt={2} alignItems="center">
-          <Pagination
-            count={Math.ceil(dataOrcamentos.total / dataOrcamentos.per_page)}
-            page={dataOrcamentos.current_page}
-            onChange={handlePageChange}
-          />
-        </Stack>
+          {/* Paginação */}
+          <Stack spacing={2} mt={2} alignItems="center">
+            <Pagination
+              count={Math.ceil(dataOrcamentos.total / dataOrcamentos.per_page)}
+              page={dataOrcamentos.current_page}
+              onChange={handlePageChange}
+            />
+          </Stack>
 
         </>
       </ParentCard>
