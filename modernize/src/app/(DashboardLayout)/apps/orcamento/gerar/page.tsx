@@ -683,7 +683,6 @@ Orçamento válido por 30 dias.
 
     setOrçamentoTexto(textoOrcamento);
     setOpenBudget(true);
-    salvarOrcamento();
   }
 
   const salvarOrcamento = async () => {
@@ -718,6 +717,10 @@ Orçamento válido por 30 dias.
       console.error('Erro:', error);
     }
   };
+
+  useEffect(() => {
+    salvarOrcamento();
+  }, [orçamentoTexto]);
 
   const handleCloseSnackbarCopiarOrcamento = () => {
     setOpenSnackbarCopiarOrcamento(false);
