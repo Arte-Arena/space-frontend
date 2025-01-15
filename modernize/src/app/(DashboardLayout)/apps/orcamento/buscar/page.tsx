@@ -37,8 +37,8 @@ interface Orcamento {
   created_at: string;
   updated_at: string;
 }
-
-const OrcamentoBuscarScreen: React.FC<{ row: { id: string | number } }> = ({ row }) => {
+const OrcamentoBuscarScreen = () => {
+// const OrcamentoBuscarScreen: React.FC<{ row: { id: string | number } }> = ({ row }) => {
   const [query, setQuery] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
