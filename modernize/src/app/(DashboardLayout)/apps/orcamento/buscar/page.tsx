@@ -38,7 +38,6 @@ interface Orcamento {
   updated_at: string;
 }
 const OrcamentoBuscarScreen = () => {
-// const OrcamentoBuscarScreen: React.FC<{ row: { id: string | number } }> = ({ row }) => {
   const [query, setQuery] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
@@ -51,7 +50,7 @@ const OrcamentoBuscarScreen = () => {
     throw new Error('Access token is missing');
   }
 
-  const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos } = useQuery({
+  const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos, refetch } = useQuery({
     queryKey: ['budgetData', searchQuery, page],
     queryFn: () =>
       fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/get-orcamentos-status?q=${encodeURIComponent(searchQuery)}&page=${page}`, {
@@ -62,6 +61,7 @@ const OrcamentoBuscarScreen = () => {
         },
       }).then((res) => res.json()),
   });
+
 
   const handleSearch = () => {
     setSearchQuery(query); // Atualiza a busca
@@ -94,6 +94,25 @@ const OrcamentoBuscarScreen = () => {
     setStatusPopoverAnchor(null);
   };
 
+  const aprovaOrcamento = (orcamentoId: number | null) => {
+    if (orcamentoId !== null) {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/status/aprova/${orcamentoId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }).then(() => {
+        console.log('Orçamento aprovado com sucesso');
+        // Pode fazer o refetch agora!
+        // Implemente o refetch aqui!
+        refetch();
+      });
+    }
+  };
+
+  const isStatusPopoverOpen = Boolean(statusPopoverAnchor);
+  const popoverId = isStatusPopoverOpen ? 'status-action-popover' : undefined;
   const handleSetStatus = (statusAction: 'approve' | 'reject', orcamentoId: number | null) => {
     if (orcamentoId !== null) {
       console.log(`Id do Orçamento: ${orcamentoId}`);
@@ -101,11 +120,9 @@ const OrcamentoBuscarScreen = () => {
       console.error("orcamentoId is null");
     }
     console.log(statusAction);
+    aprovaOrcamento(orcamentoId);
     handleCloseStatusPopover();
   };
-
-  const isStatusPopoverOpen = Boolean(statusPopoverAnchor);
-  const popoverId = isStatusPopoverOpen ? 'status-action-popover' : undefined;
 
   return (
     <PageContainer title="Orçamento / Buscar" description="Buscar Orçamento da Arte Arena">
