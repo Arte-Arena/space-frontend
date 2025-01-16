@@ -639,13 +639,13 @@ const OrcamentoGerarScreen = () => {
       const produtoTotal = product.preco * product.quantidade;
 
       // Formatação da linha do produto para garantir alinhamento
-      const quantidade = `${product.quantidade} un`.padEnd(larguraMaxima, ' ');
-      const nomeProduto = product.nome.padEnd(larguraMaxima, ' ');
-      const precoUnitario = `R$ ${product.preco.toFixed(2)}`.padStart(larguraPrecoTotal, ' ');
-      const totalProduto = `R$ ${produtoTotal.toFixed(2)}`.padStart(larguraPrecoTotal, ' ');
+      const quantidade = `${product.quantidade} un`;
+      const nomeProduto = product.nome;
+      const precoUnitario = `R$ ${product.preco.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`;
+      const totalProduto = `R$ ${produtoTotal.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`;
 
       // Concatena as informações do produto
-      produtosTexto += `${quantidade} ${nomeProduto} ${precoUnitario} ${totalProduto}\n`;
+      produtosTexto += `${quantidade} ${nomeProduto} ${precoUnitario} (${totalProduto})\n`;
       totalOrçamento += produtoTotal;
     });
 
@@ -655,7 +655,7 @@ const OrcamentoGerarScreen = () => {
 
     let precoFreteTexto = '0.00';
     if (precoFrete) {
-      precoFreteTexto = precoFrete.toFixed(2);
+      precoFreteTexto = precoFrete.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
     } else {
       console.log("Erro crítico precoFrete não existe ao compor o texto do orçamento.")
     }
@@ -666,15 +666,12 @@ const OrcamentoGerarScreen = () => {
 Lista de Produtos:
 
 ${produtosTexto.trim()}
+${shippingOption === 'RETIRADA' ? 'Frete: R$ 0,00 (Retirada)' : `Frete: R$ ${precoFreteTexto} (Dia da postagem + ${prazoFrete} dias úteis via ${shippingOption})`}
 
-Frete:        R$ ${precoFreteTexto}
-
-Total:        R$ ${totalOrçamento.toFixed(2)}
+Total: R$ ${totalOrçamento.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}
 
 Prazo de Produção: ${prazoProducao} dias úteis
-Prazo de Frete: ${prazoFrete} dias úteis
-
-Previsão de Entrega: ${previsaoEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy')}
+Previsão de ${shippingOption === 'RETIRADA' ? 'Retirada' : 'Entrega'}: ${previsaoEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy')}
 
 Prazo inicia-se após aprovação da arte e pagamento confirmado.
 
@@ -683,7 +680,6 @@ Orçamento válido por 30 dias.
 
     setOrçamentoTexto(textoOrcamento);
     setOpenBudget(true);
-    salvarOrcamento();
   }
 
   const salvarOrcamento = async () => {
@@ -718,6 +714,10 @@ Orçamento válido por 30 dias.
       console.error('Erro:', error);
     }
   };
+
+  useEffect(() => {
+    salvarOrcamento();
+  }, [orçamentoTexto]);
 
   const handleCloseSnackbarCopiarOrcamento = () => {
     setOpenSnackbarCopiarOrcamento(false);
