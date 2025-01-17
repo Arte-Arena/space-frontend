@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
@@ -20,6 +20,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { IconProgressCheck, IconEdit, IconCircleCheck, IconBan, IconProgressHelp } from '@tabler/icons-react';
 import Tooltip from '@mui/material/Tooltip';
+import { useRouter } from 'next/navigation';
 
 interface Orcamento {
   id: number;
@@ -38,6 +39,8 @@ interface Orcamento {
   updated_at: string;
 }
 const OrcamentoBuscarScreen = () => {
+  const router = useRouter();
+
   const [query, setQuery] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
@@ -123,6 +126,10 @@ const OrcamentoBuscarScreen = () => {
     aprovaOrcamento(orcamentoId);
     handleCloseStatusPopover();
   };
+
+const handleEditOrcamento = (orcamentoId: number) => {
+  router.push(`/apps/orcamento/editar?id=${orcamentoId}`);
+};
 
   return (
     <PageContainer title="Orçamento / Buscar" description="Buscar Orçamento da Arte Arena">
@@ -248,7 +255,7 @@ const OrcamentoBuscarScreen = () => {
                           </Popover>
                           <IconButton
                             aria-label="edit"
-                            onClick={() => console.log(`Edit: ${row.id}`)}
+                            onClick={() => handleEditOrcamento(row.id)}
                           >
                             <IconEdit />
                           </IconButton>

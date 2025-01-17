@@ -31,7 +31,7 @@ import contarFinaisDeSemana from '@/utils/contarFinaisDeSemana';
 import contarFeriados from '@/utils/contarFeriados';
 import avancarDias from '@/utils/avancarDias';
 import encontrarProximoDiaUtil from '@/utils/encontrarProximoDiaUtil';
-// import gerarNumeroAleatorioDe4Digitos from '@/utils/gerarNumeroAleatorio4Digitos';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy } from '@tabler/icons-react';
 import {
   Button,
@@ -87,6 +87,12 @@ interface FreteData {
 
 const OrcamentoGerarScreen = () => {
   const isLoggedIn = useAuth();
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const id = searchParams.get('id') ?? null;
+
   const [isLoadedClients, setIsLoadedClients] = useState(false);
   const [allClients, setAllClients] = useState<Cliente[]>([]);
   const [currentPageClients, setCurrentPageClients] = useState(1);
@@ -260,11 +266,10 @@ const OrcamentoGerarScreen = () => {
     }
   };
 
-
   const { isFetching: isFetchingProducts, error: errorProducts, data: dataProducts } = useQuery({
     queryKey: ['productData'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/produto-personalizad`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/produto-orcamento-consolidado`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -512,57 +517,68 @@ const OrcamentoGerarScreen = () => {
   };
 
   useEffect(() => {
-    console.log('Opção de entrega atualizada', shippingOption);
-    setFreteAtualizado(true);
-    switch (shippingOption) {
-      case 'RETIRADA':
-        setPrazoFrete(0);
-        setPrecoFrete(0.00);
-        break;
-      case 'MINIENVIOS':
-        setPrazoFrete(prazoMiniEnvios);
-        setPrecoFrete(precoMiniEnvios);
-        break;
-      case 'PAC':
-        setPrazoFrete(prazoPac);
-        setPrecoFrete(precoPac);
-        break;
-      case 'SEDEX':
-        setPrazoFrete(prazoSedex);
-        setPrecoFrete(precoSedex);
-        break;
-      case 'SEDEX10':
-        setPrazoFrete(prazoSedex10);
-        setPrecoFrete(precoSedex10);
-        break;
-      case 'SEDEX12':
-        setPrazoFrete(prazoSedex12);
-        setPrecoFrete(precoSedex12);
-        break;
-      default:
-        console.error('Invalid shipping option:', shippingOption);
-        setPrazoFrete(0);
-        setPrecoFrete(0);
+    if (clientId && productsList) {
+      console.log('Opção de entrega atualizada', shippingOption);
+      setFreteAtualizado(true);
+      switch (shippingOption) {
+        case 'RETIRADA':
+          console.log('oieeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
+          setPrazoFrete(0.00);
+          setPrecoFrete(0.00);
+          break;
+        case 'MINIENVIOS':
+          setPrazoFrete(prazoMiniEnvios);
+          setPrecoFrete(precoMiniEnvios);
+          break;
+        case 'PAC':
+          setPrazoFrete(prazoPac);
+          setPrecoFrete(precoPac);
+          break;
+        case 'SEDEX':
+          setPrazoFrete(prazoSedex);
+          setPrecoFrete(precoSedex);
+          break;
+        case 'SEDEX10':
+          setPrazoFrete(prazoSedex10);
+          setPrecoFrete(precoSedex10);
+          break;
+        case 'SEDEX12':
+          setPrazoFrete(prazoSedex12);
+          setPrecoFrete(precoSedex12);
+          break;
+        default:
+          console.error('Invalid shipping option:', shippingOption);
+          setPrazoFrete(0);
+          setPrecoFrete(0);
+      }
     }
   }, [shippingOption]);
 
   useEffect(() => {
-    calcPrevisao();
-  }, [prazoProducao, prazoFrete]);
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
+      calcPrevisao();
+    }
+  }, [clientId, productsList, shippingOption, cep, address, prazoProducao, prazoFrete]);
+
+  useEffect(() => {
+    if (freteAtualizado) {
+      calcPrevisao();
+    }
+  }, [freteAtualizado]);
 
   const calcPrevisao = async () => {
-
+    setFreteAtualizado(false);
     setLoadingPrevisao(true);
 
     console.log('Calculando a previsão... Iniciando calculo de previsão de entrega');
     const today = DateTime.fromJSDate(getBrazilTime());
     // console.log('Calculando a previsão... Avançando os dias... Dia no Brasil: ', today);
+    // if (shippingOption) {
+    //   // console.log('Calculando a previsão... Opção de entrega definida pelo usuário:', shippingOption);
+    // }
 
-    if (shippingOption) {
-      // console.log('Calculando a previsão... Opção de entrega definida pelo usuário:', shippingOption);
-    }
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
 
-    if (prazoProducao && prazoFrete) {
       console.log('Calculando a previsão... prazoProducao: ', prazoProducao);
       console.log('Calculando a previsão... prazoFrete: ', prazoFrete);
 
@@ -589,7 +605,7 @@ const OrcamentoGerarScreen = () => {
 
       setPrevisaoEntrega(await encontrarProximoDiaUtil(dataPrevistaEntrega));
     } else {
-      console.log('Calculando a previsão... Erro crítico: prazoFrete ou prazoProducao não definido(s)');
+      console.log('Calculando a previsão... Erro crítico: algum(uns) campo(s) anterior(es) indefinido(s)');
     }
 
     setLoadingPrevisao(false);
@@ -675,7 +691,7 @@ Previsão de ${shippingOption === 'RETIRADA' ? 'Retirada' : 'Entrega'}: ${previs
 
 Prazo inicia-se após aprovação da arte e pagamento confirmado.
 
-Orçamento válido por 30 dias.
+Orçamento válido por 7 dias.
 `.trim();
 
     setOrçamentoTexto(textoOrcamento);
@@ -716,12 +732,23 @@ Orçamento válido por 30 dias.
   };
 
   useEffect(() => {
-    salvarOrcamento();
+    if (clientId && productsList && cep && address && shippingOption && prazoProducao && prazoFrete) {
+      salvarOrcamento();
+    }
   }, [orçamentoTexto]);
 
   const handleCloseSnackbarCopiarOrcamento = () => {
     setOpenSnackbarCopiarOrcamento(false);
   }
+
+  useEffect(() => {
+    if (id) {
+      console.log("O valor do parâmetro id ou valor padrão:", id);
+
+      setClientId(Number(id));
+
+    }
+  }, [id]);
 
   return (
     <PageContainer title="Orçamento / Gerar" description="Gerar Orçamento da Arte Arena">
