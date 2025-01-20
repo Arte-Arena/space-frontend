@@ -3,8 +3,11 @@ import avancarDias from './avancarDias';
 import contarFeriados from './contarFeriados';
 import contarFinaisDeSemana from './contarFinaisDeSemana';
 
-export default async function encontrarProximoDiaUtil(dataPrevista: DateTime) {
+export default async function encontrarProximoDiaUtil(dataFeriados: { dias_feriados: Array<{ start_at: string }> }, dataPrevista: DateTime) {
 
+    dataFeriados = dataFeriados || {};
+
+    
     // console.log("dataPrevistaPreliminar", dataPrevista.toString());
 
     // define o contador como 0
@@ -20,7 +23,7 @@ export default async function encontrarProximoDiaUtil(dataPrevista: DateTime) {
     while (true) {
         const dataVerificacao = avancarDias(dataPrevista, contador);
         // console.log("dataVerificacao: ", dataVerificacao);
-        const qtdFeriados = await contarFeriados(dataVerificacao.toJSDate(), 1);
+        const qtdFeriados = await contarFeriados(dataFeriados, dataVerificacao.toJSDate(), 1);
         // console.log("qtdFeriados: ", qtdFeriados);
         const qtdFinaisDeSemana = contarFinaisDeSemana(dataVerificacao.toJSDate(), 1);
         // console.log("qtdFinaisDeSemana: ", qtdFinaisDeSemana);

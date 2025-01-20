@@ -50,6 +50,14 @@ import {
   Typography
 } from '@mui/material';
 
+
+interface Cliente {
+  id: number;
+  nome: string | null;
+  telefone: string | null;
+  email: string | null;
+}
+
 interface ApiResponseClientes {
   status: string;
   data: Cliente[];
@@ -58,13 +66,6 @@ interface ApiResponseClientes {
     total_pages: number;
     total_items: number;
   };
-}
-
-interface Cliente {
-  id: number;
-  nome: string | null;
-  telefone: string | null;
-  email: string | null;
 }
 
 interface Product {
@@ -77,6 +78,15 @@ interface Product {
   comprimento: number;
   largura: number;
   altura: number;
+}
+
+interface Feriado {
+  id: number;
+  start_at: string;
+}
+
+interface ApiResponseFeriados {
+  dias_feriados: Feriado[];
 }
 
 interface FreteData {
@@ -162,7 +172,7 @@ const OrcamentoGerarScreen = () => {
   // useEffect para processar a resposta da API
   useEffect(() => {
     if (dataClients) {
-      console.log('Resposta da API:', dataClients);
+      // console.log('Resposta da API:', dataClients);
       if (dataClients.status === 'success' && Array.isArray(dataClients.data)) {
         setAllClients((prevClients) => [
           ...prevClients,
@@ -201,19 +211,19 @@ const OrcamentoGerarScreen = () => {
 
   useEffect(() => {
     if (allClients.length > 0) {
-      console.log('Clientes consolidados carregados:', allClients);
+      // console.log('Clientes consolidados carregados:', allClients);
     }
   }, [allClients]);
 
   useEffect(() => {
     if (clientId) {
-      console.log('Cliente selecionado:', clientId);
+      // console.log('Cliente selecionado:', clientId);
     }
   }, [clientId]);
 
   useEffect(() => {
     if (allClients) {
-      console.log('allClients:', allClients);
+      // console.log('allClients:', allClients);
     }
   }, [allClients]);
 
@@ -249,7 +259,7 @@ const OrcamentoGerarScreen = () => {
           ]);
           setIsLoadedClients(true);
         } else {
-          console.log('Opções encontradas [busca de clientes]');
+          // console.log('Opções encontradas [busca de clientes]');
           setAllClients(data.data);
           setIsLoadedClients(true);
         }
@@ -280,7 +290,7 @@ const OrcamentoGerarScreen = () => {
 
   useEffect(() => {
     if (dataProducts) {
-      console.log('productData:', dataProducts);
+      // console.log('productData:', dataProducts);
       if (Array.isArray(dataProducts)) {
         const transformedProducts = dataProducts.map((item: Product) => ({
           id: item.id,
@@ -310,7 +320,7 @@ const OrcamentoGerarScreen = () => {
 
   useEffect(() => {
     if (allProducts) {
-      console.log('allProducts:', allProducts);
+      // console.log('allProducts:', allProducts);
     }
   }, [allProducts]);
 
@@ -319,13 +329,13 @@ const OrcamentoGerarScreen = () => {
   useEffect(() => {
     if (selectedProduct) {
       adicionarProduto(selectedProduct);
-      console.log('selectedProduct:', selectedProduct);
+      // console.log('selectedProduct:', selectedProduct);
     }
   }, [selectedProduct]);
 
   useEffect(() => {
     if (productsList) {
-      console.log('productsList:', productsList);
+      // console.log('productsList:', productsList);
       setPrazoProducao(Math.max(...productsList.map(product => product.prazo ?? 0)));
 
       if (cep) {
@@ -407,15 +417,46 @@ const OrcamentoGerarScreen = () => {
   }, [productsList]);
 
   useEffect(() => {
-    console.log(
-      `produtosComAtributoZerado (após atualização): ${produtosComAtributoZerado ? 'SIM' : 'NÃO'}`
-    );
+    // console.log(
+    //   `produtosComAtributoZerado (após atualização): ${produtosComAtributoZerado ? 'SIM' : 'NÃO'}`
+    // );
 
   }, [produtosComAtributoZerado]); // Executa este useEffect quando produtosComAtributoZerado mudar
 
   const handleCloseSnackbarProdutosComAtributoZerado = () => {
     setOpenSnackbarProdutosComAtributoZerado(false);
   }
+
+  const today = DateTime.fromJSDate(getBrazilTime());
+
+  // console.log('Today: ' + today);
+  const mesAtual = today.month;
+  const anoAtual = today.year;
+
+  // console.log('mesAtual', mesAtual);
+  // console.log('anoAtual', anoAtual);
+
+  const { isFetching: isFetchingFeriados, error: errorFeriados, data: dataFeriados } = useQuery<ApiResponseFeriados>({
+    queryKey: ['feriadosData'], // Chave da query
+    queryFn: async () => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/calendar/feriados-ano-mes?ano=${anoAtual}&mes=${mesAtual}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro ao buscar clientes: ${response.statusText}`);
+      }
+
+      return response.json();
+    }
+  });
+
+
+
 
   const validateCEP = async (cep: string) => {
 
@@ -429,8 +470,8 @@ const OrcamentoGerarScreen = () => {
       const data = await response.json();
 
       if (response.ok && data.cep) {
-        console.log('cep válido');
-        console.log(data);
+        // console.log('cep válido');
+        // console.log(data);
         setAddress(data.logradouro + " " + data.localidade + " " + data.uf + " " + data.cep);
         return true;
       } else {
@@ -468,7 +509,7 @@ const OrcamentoGerarScreen = () => {
       if (!response.ok) {
         throw new Error('Failed to fetch frete');
       } else {
-        console.log(body);
+        // console.log(body);
       }
 
       const data: FreteData[] = await response.json();
@@ -479,7 +520,7 @@ const OrcamentoGerarScreen = () => {
         fretesByName[frete.name.toLowerCase().replace(/\s/g, '')] = frete; // Use lowercase and remove spaces for consistent keys
       });
 
-      console.log('Fretes by name:', fretesByName);
+      // console.log('Fretes by name:', fretesByName);
 
       // Example usage with state updates:
       if (fretesByName.pac) {
@@ -518,12 +559,11 @@ const OrcamentoGerarScreen = () => {
 
   useEffect(() => {
     if (clientId && productsList) {
-      console.log('Opção de entrega atualizada', shippingOption);
+      // console.log('Opção de entrega atualizada', shippingOption);
       setFreteAtualizado(true);
       switch (shippingOption) {
         case 'RETIRADA':
-          console.log('oieeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
-          setPrazoFrete(0.00);
+          setPrazoFrete(0);
           setPrecoFrete(0.00);
           break;
         case 'MINIENVIOS':
@@ -555,6 +595,14 @@ const OrcamentoGerarScreen = () => {
   }, [shippingOption]);
 
   useEffect(() => {
+    if (prazoFrete == 0) {
+      calcPrevisao();
+    } else {
+      calcPrevisao();
+    }
+  }, [prazoFrete]);
+
+  useEffect(() => {
     if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
       calcPrevisao();
     }
@@ -571,21 +619,25 @@ const OrcamentoGerarScreen = () => {
     setLoadingPrevisao(true);
 
     console.log('Calculando a previsão... Iniciando calculo de previsão de entrega');
-    const today = DateTime.fromJSDate(getBrazilTime());
     // console.log('Calculando a previsão... Avançando os dias... Dia no Brasil: ', today);
     // if (shippingOption) {
     //   // console.log('Calculando a previsão... Opção de entrega definida pelo usuário:', shippingOption);
     // }
+    
+    console.log(prazoFrete);
 
-    if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete || prazoFrete === 0)) {
 
+      const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
+
+      console.log('Calculando a previsão... inciando... shippingOption: ', shippingOption);
       console.log('Calculando a previsão... prazoProducao: ', prazoProducao);
       console.log('Calculando a previsão... prazoFrete: ', prazoFrete);
-
+      
       const prazoProducaoFinsSemana = contarFinaisDeSemana(getBrazilTime(), prazoProducao);
       console.log('Calculando a previsão... prazoProducaoFinsSemana: ', prazoProducaoFinsSemana);
-
-      const prazoProducaoFeriados = await contarFeriados(getBrazilTime(), prazoProducao);
+      
+      const prazoProducaoFeriados = await contarFeriados(safeDataFeriados, getBrazilTime(), prazoProducao);
       console.log('Calculando a previsão... prazoProducaoFeriados: ', prazoProducaoFeriados);
 
       const prazoProducaoTotal = prazoProducao + prazoProducaoFinsSemana + prazoProducaoFeriados;
@@ -594,16 +646,17 @@ const OrcamentoGerarScreen = () => {
       const prazoFreteFinsSemana = contarFinaisDeSemana(getBrazilTime(), prazoFrete);
       console.log('Calculando a previsão... prazoFreteFinsSemana: ', prazoFreteFinsSemana);
 
-      const prazoFreteFeriados = await contarFeriados(getBrazilTime(), prazoFrete);
+      const prazoFreteFeriados = await contarFeriados(safeDataFeriados, getBrazilTime(), prazoFrete);
       console.log('Calculando a previsão... prazoFreteFeriados: ', prazoFreteFeriados);
-
+      
       const prazoFreteTotal = prazoFrete + prazoFreteFinsSemana + prazoFreteFeriados;
       console.log('Calculando a previsão... prazoFreteTotal: ', prazoProducaoTotal);
 
       const dataPrevistaEntrega = avancarDias(today, prazoFreteTotal + prazoProducaoTotal);
-      console.log('dataPrevistaEntrega', dataPrevistaEntrega);
-
-      setPrevisaoEntrega(await encontrarProximoDiaUtil(dataPrevistaEntrega));
+      // console.log('dataPrevistaEntrega', dataPrevistaEntrega);
+      
+      setPrevisaoEntrega(await encontrarProximoDiaUtil(safeDataFeriados, dataPrevistaEntrega));
+      console.log('Calculando a previsão... finalizando... shippingOption: ', shippingOption);
     } else {
       console.log('Calculando a previsão... Erro crítico: algum(uns) campo(s) anterior(es) indefinido(s)');
     }
@@ -676,13 +729,13 @@ const OrcamentoGerarScreen = () => {
       console.log("Erro crítico precoFrete não existe ao compor o texto do orçamento.")
     }
 
-    console.log('Testando o estado previsaoEntrega: ', previsaoEntrega);
+    // console.log('Testando o estado previsaoEntrega: ', previsaoEntrega);
 
     const textoOrcamento = `
 Lista de Produtos:
 
 ${produtosTexto.trim()}
-${shippingOption === 'RETIRADA' ? 'Frete: R$ 0,00 (Retirada)' : `Frete: R$ ${precoFreteTexto} (Dia da postagem + ${prazoFrete} dias úteis via ${shippingOption})`}
+${shippingOption === 'RETIRADA' ? 'Frete: R$ 0,00 (Retirada)' : `Frete: R$ ${precoFreteTexto} (Dia da postagem + ${prazoFrete} dias úteis via ${shippingOption} para o CEP $ ${cep})`}
 
 Total: R$ ${totalOrçamento.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}
 
@@ -725,7 +778,7 @@ Orçamento válido por 7 dias.
         throw new Error('Erro ao salvar orçamento');
       }
 
-      console.log('Orçamento salvo com sucesso');
+      // console.log('Orçamento salvo com sucesso');
     } catch (error) {
       console.error('Erro:', error);
     }
@@ -743,7 +796,7 @@ Orçamento válido por 7 dias.
 
   useEffect(() => {
     if (id) {
-      console.log("O valor do parâmetro id ou valor padrão:", id);
+      // console.log("O valor do parâmetro id ou valor padrão:", id);
 
       setClientId(Number(id));
 
