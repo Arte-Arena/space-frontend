@@ -11,14 +11,14 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { Pagination, Stack, Button, Box, Typography, Collapse } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import { IconSearch } from '@tabler/icons-react';
+import { IconSearch, IconLink, IconShirtSport, IconCheck } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import Link from 'next/link';
 
 interface Orcamento {
   id: number;
@@ -51,7 +51,7 @@ const OrcamentoBackofficeScreen = () => {
   const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos } = useQuery({
     queryKey: ['budgetData', searchQuery, page],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/get-orcamentos-status?q=${encodeURIComponent(searchQuery)}&page=${page}`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/get-orcamentos-aprovados?q=${encodeURIComponent(searchQuery)}&page=${page}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -88,9 +88,9 @@ const OrcamentoBackofficeScreen = () => {
 
 
   return (
-    <PageContainer title="Orçamento / Buscar" description="Buscar Orçamento da Arte Arena">
-      <Breadcrumb title="Orçamento / Buscar" subtitle="Gerencie os Orçamentos da Arte Arena / Buscar" />
-      <ParentCard title="Buscar Orçamento" >
+    <PageContainer title="Orçamento / Backoffice" description="Gerenciar Pedidos da Arte Arena">
+      <Breadcrumb title="Orçamento / Backoffice" subtitle="Gerenciar Pedidos da Arte Arena / Backoffice" />
+      <ParentCard title="Backoffice" >
         <>
 
           <Stack spacing={2} direction="row" alignItems="center" mb={2}>
@@ -99,7 +99,7 @@ const OrcamentoBackofficeScreen = () => {
               value={query}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
               onKeyPress={handleSearchKeyPress}
-              placeholder="Buscar orçamento..."
+              placeholder="Buscar orçamento aprovado..."
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -123,12 +123,11 @@ const OrcamentoBackofficeScreen = () => {
               <TableHead>
                 <TableRow>
                   <TableCell></TableCell>
-                  <TableCell>ID</TableCell>
+                  <TableCell>ID do Orçamento</TableCell>
+                  <TableCell>ID do Pedido</TableCell>
                   <TableCell>Número do Cliente</TableCell>
-                  <TableCell>Nome do Cliente</TableCell>
                   <TableCell>Data de Criação</TableCell>
-                  <TableCell>Data de Última Atualização</TableCell>
-                  <TableCell>Status</TableCell>
+                  <TableCell>Ações</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -136,20 +135,35 @@ const OrcamentoBackofficeScreen = () => {
                   <React.Fragment key={row.id}>
                     <TableRow>
                       <TableCell>
-                        <IconButton 
-                          aria-label="expand row" 
-                          size="small" 
+                        <IconButton
+                          aria-label="expand row"
+                          size="small"
                           onClick={() => handleToggleRow(row.id)}
                         >
                           {openRow[row.id] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                         </IconButton>
                       </TableCell>
                       <TableCell>{row.id}</TableCell>
+                      <TableCell>-</TableCell>
                       <TableCell>{row.cliente_octa_number}</TableCell>
-                      <TableCell>{row.nome_cliente}</TableCell>
-                      <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell>{new Date(row.updated_at).toLocaleDateString()}</TableCell>
-                      <TableCell>{row.status}</TableCell>
+                      <TableCell>{new Date(row.created_at).toLocaleDateString('pt-BR')}</TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1}>
+                          <IconButton aria-label="link">
+                            <Link href={`/apps/orcamento/backoffice/cliente-cadastro?id=${row.id}`}>
+                              <IconButton aria-label="link">
+                                <IconLink />
+                              </IconButton>
+                            </Link>
+                          </IconButton>
+                          <Button variant="outlined">
+                            <IconShirtSport />
+                          </Button>
+                          <Button variant="contained" color="primary">
+                            <IconCheck />
+                          </Button>
+                        </Stack>
+                      </TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
@@ -185,9 +199,15 @@ const OrcamentoBackofficeScreen = () => {
               </TableBody>
             </Table>
           </TableContainer>
-          {/* <Stack spacing={2} direction="row" justifyContent="flex-end" sx={{ mt: 2 }}> */}
-          {/* <Pagination count={meta?.pageCount} page={25} /> */}
-          {/* </Stack> */}
+
+          {/* Paginação */}
+          <Stack spacing={2} mt={2} alignItems="center">
+            <Pagination
+              count={Math.ceil(dataOrcamentos.total / dataOrcamentos.per_page)}
+              page={dataOrcamentos.current_page}
+              onChange={handlePageChange}
+            />
+          </Stack>
 
         </>
       </ParentCard>
