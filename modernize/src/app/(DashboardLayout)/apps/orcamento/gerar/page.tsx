@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/utils/useAuth';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
@@ -31,8 +31,9 @@ import contarFinaisDeSemana from '@/utils/contarFinaisDeSemana';
 import contarFeriados from '@/utils/contarFeriados';
 import avancarDias from '@/utils/avancarDias';
 import encontrarProximoDiaUtil from '@/utils/encontrarProximoDiaUtil';
+import exportarPDF from '@/utils/exportarPDF';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy } from '@tabler/icons-react';
+import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf } from '@tabler/icons-react';
 import {
   Button,
   Dialog,
@@ -100,7 +101,6 @@ const OrcamentoGerarScreen = () => {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const id = searchParams.get('id') ?? null;
 
   const [isLoadedClients, setIsLoadedClients] = useState(false);
@@ -623,7 +623,7 @@ const OrcamentoGerarScreen = () => {
     // if (shippingOption) {
     //   // console.log('Calculando a previsão... Opção de entrega definida pelo usuário:', shippingOption);
     // }
-    
+
     console.log(prazoFrete);
 
     if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete || prazoFrete === 0)) {
@@ -633,10 +633,10 @@ const OrcamentoGerarScreen = () => {
       console.log('Calculando a previsão... inciando... shippingOption: ', shippingOption);
       console.log('Calculando a previsão... prazoProducao: ', prazoProducao);
       console.log('Calculando a previsão... prazoFrete: ', prazoFrete);
-      
+
       const prazoProducaoFinsSemana = contarFinaisDeSemana(getBrazilTime(), prazoProducao);
       console.log('Calculando a previsão... prazoProducaoFinsSemana: ', prazoProducaoFinsSemana);
-      
+
       const prazoProducaoFeriados = await contarFeriados(safeDataFeriados, getBrazilTime(), prazoProducao);
       console.log('Calculando a previsão... prazoProducaoFeriados: ', prazoProducaoFeriados);
 
@@ -648,13 +648,13 @@ const OrcamentoGerarScreen = () => {
 
       const prazoFreteFeriados = await contarFeriados(safeDataFeriados, getBrazilTime(), prazoFrete);
       console.log('Calculando a previsão... prazoFreteFeriados: ', prazoFreteFeriados);
-      
+
       const prazoFreteTotal = prazoFrete + prazoFreteFinsSemana + prazoFreteFeriados;
       console.log('Calculando a previsão... prazoFreteTotal: ', prazoProducaoTotal);
 
       const dataPrevistaEntrega = avancarDias(today, prazoFreteTotal + prazoProducaoTotal);
       // console.log('dataPrevistaEntrega', dataPrevistaEntrega);
-      
+
       setPrevisaoEntrega(await encontrarProximoDiaUtil(safeDataFeriados, dataPrevistaEntrega));
       console.log('Calculando a previsão... finalizando... shippingOption: ', shippingOption);
     } else {
@@ -735,7 +735,7 @@ const OrcamentoGerarScreen = () => {
 Lista de Produtos:
 
 ${produtosTexto.trim()}
-${shippingOption === 'RETIRADA' ? 'Frete: R$ 0,00 (Retirada)' : `Frete: R$ ${precoFreteTexto} (Dia da postagem + ${prazoFrete} dias úteis via ${shippingOption} para o CEP $ ${cep})`}
+${shippingOption === 'RETIRADA' ? 'Frete: R$ 0,00 (Retirada)' : `Frete: R$ ${precoFreteTexto} (Dia da postagem + ${prazoFrete} dias úteis via ${shippingOption} para o CEP ${cep})`}
 
 Total: R$ ${totalOrçamento.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}
 
@@ -797,11 +797,11 @@ Orçamento válido por 7 dias.
   useEffect(() => {
     if (id) {
       // console.log("O valor do parâmetro id ou valor padrão:", id);
-
       setClientId(Number(id));
-
     }
   }, [id]);
+
+
 
   return (
     <PageContainer title="Orçamento / Gerar" description="Gerar Orçamento da Arte Arena">
@@ -1487,6 +1487,32 @@ Orçamento válido por 7 dias.
               <IconButton onClick={() => { navigator.clipboard.writeText(orçamentoTexto); setOpenSnackbarCopiarOrcamento(true); }}>
                 <IconCopy />
                 <Typography variant="body2">Copiar Orçamento</Typography>
+              </IconButton>
+
+              <IconButton
+                onClick={() => {
+
+                  const htmlContent = `
+                  <style>
+                    body {
+                      color: black !important; /* Garante que o texto seja preto */
+                      font-family: Arial, sans-serif;
+                      font-size: 12px;
+                    }
+                    p {
+                      margin: 0;
+                    }
+                  </style>
+                  <div>
+                    <p><pre>${orçamentoTexto}</pre></p>
+                  </div>
+                `;
+
+                  exportarPDF(htmlContent); // Passa o HTML com a cor ajustada
+                }}
+              >
+                <IconFileTypePdf />
+                <Typography variant="body2">Exportar PDF</Typography>
               </IconButton>
 
               <Button autoFocus onClick={handleCloseBudget} color="primary">
