@@ -313,9 +313,9 @@ const Menuitems: MenuitemsType[] = [
       },
       {
         id: uniqueId(),
-        title: "Relatórios",
+        title: "Relatórios de Vendas",
         icon: IconBuildingStore,
-        href: "/apps/chats/chatbot",
+        href: "/apps/vendas/relatorios",
       },
     ]
   },

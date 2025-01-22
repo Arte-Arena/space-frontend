@@ -104,13 +104,16 @@ const OrcamentoBackofficeScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/upsert-cliente-cadastro`, {
-        method: 'POST',
+
+      const formDataWithOrcamentoId = { ...formData, orcamentoId: id };
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/cliente-cadastro`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formDataWithOrcamentoId),
       });
 
       if (response.ok) {
@@ -185,6 +188,15 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                     variant="outlined"
                   />
                   <CustomTextField
+                    label="CPF"
+                    name="cpf"
+                    value={formData.cpf}
+                    onChange={handleInputChange}
+                    fullWidth
+                    margin="normal"
+                    variant="outlined"
+                  />
+                  <CustomTextField
                     label="RG"
                     name="rg"
                     value={formData.rg}
@@ -227,6 +239,25 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                   />
                 </>
               )}
+
+              <CustomTextField
+                label="Email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                fullWidth
+                margin="normal"
+                variant="outlined"
+              />
+              <CustomTextField
+                label="Telefone Celular"
+                name="celular"
+                value={formData.celular}
+                onChange={handleInputChange}
+                fullWidth
+                margin="normal"
+                variant="outlined"
+              />
 
               {/* Endereço */}
               <h3>Endereço</h3>
