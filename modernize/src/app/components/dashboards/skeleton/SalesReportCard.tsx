@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Skeleton, Typography } from "@mui/material";
 import DashboardCard from "../../shared/DashboardCard";
+import Link from "next/link";
 
 export interface SalesReportCardProps {
   icon: React.ReactNode;
@@ -16,20 +17,22 @@ const SalesReportCard: React.FC<SalesReportCardProps> = (props: SalesReportCardP
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowTitle(true);
-    }, 3000); // 3 segundos
+    }, 1000); // 3 segundos
 
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <DashboardCard>
-      <Box display="flex" alignItems="center" mb={1}>
-        {icon}
-        <Typography variant="h4" sx={{ ml: 1 }}>
-          {showTitle ? title : <Skeleton variant="rounded" width={112} height={21} />}
-        </Typography>
-      </Box>
-    </DashboardCard>
+    <Link href={link} passHref>
+      <DashboardCard>
+        <Box display="flex" alignItems="center" mb={1}>
+        {showTitle ? icon : <Skeleton variant="rounded" width={22} height={21} />}
+          <Typography variant="h4" sx={{ ml: 1 }}>
+            {showTitle ? title : <Skeleton variant="rounded" width={212} height={21} />}
+          </Typography>
+        </Box>
+      </DashboardCard>
+    </Link>
   );
 };
 

@@ -80,6 +80,11 @@ import {
   IconAppWindow,
   IconNotebook,
   IconFileCheck,
+  IconReportAnalytics,
+  IconMessage,
+  IconMessage2Dollar,
+  IconBrandSlack,
+  IconBusinessplan,
 } from "@tabler/icons-react";
 
 const Menuitems: MenuitemsType[] = [
@@ -279,12 +284,6 @@ const Menuitems: MenuitemsType[] = [
         icon: IconZoomMoney,
         href: "/apps/orcamento/buscar",
       },
-      // {
-      //   id: uniqueId(),
-      //   title: "Pedido Interno",
-      //   icon: IconClipboardList,
-      //   href: "/apps/pedido-interno",
-      // },
       {
         id: uniqueId(),
         title: "Backoffice",
@@ -308,13 +307,13 @@ const Menuitems: MenuitemsType[] = [
       {
         id: uniqueId(),
         title: "CRM",
-        icon: IconBuildingStore,
-        href: "/apps/chats/chat-interno",
+        icon: IconBusinessplan,
+        href: "/apps/vendas/crm",
       },
       {
         id: uniqueId(),
         title: "Relatórios de Vendas",
-        icon: IconBuildingStore,
+        icon: IconReportAnalytics,
         href: "/apps/vendas/relatorios",
       },
     ]
@@ -328,13 +327,13 @@ const Menuitems: MenuitemsType[] = [
       {
         id: uniqueId(),
         title: "Chat Interno",
-        icon: IconMessage2,
+        icon: IconBrandSlack,
         href: "/apps/chats/chat-interno",
       },
       {
         id: uniqueId(),
         title: "Atendimento Externo",
-        icon: IconMessage2,
+        icon: IconMessage2Dollar,
         href: "/apps/chats/chatbot",
       },
     ]
