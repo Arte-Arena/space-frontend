@@ -3,7 +3,7 @@ import React from "react";
 import PageContainer from "@/app/components/container/PageContainer";
 import ParentCard from '@/app/components/shared/ParentCard';
 import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
-import SalesReportCard, { SalesReportCardProps } from "@/app/components/dashboards/skeleton/SalesReportCard";
+import SalesReportCard from "@/app/components/dashboards/skeleton/SalesReportCard";
 import { IconFlagDollar, IconMessage2Dollar, IconReportMoney, IconChecklist, IconReceiptDollar } from "@tabler/icons-react";
 
 interface Report {

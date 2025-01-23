@@ -12,10 +12,16 @@ const BCrumb = [
     title: "Home",
   },
   {
+    to: '/apps/vendas/',
     title: "Vendas",
   },
   {
+    to: '/apps/vendas/relatorios/',
     title: "Relatórios",
+  },
+  {
+    to: '/apps/vendas/relatorios/orcamentos-aprovados/',
+    title: "Orçamentos Aprovados",
   },
 ];
 
