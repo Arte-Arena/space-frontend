@@ -20,6 +20,7 @@ const OrcamentoBuscarScreen = ({ params }: { params: { id: string } }) => {
   const [qtdParcelas, setQtdParcelas] = useState<number | null>(null);
   const [dataEntrega, setDataEntrega] = useState<Date | null>(null);
   const [linkTrello, setLinkTrello] = useState<string | null>('');
+  const [comentarios, setComentarios] = useState<string | null>('');
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -154,6 +155,24 @@ const OrcamentoBuscarScreen = ({ params }: { params: { id: string } }) => {
             renderInput={(params) => <CustomTextField {...params} />}
           />
         </LocalizationProvider>
+
+        <CustomFormLabel
+          sx={{
+            mt: 0,
+          }}
+          htmlFor="comentarios"
+        >
+          Informações Adicionais (opcional)
+        </CustomFormLabel>
+        <CustomTextField
+          label="Comentários"
+          name="comentarios"
+          value={comentarios}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => setComentarios(event.target.value)}
+          multiline
+          rows={4}
+        />
+
 
       </Stack>
 
