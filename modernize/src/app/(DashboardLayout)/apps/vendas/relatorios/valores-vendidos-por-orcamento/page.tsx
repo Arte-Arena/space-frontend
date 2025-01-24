@@ -12,8 +12,8 @@ interface ApiResponse {
 }
 
 interface Orcamento {
-  nome: string;
-  quantidade: number;
+  orcamento_id: number;
+  valor_vendido: number;
 }
 
 
@@ -38,7 +38,7 @@ const BCrumb = [
 
 
 const VendasRelatoriosValoresVendidosPorOrcamento = () => {
-  const [produtosVendidos, setProdutosVendidos] = useState<Orcamento[]>([]);
+  const [valoresVendidosApiResponse, setValoresVendidosApiResponse] = useState<Orcamento[]>([]);
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -46,15 +46,15 @@ const VendasRelatoriosValoresVendidosPorOrcamento = () => {
   }
 
   const { isFetching, error } = useQuery({
-    queryKey: ['produtosVendidos'],
+    queryKey: ['valoresVendidos'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/vendas/produtos-vendidos`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/vendas/valores-vendidos-por-orcamento`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-      }).then((res) => res.json()).then(data => setProdutosVendidos(data.produtosVendidos)),
+      }).then((res) => res.json()).then(data => setValoresVendidosApiResponse(data.valoresVendidosPorOrcamento)),
   });
 
   return (
@@ -68,13 +68,13 @@ const VendasRelatoriosValoresVendidosPorOrcamento = () => {
           Total de Orçamentos:
         </Typography>
 
-        {produtosVendidos.map((produto, index) => (
+        {valoresVendidosApiResponse.map((valor, index) => (
           <div key={index} style={{ marginBottom: '1rem' }}>
             <strong style={{ backgroundColor: theme.palette.secondary.main, color: 'white', borderRadius: '5px', padding: '0.25rem 0.5rem' }}>
-              {produto.nome}: 
+              Orcamento {valor.orcamento_id}: 
             </strong>
             <strong style={{ backgroundColor: theme.palette.primary.main, color: 'white', borderRadius: '5px', padding: '0.25rem 0.5rem' }}>
-              {produto.quantidade}
+              {valor.valor_vendido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </strong>
           </div>
         ))}

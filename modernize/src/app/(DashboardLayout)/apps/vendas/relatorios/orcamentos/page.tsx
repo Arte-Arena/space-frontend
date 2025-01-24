@@ -16,7 +16,12 @@ const BCrumb = [
     title: "Vendas",
   },
   {
-    title: "Relatórios",
+    to: '/apps/vendas/relatorios/',
+    title: "Relatórios de Vendas",
+  },
+  {
+    to: '/apps/vendas/relatorios/orcamentos',
+    title: "Orçamentos",
   },
 ];
 

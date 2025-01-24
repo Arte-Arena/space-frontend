@@ -29,13 +29,18 @@ const reports: Report[] = [
     icon: <IconMessage2Dollar />
   },
   {
-    report: "Produtos Vendidos",
-    path: "/apps/vendas/relatorios/produtos-vendidos",
+    report: "Produtos Vendidos por Orçamento",
+    path: "/apps/vendas/relatorios/produtos-vendidos-por-orcamento",
     icon: <IconFlagDollar />
   },
   {
-    report: "Valores Vendidos",
-    path: "/apps/vendas/relatorios/valores-vendidos",
+    report: "Valores Vendidos por Orcamento",
+    path: "/apps/vendas/relatorios/valores-vendidos-por-orcamento",
+    icon: <IconReceiptDollar />
+  },
+  {
+    report: "Valores Vendidos por Produto",
+    path: "/apps/vendas/relatorios/valores-vendidos-por-produto",
     icon: <IconReceiptDollar />
   }
 ];
