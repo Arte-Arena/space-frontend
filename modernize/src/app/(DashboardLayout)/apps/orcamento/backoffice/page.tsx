@@ -18,7 +18,11 @@ import { IconSearch, IconLink, IconShirtSport, IconCheck } from '@tabler/icons-r
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import Link from 'next/link';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogActions from '@mui/material/DialogActions';
 
 interface Orcamento {
   id: number;
@@ -42,6 +46,8 @@ const OrcamentoBackofficeScreen = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
+  const [linkOrcamento, setLinkOrcamento] = useState<string>('');
+  const [openLinkDialog, setOpenLinkDialog] = useState<boolean>(false);
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -150,11 +156,43 @@ const OrcamentoBackofficeScreen = () => {
                       <TableCell>
                         <Stack direction="row" spacing={1}>
                           <IconButton aria-label="link">
-                            <Link href={`/apps/orcamento/backoffice/cliente-cadastro?id=${row.id}`}>
-                              <IconButton aria-label="link">
-                                <IconLink />
-                              </IconButton>
-                            </Link>
+
+                        {/* Abre o link do orçamento em uma janela nova 
+                        href={`/apps/orcamento/backoffice/cliente-cadastro?id=${row.id}`
+                        */}
+
+
+                            <IconButton
+                              aria-label="link"
+                              onClick={() => {
+                                setOpenLinkDialog(true);
+                                setLinkOrcamento(`${window.location.origin}/orcamento/${row.id}`);
+                              }}
+                            >
+                              <IconLink />
+                            </IconButton>
+                            <Dialog
+                              open={openLinkDialog}
+                              onClose={() => setOpenLinkDialog(false)}
+                            >
+                              <DialogTitle>Link do Orçamento</DialogTitle>
+                              <DialogContent>
+                                <DialogContentText>
+                                  {linkOrcamento}
+                                </DialogContentText>
+                              </DialogContent>
+                              <DialogActions>
+                                <Button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(linkOrcamento);
+                                    setOpenLinkDialog(false);
+                                  }}
+                                >
+                                  Copiar Link
+                                </Button>
+                              </DialogActions>
+                            </Dialog>
+
                           </IconButton>
                           <Button variant="outlined">
                             <IconShirtSport />
