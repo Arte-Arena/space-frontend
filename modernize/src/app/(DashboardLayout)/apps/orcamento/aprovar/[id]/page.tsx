@@ -11,6 +11,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import InputAdornment from '@mui/material/InputAdornment';
 import { NumericFormat, NumericFormatProps } from 'react-number-format';
+import { useRouter } from 'next/navigation';
 
 // Wrapper para o NumericFormat com forwardRef
 const NumericFormatCustom = React.forwardRef<HTMLElement, NumericFormatProps>((props, ref) => (
@@ -27,6 +28,8 @@ NumericFormatCustom.displayName = 'NumericFormatCustom';
 
 const OrcamentoBuscarScreen = ({ params }: { params: { id: string } }) => {
   const orcamentoId = params.id || null;
+
+  const router = useRouter();
 
   const [formaPagamento, setFormaPagamento] = useState('');
   const [tipoFaturamento, setTipoFaturamento] = useState('');
@@ -56,6 +59,7 @@ const OrcamentoBuscarScreen = ({ params }: { params: { id: string } }) => {
         },
       }).then(() => {
         console.log('Orçamento aprovado com sucesso');
+        router.push(`/apps/orcamento/buscar`);
       });
     }
   };

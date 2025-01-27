@@ -42,6 +42,16 @@ const reports: Report[] = [
     report: "Valores Vendidos por Produto",
     path: "/apps/vendas/relatorios/valores-vendidos-por-produto",
     icon: <IconReceiptDollar />
+  },
+  {
+    report: "Valores Vendidos (Últimos 7 dias)",
+    path: "/apps/vendas/relatorios/valores-vendidos-ultimos-7-dias",
+    icon: <IconReceiptDollar />
+  },
+  {
+    report: "Produtos Vendidos (Últimos 7 dias)",
+    path: "/apps/vendas/relatorios/produtos-vendidos-ultimos-7-dias",
+    icon: <IconReceiptDollar />
   }
 ];
 

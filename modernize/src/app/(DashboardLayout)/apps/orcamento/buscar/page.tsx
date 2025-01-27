@@ -135,9 +135,7 @@ const OrcamentoBuscarScreen = () => {
                   <TableCell></TableCell>
                   <TableCell>ID</TableCell>
                   <TableCell>Número do Cliente</TableCell>
-                  <TableCell>Nome do Cliente</TableCell>
                   <TableCell>Data de Criação</TableCell>
-                  <TableCell>Data de Última Atualização</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Ações</TableCell>
                 </TableRow>
@@ -157,9 +155,7 @@ const OrcamentoBuscarScreen = () => {
                       </TableCell>
                       <TableCell>{row.id}</TableCell>
                       <TableCell>{row.cliente_octa_number}</TableCell>
-                      <TableCell>{row.nome_cliente}</TableCell>
                       <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell>{new Date(row.updated_at).toLocaleDateString()}</TableCell>
                       <TableCell>
                         {row.status === "aprovado" ? (
                           <Stack direction="row" alignItems="center" spacing={1}>
@@ -192,12 +188,12 @@ const OrcamentoBuscarScreen = () => {
                           </Tooltip>
 
 
-                          <IconButton
+                          {/* <IconButton
                             aria-label="edit"
                             onClick={() => handleEditOrcamento(row.id)}
                           >
                             <IconEdit />
-                          </IconButton>
+                          </IconButton> */}
                         </Stack>
                       </TableCell>
 

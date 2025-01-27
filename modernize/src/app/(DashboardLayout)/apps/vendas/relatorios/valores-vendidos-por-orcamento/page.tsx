@@ -65,7 +65,7 @@ const VendasRelatoriosValoresVendidosPorOrcamento = () => {
 
       <div>
         <Typography variant="h6" component="p" gutterBottom style={{ marginBottom: '2rem' }}>
-          Total de Orçamentos:
+          Orçamentos / Valores:
         </Typography>
 
         {valoresVendidosApiResponse.map((valor, index) => (
