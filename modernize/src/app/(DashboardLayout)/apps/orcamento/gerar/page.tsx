@@ -34,6 +34,7 @@ import encontrarProximoDiaUtil from '@/utils/encontrarProximoDiaUtil';
 import exportarPDF from '@/utils/exportarPDF';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf } from '@tabler/icons-react';
+import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
 import {
   Button,
   Dialog,
@@ -145,6 +146,7 @@ const OrcamentoGerarScreen = () => {
   const [freteAtualizado, setFreteAtualizado] = useState<boolean>(false);
   const [loadingPrevisao, setLoadingPrevisao] = useState(false);
   const [previsaoEntrega, setPrevisaoEntrega] = useState<DateTime>(DateTime.now())
+  const [checkedOcultaPrevisao, setCheckedOcultaPrevisao] = useState<boolean>(false);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
   const [openSnackbarCopiarOrcamento, setOpenSnackbarCopiarOrcamento] = useState(false);
 
@@ -740,7 +742,9 @@ ${shippingOption === 'RETIRADA' ? 'Frete: R$ 0,00 (Retirada)' : `Frete: R$ ${pre
 Total: R$ ${totalOrçamento.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}
 
 Prazo de Produção: ${prazoProducao} dias úteis
-Previsão de ${shippingOption === 'RETIRADA' ? 'Retirada' : 'Entrega'}: ${previsaoEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy')}
+${!checkedOcultaPrevisao ? 
+  `Previsão de ${shippingOption === 'RETIRADA' ? 'Retirada' : 'Entrega'}: ${previsaoEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy')} (aprovando hoje).` 
+  : ''}
 
 Prazo inicia-se após aprovação da arte e pagamento confirmado.
 
@@ -1452,6 +1456,20 @@ Orçamento válido por 7 dias.
                 )}
               </Typography>
             )}
+
+            <div style={{ marginTop: '20px' }}>
+              <FormControl sx={{ mt: 2 }}>
+                <FormControlLabel
+                  control={
+                    <CustomCheckbox
+                      checked={checkedOcultaPrevisao}
+                      onChange={(e) => setCheckedOcultaPrevisao(e.target.checked)}
+                    />
+                  }
+                  label="Ocultar Previsão de Entrega"
+                />
+              </FormControl>
+            </div>
 
             <div style={{ marginTop: '20px' }}>
               <Button

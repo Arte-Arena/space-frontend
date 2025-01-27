@@ -18,9 +18,10 @@ import { IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import { IconProgressCheck, IconEdit, IconCircleCheck, IconBan, IconProgressHelp } from '@tabler/icons-react';
+import { IconProgressCheck, IconEdit, IconCircleCheck, IconBan, IconProgressHelp, IconX } from '@tabler/icons-react';
 import Tooltip from '@mui/material/Tooltip';
 import { useRouter } from 'next/navigation';
+
 
 interface Orcamento {
   id: number;
@@ -45,8 +46,6 @@ const OrcamentoBuscarScreen = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
-  const [statusPopoverAnchor, setStatusPopoverAnchor] = useState<null | HTMLElement>(null);
-  const [currentRowId, setCurrentRowId] = useState<number | null>(null);
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -88,48 +87,15 @@ const OrcamentoBuscarScreen = () => {
   if (isFetchingOrcamentos) return <CircularProgress />;
   if (errorOrcamentos) return <p>Ocorreu um erro: {errorOrcamentos.message}</p>;
 
-  const handleOpenStatusPopover = (event: React.MouseEvent<HTMLElement>, rowId: number) => {
-    setStatusPopoverAnchor(event.currentTarget);
-    setCurrentRowId(rowId); // Fixed: rowId is now of type number
+
+  const handleAprovar = (rowId: number) => {
+    router.push(`/apps/orcamento/aprovar/${rowId}`);
   };
 
-  const handleCloseStatusPopover = () => {
-    setStatusPopoverAnchor(null);
+  const handleEditOrcamento = (orcamentoId: number) => {
+    // router.push(`/apps/orcamento/editar?id=${orcamentoId}`);
+    console.log('Aguarde.');
   };
-
-  const aprovaOrcamento = (orcamentoId: number | null) => {
-    if (orcamentoId !== null) {
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/status/aprova/${orcamentoId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }).then(() => {
-        console.log('Orçamento aprovado com sucesso');
-        // Pode fazer o refetch agora!
-        // Implemente o refetch aqui!
-        refetch();
-      });
-    }
-  };
-
-  const isStatusPopoverOpen = Boolean(statusPopoverAnchor);
-  const popoverId = isStatusPopoverOpen ? 'status-action-popover' : undefined;
-  const handleSetStatus = (statusAction: 'approve' | 'reject', orcamentoId: number | null) => {
-    if (orcamentoId !== null) {
-      console.log(`Id do Orçamento: ${orcamentoId}`);
-    } else {
-      console.error("orcamentoId is null");
-    }
-    console.log(statusAction);
-    aprovaOrcamento(orcamentoId);
-    handleCloseStatusPopover();
-  };
-
-const handleEditOrcamento = (orcamentoId: number) => {
-  router.push(`/apps/orcamento/editar?id=${orcamentoId}`);
-};
 
   return (
     <PageContainer title="Orçamento / Buscar" description="Buscar Orçamento da Arte Arena">
@@ -169,9 +135,7 @@ const handleEditOrcamento = (orcamentoId: number) => {
                   <TableCell></TableCell>
                   <TableCell>ID</TableCell>
                   <TableCell>Número do Cliente</TableCell>
-                  <TableCell>Nome do Cliente</TableCell>
                   <TableCell>Data de Criação</TableCell>
-                  <TableCell>Data de Última Atualização</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Ações</TableCell>
                 </TableRow>
@@ -191,9 +155,7 @@ const handleEditOrcamento = (orcamentoId: number) => {
                       </TableCell>
                       <TableCell>{row.id}</TableCell>
                       <TableCell>{row.cliente_octa_number}</TableCell>
-                      <TableCell>{row.nome_cliente}</TableCell>
                       <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell>{new Date(row.updated_at).toLocaleDateString()}</TableCell>
                       <TableCell>
                         {row.status === "aprovado" ? (
                           <Stack direction="row" alignItems="center" spacing={1}>
@@ -219,46 +181,19 @@ const handleEditOrcamento = (orcamentoId: number) => {
                           <Tooltip title="Alterar Status">
                             <IconButton
                               aria-label="alterar status"
-                              aria-describedby={popoverId}
-                              onClick={(event) => handleOpenStatusPopover(event, row.id)}
+                              onClick={() => handleAprovar(row.id)}
                             >
                               <IconProgressCheck />
                             </IconButton>
                           </Tooltip>
-                          <Popover
-                            id={popoverId}
-                            open={isStatusPopoverOpen}
-                            anchorEl={statusPopoverAnchor}
-                            onClose={handleCloseStatusPopover}
-                            anchorOrigin={{
-                              vertical: 'bottom',
-                              horizontal: 'center',
-                            }}
-                            transformOrigin={{
-                              vertical: 'top',
-                              horizontal: 'center',
-                            }}
-                            sx={{
-                              boxShadow: 'none',
-                            }}
-                          >
-                            <div>
-                              <Typography sx={{ p: 2 }}>
-                                Aprovar Orçamento?
-                              </Typography>
-                              <Stack direction="row" spacing={1} padding={1}>
-                                <Button variant="contained" color="primary" onClick={() => handleSetStatus('approve', currentRowId)}>
-                                  Aprovar
-                                </Button>
-                              </Stack>
-                            </div>
-                          </Popover>
-                          <IconButton
+
+
+                          {/* <IconButton
                             aria-label="edit"
                             onClick={() => handleEditOrcamento(row.id)}
                           >
                             <IconEdit />
-                          </IconButton>
+                          </IconButton> */}
                         </Stack>
                       </TableCell>
 

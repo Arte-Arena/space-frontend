@@ -3,7 +3,7 @@ import React from "react";
 import PageContainer from "@/app/components/container/PageContainer";
 import ParentCard from '@/app/components/shared/ParentCard';
 import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
-import SalesReportCard, { SalesReportCardProps } from "@/app/components/dashboards/skeleton/SalesReportCard";
+import SalesReportCard from "@/app/components/dashboards/skeleton/SalesReportCard";
 import { IconFlagDollar, IconMessage2Dollar, IconReportMoney, IconChecklist, IconReceiptDollar } from "@tabler/icons-react";
 
 interface Report {
@@ -29,13 +29,28 @@ const reports: Report[] = [
     icon: <IconMessage2Dollar />
   },
   {
-    report: "Produtos Vendidos",
-    path: "/apps/vendas/relatorios/produtos-vendidos",
+    report: "Produtos Vendidos por Orçamento",
+    path: "/apps/vendas/relatorios/produtos-vendidos-por-orcamento",
     icon: <IconFlagDollar />
   },
   {
-    report: "Valores Vendidos",
-    path: "/apps/vendas/relatorios/valores-vendidos",
+    report: "Valores Vendidos por Orcamento",
+    path: "/apps/vendas/relatorios/valores-vendidos-por-orcamento",
+    icon: <IconReceiptDollar />
+  },
+  {
+    report: "Valores Vendidos por Produto",
+    path: "/apps/vendas/relatorios/valores-vendidos-por-produto",
+    icon: <IconReceiptDollar />
+  },
+  {
+    report: "Valores Vendidos (Últimos 7 dias)",
+    path: "/apps/vendas/relatorios/valores-vendidos-ultimos-7-dias",
+    icon: <IconReceiptDollar />
+  },
+  {
+    report: "Produtos Vendidos (Últimos 7 dias)",
+    path: "/apps/vendas/relatorios/produtos-vendidos-ultimos-7-dias",
     icon: <IconReceiptDollar />
   }
 ];
