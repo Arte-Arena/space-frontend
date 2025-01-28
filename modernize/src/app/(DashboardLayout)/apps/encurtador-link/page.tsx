@@ -120,7 +120,7 @@ const EncurtadorLink = () => {
                 </Typography>
                 <IconButton onClick={() => { navigator.clipboard.writeText(shortUrl); }}>
                   <IconCopy />
-                  <Typography variant="body2">Copiar Orçamento</Typography>
+                  <Typography variant="body2">Copiar Link</Typography>
                 </IconButton>
               </Box>
             )}
