@@ -23,7 +23,7 @@ export default function S({ params }: PageProps) {
   const resolveLink = async () => {
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/encurtador-link/resolve/${code}`, {
-      method: 'GET',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`,
