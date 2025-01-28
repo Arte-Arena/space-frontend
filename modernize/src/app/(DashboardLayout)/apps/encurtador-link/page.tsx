@@ -105,7 +105,7 @@ const EncurtadorLink = () => {
             disabled={!url}
             onClick={handleOnSubmit}
           >
-            Encurtador
+            Encurtar Link
           </Button>
         </Grid>
       </Grid>
