@@ -92,6 +92,26 @@ const OrcamentoBackofficeScreen = () => {
   if (isFetchingOrcamentos) return <CircularProgress />;
   if (errorOrcamentos) return <p>Ocorreu um erro: {errorOrcamentos.message}</p>;
 
+  const handleLinkOrcamento = async (orcamentoId: number) => {
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/url/${orcamentoId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (!data.caminho) {
+        console.log('Erro: servidor de short URL não disponível');
+      } else {
+        setLinkOrcamento(`${window.location.origin}${data.caminho}`);
+        setOpenLinkDialog(true);
+      }
+    }
+  };
 
   return (
     <PageContainer title="Orçamento / Backoffice" description="Gerenciar Pedidos da Arte Arena">
@@ -156,17 +176,11 @@ const OrcamentoBackofficeScreen = () => {
                       <TableCell>
                         <Stack direction="row" spacing={1}>
                           <IconButton aria-label="link">
-
-                        {/* Abre o link do orçamento em uma janela nova 
-                        href={`/apps/orcamento/backoffice/cliente-cadastro?id=${row.id}`
-                        */}
-
-
                             <IconButton
                               aria-label="link"
                               onClick={() => {
                                 setOpenLinkDialog(true);
-                                setLinkOrcamento(`${window.location.origin}/orcamento/${row.id}`);
+                                handleLinkOrcamento(row.id);
                               }}
                             >
                               <IconLink />
