@@ -18,7 +18,11 @@ import { IconSearch, IconLink, IconShirtSport, IconCheck } from '@tabler/icons-r
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import Link from 'next/link';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogActions from '@mui/material/DialogActions';
 
 interface Orcamento {
   id: number;
@@ -42,6 +46,8 @@ const OrcamentoBackofficeScreen = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
+  const [linkOrcamento, setLinkOrcamento] = useState<string>('');
+  const [openLinkDialog, setOpenLinkDialog] = useState<boolean>(false);
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -86,6 +92,26 @@ const OrcamentoBackofficeScreen = () => {
   if (isFetchingOrcamentos) return <CircularProgress />;
   if (errorOrcamentos) return <p>Ocorreu um erro: {errorOrcamentos.message}</p>;
 
+  const handleLinkOrcamento = async (orcamentoId: number) => {
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/url/${orcamentoId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (!data.caminho) {
+        console.log('Erro: servidor de short URL não disponível');
+      } else {
+        setLinkOrcamento(`${window.location.origin}${data.caminho}`);
+        setOpenLinkDialog(true);
+      }
+    }
+  };
 
   return (
     <PageContainer title="Orçamento / Backoffice" description="Gerenciar Pedidos da Arte Arena">
@@ -150,11 +176,37 @@ const OrcamentoBackofficeScreen = () => {
                       <TableCell>
                         <Stack direction="row" spacing={1}>
                           <IconButton aria-label="link">
-                            <Link href={`/apps/orcamento/backoffice/cliente-cadastro?id=${row.id}`}>
-                              <IconButton aria-label="link">
-                                <IconLink />
-                              </IconButton>
-                            </Link>
+                            <IconButton
+                              aria-label="link"
+                              onClick={() => {
+                                setOpenLinkDialog(true);
+                                handleLinkOrcamento(row.id);
+                              }}
+                            >
+                              <IconLink />
+                            </IconButton>
+                            <Dialog
+                              open={openLinkDialog}
+                              onClose={() => setOpenLinkDialog(false)}
+                            >
+                              <DialogTitle>Link do Orçamento</DialogTitle>
+                              <DialogContent>
+                                <DialogContentText>
+                                  {linkOrcamento}
+                                </DialogContentText>
+                              </DialogContent>
+                              <DialogActions>
+                                <Button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(linkOrcamento);
+                                    setOpenLinkDialog(false);
+                                  }}
+                                >
+                                  Copiar Link
+                                </Button>
+                              </DialogActions>
+                            </Dialog>
+
                           </IconButton>
                           <Button variant="outlined">
                             <IconShirtSport />

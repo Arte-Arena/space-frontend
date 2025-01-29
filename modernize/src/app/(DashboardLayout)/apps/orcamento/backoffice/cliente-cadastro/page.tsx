@@ -35,6 +35,7 @@ interface ClienteCadastroForm {
   cidade_cobranca: string;
   uf_cobranca: string;
   endereco_cobranca_diferente: boolean;
+  orcamento_id: number;
 }
 
 const OrcamentoBackofficeScreen: React.FC = () => {
@@ -67,6 +68,7 @@ const OrcamentoBackofficeScreen: React.FC = () => {
     cidade_cobranca: '',
     uf_cobranca: '', // Inicializando com valor vazio
     endereco_cobranca_diferente: false,
+    orcamento_id: Number(id),
   });
 
   const [isTipoPessoaSelected, setIsTipoPessoaSelected] = useState(false);
@@ -143,6 +145,7 @@ const OrcamentoBackofficeScreen: React.FC = () => {
           cidade_cobranca: '',
           uf_cobranca: '',
           endereco_cobranca_diferente: false,
+          orcamento_id: Number(id),
         });
         setIsTipoPessoaSelected(false);
       } else {
