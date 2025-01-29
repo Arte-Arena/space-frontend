@@ -50,7 +50,7 @@ const custoBandeiraItem: MenuitemsType = {
   id: uniqueId(),
   title: "Custo de Bandeira",
   icon: IconFlag,
-  href: "/apps/custo-bandeira",
+  href: "/apps/orcamento/custo-bandeira",
 };
 
 // Função que gera o menu atualizado dinamicamente
@@ -122,7 +122,7 @@ const getMenuItems = (): MenuitemsType[] => {
           id: uniqueId(),
           title: "Preco de Bandeira",
           icon: IconFlag,
-          href: "/apps/preco-bandeira",
+          href: "/apps/orcamento/preco-bandeira",
         },
         ...(isSuperUser ? [custoBandeiraItem] : []),
       ],
