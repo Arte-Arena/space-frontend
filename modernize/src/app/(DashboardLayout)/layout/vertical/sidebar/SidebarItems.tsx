@@ -1,4 +1,4 @@
-import Menuitems from './MenuItems';
+import getMenuItems from './MenuItems';
 import { usePathname } from "next/navigation";
 import Box from '@mui/material/Box';
 import List from '@mui/material/List';
@@ -10,6 +10,7 @@ import NavGroup from './NavGroup/NavGroup';
 import { AppState } from '@/store/store'
 import { toggleMobileSidebar } from '@/store/customizer/CustomizerSlice';
 
+const Menuitems = getMenuItems();
 
 const SidebarItems = () => {
   const  pathname  = usePathname();

@@ -13,7 +13,7 @@ import {
   ListItemButton,
 } from '@mui/material';
 import { IconSearch, IconX } from '@tabler/icons-react';
-import Menuitems from '../sidebar/MenuItems';
+import getMenuItems from '../sidebar/MenuItems';
 import Link from 'next/link';
 
 interface menuType {
@@ -23,6 +23,8 @@ interface menuType {
   children: menuType[];
   href: string;
 }
+
+const Menuitems = getMenuItems();
 
 const Search = () => {
   // drawer top
