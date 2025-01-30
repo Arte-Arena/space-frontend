@@ -44,7 +44,7 @@ const PrecoBandeiraScreen = () => {
           </CustomFormLabel>
           <CustomTextField
             id="altura"
-            helperText="A altura em metros da superfície da bandeira."
+            helperText="A altura em centimetros da superfície da bandeira."
             variant="outlined"
             fullWidth
             onInput={(e: React.FormEvent<HTMLInputElement>) => {
@@ -63,7 +63,7 @@ const PrecoBandeiraScreen = () => {
           </CustomFormLabel>
           <CustomTextField
             id="largura"
-            helperText="A largura em metros da superfície da bandeira."
+            helperText="A largura em centimetros da superfície da bandeira."
             variant="outlined"
             fullWidth
             onInput={(e: React.FormEvent<HTMLInputElement>) => {
