@@ -18,10 +18,6 @@ const PrecoBandeiraScreen = () => {
 
   const [altura, setAltura] = useState(0);
   const [largura, setLargura] = useState(0);
-  const [fatorNormalPessoal, setFatorNormalPessoal] = useState(FATOR_NORMAL_PESSOAL);
-  const [fatorNormalEmpresarial, setFatorNormalEmpresarial] = useState(FATOR_NORMAL_EMPRESARIAL);
-  const [fatorMinimoPessoal, setFatorMinimoPessoal] = useState(FATOR_MINIMO_PESSOAL);
-  const [fatorMinimoEmpresarial, setFatorMinimoEmpresarial] = useState(FATOR_MINIMO_EMPRESARIAL);
   const [quantidadeTecidoState, setQuantidadeTecidoState] = useState(0);
 
   useEffect(() => {
