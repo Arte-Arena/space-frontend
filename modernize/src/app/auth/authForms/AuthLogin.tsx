@@ -69,6 +69,10 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
       }
 
       router.push('/');
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+
     } catch (error) {
       console.error('Login error:', (error as Error).message);
       alert('Falha no login. Verifique seu email e senha.');
