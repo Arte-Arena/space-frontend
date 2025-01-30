@@ -11,89 +11,32 @@ import Typography from '@mui/material/Typography';
 
 const PrecoBandeiraScreen = () => {
 
+  const FATOR_NORMAL_PESSOAL = 31;
+  const FATOR_NORMAL_EMPRESARIAL = 26;
+  const FATOR_MINIMO_PESSOAL = 24;
+  const FATOR_MINIMO_EMPRESARIAL = 22;
+
   const [altura, setAltura] = useState(0);
   const [largura, setLargura] = useState(0);
-  const [custoTecido, setCustoTecido] = useState(0);
-  const [custoTinta, setCustoTinta] = useState(0);
-  const [custoPapel, setCustoPapel] = useState(0);
-  const [custoImposto, setCustoImposto] = useState(0);
-  const [resultado, setResultado] = useState<number | null>(null);
-
-  const calcularCusto = () => {
-    if (!altura || !largura) {
-      alert('Por favor, preencha todos os campos.');
-      return;
-    }
-    const larguraTecido = 1.5;
-
-    // Determinar a quantidade de faixas
-    const menorDimensao = Math.min(altura, largura);
-    const faixas = Math.ceil(menorDimensao / larguraTecido);    
-    
-    // Calcular a quantidade total de tecido
-    const maiorDimensao = Math.max(altura, largura);
-    const quantidadeTecido = faixas * maiorDimensao;
-
-    const FATOR_NORMAL_PESSOAL = 31;
-    const FATOR_NORMAL_EMPRESARIAL = 26;
-    const FATOR_MINIMO_PESSOAL = 24;
-    const FATOR_MINIMO_EMPRESARIAL = 22;
-
-
-    // const custoMetro = custoTecido + custoTinta + custoPapel;
-
-    // const custoSemImposto = custoMetro * quantidadeTecido;
-
-    // const custoComImposto = custoSemImposto * (1 + (custoImposto / 100));
-
-    // // Limita o resultado para no máximo duas casas decimais
-    // const resultado = Math.round((custoComImposto + Number.EPSILON) * 100) / 100;
-    
-    const resultado = FATOR_NORMAL_EMPRESARIAL * quantidadeTecido;
-    
-
-    setResultado(resultado);
-
-  };
+  const [fatorNormalPessoal, setFatorNormalPessoal] = useState(FATOR_NORMAL_PESSOAL);
+  const [fatorNormalEmpresarial, setFatorNormalEmpresarial] = useState(FATOR_NORMAL_EMPRESARIAL);
+  const [fatorMinimoPessoal, setFatorMinimoPessoal] = useState(FATOR_MINIMO_PESSOAL);
+  const [fatorMinimoEmpresarial, setFatorMinimoEmpresarial] = useState(FATOR_MINIMO_EMPRESARIAL);
+  const [quantidadeTecidoState, setQuantidadeTecidoState] = useState(0);
 
   useEffect(() => {
-    const fetchConfig = async () => {
-      const token = localStorage.getItem('accessToken') || '';
-
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-config`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch config');
-        }
-
-        const data = await response.json();
-
-        setCustoTecido(data.custo_tecido);
-        setCustoTinta(data.custo_tinta);
-        setCustoPapel(data.custo_papel);
-        setCustoImposto(data.custo_imposto);
-      } catch (error) {
-        console.error('Error fetching config:', error);
-      }
-    };
-
-    fetchConfig();
-  }, []);
+    if (altura && largura) {
+      const quantidadeTecido = altura * largura;
+      setQuantidadeTecidoState(quantidadeTecido);
+    }
+  }, [altura, largura]);
 
   return (
     <PageContainer title="Cálculo do Custo de Bandeira" description="Cálculo do Custo de Bandeira da Arte Arena">
       <Breadcrumb title="Cálculo do Custo de Bandeira" subtitle="Cálculo do Custo de Bandeira da Arte Arena" />
 
       <ParentCard title="Calcular o Custo de uma Bandeira">
-        <form style={{ maxWidth: '600px' }}>
-
+        <div>
           <CustomFormLabel
             sx={{
               mt: 0,
@@ -109,7 +52,7 @@ const PrecoBandeiraScreen = () => {
             fullWidth
             onInput={(e: React.FormEvent<HTMLInputElement>) => {
               const value = (e.target as HTMLInputElement).value.replace(',', '.');
-              setAltura(parseFloat(value));
+              setAltura(parseFloat(value) / 100);
             }}
           />
 
@@ -128,22 +71,48 @@ const PrecoBandeiraScreen = () => {
             fullWidth
             onInput={(e: React.FormEvent<HTMLInputElement>) => {
               const value = (e.target as HTMLInputElement).value.replace(',', '.');
-              setLargura(parseFloat(value));
+              setLargura(parseFloat(value) / 100);
             }}
           />
 
           <div style={{ marginTop: '20px' }}>
-            <Button variant="contained" onClick={calcularCusto}>Calcular</Button>
+            <Button variant="contained">Calcular</Button>
           </div>
-          {resultado !== null && (
-            <div style={{ marginTop: '20px' }}>
-              <Typography variant="h5">
-                O custo total da bandeira é: <strong>R$ {resultado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-              </Typography>
-            </div>
-          )}
+          <div style={{ marginTop: '20px' }}>
 
-        </form>
+
+            <div style={{ marginTop: '20px' }}>
+              <Typography variant="h6">
+                Resultados:
+              </Typography>
+              <Typography>
+                Valor Mínimo Pessoal Simples: <strong>R$ {(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+              </Typography>
+              <Typography>
+                Valor Normal Pessoal Simples: <strong>R$ {(FATOR_NORMAL_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+              </Typography>
+              <Typography>
+                Valor Mínimo Pessoal Dupla: <strong>R$ {((FATOR_MINIMO_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+              </Typography>
+              <Typography>
+                Valor Normal Pessoal Dupla: <strong>R$ {((FATOR_NORMAL_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+              </Typography>
+              <Typography>
+                Valor Mínimo Empresarial Simples: <strong>R$ {(FATOR_MINIMO_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+              </Typography>
+              <Typography>
+                Valor Normal Empresarial Simples: <strong>R$ {(FATOR_NORMAL_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+              </Typography>
+              <Typography>
+                Valor Mínimo Empresarial Dupla: <strong>R$ {((FATOR_MINIMO_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+              </Typography>
+              <Typography>
+                Valor Normal Empresarial Dupla: <strong>R$ {((FATOR_NORMAL_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+              </Typography>
+
+            </div>
+          </div>
+        </div>
 
       </ParentCard>
     </PageContainer>
