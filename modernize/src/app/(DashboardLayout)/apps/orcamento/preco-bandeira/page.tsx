@@ -9,6 +9,23 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import ParentCard from '@/app/components/shared/ParentCard';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+
+const styles = {
+  label: {
+    fontWeight: 'bold',
+    marginRight: '8px', // Ajuste este valor para controlar o espaço
+  },
+  value: {
+    textAlign: 'right',
+    marginLeft: 'auto', // Ajuste este valor para controlar o espaço
+  },
+  row: {
+    display: 'flex',
+    alignItems: 'baseline',
+    marginBottom: '4px',
+  },
+};
 
 const PrecoBandeiraScreen = () => {
 
@@ -44,7 +61,7 @@ const PrecoBandeiraScreen = () => {
           </CustomFormLabel>
           <CustomTextField
             id="altura"
-            helperText="A altura em centimetros da superfície da bandeira."
+            helperText="A altura em centímetros da superfície da bandeira."
             variant="outlined"
             fullWidth
             onInput={(e: React.FormEvent<HTMLInputElement>) => {
@@ -73,43 +90,80 @@ const PrecoBandeiraScreen = () => {
           />
 
           <div style={{ marginTop: '20px' }}>
-
-
             <div style={{ marginTop: '20px' }}>
               <Typography variant="h6" style={{ marginBottom: '20px', marginTop: '30px' }}>
                 Resultados:
               </Typography>
-              <Grid container spacing={2}>
+              <Grid container spacing={1}> {/* Reduzir espaçamento padrão */}
                 <Grid item xs={12} md={6}>
-                  <Typography>
-                    Valor Mínimo Pessoal Simples: <strong>R$ {(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                  </Typography>
-                  <Typography>
-                    Valor Normal Pessoal Simples: <strong>R$ {(FATOR_NORMAL_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                  </Typography>
-                  <Typography>
-                    Valor Mínimo Pessoal Dupla: <strong>R$ {((FATOR_MINIMO_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                  </Typography>
-                  <Typography>
-                    Valor Normal Pessoal Dupla: <strong>R$ {((FATOR_NORMAL_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                  </Typography>
+                  <Box sx={styles.row}>
+                    <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
+                      Valor Mínimo Pessoal Simples:
+                    </Typography>
+                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                      R$ {(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Typography>
+                  </Box>
+                  <Box sx={styles.row}>
+                    <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
+                      Valor Normal Pessoal Simples:
+                    </Typography>
+                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                      R$ {(FATOR_NORMAL_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Typography>
+                  </Box>
+                  <Box sx={styles.row}>
+                    <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
+                      Valor Mínimo Pessoal Dupla:
+                    </Typography>
+                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                      R$ {((FATOR_MINIMO_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Typography>
+                  </Box>
+                  <Box sx={styles.row}>
+                    <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
+                      Valor Normal Pessoal Dupla:
+                    </Typography>
+                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                      R$ {((FATOR_NORMAL_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Typography>
+                  </Box>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography>
-                    Valor Mínimo Empresarial Simples: <strong>R$ {(FATOR_MINIMO_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                  </Typography>
-                  <Typography>
-                    Valor Normal Empresarial Simples: <strong>R$ {(FATOR_NORMAL_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                  </Typography>
-                  <Typography>
-                    Valor Mínimo Empresarial Dupla: <strong>R$ {((FATOR_MINIMO_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                  </Typography>
-                  <Typography>
-                    Valor Normal Empresarial Dupla: <strong>R$ {((FATOR_NORMAL_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                  </Typography>
+                  <Box sx={styles.row}>
+                    <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
+                      Valor Mínimo Empresarial Simples:
+                    </Typography>
+                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                      R$ {(FATOR_MINIMO_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Typography>
+                  </Box>
+                  <Box sx={styles.row}>
+                    <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
+                      Valor Normal Empresarial Simples:
+                    </Typography>
+                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                      R$ {(FATOR_NORMAL_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Typography>
+                  </Box>
+                  <Box sx={styles.row}>
+                    <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
+                      Valor Mínimo Empresarial Dupla:
+                    </Typography>
+                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                      R$ {((FATOR_MINIMO_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Typography>
+                  </Box>
+                  <Box sx={styles.row}>
+                    <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
+                      Valor Normal Empresarial Dupla:
+                    </Typography>
+                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                      R$ {((FATOR_NORMAL_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </Typography>
+                  </Box>
                 </Grid>
               </Grid>
-
             </div>
           </div>
         </div>

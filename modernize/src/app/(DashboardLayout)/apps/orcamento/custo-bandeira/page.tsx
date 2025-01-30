@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
-import { Button } from '@mui/material';
 import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import ParentCard from '@/app/components/shared/ParentCard';
@@ -18,6 +17,12 @@ const CustoBandeiraScreen = () => {
   const [custoPapel, setCustoPapel] = useState(0);
   const [custoImposto, setCustoImposto] = useState(0);
   const [resultado, setResultado] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (altura && largura) {
+      calcularCusto();
+    }
+  }, [altura, largura]);
 
   const calcularCusto = () => {
     if (!altura || !largura) {
@@ -44,7 +49,6 @@ const CustoBandeiraScreen = () => {
     const resultado = Math.round((custoComImposto + Number.EPSILON) * 100) / 100;
     
     setResultado(resultado);
-
   };
 
   useEffect(() => {
@@ -95,12 +99,12 @@ const CustoBandeiraScreen = () => {
           </CustomFormLabel>
           <CustomTextField
             id="altura"
-            helperText="A altura em metros da superfície da bandeira."
+            helperText="A altura em centímetros da superfície da bandeira."
             variant="outlined"
             fullWidth
             onInput={(e: React.FormEvent<HTMLInputElement>) => {
               const value = (e.target as HTMLInputElement).value.replace(',', '.');
-              setAltura(parseFloat(value));
+              setAltura(parseFloat(value) / 100);
             }}
           />
 
@@ -119,13 +123,10 @@ const CustoBandeiraScreen = () => {
             fullWidth
             onInput={(e: React.FormEvent<HTMLInputElement>) => {
               const value = (e.target as HTMLInputElement).value.replace(',', '.');
-              setLargura(parseFloat(value));
+              setLargura(parseFloat(value) / 100);
             }}
           />
 
-          <div style={{ marginTop: '20px' }}>
-            <Button variant="contained" onClick={calcularCusto}>Calcular</Button>
-          </div>
           {resultado !== null && (
             <div style={{ marginTop: '20px' }}>
               <Typography variant="h5">
@@ -142,3 +143,4 @@ const CustoBandeiraScreen = () => {
 };
 
 export default CustoBandeiraScreen;
+
