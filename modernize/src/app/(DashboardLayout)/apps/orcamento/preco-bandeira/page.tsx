@@ -8,6 +8,7 @@ import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLab
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import ParentCard from '@/app/components/shared/ParentCard';
 import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
 
 const PrecoBandeiraScreen = () => {
 
@@ -78,33 +79,39 @@ const PrecoBandeiraScreen = () => {
 
 
             <div style={{ marginTop: '20px' }}>
-              <Typography variant="h6">
+              <Typography variant="h6" style={{ marginBottom: '20px', marginTop: '30px' }}>
                 Resultados:
               </Typography>
-              <Typography>
-                Valor Mínimo Pessoal Simples: <strong>R$ {(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-              </Typography>
-              <Typography>
-                Valor Normal Pessoal Simples: <strong>R$ {(FATOR_NORMAL_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-              </Typography>
-              <Typography>
-                Valor Mínimo Pessoal Dupla: <strong>R$ {((FATOR_MINIMO_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-              </Typography>
-              <Typography>
-                Valor Normal Pessoal Dupla: <strong>R$ {((FATOR_NORMAL_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-              </Typography>
-              <Typography>
-                Valor Mínimo Empresarial Simples: <strong>R$ {(FATOR_MINIMO_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-              </Typography>
-              <Typography>
-                Valor Normal Empresarial Simples: <strong>R$ {(FATOR_NORMAL_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-              </Typography>
-              <Typography>
-                Valor Mínimo Empresarial Dupla: <strong>R$ {((FATOR_MINIMO_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-              </Typography>
-              <Typography>
-                Valor Normal Empresarial Dupla: <strong>R$ {((FATOR_NORMAL_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Typography>
+                    Valor Mínimo Pessoal Simples: <strong>R$ {(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                  </Typography>
+                  <Typography>
+                    Valor Normal Pessoal Simples: <strong>R$ {(FATOR_NORMAL_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                  </Typography>
+                  <Typography>
+                    Valor Mínimo Pessoal Dupla: <strong>R$ {((FATOR_MINIMO_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                  </Typography>
+                  <Typography>
+                    Valor Normal Pessoal Dupla: <strong>R$ {((FATOR_NORMAL_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography>
+                    Valor Mínimo Empresarial Simples: <strong>R$ {(FATOR_MINIMO_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                  </Typography>
+                  <Typography>
+                    Valor Normal Empresarial Simples: <strong>R$ {(FATOR_NORMAL_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                  </Typography>
+                  <Typography>
+                    Valor Mínimo Empresarial Dupla: <strong>R$ {((FATOR_MINIMO_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                  </Typography>
+                  <Typography>
+                    Valor Normal Empresarial Dupla: <strong>R$ {((FATOR_NORMAL_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                  </Typography>
+                </Grid>
+              </Grid>
 
             </div>
           </div>
