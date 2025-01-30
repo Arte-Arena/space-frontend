@@ -109,7 +109,7 @@ const PrecoBandeiraScreen = () => {
             fullWidth
             onInput={(e: React.FormEvent<HTMLInputElement>) => {
               const value = (e.target as HTMLInputElement).value.replace(',', '.');
-              setAltura(parseFloat(value));
+              setAltura(parseFloat(value) / 100);
             }}
           />
 
@@ -128,7 +128,7 @@ const PrecoBandeiraScreen = () => {
             fullWidth
             onInput={(e: React.FormEvent<HTMLInputElement>) => {
               const value = (e.target as HTMLInputElement).value.replace(',', '.');
-              setLargura(parseFloat(value));
+              setLargura(parseFloat(value) / 100);
             }}
           />
 
