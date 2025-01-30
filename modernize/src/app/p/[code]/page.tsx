@@ -1,5 +1,5 @@
 'use client'
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface PageProps {
@@ -9,41 +9,45 @@ interface PageProps {
 }
 
 export default function S({ params }: PageProps) {
-
-  const accessToken = localStorage.getItem('accessToken');
-  if (!accessToken) {
-    throw new Error('Access token is missing');
-  }
-
-  const { code } = params;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { code } = params;
 
-  console.log('Code:', code);
+  useEffect(() => {
 
-  const resolveLink = async () => {
+    const resolveLink = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/encurtador-link/resolve/${code}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/encurtador-link/resolve/${code}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+        const data = await response.json();
 
-    const data = await response.json();
-
-    if (response.ok) {
-      console.log(data.original_url);
-      if (data.original_url) {
-        router.push(data.original_url);
+        if (response.ok) {
+          if (data.original_url) {
+            router.push(data.original_url);
+          } else {
+            setError('URL original não encontrada.');
+          }
+        } else {
+          setError(`Erro ao resolver URL: ${data.error}`);
+        }
+      } catch (err) {
+        setError('Erro ao realizar a requisição.');
+      } finally {
+        setLoading(false);
       }
-    } else {
-      console.error('Erro ao resolver URL:', data.error);
-    }
+    };
 
-  }
+    resolveLink();
+  }, [code, router]);
 
-  resolveLink();
+  if (loading) return <div>Carregando...</div>;
+  if (error) return <div>Erro: {error}</div>;
 
   return (
     <div>

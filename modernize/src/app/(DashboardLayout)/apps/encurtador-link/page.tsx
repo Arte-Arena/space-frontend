@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PageContainer from "@/app/components/container/PageContainer";
 import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
 import Typography from "@mui/material/Typography";
@@ -9,7 +9,6 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import IconButton from '@mui/material/IconButton';
 import { IconCopy } from '@tabler/icons-react';
-
 
 interface ShortUrlResponse {
   code: string;
@@ -29,18 +28,27 @@ const EncurtadorLink = () => {
   const [url, setUrl] = useState("");
   const [shortUrl, setShortUrl] = useState("");
   const [error, setError] = useState("");
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  const accessToken = localStorage.getItem('accessToken');
-  if (!accessToken) {
-    throw new Error('Access token is missing');
-  }
+  // Acessa o token de forma segura
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      setError('Access token is missing');
+    } else {
+      setAccessToken(token);
+    }
+  }, []);
 
   const handleFetchShortUrl = async (url: string): Promise<ShortUrlResponse | null> => {
+    if (!accessToken) return null; // Verifica se o token está disponível
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/encurtador-link`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`, // Inclui o token de autorização
         },
         body: JSON.stringify({ url }),
       });
@@ -61,74 +69,65 @@ const EncurtadorLink = () => {
     }
   };
 
-  const handleOnSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (url) {
-      const data = await handleFetchShortUrl(url);
+      await handleFetchShortUrl(url);
     }
   };
 
   return (
     <PageContainer>
-      <Breadcrumb title="Encurtador de Links" items={BCrumb} />
-      <Typography variant="h5" gutterBottom>
-        Encurtador de Link
-      </Typography>
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={12}>
-          <CustomTextField
-            onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => {
-              const handleOnSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-                e.preventDefault();
-                if (url) {
-                  const data = await handleFetchShortUrl(url);
-                }
-              };
-            }}
-            label="URL"
-            value={url}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUrl(e.target.value)}
-            variant="outlined"
-            fullWidth
-          />
-        </Grid>
-        {error && (
-          <Grid item xs={12}>
-            <Typography color="error">{error}</Typography>
+      <>
+        <Breadcrumb title="Encurtador de Links" items={BCrumb} />
+        <Typography variant="h5" gutterBottom>
+          Encurtador de Link
+        </Typography>
+        <form onSubmit={handleOnSubmit}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <CustomTextField
+                label="URL"
+                value={url}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUrl(e.target.value)}
+                variant="outlined"
+                fullWidth
+              />
+            </Grid>
+            {error && (
+              <Grid item xs={12}>
+                <Typography color="error">{error}</Typography>
+              </Grid>
+            )}
+            <Grid item xs={12}>
+              <Button
+                fullWidth
+                variant="contained"
+                color="primary"
+                disabled={!url}
+                type="submit" // Define como tipo submit
+              >
+                Encurtar Link
+              </Button>
+            </Grid>
           </Grid>
-        )}
-        <Grid item xs={12}>
-          <Button
-            fullWidth
-            variant="contained"
-            color="primary"
-            disabled={!url}
-            onClick={handleOnSubmit}
-          >
-            Encurtar Link
-          </Button>
-        </Grid>
-      </Grid>
-      <div>
+        </form>
 
         {shortUrl && (
           <Box sx={{ mt: 2, mb: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid grey', borderRadius: 1 }}>
-            {shortUrl && (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mr: 1 }}>
-                  {shortUrl}
-                </Typography>
-                <IconButton onClick={() => { navigator.clipboard.writeText(shortUrl); }}>
-                  <IconCopy />
-                  <Typography variant="body2">Copiar Link</Typography>
-                </IconButton>
-              </Box>
-            )}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', mr: 1 }}>
+                {shortUrl}
+              </Typography>
+              <IconButton onClick={() => { navigator.clipboard.writeText(shortUrl); }}>
+                <IconCopy />
+                <Typography variant="body2">Copiar Link</Typography>
+              </IconButton>
+            </Box>
           </Box>
         )}
-      </div>
+      </>
     </PageContainer>
-
   );
 };
 
