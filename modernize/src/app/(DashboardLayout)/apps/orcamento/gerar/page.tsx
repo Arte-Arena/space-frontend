@@ -567,7 +567,7 @@ const OrcamentoGerarScreen = () => {
       // setFreteAtualizado(true);
       switch (shippingOption) {
         case 'RETIRADA':
-          setPrazoFrete(0);
+          setPrazoFrete(1);
           setPrecoFrete(0.00);
           break;
         case 'MINIENVIOS':
