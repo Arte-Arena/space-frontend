@@ -73,9 +73,6 @@ const PrecoBandeiraScreen = () => {
           />
 
           <div style={{ marginTop: '20px' }}>
-            <Button variant="contained">Calcular</Button>
-          </div>
-          <div style={{ marginTop: '20px' }}>
 
 
             <div style={{ marginTop: '20px' }}>

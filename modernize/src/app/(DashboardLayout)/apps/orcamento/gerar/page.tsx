@@ -143,9 +143,9 @@ const OrcamentoGerarScreen = () => {
   const [precoFrete, setPrecoFrete] = useState<number | null>(null);
   const [prazoFrete, setPrazoFrete] = useState<number | null>(null);
   const [prazoProducao, setPrazoProducao] = useState<number | null>(null);
-  const [freteAtualizado, setFreteAtualizado] = useState<boolean>(false);
+  // const [freteAtualizado, setFreteAtualizado] = useState<boolean>(false);
   const [loadingPrevisao, setLoadingPrevisao] = useState(false);
-  const [previsaoEntrega, setPrevisaoEntrega] = useState<DateTime>(DateTime.now())
+  const [previsaoEntrega, setPrevisaoEntrega] = useState<DateTime | null>(null)
   const [checkedOcultaPrevisao, setCheckedOcultaPrevisao] = useState<boolean>(false);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
   const [openSnackbarCopiarOrcamento, setOpenSnackbarCopiarOrcamento] = useState(false);
@@ -510,8 +510,6 @@ const OrcamentoGerarScreen = () => {
 
       if (!response.ok) {
         throw new Error('Failed to fetch frete');
-      } else {
-        // console.log(body);
       }
 
       const data: FreteData[] = await response.json();
@@ -556,13 +554,17 @@ const OrcamentoGerarScreen = () => {
       console.error('Error fetching frete:', error);
     } finally {
       setIsFetchingFrete(false);
+      if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
+        console.log("0000");
+        calcPrevisao();
+      }
     }
   };
 
   useEffect(() => {
     if (clientId && productsList) {
       // console.log('Opção de entrega atualizada', shippingOption);
-      setFreteAtualizado(true);
+      // setFreteAtualizado(true);
       switch (shippingOption) {
         case 'RETIRADA':
           setPrazoFrete(0);
@@ -597,36 +599,87 @@ const OrcamentoGerarScreen = () => {
   }, [shippingOption]);
 
   useEffect(() => {
-    if (prazoFrete == 0) {
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
+      if (isUrgentDeliverySelected) {
+        console.log("-0001");
+        calcPrevisao();
+      }
+    }
+  }, [isUrgentDeliverySelected]);
+
+  useEffect(() => {
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
+      console.log('00001');
       calcPrevisao();
-    } else {
+    }
+  }, [clientId]);
+
+  useEffect(() => {
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
+      console.log('00002');
+      calcPrevisao();
+    }
+  }, [productsList]);
+
+  useEffect(() => {
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
+      console.log('00003');
+      calcPrevisao();
+    }
+  }, [shippingOption]);
+
+  useEffect(() => {
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
+      console.log('00004');
+      calcPrevisao();
+    }
+  }, [cep]);
+
+  useEffect(() => {
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
+      console.log('00005');
+      calcPrevisao();
+    }
+  }, [address]);
+
+  useEffect(() => {
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
+      console.log('00006');
+      calcPrevisao();
+    }
+  }, [prazoProducao]);
+
+  useEffect(() => {
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
+      console.log('00007');
       calcPrevisao();
     }
   }, [prazoFrete]);
 
-  useEffect(() => {
-    if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
-      calcPrevisao();
-    }
-  }, [clientId, productsList, shippingOption, cep, address, prazoProducao, prazoFrete]);
+  // useEffect(() => {
+  //   if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
+  //     console.log('00008');
+  //     calcPrevisao();
+  //   }
+  // }, [freteAtualizado]);
 
   useEffect(() => {
-    if (freteAtualizado) {
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
+      console.log('00009');
       calcPrevisao();
     }
-  }, [freteAtualizado]);
+  }, [prazoProducao]);
 
   const calcPrevisao = async () => {
-    setFreteAtualizado(false);
+    // setFreteAtualizado(false);
     setLoadingPrevisao(true);
+    setPrevisaoEntrega(null);
 
-    console.log('Calculando a previsão... Iniciando calculo de previsão de entrega');
-    // console.log('Calculando a previsão... Avançando os dias... Dia no Brasil: ', today);
-    // if (shippingOption) {
-    //   // console.log('Calculando a previsão... Opção de entrega definida pelo usuário:', shippingOption);
-    // }
+    await new Promise(resolve => setTimeout(resolve, 300));
 
-    console.log(prazoFrete);
+    console.log(' ---------------- Calculando a previsão... Iniciando calculo de previsão de entrega');
+
+    console.log('prazoFrete: ', prazoFrete);
 
     if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete || prazoFrete === 0)) {
 
@@ -657,13 +710,21 @@ const OrcamentoGerarScreen = () => {
       const dataPrevistaEntrega = avancarDias(today, prazoFreteTotal + prazoProducaoTotal);
       // console.log('dataPrevistaEntrega', dataPrevistaEntrega);
 
-      setPrevisaoEntrega(await encontrarProximoDiaUtil(safeDataFeriados, dataPrevistaEntrega));
-      console.log('Calculando a previsão... finalizando... shippingOption: ', shippingOption);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      setPrevisaoEntrega(dataPrevistaEntrega);
+
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+
+      console.log(' ---------------- Calculando a previsão... finalizando... shippingOption: ', shippingOption);
     } else {
-      console.log('Calculando a previsão... Erro crítico: algum(uns) campo(s) anterior(es) indefinido(s)');
+      console.log(' ---------------- Calculando a previsão... Erro crítico: algum(uns) campo(s) anterior(es) indefinido(s)');
     }
 
     setLoadingPrevisao(false);
+
+
 
     return;
   };
@@ -742,9 +803,11 @@ ${shippingOption === 'RETIRADA' ? 'Frete: R$ 0,00 (Retirada)' : `Frete: R$ ${pre
 Total: R$ ${totalOrçamento.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}
 
 Prazo de Produção: ${prazoProducao} dias úteis
-${!checkedOcultaPrevisao ? 
-  `Previsão de ${shippingOption === 'RETIRADA' ? 'Retirada' : 'Entrega'}: ${previsaoEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy')} (aprovando hoje).` 
-  : ''}
+${!checkedOcultaPrevisao ?
+        previsaoEntrega ?
+          `Previsão de ${shippingOption === 'RETIRADA' ? 'Retirada' : 'Entrega'}: ${previsaoEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy')} (aprovando hoje).`
+          : 'Não é possível prever a data de entrega.'
+        : ''}
 
 Prazo inicia-se após aprovação da arte e pagamento confirmado.
 
@@ -1206,7 +1269,7 @@ Orçamento válido por 7 dias.
                   <FormControlLabel
                     value={"RETIRADA"}
                     control={<Radio disabled={!clientId || productsList.length === 0} />}
-                    label="Retirada - R$ 0,00"
+                    label={`Retirada - R$ 0,00. Previsão: ${prazoProducao} dias úteis.`}
                   />
 
                   <FormControlLabel
@@ -1382,7 +1445,6 @@ Orçamento válido por 7 dias.
                 value={isAnticipation ? 'antecipacao' : 'prazoNormal'}
                 onClick={() => {
                   setIsUrgentDeliverySelected(true);
-                  calcPrevisao();
                 }}
               >
                 <FormControlLabel
@@ -1452,7 +1514,7 @@ Orçamento válido por 7 dias.
                 Data de entrega prevista: {loadingPrevisao ? (
                   <CircularProgress size={20} />
                 ) : (
-                  previsaoEntrega ? previsaoEntrega.setLocale('pt-BR').toLocaleString({ day: 'numeric', month: 'long', year: 'numeric' }) : 'Nenhuma data prevista'
+                  previsaoEntrega ? previsaoEntrega.setLocale('pt-BR').toLocaleString({ day: 'numeric', month: 'long', year: 'numeric' }) : ''
                 )}
               </Typography>
             )}
