@@ -32,63 +32,7 @@ const ProfileBanner = () => {
           height="330px"
         />
         <Grid container spacing={0} justifyContent="center" alignItems="center">
-          {/* Post | Followers | Following */}
-          {/* <Grid
-            item
-            lg={4}
-            sm={12}
-            md={5}
-            xs={12}
-            sx={{
-              order: {
-                xs: "2",
-                sm: "2",
-                lg: "1",
-              },
-            }}
-          >
-            <Stack
-              direction="row"
-              textAlign="center"
-              justifyContent="center"
-              gap={6}
-              m={3}
-            >
-              <Box>
-                <Typography color="text.secondary">
-                  <IconFileDescription width="20" />
-                </Typography>
-                <Typography variant="h4" fontWeight="600">
-                  938
-                </Typography>
-                <Typography color="textSecondary" variant="h6" fontWeight={400}>
-                  Posts
-                </Typography>
-              </Box>
-              <Box>
-                <Typography color="text.secondary">
-                  <IconUserCircle width="20" />
-                </Typography>
-                <Typography variant="h4" fontWeight="600">
-                  3,586
-                </Typography>
-                <Typography color="textSecondary" variant="h6" fontWeight={400}>
-                  Followers
-                </Typography>
-              </Box>
-              <Box>
-                <Typography color="text.secondary">
-                  <IconUserCheck width="20" />
-                </Typography>
-                <Typography variant="h4" fontWeight="600">
-                  2,659
-                </Typography>
-                <Typography color="textSecondary" variant="h6" fontWeight={400}>
-                  Following
-                </Typography>
-              </Box>
-            </Stack>
-          </Grid> */}
+
           {/* about profile */}
           <Grid
             item
@@ -140,60 +84,6 @@ const ProfileBanner = () => {
               </Box>
             </Box>
           </Grid>
-          {/* friends following buttons */}
-          {/* <Grid
-            item
-            lg={4}
-            sm={12}
-            xs={12}
-            sx={{
-              order: {
-                xs: "3",
-                sm: "3",
-                lg: "3",
-              },
-            }}
-          >
-            <Stack
-              direction={"row"}
-              gap={2}
-              alignItems="center"
-              justifyContent="center"
-              my={2}
-            >
-              <Fab
-                size="small"
-                color="primary"
-                sx={{ backgroundColor: "#1877F2" }}
-              >
-                <IconBrandFacebook size="16" />
-              </Fab>
-              <Fab
-                size="small"
-                color="primary"
-                sx={{ backgroundColor: "#1DA1F2" }}
-              >
-                <IconBrandTwitter size="18" />
-              </Fab>
-              <Fab
-                size="small"
-                color="success"
-                sx={{ backgroundColor: "#EA4C89" }}
-              >
-                <IconBrandDribbble size="18" />
-              </Fab>
-              <Fab
-                size="small"
-                color="error"
-                sx={{ backgroundColor: "#CD201F" }}
-              >
-                <IconBrandYoutube size="18" />
-              </Fab>
-              <Button color="primary" variant="contained">
-                Add To Story
-              </Button>
-            </Stack>
-          </Grid> */}
         </Grid>
         {/**TabbingPart**/}
         {/* <ProfileTab /> */}
