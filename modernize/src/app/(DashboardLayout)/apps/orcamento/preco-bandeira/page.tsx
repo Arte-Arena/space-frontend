@@ -10,6 +10,7 @@ import ParentCard from '@/app/components/shared/ParentCard';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
+import { IconCopy } from '@tabler/icons-react';
 
 const styles = {
   label: {
@@ -46,10 +47,10 @@ const PrecoBandeiraScreen = () => {
   }, [altura, largura]);
 
   return (
-    <PageContainer title="Cálculo do Custo de Bandeira" description="Cálculo do Custo de Bandeira da Arte Arena">
-      <Breadcrumb title="Cálculo do Custo de Bandeira" subtitle="Cálculo do Custo de Bandeira da Arte Arena" />
+    <PageContainer title="Cálculo do Preço de Bandeira" description="Cálculo do Preço de Bandeira da Arte Arena">
+      <Breadcrumb title="Cálculo do Preço de Bandeira" subtitle="Cálculo do Preço de Bandeira da Arte Arena" />
 
-      <ParentCard title="Calcular o Custo de uma Bandeira">
+      <ParentCard title="Calcular o Preço de uma Bandeira">
         <div>
           <CustomFormLabel
             sx={{
@@ -96,71 +97,127 @@ const PrecoBandeiraScreen = () => {
               </Typography>
               <Grid container spacing={1}> {/* Reduzir espaçamento padrão */}
                 <Grid item xs={12} md={6}>
-                  <Box sx={styles.row}>
+                  <Box sx={{ ...styles.row, display: 'float', alignItems: 'center' }}>
                     <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
                       Valor Mínimo Pessoal Simples:
                     </Typography>
-                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                    <Typography component="span" sx={{ ...styles.value, marginRight: '4px' }}>
                       R$ {(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </Typography>
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`Valor Mínimo Pessoal Simples: R$ ${(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                      }}
+                    >
+                      <IconCopy />
+                    </Button>
                   </Box>
-                  <Box sx={styles.row}>
+                  <Box sx={{ ...styles.row, display: 'float', alignItems: 'center' }}>
                     <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
                       Valor Normal Pessoal Simples:
                     </Typography>
-                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                    <Typography component="span" sx={{ ...styles.value, marginRight: '4px' }}>
                       R$ {(FATOR_NORMAL_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </Typography>
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`Valor Normal Pessoal Simples: R$ ${(FATOR_NORMAL_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                      }}
+                    >
+                      <IconCopy />
+                    </Button>
                   </Box>
-                  <Box sx={styles.row}>
+                  <Box sx={{ ...styles.row, display: 'float', alignItems: 'center' }}>
                     <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
                       Valor Mínimo Pessoal Dupla:
                     </Typography>
-                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                    <Typography component="span" sx={{ ...styles.value, marginRight: '4px' }}>
                       R$ {((FATOR_MINIMO_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </Typography>
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`Valor Mínimo Pessoal Dupla: R$ {((FATOR_MINIMO_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                      }}
+                    >
+                      <IconCopy />
+                    </Button>
                   </Box>
-                  <Box sx={styles.row}>
+                  <Box sx={{ ...styles.row, display: 'float', alignItems: 'center' }}>
                     <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
                       Valor Normal Pessoal Dupla:
                     </Typography>
-                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                    <Typography component="span" sx={{ ...styles.value, marginRight: '4px' }}>
                       R$ {((FATOR_NORMAL_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </Typography>
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`Valor Normal Pessoal Dupla: R$ ${((FATOR_NORMAL_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                      }}
+                    >
+                      <IconCopy />
+                    </Button>
                   </Box>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Box sx={styles.row}>
+                  <Box sx={{ ...styles.row, display: 'float', alignItems: 'center' }}>
                     <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
-                      Valor Mínimo Empresarial Simples:
+                      Valor Mínimo Pessoal Simples:
                     </Typography>
-                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
-                      R$ {(FATOR_MINIMO_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <Typography component="span" sx={{ ...styles.value, marginRight: '4px' }}>
+                      R$ {(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </Typography>
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`Valor Mínimo Pessoal Simples: R$ ${(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                      }}
+                    >
+                      <IconCopy />
+                    </Button>
                   </Box>
-                  <Box sx={styles.row}>
+                  <Box sx={{ ...styles.row, display: 'float', alignItems: 'center' }}>
                     <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
                       Valor Normal Empresarial Simples:
                     </Typography>
-                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                    <Typography component="span" sx={{ ...styles.value, marginRight: '4px' }}>
                       R$ {(FATOR_NORMAL_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </Typography>
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`Valor Normal Empresarial Simples: R$ ${(FATOR_NORMAL_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                      }}
+                    >
+                      <IconCopy />
+                    </Button>
                   </Box>
-                  <Box sx={styles.row}>
+                  <Box sx={{ ...styles.row, display: 'float', alignItems: 'center' }}>
                     <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
                       Valor Mínimo Empresarial Dupla:
                     </Typography>
-                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
+                    <Typography component="span" sx={{ ...styles.value, marginRight: '4px' }}>
                       R$ {((FATOR_MINIMO_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </Typography>
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`Valor Mínimo Empresarial Dupla: R$ ${((FATOR_MINIMO_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                      }}
+                    >
+                      <IconCopy />
+                    </Button>
                   </Box>
-                  <Box sx={styles.row}>
+                  <Box sx={{ ...styles.row, display: 'float', alignItems: 'center' }}>
                     <Typography component="span" sx={{ ...styles.label, marginRight: '8px' }}>
-                      Valor Normal Empresarial Dupla:
+                      Valor Mínimo Pessoal Simples:
                     </Typography>
-                    <Typography component="span" sx={{ ...styles.value, marginLeft: '8px' }}>
-                      R$ {((FATOR_NORMAL_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <Typography component="span" sx={{ ...styles.value, marginRight: '4px' }}>
+                      R$ {(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </Typography>
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`Valor Mínimo Pessoal Simples: R$ ${(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                      }}
+                    >
+                      <IconCopy />
+                    </Button>
                   </Box>
                 </Grid>
               </Grid>
