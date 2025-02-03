@@ -47,10 +47,10 @@ const PrecoBandeiraScreen = () => {
   }, [altura, largura]);
 
   return (
-    <PageContainer title="Cálculo do Custo de Bandeira" description="Cálculo do Custo de Bandeira da Arte Arena">
-      <Breadcrumb title="Cálculo do Custo de Bandeira" subtitle="Cálculo do Custo de Bandeira da Arte Arena" />
+    <PageContainer title="Cálculo do Preço de Bandeira" description="Cálculo do Preço de Bandeira da Arte Arena">
+      <Breadcrumb title="Cálculo do Preço de Bandeira" subtitle="Cálculo do Preço de Bandeira da Arte Arena" />
 
-      <ParentCard title="Calcular o Custo de uma Bandeira">
+      <ParentCard title="Calcular o Preço de uma Bandeira">
         <div>
           <CustomFormLabel
             sx={{
