@@ -30,11 +30,11 @@ import { DateTime } from 'luxon';
 import contarFinaisDeSemana from '@/utils/contarFinaisDeSemana';
 import contarFeriados from '@/utils/contarFeriados';
 import avancarDias from '@/utils/avancarDias';
-import encontrarProximoDiaUtil from '@/utils/encontrarProximoDiaUtil';
 import exportarPDF from '@/utils/exportarPDF';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf } from '@tabler/icons-react';
 import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
+import InputAdornment from '@mui/material/InputAdornment';
 import {
   Button,
   Dialog,
@@ -51,7 +51,6 @@ import {
   Stack,
   Typography
 } from '@mui/material';
-
 
 interface Cliente {
   id: number;
@@ -149,6 +148,8 @@ const OrcamentoGerarScreen = () => {
   const [checkedOcultaPrevisao, setCheckedOcultaPrevisao] = useState<boolean>(false);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
   const [openSnackbarCopiarOrcamento, setOpenSnackbarCopiarOrcamento] = useState(false);
+  const [taxaAntecipacao, setTaxaAntecipacao] = useState<number | null>(null);
+
 
   const accessToken = localStorage.getItem('accessToken');
 
@@ -335,10 +336,23 @@ const OrcamentoGerarScreen = () => {
     }
   }, [selectedProduct]);
 
+  // useEffect(() => {
+  //   if (productsList) {
+  //     // console.log('productsList:', productsList);
+  //     setPrazoProducao(Math.max(...productsList.map(product => product.prazo ?? 0)));
+
+  //     if (cep) {
+  //       getFrete(cep);
+  //     }
+  //   }
+  // }, [productsList]);
+
   useEffect(() => {
     if (productsList) {
-      // console.log('productsList:', productsList);
-      setPrazoProducao(Math.max(...productsList.map(product => product.prazo ?? 0)));
+      const maxPrazo = productsList.length > 0
+        ? Math.max(...productsList.map(product => product.prazo ?? 0))
+        : 0;
+      setPrazoProducao(maxPrazo);
 
       if (cep) {
         getFrete(cep);
@@ -811,7 +825,7 @@ ${!checkedOcultaPrevisao ?
 
 Prazo inicia-se após aprovação da arte e pagamento confirmado.
 
-Orçamento válido por 7 dias.
+Orçamento válido somente hoje.
 `.trim();
 
     setOrçamentoTexto(textoOrcamento);
@@ -1269,7 +1283,7 @@ Orçamento válido por 7 dias.
                   <FormControlLabel
                     value={"RETIRADA"}
                     control={<Radio disabled={!clientId || productsList.length === 0} />}
-                    label={`Retirada - R$ 0,00. Previsão: ${prazoProducao} dias úteis.`}
+                    label={`Retirada - R$ 0,00.${prazoProducao && prazoProducao > 0 ? ` Previsão: ${prazoProducao} dias úteis.` : ''}`}
                   />
 
                   <FormControlLabel
@@ -1480,17 +1494,46 @@ Orçamento válido por 7 dias.
               <DialogTitle id="alert-dialog-title">
                 {"Defina a data de entrega desejada"}
               </DialogTitle>
-              <DialogContent>
+              <DialogContent sx={{ px: 3 }}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
                     label="Data de entrega"
                     value={dataDesejadaEntrega}
                     onChange={(newValue) => setDataDesejadaEntrega(newValue)}
-                    renderInput={(params) => <CustomTextField {...params} />}
+                    renderInput={(params) => <CustomTextField {...params} sx={{ mb: 2 }} />}
                   />
                 </LocalizationProvider>
+                <CustomFormLabel
+                  htmlFor="taxaAntecipacao"
+                  sx={{
+                    mt: 0,
+                  }}
+                >
+                  Taxa de Antecipação
+                </CustomFormLabel>
+                <NumericFormat
+                  id="taxaAntecipacao"
+                  name="taxaAntecipacao"
+                  value={taxaAntecipacao}
+                  onValueChange={(values) => {
+                    setTaxaAntecipacao(values.floatValue ??  0);
+                  }}
+                  thousandSeparator="."
+                  decimalSeparator=","
+                  allowLeadingZeros={false}
+                  decimalScale={2}
+                  fixedDecimalScale
+                  prefix="R$ "
+                  customInput={CustomTextField}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">R$</InputAdornment>
+                    ),
+                  }}
+                  sx={{ mb: 2 }}
+                />
               </DialogContent>
-              <DialogActions>
+              <DialogActions sx={{ px: 3 }}>
                 <Button onClick={() => {
                   setOpenAnticipation(false);
                   setIsAnticipation(false);
