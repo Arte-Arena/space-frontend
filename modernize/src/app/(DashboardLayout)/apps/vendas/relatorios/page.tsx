@@ -15,18 +15,18 @@ interface Report {
 const reports: Report[] = [
   {
     report: "Quantidade de Orcamentos",
-    path: "/apps/vendas/relatorios/orcamentos",
+    path: "/apps/vendas/relatorios/quantidade-orcamentos",
     icon: <IconReportMoney />
   },
   {
     report: "Quantidade de Orçamentos Aprovados",
-    path: "/apps/vendas/relatorios/orcamentos-aprovados",
+    path: "/apps/vendas/relatorios/quantidade-orcamentos-aprovados",
     icon: <IconChecklist />
   },
   {
-    report: "Clientes Atendidos",
-    path: "/apps/vendas/relatorios/orcamentos",
-    icon: <IconMessage2Dollar />
+    report: "Orçamentos Não Aprovados",
+    path: "/apps/vendas/relatorios/orcamentos-nao-aprovados",
+    icon: <IconReportMoney />
   },
   {
     report: "Produtos Vendidos por Orçamento",
@@ -52,7 +52,12 @@ const reports: Report[] = [
     report: "Produtos Vendidos (Últimos 7 dias)",
     path: "/apps/vendas/relatorios/produtos-vendidos-ultimos-7-dias",
     icon: <IconReceiptDollar />
-  }
+  },
+  {
+    report: "Clientes Atendidos",
+    path: "/apps/vendas/relatorios/orcamentos",
+    icon: <IconMessage2Dollar />
+  },
 ];
 
 const RelatoriosVendas = (): React.ReactElement => {
