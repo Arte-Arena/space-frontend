@@ -508,7 +508,7 @@ const OrcamentoGerarScreen = () => {
           valor: productsList.reduce((total, product) => total + product.preco * product.quantidade, 0),
           qtd: productsList.length
         };
-  
+
         const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/frete-melhorenvio`, {
           method: 'POST',
           headers: {
@@ -517,49 +517,49 @@ const OrcamentoGerarScreen = () => {
           },
           body: JSON.stringify(body)
         });
-  
+
         if (!response.ok) {
           throw new Error('Failed to fetch frete');
         }
-  
+
         const data: FreteData[] = await response.json();
-  
+
         const fretesByName: { [key: string]: FreteData } = {};
-  
+
         data.forEach(frete => {
           fretesByName[frete.name.toLowerCase().replace(/\s/g, '')] = frete; // Use lowercase and remove spaces for consistent keys
         });
-  
+
         // console.log('Fretes by name:', fretesByName);
-  
+
         // Example usage with state updates:
         if (fretesByName.pac) {
           setPrecoPac(Number(fretesByName.pac.price));
           setPrazoPac(fretesByName.pac.delivery_time);
         }
-  
+
         if (fretesByName.sedex) {
           setPrecoSedex(Number(fretesByName.sedex.price));
           setPrazoSedex(fretesByName.sedex.delivery_time);
         }
-  
+
         if (fretesByName.sedex10) {
           setPrecoSedex10(Number(fretesByName.sedex10.price));
           setPrazoSedex10(fretesByName.sedex10.delivery_time);
         }
-  
+
         if (fretesByName.sedex12) {
           setPrecoSedex12(Number(fretesByName.sedex12.price));
           setPrazoSedex12(fretesByName.sedex12.delivery_time);
         }
-  
+
         if (fretesByName.minienvios) {
           setPrecoMiniEnvios(Number(fretesByName.minienvios.price));
           setPrazoMiniEnvios(fretesByName.minienvios.delivery_time);
         }
-  
+
         setCepSuccess(true);
-  
+
       } catch (error) {
         console.error('Error fetching frete:', error);
       } finally {
@@ -582,23 +582,43 @@ const OrcamentoGerarScreen = () => {
           setPrecoFrete(0.00);
           break;
         case 'MINIENVIOS':
-          setPrazoFrete(prazoMiniEnvios);
+          if (prazoMiniEnvios !== null) {
+            setPrazoFrete(prazoMiniEnvios + 1);
+          } else {
+            console.error('prazoMiniEnvios is null');
+          }
           setPrecoFrete(precoMiniEnvios);
           break;
         case 'PAC':
-          setPrazoFrete(prazoPac);
+          if (prazoPac !== null) {
+            setPrazoFrete(prazoPac + 1);
+          } else {
+            console.error('prazoPac is null');
+          }
           setPrecoFrete(precoPac);
           break;
         case 'SEDEX':
-          setPrazoFrete(prazoSedex);
+          if (prazoSedex !== null) {
+            setPrazoFrete(prazoSedex + 1);
+          } else {
+            console.error('prazoSedex is null');
+          }
           setPrecoFrete(precoSedex);
           break;
         case 'SEDEX10':
-          setPrazoFrete(prazoSedex10);
+          if (prazoSedex10 !== null) {
+            setPrazoFrete(prazoSedex10 + 1);
+          } else {
+            console.error('prazoSedex10 is null');
+          }
           setPrecoFrete(precoSedex10);
           break;
         case 'SEDEX12':
-          setPrazoFrete(prazoSedex12);
+          if (prazoSedex12 !== null) {
+            setPrazoFrete(prazoSedex12 + 1);
+          } else {
+            console.error('prazoSedex12 is null');
+          }
           setPrecoFrete(precoSedex12);
           break;
         default:
@@ -733,10 +753,10 @@ const OrcamentoGerarScreen = () => {
         setTimeout(() => {
           console.log("diffDaysFeriados.feriadosExatos: ", diffDaysFeriados.feriadosExatos);
         }, 5000);
-        
+
         const diffDaysFinaisDeSemana = contarFinaisDeSemana(hojeDate, diffDays);
         console.log("diffDaysFinaisDeSemana: ", diffDaysFinaisDeSemana);
-        
+
         // Assuming that prazoProducaoAntecipado is a state variable defined elsewhere
         // and that it's of type 'number | undefined'
 
@@ -766,47 +786,48 @@ const OrcamentoGerarScreen = () => {
     } else {
       setLoadingPrevisao(true);
       setPrevisaoEntrega(null);
-  
+
       await new Promise(resolve => setTimeout(resolve, 300));
-  
+
       // console.log(' ---------------- Calculando a previsão... Iniciando calculo de previsão de entrega');
-  
+
       // console.log('prazoFrete: ', prazoFrete);
-  
+
       if (
         clientId &&
         productsList &&
         shippingOption &&
         prazoProducao &&
         prazoFrete &&
-        (shippingOption !== 'REITRADA' || (!cep && !address) && !isAnticipation && isUrgentDeliverySelected) 
-        ) {
-        
+        (shippingOption !== 'REITRADA' || (!cep && !address) && !isAnticipation && isUrgentDeliverySelected)
+      ) {
+
         await new Promise(resolve => setTimeout(resolve, 300));
         const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
         console.log(safeDataFeriados);
-  
+
         console.log('Calculando a previsão... inciando... shippingOption: ', shippingOption);
+
         console.log('Calculando a previsão... prazoProducao: ', prazoProducao);
         console.log('Calculando a previsão... prazoFrete: ', prazoFrete);
-  
+
         await new Promise(resolve => setTimeout(resolve, 300));
 
         const dataPrevistaEntrega = calcDiasUteis(DateTime.fromJSDate(getBrazilTime()), prazoProducao + prazoFrete, safeDataFeriados);
         // console.log('dataPrevistaEntrega', dataPrevistaEntrega);
-  
+
         await new Promise(resolve => setTimeout(resolve, 300));
 
         setPrevisaoEntrega(dataPrevistaEntrega);
         console.log('dataPrevistaEntrega', dataPrevistaEntrega.toLocaleString(DateTime.DATE_FULL));
-  
+
         await new Promise(resolve => setTimeout(resolve, 300));
-  
+
         // console.log(' ---------------- Calculando a previsão... finalizando... shippingOption: ', shippingOption);
       } else {
         console.log(' ---------------- Calculando a previsão... Erro crítico: algum(uns) campo(s) anterior(es) indefinido(s)');
       }
-  
+
       setLoadingPrevisao(false);
     }
 
