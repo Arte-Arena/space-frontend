@@ -4,7 +4,7 @@ import PageContainer from "@/app/components/container/PageContainer";
 import ParentCard from '@/app/components/shared/ParentCard';
 import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
 import SalesReportCard from "@/app/components/dashboards/skeleton/SalesReportCard";
-import { IconFlagDollar, IconMessage2Dollar, IconReportMoney, IconChecklist, IconReceiptDollar } from "@tabler/icons-react";
+import { IconFlagDollar, IconMessage2Dollar, IconReportMoney, IconChecklist, IconReceiptDollar, IconPackageImport } from "@tabler/icons-react";
 
 interface Report {
   report: string;
@@ -57,6 +57,11 @@ const reports: Report[] = [
     report: "Clientes Atendidos",
     path: "/apps/vendas/relatorios/orcamentos",
     icon: <IconMessage2Dollar />
+  },
+  {
+    report: "Orçamentos por Opções de Entrega",
+    path: "/apps/vendas/relatorios/orcamentos-entrega",
+    icon: <IconPackageImport />
   },
 ];
 
