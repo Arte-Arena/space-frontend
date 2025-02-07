@@ -1415,7 +1415,7 @@ Orçamento válido somente hoje.
 
                   <FormControlLabel
                     sx={{
-                      display: !precoPac && !prazoPac ? 'none' : 'flex',
+                      display: isAnticipation && dataDesejadaEntrega && prazoPac !== null && dataDesejadaEntrega.toMillis() >= prazoPac ? 'none' : !precoPac && !prazoPac ? 'none' : 'flex',
                       alignItems: 'center'
                     }}
                     value={"PAC"}
@@ -1446,7 +1446,7 @@ Orçamento válido somente hoje.
 
                   <FormControlLabel
                     sx={{
-                      display: !precoSedex && !prazoSedex ? 'none' : 'flex',
+                      display: isAnticipation && dataDesejadaEntrega && prazoSedex !== null && dataDesejadaEntrega.toMillis() >= prazoSedex ? 'none' : !precoSedex && !prazoSedex ? 'none' : 'flex',
                       alignItems: 'center'
                     }}
                     value={"SEDEX"}
