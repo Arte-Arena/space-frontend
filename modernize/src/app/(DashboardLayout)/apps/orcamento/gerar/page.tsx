@@ -29,12 +29,12 @@ import Alert from '@mui/material/Alert';
 import { DateTime } from 'luxon';
 import contarFinaisDeSemana from '@/utils/contarFinaisDeSemana';
 import contarFeriados from '@/utils/contarFeriados';
-import avancarDias from '@/utils/avancarDias';
 import exportarPDF from '@/utils/exportarPDF';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf } from '@tabler/icons-react';
 import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
 import InputAdornment from '@mui/material/InputAdornment';
+import ptBR from 'date-fns/locale/pt-BR';
 import {
   Button,
   Dialog,
@@ -51,6 +51,7 @@ import {
   Stack,
   Typography
 } from '@mui/material';
+import calcDiasUteis from '@/utils/calcDiasUteis';
 
 interface Cliente {
   id: number;
@@ -148,13 +149,13 @@ const OrcamentoGerarScreen = () => {
   const [checkedOcultaPrevisao, setCheckedOcultaPrevisao] = useState<boolean>(false);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
   const [openSnackbarCopiarOrcamento, setOpenSnackbarCopiarOrcamento] = useState(false);
-  const [taxaAntecipacao, setTaxaAntecipacao] = useState<number | null>(null);
-
+  const [taxaAntecipa, setTaxaAntecipa] = useState<number | null>(null);
+  const [prazoProducaoAntecipado, setPrazoProducaoAntecipado] = useState<number | null>(null);
 
   const accessToken = localStorage.getItem('accessToken');
 
   const { isFetching: isFetchingClients, error: errorClients, data: dataClients } = useQuery<ApiResponseClientes>({
-    queryKey: ['clientData', currentPageClients], // Chave da query
+    queryKey: ['clientData', currentPageClients],
     queryFn: async () => {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/clientes-consolidados?page=${currentPageClients}`, {
         method: 'GET',
@@ -172,7 +173,6 @@ const OrcamentoGerarScreen = () => {
     }
   });
 
-  // useEffect para processar a resposta da API
   useEffect(() => {
     if (dataClients) {
       // console.log('Resposta da API:', dataClients);
@@ -229,6 +229,13 @@ const OrcamentoGerarScreen = () => {
       // console.log('allClients:', allClients);
     }
   }, [allClients]);
+
+  useEffect(() => {
+    if (id) {
+      // console.log("O valor do parâmetro id ou valor padrão:", id);
+      setClientId(Number(id));
+    }
+  }, [id]);
 
   const handleChangeClientesConsolidadosInput = (
     event: React.ChangeEvent<{}>,
@@ -336,17 +343,6 @@ const OrcamentoGerarScreen = () => {
     }
   }, [selectedProduct]);
 
-  // useEffect(() => {
-  //   if (productsList) {
-  //     // console.log('productsList:', productsList);
-  //     setPrazoProducao(Math.max(...productsList.map(product => product.prazo ?? 0)));
-
-  //     if (cep) {
-  //       getFrete(cep);
-  //     }
-  //   }
-  // }, [productsList]);
-
   useEffect(() => {
     if (productsList) {
       const maxPrazo = productsList.length > 0
@@ -417,13 +413,15 @@ const OrcamentoGerarScreen = () => {
   };
 
   useEffect(() => {
-    const checkZeroAttribute = () => {
+    const checkZeroAttribute = (isAnticipation: boolean) => {
       return productsList.some((product) =>
-        Object.values(product).some((value) => value === 0)
+        Object.entries(product).some(([key, value]) =>
+          (key !== 'prazo' || !isAnticipation) && value === 0
+        )
       );
     };
 
-    const hasZeroAttribute = checkZeroAttribute();
+    const hasZeroAttribute = checkZeroAttribute(isAnticipation);
     setProdutosComAtributoZerado(hasZeroAttribute);
 
     if (hasZeroAttribute) {
@@ -432,12 +430,12 @@ const OrcamentoGerarScreen = () => {
 
   }, [productsList]);
 
-  useEffect(() => {
-    // console.log(
-    //   `produtosComAtributoZerado (após atualização): ${produtosComAtributoZerado ? 'SIM' : 'NÃO'}`
-    // );
+  // useEffect(() => {
+  //   console.log(
+  //     `produtosComAtributoZerado (após atualização): ${produtosComAtributoZerado ? 'SIM' : 'NÃO'}`
+  //   );
 
-  }, [produtosComAtributoZerado]); // Executa este useEffect quando produtosComAtributoZerado mudar
+  // }, [produtosComAtributoZerado]); // Executa este useEffect quando produtosComAtributoZerado mudar
 
   const handleCloseSnackbarProdutosComAtributoZerado = () => {
     setOpenSnackbarProdutosComAtributoZerado(false);
@@ -471,9 +469,6 @@ const OrcamentoGerarScreen = () => {
     }
   });
 
-
-
-
   const validateCEP = async (cep: string) => {
 
     if (!cep) {
@@ -501,76 +496,78 @@ const OrcamentoGerarScreen = () => {
   };
 
   const getFrete = async (cepTo: string) => {
-    setIsFetchingFrete(true);
-    try {
-      const body = {
-        cepTo,
-        largura: productsList.reduce((max, product) => Math.max(max, product.largura), 0),
-        altura: productsList.reduce((max, product) => Math.max(max, product.altura), 0),
-        comprimento: productsList.reduce((max, product) => Math.max(max, product.comprimento), 0),
-        peso: productsList.reduce((total, product) => total + product.peso * product.quantidade, 0),
-        valor: productsList.reduce((total, product) => total + product.preco * product.quantidade, 0),
-        qtd: productsList.length
-      };
+    if (clientId && productsList) {
+      setIsFetchingFrete(true);
+      try {
+        const body = {
+          cepTo,
+          largura: productsList.reduce((max, product) => Math.max(max, product.largura), 0),
+          altura: productsList.reduce((max, product) => Math.max(max, product.altura), 0),
+          comprimento: productsList.reduce((max, product) => Math.max(max, product.comprimento), 0),
+          peso: productsList.reduce((total, product) => total + product.peso * product.quantidade, 0),
+          valor: productsList.reduce((total, product) => total + product.preco * product.quantidade, 0),
+          qtd: productsList.length
+        };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/frete-melhorenvio`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      });
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/frete-melhorenvio`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch frete');
-      }
+        if (!response.ok) {
+          throw new Error('Failed to fetch frete');
+        }
 
-      const data: FreteData[] = await response.json();
+        const data: FreteData[] = await response.json();
 
-      const fretesByName: { [key: string]: FreteData } = {};
+        const fretesByName: { [key: string]: FreteData } = {};
 
-      data.forEach(frete => {
-        fretesByName[frete.name.toLowerCase().replace(/\s/g, '')] = frete; // Use lowercase and remove spaces for consistent keys
-      });
+        data.forEach(frete => {
+          fretesByName[frete.name.toLowerCase().replace(/\s/g, '')] = frete; // Use lowercase and remove spaces for consistent keys
+        });
 
-      // console.log('Fretes by name:', fretesByName);
+        // console.log('Fretes by name:', fretesByName);
 
-      // Example usage with state updates:
-      if (fretesByName.pac) {
-        setPrecoPac(Number(fretesByName.pac.price));
-        setPrazoPac(fretesByName.pac.delivery_time);
-      }
+        // Example usage with state updates:
+        if (fretesByName.pac) {
+          setPrecoPac(Number(fretesByName.pac.price));
+          setPrazoPac(fretesByName.pac.delivery_time);
+        }
 
-      if (fretesByName.sedex) {
-        setPrecoSedex(Number(fretesByName.sedex.price));
-        setPrazoSedex(fretesByName.sedex.delivery_time);
-      }
+        if (fretesByName.sedex) {
+          setPrecoSedex(Number(fretesByName.sedex.price));
+          setPrazoSedex(fretesByName.sedex.delivery_time);
+        }
 
-      if (fretesByName.sedex10) {
-        setPrecoSedex10(Number(fretesByName.sedex10.price));
-        setPrazoSedex10(fretesByName.sedex10.delivery_time);
-      }
+        if (fretesByName.sedex10) {
+          setPrecoSedex10(Number(fretesByName.sedex10.price));
+          setPrazoSedex10(fretesByName.sedex10.delivery_time);
+        }
 
-      if (fretesByName.sedex12) {
-        setPrecoSedex12(Number(fretesByName.sedex12.price));
-        setPrazoSedex12(fretesByName.sedex12.delivery_time);
-      }
+        if (fretesByName.sedex12) {
+          setPrecoSedex12(Number(fretesByName.sedex12.price));
+          setPrazoSedex12(fretesByName.sedex12.delivery_time);
+        }
 
-      if (fretesByName.minienvios) {
-        setPrecoMiniEnvios(Number(fretesByName.minienvios.price));
-        setPrazoMiniEnvios(fretesByName.minienvios.delivery_time);
-      }
+        if (fretesByName.minienvios) {
+          setPrecoMiniEnvios(Number(fretesByName.minienvios.price));
+          setPrazoMiniEnvios(fretesByName.minienvios.delivery_time);
+        }
 
-      setCepSuccess(true);
+        setCepSuccess(true);
 
-    } catch (error) {
-      console.error('Error fetching frete:', error);
-    } finally {
-      setIsFetchingFrete(false);
-      if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
-        console.log("0000");
-        calcPrevisao();
+      } catch (error) {
+        console.error('Error fetching frete:', error);
+      } finally {
+        setIsFetchingFrete(false);
+        if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
+          console.log("0000");
+          calcPrevisao();
+        }
       }
     }
   };
@@ -585,23 +582,43 @@ const OrcamentoGerarScreen = () => {
           setPrecoFrete(0.00);
           break;
         case 'MINIENVIOS':
-          setPrazoFrete(prazoMiniEnvios);
+          if (prazoMiniEnvios !== null) {
+            setPrazoFrete(prazoMiniEnvios + 1);
+          } else {
+            console.error('prazoMiniEnvios is null');
+          }
           setPrecoFrete(precoMiniEnvios);
           break;
         case 'PAC':
-          setPrazoFrete(prazoPac);
+          if (prazoPac !== null) {
+            setPrazoFrete(prazoPac + 1);
+          } else {
+            console.error('prazoPac is null');
+          }
           setPrecoFrete(precoPac);
           break;
         case 'SEDEX':
-          setPrazoFrete(prazoSedex);
+          if (prazoSedex !== null) {
+            setPrazoFrete(prazoSedex + 1);
+          } else {
+            console.error('prazoSedex is null');
+          }
           setPrecoFrete(precoSedex);
           break;
         case 'SEDEX10':
-          setPrazoFrete(prazoSedex10);
+          if (prazoSedex10 !== null) {
+            setPrazoFrete(prazoSedex10 + 1);
+          } else {
+            console.error('prazoSedex10 is null');
+          }
           setPrecoFrete(precoSedex10);
           break;
         case 'SEDEX12':
-          setPrazoFrete(prazoSedex12);
+          if (prazoSedex12 !== null) {
+            setPrazoFrete(prazoSedex12 + 1);
+          } else {
+            console.error('prazoSedex12 is null');
+          }
           setPrecoFrete(precoSedex12);
           break;
         default:
@@ -610,19 +627,29 @@ const OrcamentoGerarScreen = () => {
           setPrecoFrete(0);
       }
     }
+
+    if (clientId && productsList && isUrgentDeliverySelected && shippingOption === 'RETIRADA') {
+      console.log('0010');
+      calcPrevisao();
+    }
+
   }, [shippingOption]);
 
   useEffect(() => {
-    if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
       if (isUrgentDeliverySelected) {
-        console.log("-0001");
+        console.log('0011');
         calcPrevisao();
       }
+    }
+    else if (clientId && productsList && prazoProducao && prazoFrete && shippingOption === 'RETIRADA' && isUrgentDeliverySelected) {
+      console.log('0012');
+      calcPrevisao();
     }
   }, [isUrgentDeliverySelected]);
 
   useEffect(() => {
-    if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
+    if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
       console.log('00001');
       calcPrevisao();
     }
@@ -684,61 +711,125 @@ const OrcamentoGerarScreen = () => {
     }
   }, [prazoProducao]);
 
-  const calcPrevisao = async () => {
-    // setFreteAtualizado(false);
-    setLoadingPrevisao(true);
-    setPrevisaoEntrega(null);
+  useEffect(() => {
 
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
+    //   console.log('0099');
+    //   calcPrevisao();
+    // }
 
-    console.log(' ---------------- Calculando a previsão... Iniciando calculo de previsão de entrega');
+    // console.log("isAnticipation4444: ", isAnticipation);
+    // console.log("taxaAntecipa: ", taxaAntecipa);
+    // console.log("dataDesejadaEntrega: ", dataDesejadaEntrega);
 
-    console.log('prazoFrete: ', prazoFrete);
-
-    if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete || prazoFrete === 0)) {
-
-      const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
-
-      console.log('Calculando a previsão... inciando... shippingOption: ', shippingOption);
-      console.log('Calculando a previsão... prazoProducao: ', prazoProducao);
-      console.log('Calculando a previsão... prazoFrete: ', prazoFrete);
-
-      const prazoProducaoFinsSemana = contarFinaisDeSemana(getBrazilTime(), prazoProducao);
-      console.log('Calculando a previsão... prazoProducaoFinsSemana: ', prazoProducaoFinsSemana);
-
-      const prazoProducaoFeriados = await contarFeriados(safeDataFeriados, getBrazilTime(), prazoProducao);
-      console.log('Calculando a previsão... prazoProducaoFeriados: ', prazoProducaoFeriados);
-
-      const prazoProducaoTotal = prazoProducao + prazoProducaoFinsSemana + prazoProducaoFeriados;
-      console.log('Calculando a previsão... prazoProducaoTotal: ', prazoProducaoTotal);
-
-      const prazoFreteFinsSemana = contarFinaisDeSemana(getBrazilTime(), prazoFrete);
-      console.log('Calculando a previsão... prazoFreteFinsSemana: ', prazoFreteFinsSemana);
-
-      const prazoFreteFeriados = await contarFeriados(safeDataFeriados, getBrazilTime(), prazoFrete);
-      console.log('Calculando a previsão... prazoFreteFeriados: ', prazoFreteFeriados);
-
-      const prazoFreteTotal = prazoFrete + prazoFreteFinsSemana + prazoFreteFeriados;
-      console.log('Calculando a previsão... prazoFreteTotal: ', prazoProducaoTotal);
-
-      const dataPrevistaEntrega = avancarDias(today, prazoFreteTotal + prazoProducaoTotal);
-      // console.log('dataPrevistaEntrega', dataPrevistaEntrega);
-
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      setPrevisaoEntrega(dataPrevistaEntrega);
-
-      await new Promise(resolve => setTimeout(resolve, 300));
+    setShippingOption('');
+    getFrete(cep);
 
 
-      console.log(' ---------------- Calculando a previsão... finalizando... shippingOption: ', shippingOption);
-    } else {
-      console.log(' ---------------- Calculando a previsão... Erro crítico: algum(uns) campo(s) anterior(es) indefinido(s)');
+  }, [isAnticipation]);
+
+  useEffect(() => {
+    async function calcularDiferenca() { // Função assíncrona
+      if (dataDesejadaEntrega) {
+        const hojeDate = getBrazilTime();
+        const hojeLuxon = DateTime.fromJSDate(hojeDate);
+
+        console.log('tentando calcular a diferença para data de antecipação...');
+        console.log("dataDesejadaEntrega: ", dataDesejadaEntrega);
+
+        const diffTime = Math.abs(
+          dataDesejadaEntrega.toMillis() - hojeLuxon.toMillis()
+        );
+
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        console.log("diffDays: ", diffDays);
+
+        const diffDaysFeriados = await contarFeriados(
+          dataFeriados ?? { dias_feriados: [] },
+          hojeDate,
+          diffDays
+        );
+        console.log("diffDaysFeriados: ", diffDaysFeriados.quantidade);
+        setTimeout(() => {
+          console.log("diffDaysFeriados.feriadosExatos: ", diffDaysFeriados.feriadosExatos);
+        }, 5000);
+
+        const diffDaysFinaisDeSemana = contarFinaisDeSemana(hojeDate, diffDays);
+        console.log("diffDaysFinaisDeSemana: ", diffDaysFinaisDeSemana);
+
+        // Assuming that prazoProducaoAntecipado is a state variable defined elsewhere
+        // and that it's of type 'number | undefined'
+
+        // Check if prazoProducaoAntecipado is defined and not null before using it
+        if (prazoFrete !== null) {
+          const calculo = diffDays - diffDaysFeriados.quantidade - diffDaysFinaisDeSemana - prazoFrete;
+          setPrazoProducaoAntecipado(calculo < 1 ? 1 : calculo);
+        } else {
+          console.error('prazoProducaoAntecipado or prazoFrete is not defined');
+        }
+        setPrevisaoEntrega(dataDesejadaEntrega);
+
+      }
     }
 
-    setLoadingPrevisao(false);
+    calcularDiferenca();
+  }, [dataDesejadaEntrega]);
 
+  // useEffect(() => {
+  //   console.log("prazoProducaoAntecipado: ", prazoProducaoAntecipado);
+  // }, [prazoProducaoAntecipado]);
 
+  const calcPrevisao = async () => {
+
+    if (isAnticipation && dataDesejadaEntrega) {
+      setPrevisaoEntrega(dataDesejadaEntrega);
+    } else {
+      setLoadingPrevisao(true);
+      setPrevisaoEntrega(null);
+
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // console.log(' ---------------- Calculando a previsão... Iniciando calculo de previsão de entrega');
+
+      // console.log('prazoFrete: ', prazoFrete);
+
+      if (
+        clientId &&
+        productsList &&
+        shippingOption &&
+        prazoProducao &&
+        prazoFrete &&
+        (shippingOption !== 'REITRADA' || (!cep && !address) && !isAnticipation && isUrgentDeliverySelected)
+      ) {
+
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
+        console.log(safeDataFeriados);
+
+        console.log('Calculando a previsão... inciando... shippingOption: ', shippingOption);
+
+        console.log('Calculando a previsão... prazoProducao: ', prazoProducao);
+        console.log('Calculando a previsão... prazoFrete: ', prazoFrete);
+
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        const dataPrevistaEntrega = calcDiasUteis(DateTime.fromJSDate(getBrazilTime()), prazoProducao + prazoFrete, safeDataFeriados);
+        // console.log('dataPrevistaEntrega', dataPrevistaEntrega);
+
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        setPrevisaoEntrega(dataPrevistaEntrega);
+        console.log('dataPrevistaEntrega', dataPrevistaEntrega.toLocaleString(DateTime.DATE_FULL));
+
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // console.log(' ---------------- Calculando a previsão... finalizando... shippingOption: ', shippingOption);
+      } else {
+        console.log(' ---------------- Calculando a previsão... Erro crítico: algum(uns) campo(s) anterior(es) indefinido(s)');
+      }
+
+      setLoadingPrevisao(false);
+    }
 
     return;
   };
@@ -803,7 +894,11 @@ const OrcamentoGerarScreen = () => {
     if (precoFrete) {
       precoFreteTexto = precoFrete.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
     } else {
-      console.log("Erro crítico precoFrete não existe ao compor o texto do orçamento.")
+      if (shippingOption !== 'RETIRADA') {
+        if (!precoFrete) {
+          throw new Error('Erro crítico precoFrete não existe ao compor o texto do orçamento.');
+        }
+      }
     }
 
     // console.log('Testando o estado previsaoEntrega: ', previsaoEntrega);
@@ -816,7 +911,7 @@ ${shippingOption === 'RETIRADA' ? 'Frete: R$ 0,00 (Retirada)' : `Frete: R$ ${pre
 
 Total: R$ ${totalOrçamento.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}
 
-Prazo de Produção: ${prazoProducao} dias úteis
+Prazo de Produção: ${isAnticipation && dataDesejadaEntrega ? prazoProducaoAntecipado === 1 ? '1 dia útil' : `${prazoProducaoAntecipado} dias úteis` : prazoProducao === 1 ? '1 dia útil' : `${prazoProducao} dias úteis`}
 ${!checkedOcultaPrevisao ?
         previsaoEntrega ?
           `Previsão de ${shippingOption === 'RETIRADA' ? 'Retirada' : 'Entrega'}: ${previsaoEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy')} (aprovando hoje).`
@@ -843,6 +938,9 @@ Orçamento válido somente hoje.
       opcao_entrega: shippingOption,
       prazo_opcao_entrega: 1,
       preco_opcao_entrega: 50.66,
+      antecipado: isAnticipation,
+      data_antecipa: dataDesejadaEntrega,
+      taxa_antecipa: taxaAntecipa
     };
 
     try {
@@ -875,13 +973,8 @@ Orçamento válido somente hoje.
     setOpenSnackbarCopiarOrcamento(false);
   }
 
-  useEffect(() => {
-    if (id) {
-      // console.log("O valor do parâmetro id ou valor padrão:", id);
-      setClientId(Number(id));
-    }
-  }, [id]);
-
+  // Definindo a data mínima para amanhã
+  const tomorrow = DateTime.now().plus({ days: 1 });
 
 
   return (
@@ -1059,11 +1152,13 @@ Orçamento válido somente hoje.
 
                       <TableCell align="right">
                         <CustomTextField
-                          value={product.prazo}
+                          value={isAnticipation ? 1 : product.prazo}
                           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                            const newProductValue = Math.max(0, +event.target.value);
-                            const updatedProduct = { ...product, prazo: newProductValue };
-                            atualizarProduto(updatedProduct);
+                            if (!isAnticipation) {
+                              const newProductValue = Math.max(0, +event.target.value);
+                              const updatedProduct = { ...product, prazo: newProductValue };
+                              atualizarProduto(updatedProduct);
+                            }
                           }}
                           type="number"
                           variant="outlined"
@@ -1080,6 +1175,7 @@ Orçamento válido somente hoje.
                               MozAppearance: 'textfield', // Para Firefox
                             },
                           }}
+                          disabled={isAnticipation}
                         />
                       </TableCell>
 
@@ -1466,7 +1562,7 @@ Orçamento válido somente hoje.
                   control={<Radio />}
                   label="Prazo Normal"
                   checked={isUrgentDeliverySelected && !isAnticipation}
-                  disabled={!shippingOption}
+                  // disabled={!shippingOption}
                   onClick={() => {
                     setIsAnticipation(false);
                   }}
@@ -1476,11 +1572,10 @@ Orçamento válido somente hoje.
                   control={<Radio />}
                   label="Antecipação"
                   onClick={() => {
-                    setIsAnticipation(true);
                     setOpenAnticipation(true);
                   }}
                   checked={isUrgentDeliverySelected && isAnticipation}
-                  disabled={!shippingOption}
+                // disabled={!shippingOption}
                 />
               </RadioGroup>
             </FormControl>
@@ -1491,16 +1586,41 @@ Orçamento válido somente hoje.
               aria-labelledby="alert-dialog-title"
               aria-describedby="alert-dialog-description"
             >
-              <DialogTitle id="alert-dialog-title">
-                {"Defina a data de entrega desejada"}
+              <DialogTitle id="alert-dialog-title" sx={{ mt: 3 }}>
+                {"Definições de Antecipação"}
               </DialogTitle>
-              <DialogContent sx={{ px: 3 }}>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DialogContent sx={{ mt: 5, px: 3 }}>
+                <CustomFormLabel
+                  htmlFor="dataAntecipa"
+                  sx={{
+                    mt: 0,
+                  }}
+                >
+                  Data de Antecipação
+                </CustomFormLabel>
+                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
                   <DatePicker
                     label="Data de entrega"
-                    value={dataDesejadaEntrega}
-                    onChange={(newValue) => setDataDesejadaEntrega(newValue)}
-                    renderInput={(params) => <CustomTextField {...params} sx={{ mb: 2 }} />}
+                    value={dataDesejadaEntrega ? dataDesejadaEntrega.toJSDate() : null}
+                    onChange={(newValue: Date | null) => {
+                      if (newValue) {
+                        // Converta o Date para Luxon DateTime ANTES de atualizar o estado
+                        const luxonDate = DateTime.fromJSDate(newValue);
+                        setDataDesejadaEntrega(luxonDate); // 🚨 Armazena Luxon
+                      } else {
+                        setDataDesejadaEntrega(null);
+                      }
+                    }}
+                    // minDate={tomorrow}
+                    renderInput={(params) => (
+                      <CustomTextField
+                        {...params}
+                        sx={{ mb: 2 }}
+                        id="dataAntecipa"
+                        name="dataAntecipa"
+                      />
+                    )}
+                  // renderInput={(params) => <CustomTextField {...params} sx={{ mb: 2 }} id="dataAntecipa" name="dataAntecipa" />}
                   />
                 </LocalizationProvider>
                 <CustomFormLabel
@@ -1514,9 +1634,9 @@ Orçamento válido somente hoje.
                 <NumericFormat
                   id="taxaAntecipacao"
                   name="taxaAntecipacao"
-                  value={taxaAntecipacao}
+                  value={taxaAntecipa}
                   onValueChange={(values) => {
-                    setTaxaAntecipacao(values.floatValue ??  0);
+                    setTaxaAntecipa(values.floatValue ?? 0);
                   }}
                   thousandSeparator="."
                   decimalSeparator=","
@@ -1540,15 +1660,22 @@ Orçamento válido somente hoje.
                 }}>
                   Cancelar
                 </Button>
-                <Button onClick={() => setOpenAnticipation(false)} autoFocus>
-                  Salvar
+                <Button onClick={
+                  () => {
+                    setIsAnticipation(true);
+                    setOpenAnticipation(false)
+                  }
+                }
+                  autoFocus
+                >
+                  Antecipar
                 </Button>
               </DialogActions>
             </Dialog>
 
             {isAnticipation && (
               <Typography variant="body2" color="text Secondary" sx={{ mt: 2 }}>
-                Data de entrega desejada: {dataDesejadaEntrega ? dataDesejadaEntrega.toLocaleString() : 'Nenhuma data selecionada'}
+                Data de entrega desejada: {dataDesejadaEntrega ? dataDesejadaEntrega.setLocale('pt-BR').toLocaleString({ day: 'numeric', month: 'long', year: 'numeric' }) : 'Nenhuma data selecionada'}
               </Typography>
             )}
 
