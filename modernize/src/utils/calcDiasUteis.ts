@@ -28,7 +28,7 @@ function isDiaUtil(date: DateTime, holidays: ApiResponseFeriados): boolean {
   return !isWeekend(date) && !isHoliday(date, holidays);
 }
 
-export default function calcularDiasUteis(
+export default function calcularDataDiasUteis(
   dataInicial: DateTime,
   diasUteisDesejados: number,
   feriados: ApiResponseFeriados
@@ -52,3 +52,22 @@ export default function calcularDiasUteis(
 
   return dataAtual;
 }
+
+export function calcDiasUteisEntreDatas(
+  dataInicial: DateTime,
+  dataFinal: DateTime,
+  feriados: ApiResponseFeriados
+): number {
+  let dataAtual = dataInicial;
+  let diasUteisContados = 0;
+
+  while (dataAtual < dataFinal) {
+    dataAtual = avancarDias(dataAtual, 1);
+    if (isDiaUtil(dataAtual, feriados)) {
+      diasUteisContados++;
+    }
+  }
+
+  return diasUteisContados;
+}
+

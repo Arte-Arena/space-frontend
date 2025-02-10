@@ -27,8 +27,6 @@ import Image from "next/image";
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { DateTime } from 'luxon';
-import contarFinaisDeSemana from '@/utils/contarFinaisDeSemana';
-import contarFeriados from '@/utils/contarFeriados';
 import exportarPDF from '@/utils/exportarPDF';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf } from '@tabler/icons-react';
@@ -51,7 +49,8 @@ import {
   Stack,
   Typography
 } from '@mui/material';
-import calcDiasUteis from '@/utils/calcDiasUteis';
+import calcDataDiasUteis from '@/utils/calcDiasUteis';
+import calcDiasUteisEntreDatas from '@/utils/calcDiasUteis';
 
 interface Cliente {
   id: number;
@@ -139,7 +138,9 @@ const OrcamentoGerarScreen = () => {
   const [isUrgentDeliverySelected, setIsUrgentDeliverySelected] = useState(false);
   const [isAnticipation, setIsAnticipation] = useState(false);
   const [openAnticipation, setOpenAnticipation] = useState(false);
+  const [dataDesejadaEntregaInput, setDataDesejadaEntregaInput] = useState<DateTime | null>(null);
   const [dataDesejadaEntrega, setDataDesejadaEntrega] = useState<DateTime | null>(null);
+  const [diffHojeDataDesejadaEntrega, setDiffHojeDataDesejadaEntrega] = useState<number | null>(null);
   const [precoFrete, setPrecoFrete] = useState<number | null>(null);
   const [prazoFrete, setPrazoFrete] = useState<number | null>(null);
   const [prazoProducao, setPrazoProducao] = useState<number | null>(null);
@@ -149,6 +150,7 @@ const OrcamentoGerarScreen = () => {
   const [checkedOcultaPrevisao, setCheckedOcultaPrevisao] = useState<boolean>(false);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
   const [openSnackbarCopiarOrcamento, setOpenSnackbarCopiarOrcamento] = useState(false);
+  const [taxaAntecipaInput, setTaxaAntecipaInput] = useState<number | null>(null);
   const [taxaAntecipa, setTaxaAntecipa] = useState<number | null>(null);
   const [prazoProducaoAntecipado, setPrazoProducaoAntecipado] = useState<number | null>(null);
 
@@ -493,7 +495,37 @@ const OrcamentoGerarScreen = () => {
       console.error('Error validating CEP:', error);
       return false;
     }
+  }
+
+  // const prazoEntregaMenordataDesejadaAntecipa = (delivery_time: number): boolean => {
+  //   if (dataDesejadaEntrega) {
+  //     const diff = dataDesejadaEntrega.diff(DateTime.now(), 'days');
+
+  //     return diff.days > delivery_time;
+
+  //   } else {
+  //     console.log('Erro critico: ');
+  //     return false
+  //   }
+
+  // };
+
+  const prazoEntregaMenordataDesejadaAntecipa = (
+    delivery_time: number,
+    dataDesejadaEntrega: DateTime | null,
+    feriados: ApiResponseFeriados // Adicione o array de feriados como parâmetro
+  ): boolean => {
+    if (dataDesejadaEntrega) {
+
+      const dataEntregaCalculada = calcDataDiasUteis(DateTime.now(), delivery_time, feriados);
+
+      return dataEntregaCalculada < dataDesejadaEntrega; // Comparação direta de DateTime
+    } else {
+      console.error('Erro: dataDesejadaEntrega é nulo ou indefinido.');
+      return false;
+    }
   };
+
 
   const getFrete = async (cepTo: string) => {
     if (clientId && productsList) {
@@ -530,17 +562,36 @@ const OrcamentoGerarScreen = () => {
           fretesByName[frete.name.toLowerCase().replace(/\s/g, '')] = frete; // Use lowercase and remove spaces for consistent keys
         });
 
-        // console.log('Fretes by name:', fretesByName);
+        const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
 
-        // Example usage with state updates:
         if (fretesByName.pac) {
-          setPrecoPac(Number(fretesByName.pac.price));
-          setPrazoPac(fretesByName.pac.delivery_time);
+          if (!isAnticipation) {
+            setPrecoPac(Number(fretesByName.pac.price));
+            setPrazoPac(fretesByName.pac.delivery_time);
+          } else {
+            if (prazoEntregaMenordataDesejadaAntecipa(fretesByName.pac.delivery_time, dataDesejadaEntrega, safeDataFeriados)) {
+              setPrecoPac(Number(fretesByName.pac.price));
+              setPrazoPac(fretesByName.pac.delivery_time);
+            } else {
+              setPrecoPac(null);
+              setPrazoPac(null);
+            }
+          }
         }
 
         if (fretesByName.sedex) {
-          setPrecoSedex(Number(fretesByName.sedex.price));
-          setPrazoSedex(fretesByName.sedex.delivery_time);
+          if (!isAnticipation) {
+            setPrecoSedex(Number(fretesByName.sedex.price));
+            setPrazoSedex(fretesByName.sedex.delivery_time);
+          } else {
+            if (prazoEntregaMenordataDesejadaAntecipa(fretesByName.sedex.delivery_time, dataDesejadaEntrega, safeDataFeriados)) {
+              setPrecoSedex(Number(fretesByName.sedex.price));
+              setPrazoSedex(fretesByName.sedex.delivery_time);
+            } else {
+              setPrecoSedex(null);
+              setPrazoSedex(null);
+            }
+          }
         }
 
         if (fretesByName.sedex10) {
@@ -728,52 +779,54 @@ const OrcamentoGerarScreen = () => {
 
   }, [isAnticipation]);
 
-  useEffect(() => {
-    async function calcularDiferenca() { // Função assíncrona
-      if (dataDesejadaEntrega) {
-        const hojeDate = getBrazilTime();
-        const hojeLuxon = DateTime.fromJSDate(hojeDate);
+  async function calcPrazoAntecipa() {
+    if (isAnticipation && dataDesejadaEntrega) {
+      console.log('0020');
+      const hojeDate = getBrazilTime();
+      const hojeLuxon = DateTime.fromJSDate(hojeDate).startOf('day'); // Arredonda para o início do dia
+      const dataDesejadaEntregaStart = dataDesejadaEntrega.startOf('day'); // Arredonda para o início do dia
 
-        console.log('tentando calcular a diferença para data de antecipação...');
-        console.log("dataDesejadaEntrega: ", dataDesejadaEntrega);
+      // Está certo.
+      // Só falta subtrair os dias úteis existentes durante esse período.
+      // para isso, queremos saber quantos dias não úteis existe entre a data de entrega e a data resultante da subtração da data de entraga menos o prazoFrete
+      // depois disso, vamos adicionar esse número de dias não úteis a uma variavao DiasNaoUtesi 
 
-        const diffTime = Math.abs(
-          dataDesejadaEntrega.toMillis() - hojeLuxon.toMillis()
-        );
-
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        console.log("diffDays: ", diffDays);
-
-        const diffDaysFeriados = await contarFeriados(
-          dataFeriados ?? { dias_feriados: [] },
-          hojeDate,
-          diffDays
-        );
-        console.log("diffDaysFeriados: ", diffDaysFeriados.quantidade);
-        setTimeout(() => {
-          console.log("diffDaysFeriados.feriadosExatos: ", diffDaysFeriados.feriadosExatos);
-        }, 5000);
-
-        const diffDaysFinaisDeSemana = contarFinaisDeSemana(hojeDate, diffDays);
-        console.log("diffDaysFinaisDeSemana: ", diffDaysFinaisDeSemana);
-
-        // Assuming that prazoProducaoAntecipado is a state variable defined elsewhere
-        // and that it's of type 'number | undefined'
-
-        // Check if prazoProducaoAntecipado is defined and not null before using it
-        if (prazoFrete !== null) {
-          const calculo = diffDays - diffDaysFeriados.quantidade - diffDaysFinaisDeSemana - prazoFrete;
-          setPrazoProducaoAntecipado(calculo < 1 ? 1 : calculo);
-        } else {
-          console.error('prazoProducaoAntecipado or prazoFrete is not defined');
-        }
-        setPrevisaoEntrega(dataDesejadaEntrega);
-
+      if (prazoFrete) {
+        console.log('0021');
+        const diffDias = dataDesejadaEntregaStart.diff(hojeLuxon, 'days').days;
+        setDiffHojeDataDesejadaEntrega(diffDias);
+        const prazoProducaoAntecipado = diffDias - prazoFrete;
+        setPrazoProducaoAntecipado(prazoProducaoAntecipado);
+      } else {
+        console.log('0023');
+        setPrazoProducaoAntecipado(dataDesejadaEntregaStart.diff(hojeLuxon, 'days').days);
       }
+
+
+    }
+  }
+
+  useEffect(() => {
+    if (cep) {
+      console.log('mudei a data desejada e vou chamar o getFrete');
+      console.log('1 isAnticipation: ', isAnticipation);
+      console.log('2 prazoPac: ', prazoPac);
+      getFrete(cep);
     }
 
-    calcularDiferenca();
+    if (dataDesejadaEntrega) {
+      calcPrazoAntecipa();
+      setPrevisaoEntrega(dataDesejadaEntrega);
+    }
+
+
   }, [dataDesejadaEntrega]);
+
+  useEffect(() => {
+    console.log(diffHojeDataDesejadaEntrega);
+  }, [diffHojeDataDesejadaEntrega]);
+
+
 
   // useEffect(() => {
   //   console.log("prazoProducaoAntecipado: ", prazoProducaoAntecipado);
@@ -813,7 +866,7 @@ const OrcamentoGerarScreen = () => {
 
         await new Promise(resolve => setTimeout(resolve, 300));
 
-        const dataPrevistaEntrega = calcDiasUteis(DateTime.fromJSDate(getBrazilTime()), prazoProducao + prazoFrete, safeDataFeriados);
+        const dataPrevistaEntrega = calcDataDiasUteis(DateTime.fromJSDate(getBrazilTime()), prazoProducao + prazoFrete, safeDataFeriados);
         // console.log('dataPrevistaEntrega', dataPrevistaEntrega);
 
         await new Promise(resolve => setTimeout(resolve, 300));
@@ -830,6 +883,8 @@ const OrcamentoGerarScreen = () => {
 
       setLoadingPrevisao(false);
     }
+
+    await calcPrazoAntecipa();
 
     return;
   };
@@ -890,6 +945,10 @@ const OrcamentoGerarScreen = () => {
       totalOrçamento += precoFrete;
     }
 
+    if (isAnticipation && taxaAntecipa != null) {
+      totalOrçamento += taxaAntecipa;
+    }
+
     let precoFreteTexto = '0.00';
     if (precoFrete) {
       precoFreteTexto = precoFrete.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
@@ -903,13 +962,19 @@ const OrcamentoGerarScreen = () => {
 
     // console.log('Testando o estado previsaoEntrega: ', previsaoEntrega);
 
+    console.log('0019');
+    console.log(prazoProducaoAntecipado);
+
     const textoOrcamento = `
 Lista de Produtos:
 
 ${produtosTexto.trim()}
 ${shippingOption === 'RETIRADA' ? 'Frete: R$ 0,00 (Retirada)' : `Frete: R$ ${precoFreteTexto} (Dia da postagem + ${prazoFrete} dias úteis via ${shippingOption} para o CEP ${cep})`}
 
+${isAnticipation && taxaAntecipa ? `Taxa de Antecipação: R$ ${taxaAntecipa.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}` : ''}
+
 Total: R$ ${totalOrçamento.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}
+
 
 Prazo de Produção: ${isAnticipation && dataDesejadaEntrega ? prazoProducaoAntecipado === 1 ? '1 dia útil' : `${prazoProducaoAntecipado} dias úteis` : prazoProducao === 1 ? '1 dia útil' : `${prazoProducao} dias úteis`}
 ${!checkedOcultaPrevisao ?
@@ -976,6 +1041,12 @@ Orçamento válido somente hoje.
   // Definindo a data mínima para amanhã
   const tomorrow = DateTime.now().plus({ days: 1 });
 
+  const handleAntecipa = () => {
+    setIsAnticipation(true);
+    setDataDesejadaEntrega(dataDesejadaEntregaInput);
+    setTaxaAntecipa(taxaAntecipaInput);
+    setOpenAnticipation(false)
+  }
 
   return (
     <PageContainer title="Orçamento / Gerar" description="Gerar Orçamento da Arte Arena">
@@ -1379,7 +1450,7 @@ Orçamento válido somente hoje.
                   <FormControlLabel
                     value={"RETIRADA"}
                     control={<Radio disabled={!clientId || productsList.length === 0} />}
-                    label={`Retirada - R$ 0,00.${prazoProducao && prazoProducao > 0 ? ` Previsão: ${prazoProducao} dias úteis.` : ''}`}
+                    label={`Retirada - R$ 0,00.`}
                   />
 
                   <FormControlLabel
@@ -1396,13 +1467,6 @@ Orçamento válido somente hoje.
                           Mini Envios - R$ {precoMiniEnvios}{" "}
                           - Tempo de transporte:{" "}
                           {prazoMiniEnvios !== null ? prazoMiniEnvios : "não disponível"} dias úteis.{" "}
-                          Previsão:{" "}
-                          {(() => {
-                            const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                            return prazoMiniEnvios !== null
-                              ? (maxPrazo + prazoMiniEnvios) + " dias úteis úteis."
-                              : "não disponível";
-                          })()}
                         </Typography>
                       </Box>
                     ) : (
@@ -1415,7 +1479,7 @@ Orçamento válido somente hoje.
 
                   <FormControlLabel
                     sx={{
-                      display: isAnticipation && dataDesejadaEntrega && prazoPac !== null && dataDesejadaEntrega.toMillis() >= prazoPac ? 'none' : !precoPac && !prazoPac ? 'none' : 'flex',
+                      display: !precoPac && !prazoPac ? 'none' : 'flex',
                       alignItems: 'center'
                     }}
                     value={"PAC"}
@@ -1426,14 +1490,8 @@ Orçamento válido somente hoje.
                         <Typography sx={{ ml: 1 }}>
                           {"PAC - R$ " + precoPac +
                             " - Tempo de transporte: " +
-                            (prazoPac !== null ? prazoPac : "não disponível") +
-                            " dias úteis. Previsão: " +
-                            (() => {
-                              const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                              return prazoPac !== null
-                                ? (maxPrazo + prazoPac) + " dias úteis."
-                                : "não disponível";
-                            })()}
+                            (prazoPac !== null ? prazoPac : "não disponível") + " dias úteis."
+                          }
                         </Typography>
                       </Box>
                     ) : (
@@ -1446,7 +1504,7 @@ Orçamento válido somente hoje.
 
                   <FormControlLabel
                     sx={{
-                      display: isAnticipation && dataDesejadaEntrega && prazoSedex !== null && dataDesejadaEntrega.toMillis() >= prazoSedex ? 'none' : !precoSedex && !prazoSedex ? 'none' : 'flex',
+                      display: !precoSedex && !prazoSedex ? 'none' : 'flex',
                       alignItems: 'center'
                     }}
                     value={"SEDEX"}
@@ -1460,14 +1518,8 @@ Orçamento válido somente hoje.
                         <Typography sx={{ ml: 1, whiteSpace: 'nowrap' }}>
                           {"SEDEX - R$ " + precoSedex +
                             " - Tempo de transporte: " +
-                            (prazoSedex !== null ? prazoSedex : "não disponível") +
-                            " dias úteis. Previsão: " +
-                            (() => {
-                              const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                              return prazoSedex !== null
-                                ? (maxPrazo + prazoSedex) + " dias úteis."
-                                : "não disponível";
-                            })()}
+                            (prazoSedex !== null ? prazoSedex : "não disponível") + " dias úteis."
+                          }
                         </Typography>
                       </Box>
                     ) : (
@@ -1477,7 +1529,6 @@ Orçamento válido somente hoje.
                       </Box>
                     )}
                   />
-
 
                   <FormControlLabel
                     style={{ display: 'none' }}
@@ -1572,6 +1623,7 @@ Orçamento válido somente hoje.
                   control={<Radio />}
                   label="Antecipação"
                   onClick={() => {
+                    setIsAnticipation(true);
                     setOpenAnticipation(true);
                   }}
                   checked={isUrgentDeliverySelected && isAnticipation}
@@ -1601,14 +1653,13 @@ Orçamento válido somente hoje.
                 <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
                   <DatePicker
                     label="Data de entrega"
-                    value={dataDesejadaEntrega ? dataDesejadaEntrega.toJSDate() : null}
+                    value={dataDesejadaEntregaInput ? dataDesejadaEntregaInput.toJSDate() : null}
                     onChange={(newValue: Date | null) => {
                       if (newValue) {
-                        // Converta o Date para Luxon DateTime ANTES de atualizar o estado
                         const luxonDate = DateTime.fromJSDate(newValue);
-                        setDataDesejadaEntrega(luxonDate); // 🚨 Armazena Luxon
+                        setDataDesejadaEntregaInput(luxonDate);
                       } else {
-                        setDataDesejadaEntrega(null);
+                        setDataDesejadaEntregaInput(null);
                       }
                     }}
                     // minDate={tomorrow}
@@ -1634,9 +1685,9 @@ Orçamento válido somente hoje.
                 <NumericFormat
                   id="taxaAntecipacao"
                   name="taxaAntecipacao"
-                  value={taxaAntecipa}
+                  value={taxaAntecipaInput}
                   onValueChange={(values) => {
-                    setTaxaAntecipa(values.floatValue ?? 0);
+                    setTaxaAntecipaInput(values.floatValue ?? 0);
                   }}
                   thousandSeparator="."
                   decimalSeparator=","
@@ -1656,17 +1707,16 @@ Orçamento válido somente hoje.
               <DialogActions sx={{ px: 3 }}>
                 <Button onClick={() => {
                   setOpenAnticipation(false);
-                  setIsAnticipation(false);
+                  if (!isAnticipation) {
+                    setIsAnticipation(false);
+                  }
                 }}>
                   Cancelar
                 </Button>
-                <Button onClick={
-                  () => {
-                    setIsAnticipation(true);
-                    setOpenAnticipation(false)
-                  }
-                }
+                <Button
+                  onClick={handleAntecipa}
                   autoFocus
+                  disabled={!taxaAntecipaInput || !dataDesejadaEntregaInput}
                 >
                   Antecipar
                 </Button>
