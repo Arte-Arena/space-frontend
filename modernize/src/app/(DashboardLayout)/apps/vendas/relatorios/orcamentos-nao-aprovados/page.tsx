@@ -114,9 +114,10 @@ const VendasRelatoriosOrcamentosNaoAprovados = () => {
       width: 150,
       renderCell: (params) => {
         const data = params.row.data;
+        const dataString = data.split(" ")[0]
         return (
           <Typography variant="body2">
-            {data.toLocaleString()}
+            {dataString.toLocaleString('pt-BR')}
           </Typography>
         );
       }
@@ -154,6 +155,7 @@ const VendasRelatoriosOrcamentosNaoAprovados = () => {
 
         <div style={{ height: 400, width: '100%' }}>
           <DataGrid
+            autoHeight
             rows={orcamentosNaoAprovados as Orcamento[]}
             columns={columns}
             getRowId={(row) => row.id_orcamento}
