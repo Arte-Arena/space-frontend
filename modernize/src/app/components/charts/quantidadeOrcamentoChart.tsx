@@ -26,14 +26,6 @@ const ApexOrcamentos: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos }) => {
       foreColor: "#adb0bb",
       toolbar: { show: false },
     },
-    dropShadow: {
-      enabled: true,
-      color: "rgba(0,0,0,0.2)",
-      top: 12,
-      left: 4,
-      blur: 3,
-      opacity: 0.4,
-    },
     colors: ['#0b73e5'],
     dataLabels: {
       enabled: false,
@@ -66,9 +58,7 @@ const ApexOrcamentos: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos }) => {
     },
     markers: {
       size: 4,
-      opacity: 0.9,
       colors: [primary],
-      strokeColor: "#fff",
       strokeWidth: 2,
 
       hover: {
