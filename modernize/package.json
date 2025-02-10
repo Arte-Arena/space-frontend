@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "test": "jest",
     "start": "next start",
     "lint": "next lint"
   },
@@ -74,8 +75,10 @@
     "yup": "^0.32.11"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.2.0",
     "@types/chance": "^1.1.4",
     "@types/fslightbox-react": "^1.7.7",
+    "@types/jest": "^29.5.14",
     "@types/lodash": "^4.14.199",
     "@types/node": "^20.8.4",
     "@types/react": "18.2.28",
@@ -86,6 +89,7 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/uuid": "^10.0.0",
     "eslint": "latest",
-    "eslint-config-next": "latest"
+    "eslint-config-next": "latest",
+    "jest": "^29.7.0"
   }
 }
