@@ -27,14 +27,6 @@ const ApexOrcamentoStatus: React.FC<ApexOrcamentosProps> = ({ aprovados, naoApro
       foreColor: "#adb0bb",
       toolbar: { show: false }
     },
-    dropShadow: {
-      enabled: true,
-      color: "rgba(0,0,0,0.2)",
-      top: 12,
-      left: 4,
-      blur: 3,
-      opacity: 0.4,
-    },
     labels: ["Orçamentos Aprovados","Orçamentos Não Aprovados"],
     colors: ['#0b73e5', '#ff4d4d'], // Azul para aprovados, vermelho para não aprovados
     legend: {
@@ -50,9 +42,7 @@ const ApexOrcamentoStatus: React.FC<ApexOrcamentosProps> = ({ aprovados, naoApro
     },
     markers: {
       size: 4,
-      opacity: 0.9,
       colors: [primary],
-      strokeColor: "#fff",
       strokeWidth: 2,
 
       hover: {
