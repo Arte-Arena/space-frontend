@@ -155,12 +155,12 @@ const OrcamentoGerarScreen = () => {
   const [taxaAntecipa, setTaxaAntecipa] = useState<number | null>(null);
   const [prazoProducaoAntecipado, setPrazoProducaoAntecipado] = useState<number | null>(null);
   const [totalWithAntecipa, setTotalWithAntecipa] = useState<number | null>(null);
+  const [totalProductsValue, setTotalProductsValue] = useState<number | null>(null);
   const [checkedDesconto, setCheckedDesconto] = useState<boolean>(false);
   const [openDesconto, setOpenDesconto] = useState(false);
   const [tipoDesconto, setTipoDesconto] = useState<string | null>(null);
   const [percentualDesconto, setPercentualDesconto] = useState<number | null>(null);
   const [valorDesconto, setValorDesconto] = useState<number | null>(null);
-  const [totalValue, setTotalValue] = useState<number | null>(null);
 
   const accessToken = localStorage.getItem('accessToken');
 
@@ -371,7 +371,7 @@ const OrcamentoGerarScreen = () => {
         totalOrçamento += produtoTotal;
       });
 
-      setTotalValue(totalOrçamento);
+      setTotalProductsValue(totalOrçamento);
 
     }
   }, [productsList]);
@@ -1001,9 +1001,8 @@ const OrcamentoGerarScreen = () => {
         if (tipoDesconto === 'valor') {
           valorDescontado = parseFloat(valorDesconto?.toFixed(2) ?? '0');
         } else if (tipoDesconto === 'percentual') {
-          // Handle potential null values for totalValue and percentualDesconto
           valorDescontado = parseFloat(
-            ((totalValue ?? 0) * ((percentualDesconto ?? 0) / 100)).toFixed(2)
+            ((totalProductsValue ?? 0) * ((percentualDesconto ?? 0) / 100)).toFixed(2)
           );
         } else {
           throw new Error('Erro crítico tipoDesconto não existe ao compor o texto do orçamento.');
@@ -1071,7 +1070,22 @@ Orçamento válido somente hoje.
       preco_opcao_entrega: 50.66,
       antecipado: isAnticipation,
       data_antecipa: dataDesejadaEntrega,
-      taxa_antecipa: taxaAntecipa
+      taxa_antecipa: taxaAntecipa,
+      descontado: checkedDesconto || false,
+      tipo_desconto: tipoDesconto || null,
+      valor_desconto: checkedDesconto && tipoDesconto
+      ? tipoDesconto === 'valor'
+        ? valorDesconto ?? 0 // If valorDesconto is null, use 0
+        : tipoDesconto === 'percentual'
+          ? (totalProductsValue ?? 0) * ((percentualDesconto ?? 0) / 100) // If either is null, use 0
+        : null
+      : null,
+      percentual_desconto: percentualDesconto ? parseFloat(percentualDesconto.toFixed(2)) : null,
+      total_orcamento: isAnticipation && !checkedDesconto
+      ? (totalProductsValue ?? 0) + (taxaAntecipa ?? 0)
+      : !isAnticipation && checkedDesconto
+        ? (totalProductsValue ?? 0) - (valorDesconto ?? 0)
+        : (totalProductsValue ?? 0) + (shippingOption !== 'RETIRADA' ? precoFrete ?? 0 : 0),
     };
 
     try {
@@ -1119,6 +1133,7 @@ Orçamento válido somente hoje.
   }, [checkedDesconto]);
 
   const handleDesconto = () => {
+    
     setOpenDesconto(false)
   }
 
@@ -1969,8 +1984,8 @@ Orçamento válido somente hoje.
                 Valor Descontado: <strong>
                   R$ {tipoDesconto === 'valor'
                     ? valorDesconto?.toFixed(2)
-                    : totalValue !== null && percentualDesconto !== null
-                      ? (totalValue * (percentualDesconto / 100)).toFixed(2)
+                    : totalProductsValue !== null && percentualDesconto !== null
+                      ? (totalProductsValue * (percentualDesconto / 100)).toFixed(2)
                       : '0.00'}
                 </strong>
               </div>
