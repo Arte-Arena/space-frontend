@@ -49,8 +49,7 @@ import {
   Stack,
   Typography
 } from '@mui/material';
-import calcDataDiasUteis from '@/utils/calcDiasUteis';
-import calcDiasUteisEntreDatas from '@/utils/calcDiasUteis';
+import { calcularDataFuturaDiasUteis, calcDiasNaoUteisEntreDatas} from '@/utils/calcDiasUteis';
 
 interface Cliente {
   id: number;
@@ -515,9 +514,11 @@ const OrcamentoGerarScreen = () => {
     dataDesejadaEntrega: DateTime | null,
     feriados: ApiResponseFeriados // Adicione o array de feriados como parâmetro
   ): boolean => {
-    if (dataDesejadaEntrega) {
 
-      const dataEntregaCalculada = calcDataDiasUteis(DateTime.now(), delivery_time, feriados);
+    const tomorrow = DateTime.fromJSDate(getBrazilTime()).plus({ days: 1 });
+
+    if (dataDesejadaEntrega) {
+      const dataEntregaCalculada = calcularDataFuturaDiasUteis(tomorrow, delivery_time, feriados);
 
       return dataEntregaCalculada < dataDesejadaEntrega; // Comparação direta de DateTime
     } else {
@@ -786,6 +787,10 @@ const OrcamentoGerarScreen = () => {
       const hojeLuxon = DateTime.fromJSDate(hojeDate).startOf('day'); // Arredonda para o início do dia
       const dataDesejadaEntregaStart = dataDesejadaEntrega.startOf('day'); // Arredonda para o início do dia
 
+      const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
+      const qtdDiasNaoUteis = calcDiasNaoUteisEntreDatas(hojeLuxon, dataDesejadaEntrega, safeDataFeriados);
+
+
       // Está certo.
       // Só falta subtrair os dias úteis existentes durante esse período.
       // para isso, queremos saber quantos dias não úteis existe entre a data de entrega e a data resultante da subtração da data de entraga menos o prazoFrete
@@ -796,10 +801,10 @@ const OrcamentoGerarScreen = () => {
         const diffDias = dataDesejadaEntregaStart.diff(hojeLuxon, 'days').days;
         setDiffHojeDataDesejadaEntrega(diffDias);
         const prazoProducaoAntecipado = diffDias - prazoFrete;
-        setPrazoProducaoAntecipado(prazoProducaoAntecipado);
+        setPrazoProducaoAntecipado(prazoProducaoAntecipado - qtdDiasNaoUteis);
       } else {
         console.log('0023');
-        setPrazoProducaoAntecipado(dataDesejadaEntregaStart.diff(hojeLuxon, 'days').days);
+        setPrazoProducaoAntecipado(dataDesejadaEntregaStart.diff(hojeLuxon, 'days').days +-qtdDiasNaoUteis);
       }
 
 
@@ -866,7 +871,7 @@ const OrcamentoGerarScreen = () => {
 
         await new Promise(resolve => setTimeout(resolve, 300));
 
-        const dataPrevistaEntrega = calcDataDiasUteis(DateTime.fromJSDate(getBrazilTime()), prazoProducao + prazoFrete, safeDataFeriados);
+        const dataPrevistaEntrega = calcularDataFuturaDiasUteis(DateTime.fromJSDate(getBrazilTime()), prazoProducao + prazoFrete, safeDataFeriados);
         // console.log('dataPrevistaEntrega', dataPrevistaEntrega);
 
         await new Promise(resolve => setTimeout(resolve, 300));
@@ -926,6 +931,34 @@ const OrcamentoGerarScreen = () => {
     const larguraMaxima = 40;
     const larguraPrecoTotal = 15;
 
+    var prazoProducaoTextoOrcamento: string = "";
+
+    if (prazoProducaoAntecipado) {
+      if (prazoProducaoAntecipado < 1) {
+        throw new Error("Erro crítico: prazoProducaoAntecipado deve ser maior que zero.");
+      }
+    }
+    
+    if (prazoProducao) {
+      if (prazoProducao < 1) {
+        throw new Error("Erro crítico: prazoProducao deve ser maior que zero.");
+      }
+    }
+
+    if (isAnticipation && dataDesejadaEntrega) {
+      if (prazoProducaoAntecipado === 1) {
+        prazoProducaoTextoOrcamento = '1 dia útil';
+      } else {
+        prazoProducaoTextoOrcamento = `${prazoProducaoAntecipado} dias úteis (antecipado)`;
+      }
+    } else {
+      if (prazoProducao === 1) {
+        prazoProducaoTextoOrcamento = '1 dia útil';
+      } else {
+        prazoProducaoTextoOrcamento = `${prazoProducao} dias úteis`;
+      }
+    }
+
     productsList.forEach((product) => {
 
       const produtoTotal = product.preco * product.quantidade;
@@ -976,7 +1009,7 @@ ${isAnticipation && taxaAntecipa ? `Taxa de Antecipação: R$ ${taxaAntecipa.toF
 Total: R$ ${totalOrçamento.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}
 
 
-Prazo de Produção: ${isAnticipation && dataDesejadaEntrega ? prazoProducaoAntecipado === 1 ? '1 dia útil' : `${prazoProducaoAntecipado} dias úteis` : prazoProducao === 1 ? '1 dia útil' : `${prazoProducao} dias úteis`}
+Prazo de Produção: ${prazoProducaoTextoOrcamento}
 ${!checkedOcultaPrevisao ?
         previsaoEntrega ?
           `Previsão de ${shippingOption === 'RETIRADA' ? 'Retirada' : 'Entrega'}: ${previsaoEntrega.setLocale('pt-BR').toFormat('dd \'de\' MMMM \'de\' yyyy')} (aprovando hoje).`
