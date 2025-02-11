@@ -233,15 +233,6 @@ const VendasRelatoriosTodosOrcamentos = () => {
             value={filters.vendedor}
             onChange={(e) => handleFilterChange('vendedor', e.target.value)}
           />
-          
-          {/* não funciona como deveria  
-          <TextField
-            label="Status"
-            variant="outlined"
-            size="small"
-            value={filters.status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-          /> */}
 
           {/*Filtro de Data Personalizado */}
           <TextField
@@ -262,15 +253,15 @@ const VendasRelatoriosTodosOrcamentos = () => {
           />
           {/* Botão para limpar os filtros */}
           <Grid item xs={12} sm={4}>
-              <Button
-                variant="contained"
-                color="primary"
-                fullWidth
-                onClick={handleClearFilters}
-              >
-                Limpar Filtro
-              </Button>
-            </Grid>
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              onClick={handleClearFilters}
+            >
+              Limpar Filtro
+            </Button>
+          </Grid>
         </Box>
       </div>
 
