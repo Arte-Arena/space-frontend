@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import CustomToolbar from '@/app/components/DataGridFilters/CustomDataGridFilters';
 import { Tooltip, Typography, Box, TextField, Button, Grid } from "@mui/material";
-import { bool, boolean } from "yup";
 
 interface Orcamento {
   id_orcamento: number;
