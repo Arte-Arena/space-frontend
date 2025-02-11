@@ -19,6 +19,11 @@ const reports: Report[] = [
     icon: <IconReportMoney />
   },
   {
+    report: "Todos os Orcamentos",
+    path: "/apps/vendas/relatorios/orcamentos-todos",
+    icon: <IconReportMoney />
+  },
+  {
     report: "Orçamentos Por Data",
     path: "/apps/vendas/relatorios/quantidade-orcamentos-por-data",
     icon: <IconChartLine />
