@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 interface User {
-    nome: string;
+    name: string;
     id: string;
 }
 
