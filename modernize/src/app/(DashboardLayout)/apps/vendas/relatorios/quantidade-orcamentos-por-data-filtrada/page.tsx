@@ -3,9 +3,11 @@ import React, { useState, useEffect } from "react";
 import PageContainer from "@/app/components/container/PageContainer";
 import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
 import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import ApexOrcamentos from "@/app/components/charts/quantidadeOrcamentoChart";
 import ParentCard from "@/app/components/shared/ParentCard";
-import { Typography, Box, TextField, Button, Grid } from "@mui/material";
+import { Typography, Box, TextField, Button, Grid, Select, MenuItem } from "@mui/material";
+import useUsers from '@/app/components/charts/SelectUsers';
 
 interface Orcamento {
   date: string;
@@ -23,8 +25,11 @@ const VendasRelatoriosOrcamentosPorDataFiltrada = () => {
   const [dados, setDados] = useState<Orcamento[]>([]);
   const [vendedorId, setVendedorId] = useState<string>('');
   const [dataInicio, setDataInicio] = useState<string>('');
-  const [dataFim, setDataFim] = useState<string>('');
+  // data fim = hoje por default
+  const hoje = format(new Date(), 'yyyy-MM-dd');
+  const [dataFim, setDataFim] = useState<string>(hoje);
   const [isFetchingData, setIsFetchingData] = useState<boolean>(false);
+  const { data: users, error: usersError, isLoading: usersLoading } = useUsers(); 
 
   // Pega token do localStorage
   const accessToken = typeof window !== "undefined" ? localStorage.getItem('accessToken') : null;
@@ -33,6 +38,7 @@ const VendasRelatoriosOrcamentosPorDataFiltrada = () => {
     console.error('Access token is missing');
   }
 
+  // ========================================================================================= \\
   // Fetch inicial (sem filtro)
   const { data, error } = useQuery({
     queryKey: ['quantidadeOrcamentosData'],
@@ -65,6 +71,7 @@ const VendasRelatoriosOrcamentosPorDataFiltrada = () => {
     }
   }, [data]);
 
+  // ========================================================================================= \\
   // Função para buscar dados filtrados
   const buscarDadosFiltrados = async () => {
     if (!accessToken) {
@@ -73,12 +80,13 @@ const VendasRelatoriosOrcamentosPorDataFiltrada = () => {
     }
 
     setIsFetchingData(true);
+      
+      const queryParams = new URLSearchParams({
+        ...(vendedorId && { vendedor_id: vendedorId }),
+        ...(dataInicio && { data_inicio: dataInicio }),
+        ...(dataFim && { data_fim: dataFim }),
+      }).toString();
 
-    const queryParams = new URLSearchParams({
-      ...(vendedorId && { vendedor_id: vendedorId }),
-      ...(dataInicio && { data_inicio: dataInicio }),
-      ...(dataFim && { data_fim: dataFim }),
-    }).toString();
 
     const apiUrl = `${process.env.NEXT_PUBLIC_API}/api/vendas/orcamentos-por-dia-filtered?${queryParams}`;
 
@@ -119,7 +127,23 @@ const VendasRelatoriosOrcamentosPorDataFiltrada = () => {
             value={vendedorId}
             size="small"
             onChange={(e) => setVendedorId(e.target.value)}
-            />
+          />
+
+          <Select
+            value={vendedorId}
+            onChange={(e) => setVendedorId(e.target.value)}
+            displayEmpty
+          >
+            <MenuItem value="">Selecione um vendedor</MenuItem>
+            {users?.map((user) => (
+              <MenuItem key={user.id} value={user.id}>
+                {user.name}
+                {/* {user.id} */}
+              </MenuItem>
+            ))}
+          </Select>
+
+
           {/*Filtro de Data Personalizado */}
           <TextField
             type="date"
