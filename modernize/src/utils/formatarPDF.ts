@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf";
-import logo from '../../public/images/logos/dark-logo.png'
+import logo from '../../public/images/logos/logo.png'
 
 const formatarPDF = (htmlContent: string) => { 
   const doc = new jsPDF("p", "mm", "a4");
