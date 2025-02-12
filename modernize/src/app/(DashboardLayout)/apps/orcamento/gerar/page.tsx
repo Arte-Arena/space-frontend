@@ -1662,10 +1662,7 @@ Orçamento válido somente hoje.
                             allowNegative={false}
                             fixedDecimalScale={true}
                             decimalScale={2}
-                            onValueChange={(values) => {
-                              const updatedProductBrinde = { ...product, preco: values.floatValue || 0 };
-                              atualizarProdutoBrinde(updatedProductBrinde);
-                            }}
+                            disabled={true}
                             variant="outlined"
                             size="small"
                             sx={{ width: '110px' }}
@@ -1697,16 +1694,13 @@ Orçamento válido somente hoje.
                             }}
                           />
                         </TableCell>
-
                         <TableCell align="right">
                           <CustomTextField
-                            value={isAnticipation ? 1 : product.prazo}
+                            value={product.prazo}
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                              if (!isAnticipation) {
-                                const newProductValue = Math.max(0, +event.target.value);
-                                const updatedProductBrinde = { ...product, prazo: newProductValue };
-                                atualizarProdutoBrinde(updatedProductBrinde);
-                              }
+                              const newProductValue = Math.max(0, +event.target.value);
+                              const updatedProductBrinde = { ...product, prazo: newProductValue };
+                              atualizarProdutoBrinde(updatedProductBrinde);
                             }}
                             type="number"
                             variant="outlined"
@@ -1723,7 +1717,7 @@ Orçamento válido somente hoje.
                                 MozAppearance: 'textfield', // Para Firefox
                               },
                             }}
-                            disabled={isAnticipation}
+                            disabled={true}
                           />
                         </TableCell>
 
