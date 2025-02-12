@@ -49,7 +49,9 @@ import {
   Stack,
   Typography
 } from '@mui/material';
-import { calcularDataFuturaDiasUteis, calcDiasNaoUteisEntreDatas} from '@/utils/calcDiasUteis';
+import { calcularDataFuturaDiasUteis, calcDiasNaoUteisEntreDatas } from '@/utils/calcDiasUteis';
+import CustomRadio from '@/app/components/forms/theme-elements/CustomRadio';
+
 
 interface Cliente {
   id: number;
@@ -152,6 +154,13 @@ const OrcamentoGerarScreen = () => {
   const [taxaAntecipaInput, setTaxaAntecipaInput] = useState<number | null>(null);
   const [taxaAntecipa, setTaxaAntecipa] = useState<number | null>(null);
   const [prazoProducaoAntecipado, setPrazoProducaoAntecipado] = useState<number | null>(null);
+  const [totalWithAntecipa, setTotalWithAntecipa] = useState<number | null>(null);
+  const [totalProductsValue, setTotalProductsValue] = useState<number | null>(null);
+  const [checkedDesconto, setCheckedDesconto] = useState<boolean>(false);
+  const [openDesconto, setOpenDesconto] = useState(false);
+  const [tipoDesconto, setTipoDesconto] = useState<string | null>(null);
+  const [percentualDesconto, setPercentualDesconto] = useState<number | null>(null);
+  const [valorDesconto, setValorDesconto] = useState<number | null>(null);
 
   const accessToken = localStorage.getItem('accessToken');
 
@@ -354,6 +363,16 @@ const OrcamentoGerarScreen = () => {
       if (cep) {
         getFrete(cep);
       }
+
+      var totalOrçamento = 0;
+
+      productsList.forEach((product) => {
+        const produtoTotal = product.preco * product.quantidade;
+        totalOrçamento += produtoTotal;
+      });
+
+      setTotalProductsValue(totalOrçamento);
+
     }
   }, [productsList]);
 
@@ -804,7 +823,7 @@ const OrcamentoGerarScreen = () => {
         setPrazoProducaoAntecipado(prazoProducaoAntecipado - qtdDiasNaoUteis);
       } else {
         console.log('0023');
-        setPrazoProducaoAntecipado(dataDesejadaEntregaStart.diff(hojeLuxon, 'days').days +-qtdDiasNaoUteis);
+        setPrazoProducaoAntecipado(dataDesejadaEntregaStart.diff(hojeLuxon, 'days').days + -qtdDiasNaoUteis);
       }
 
 
@@ -928,8 +947,6 @@ const OrcamentoGerarScreen = () => {
   const gerarOrcamento = () => {
     let totalOrçamento = 0;
     let produtosTexto = '';
-    const larguraMaxima = 40;
-    const larguraPrecoTotal = 15;
 
     var prazoProducaoTextoOrcamento: string = "";
 
@@ -938,7 +955,7 @@ const OrcamentoGerarScreen = () => {
         throw new Error("Erro crítico: prazoProducaoAntecipado deve ser maior que zero.");
       }
     }
-    
+
     if (prazoProducao) {
       if (prazoProducao < 1) {
         throw new Error("Erro crítico: prazoProducao deve ser maior que zero.");
@@ -978,6 +995,22 @@ const OrcamentoGerarScreen = () => {
       totalOrçamento += precoFrete;
     }
 
+    var valorDescontado = 0;
+    if (checkedDesconto) {
+      if (checkedDesconto) {
+        if (tipoDesconto === 'valor') {
+          valorDescontado = parseFloat(valorDesconto?.toFixed(2) ?? '0');
+        } else if (tipoDesconto === 'percentual') {
+          valorDescontado = parseFloat(
+            ((totalProductsValue ?? 0) * ((percentualDesconto ?? 0) / 100)).toFixed(2)
+          );
+        } else {
+          throw new Error('Erro crítico tipoDesconto não existe ao compor o texto do orçamento.');
+        }
+        totalOrçamento = totalOrçamento - valorDescontado;
+      }
+    }
+
     if (isAnticipation && taxaAntecipa != null) {
       totalOrçamento += taxaAntecipa;
     }
@@ -1003,11 +1036,10 @@ Lista de Produtos:
 
 ${produtosTexto.trim()}
 ${shippingOption === 'RETIRADA' ? 'Frete: R$ 0,00 (Retirada)' : `Frete: R$ ${precoFreteTexto} (Dia da postagem + ${prazoFrete} dias úteis via ${shippingOption} para o CEP ${cep})`}
-
 ${isAnticipation && taxaAntecipa ? `Taxa de Antecipação: R$ ${taxaAntecipa.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}` : ''}
+${checkedDesconto ? `Desconto: R$ ${valorDescontado.toFixed(2)}` : ''}
 
 Total: R$ ${totalOrçamento.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}
-
 
 Prazo de Produção: ${prazoProducaoTextoOrcamento}
 ${!checkedOcultaPrevisao ?
@@ -1038,7 +1070,22 @@ Orçamento válido somente hoje.
       preco_opcao_entrega: 50.66,
       antecipado: isAnticipation,
       data_antecipa: dataDesejadaEntrega,
-      taxa_antecipa: taxaAntecipa
+      taxa_antecipa: taxaAntecipa,
+      descontado: checkedDesconto || false,
+      tipo_desconto: tipoDesconto || null,
+      valor_desconto: checkedDesconto && tipoDesconto
+      ? tipoDesconto === 'valor'
+        ? valorDesconto ?? 0 // If valorDesconto is null, use 0
+        : tipoDesconto === 'percentual'
+          ? (totalProductsValue ?? 0) * ((percentualDesconto ?? 0) / 100) // If either is null, use 0
+        : null
+      : null,
+      percentual_desconto: percentualDesconto ? parseFloat(percentualDesconto.toFixed(2)) : null,
+      total_orcamento: isAnticipation && !checkedDesconto
+      ? (totalProductsValue ?? 0) + (taxaAntecipa ?? 0)
+      : !isAnticipation && checkedDesconto
+        ? (totalProductsValue ?? 0) - (valorDesconto ?? 0)
+        : (totalProductsValue ?? 0) + (shippingOption !== 'RETIRADA' ? precoFrete ?? 0 : 0),
     };
 
     try {
@@ -1080,6 +1127,20 @@ Orçamento válido somente hoje.
     setTaxaAntecipa(taxaAntecipaInput);
     setOpenAnticipation(false)
   }
+
+  useEffect(() => {
+    setOpenDesconto(checkedDesconto);
+  }, [checkedDesconto]);
+
+  const handleDesconto = () => {
+    
+    setOpenDesconto(false)
+  }
+
+  useEffect(() => {
+    console.log('tipoDesconto:', tipoDesconto);
+  }, [tipoDesconto]);
+
 
   return (
     <PageContainer title="Orçamento / Gerar" description="Gerar Orçamento da Arte Arena">
@@ -1785,6 +1846,150 @@ Orçamento válido somente hoje.
                 />
               </FormControl>
             </div>
+
+            <div>
+              <FormControl sx={{ mt: 2 }} disabled={isAnticipation || !(clientId && productsList.length > 0)}>
+                <FormControlLabel
+                  control={
+                    <CustomCheckbox
+                      checked={checkedDesconto}
+                      onChange={(e) => !isAnticipation && setCheckedDesconto(e.target.checked)}
+                    />
+                  }
+                  label="Desconto"
+                />
+              </FormControl>
+            </div>
+
+            <Dialog
+              open={openDesconto}
+              onClose={() => setIsAnticipation(false)}
+              aria-labelledby="alert-dialog-title"
+              aria-describedby="alert-dialog-description"
+            >
+              <DialogTitle id="alert-dialog-title" sx={{ mt: 3 }}>
+                {"Definições de Desconto"}
+              </DialogTitle>
+              <DialogContent sx={{ mt: 3, px: 3 }}>
+
+                <RadioGroup
+                  sx={{ mb: 3 }}
+                  aria-label="selecionar-tipo-desconto"
+                  name="selecionar-tipo-desconto"
+                  value={tipoDesconto}
+                  onChange={(e) => setTipoDesconto(e.target.value)}
+                  row
+                >
+                  <FormControlLabel
+
+                    value="percentual"
+                    control={<CustomRadio />}
+                    label="Aplicar Percentual"
+                  />
+                  <FormControlLabel
+                    value="valor"
+                    control={<CustomRadio />}
+                    label="Aplicar Valor"
+                  />
+                </RadioGroup>
+
+                {tipoDesconto === 'percentual' && (
+                  <>
+                    <CustomFormLabel
+                      htmlFor="taxaAntecipacao"
+                      sx={{
+                        mt: 0,
+                      }}
+                    >
+                      Percentual de Desconto
+                    </CustomFormLabel>
+                    <NumericFormat
+                      id="percentualDesconto"
+                      name="percentualDesconto"
+                      value={percentualDesconto}
+                      onValueChange={(values) => {
+                        setPercentualDesconto(values.floatValue ?? 0);
+                      }}
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      allowLeadingZeros={false}
+                      decimalScale={2}
+                      fixedDecimalScale
+                      customInput={CustomTextField}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="end">%</InputAdornment>
+                        ),
+                      }}
+                      sx={{ mb: 2 }}
+                    />
+                  </>
+                )}
+
+                {tipoDesconto === 'valor' && (
+                  <>
+                    <CustomFormLabel
+                      htmlFor="taxaAntecipacao"
+                      sx={{
+                        mt: 0,
+                      }}
+                    >
+                      Taxa de Antecipação
+                    </CustomFormLabel>
+                    <NumericFormat
+                      id="taxaAntecipacao"
+                      name="taxaAntecipacao"
+                      value={valorDesconto}
+                      onValueChange={(values) => {
+                        setValorDesconto(values.floatValue ?? 0);
+                      }}
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      allowLeadingZeros={false}
+                      decimalScale={2}
+                      fixedDecimalScale
+                      customInput={CustomTextField}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">R$</InputAdornment>
+                        ),
+                      }}
+                      sx={{ mb: 2 }}
+                    />
+                  </>
+                )}
+
+              </DialogContent>
+              <DialogActions sx={{ px: 3 }}>
+                <Button onClick={() => {
+                  setOpenDesconto(false);
+                  // if (!isAnticipation) {
+                  //   setIsAnticipation(false);
+                  // }
+                }}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleDesconto}
+                  autoFocus
+                  disabled={!tipoDesconto || (!percentualDesconto && !valorDesconto)}
+                >
+                  Aplicar Desconto
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            {checkedDesconto && tipoDesconto && (valorDesconto !== null || percentualDesconto !== null) && (
+              <div>
+                Valor Descontado: <strong>
+                  R$ {tipoDesconto === 'valor'
+                    ? valorDesconto?.toFixed(2)
+                    : totalProductsValue !== null && percentualDesconto !== null
+                      ? (totalProductsValue * (percentualDesconto / 100)).toFixed(2)
+                      : '0.00'}
+                </strong>
+              </div>
+            )}
 
             <div style={{ marginTop: '20px' }}>
               <Button
