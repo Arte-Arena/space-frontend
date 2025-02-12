@@ -54,7 +54,7 @@ const VendasRelatoriosTodosOrcamentos = () => {
   const { isFetching, error } = useQuery({
     queryKey: ['orcamentosNaoAprovadosData'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/vendas/orcamentos-por-status`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/vendas/orcamentos-por-status-todos`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
