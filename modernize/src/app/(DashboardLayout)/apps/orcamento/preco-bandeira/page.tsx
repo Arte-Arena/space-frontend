@@ -106,7 +106,7 @@ const PrecoBandeiraScreen = () => {
                     </Typography>
                     <Button
                       onClick={() => {
-                        navigator.clipboard.writeText(`Valor Mínimo Pessoal Simples: R$ ${(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                        navigator.clipboard.writeText(`1 un - Bandeira Personalizada - ${(altura).toFixed(2)} x ${(largura).toFixed(2)} - Faces: Uma - R$ ${(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                       }}
                     >
                       <IconCopy />
@@ -121,7 +121,7 @@ const PrecoBandeiraScreen = () => {
                     </Typography>
                     <Button
                       onClick={() => {
-                        navigator.clipboard.writeText(`Valor Normal Pessoal Simples: R$ ${(FATOR_NORMAL_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                        navigator.clipboard.writeText(`1 un - Bandeira Personalizada - ${(altura).toFixed(2)} x ${(largura).toFixed(2)} - Faces: Uma - R$ ${(FATOR_NORMAL_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                       }}
                     >
                       <IconCopy />
@@ -136,7 +136,7 @@ const PrecoBandeiraScreen = () => {
                     </Typography>
                     <Button
                       onClick={() => {
-                        navigator.clipboard.writeText(`Valor Mínimo Pessoal Dupla: R$ {((FATOR_MINIMO_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                        navigator.clipboard.writeText(`1 un - Bandeira Personalizada - ${(altura).toFixed(2)} x ${(largura).toFixed(2)} - Faces: Duas - R$ ${((FATOR_MINIMO_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                       }}
                     >
                       <IconCopy />
@@ -151,7 +151,7 @@ const PrecoBandeiraScreen = () => {
                     </Typography>
                     <Button
                       onClick={() => {
-                        navigator.clipboard.writeText(`Valor Normal Pessoal Dupla: R$ ${((FATOR_NORMAL_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                        navigator.clipboard.writeText(`1 un - Bandeira Personalizada - ${(altura).toFixed(2)} x ${(largura).toFixed(2)} - Faces: Duas - R$ ${((FATOR_NORMAL_PESSOAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                       }}
                     >
                       <IconCopy />
@@ -168,7 +168,7 @@ const PrecoBandeiraScreen = () => {
                     </Typography>
                     <Button
                       onClick={() => {
-                        navigator.clipboard.writeText(`Valor Mínimo Pessoal Simples: R$ ${(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                        navigator.clipboard.writeText(`1 un - Bandeira Personalizada - ${(altura).toFixed(2)} x ${(largura).toFixed(2)} - Faces: Uma - R$ ${(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                       }}
                     >
                       <IconCopy />
@@ -183,7 +183,7 @@ const PrecoBandeiraScreen = () => {
                     </Typography>
                     <Button
                       onClick={() => {
-                        navigator.clipboard.writeText(`Valor Normal Empresarial Simples: R$ ${(FATOR_NORMAL_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                        navigator.clipboard.writeText(`1 un - Bandeira Personalizada - ${(altura).toFixed(2)} x ${(largura).toFixed(2)} - Faces: Uma - R$ ${(FATOR_NORMAL_EMPRESARIAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                       }}
                     >
                       <IconCopy />
@@ -198,7 +198,7 @@ const PrecoBandeiraScreen = () => {
                     </Typography>
                     <Button
                       onClick={() => {
-                        navigator.clipboard.writeText(`Valor Mínimo Empresarial Dupla: R$ ${((FATOR_MINIMO_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                        navigator.clipboard.writeText(`1 un - Bandeira Personalizada - ${(altura).toFixed(2)} x ${(largura).toFixed(2)} - Faces: Duas - R$ ${((FATOR_MINIMO_EMPRESARIAL * 2) * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                       }}
                     >
                       <IconCopy />
@@ -213,7 +213,7 @@ const PrecoBandeiraScreen = () => {
                     </Typography>
                     <Button
                       onClick={() => {
-                        navigator.clipboard.writeText(`Valor Mínimo Pessoal Simples: R$ ${(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                        navigator.clipboard.writeText(`1 un - Bandeira Personalizada - ${(altura).toFixed(2)} x ${(largura).toFixed(2)} - Faces: Uma - R$ ${(FATOR_MINIMO_PESSOAL * quantidadeTecidoState).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
                       }}
                     >
                       <IconCopy />
