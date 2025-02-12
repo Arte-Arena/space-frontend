@@ -114,9 +114,12 @@ const OrcamentoGerarScreen = () => {
   const [isLoadedProducts, setIsLoadedProducts] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
-  const [produtosComAtributoZerado, setProdutosComAtributoZerado] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [produtosComAtributoZerado, setProdutosComAtributoZerado] = useState(false);
   const [openSnackbarProdutosComAtributoZerado, setOpenSnackbarProdutosComAtributoZerado] = useState(false);
+  const [checkedBrinde, setCheckedBrinde] = useState(false);
+  const [productsBrindeList, setProductsBrindeList] = useState<Product[]>([]);
+  const [selectedProductBrinde, setSelectedProductBrinde] = useState<Product | null>(null);
   const [openBudget, setOpenBudget] = React.useState(false);
   const [scroll, setScroll] = React.useState<DialogProps['scroll']>('paper');
   const [orçamentoTexto, setOrçamentoTexto] = useState('');
@@ -346,35 +349,14 @@ const OrcamentoGerarScreen = () => {
 
   const productNames = allProducts.map((product) => product.nome);
 
+  // Tratamento da lista de produtos (exceto brinde)
+
   useEffect(() => {
     if (selectedProduct) {
       adicionarProduto(selectedProduct);
       // console.log('selectedProduct:', selectedProduct);
     }
   }, [selectedProduct]);
-
-  useEffect(() => {
-    if (productsList) {
-      const maxPrazo = productsList.length > 0
-        ? Math.max(...productsList.map(product => product.prazo ?? 0))
-        : 0;
-      setPrazoProducao(maxPrazo);
-
-      if (cep) {
-        getFrete(cep);
-      }
-
-      var totalOrçamento = 0;
-
-      productsList.forEach((product) => {
-        const produtoTotal = product.preco * product.quantidade;
-        totalOrçamento += produtoTotal;
-      });
-
-      setTotalProductsValue(totalOrçamento);
-
-    }
-  }, [productsList]);
 
   function adicionarProduto(novoProduto: Product) {
     // Se já está na productsList, não adiciona novamente, soma 1 na sua quantidade.
@@ -433,6 +415,28 @@ const OrcamentoGerarScreen = () => {
   };
 
   useEffect(() => {
+
+    if (productsList) {
+      const maxPrazo = productsList.length > 0
+        ? Math.max(...productsList.map(product => product.prazo ?? 0))
+        : 0;
+      setPrazoProducao(maxPrazo);
+
+      if (cep) {
+        getFrete(cep);
+      }
+
+      var totalOrçamento = 0;
+
+      productsList.forEach((product) => {
+        const produtoTotal = product.preco * product.quantidade;
+        totalOrçamento += produtoTotal;
+      });
+
+      setTotalProductsValue(totalOrçamento);
+
+    }
+
     const checkZeroAttribute = (isAnticipation: boolean) => {
       return productsList.some((product) =>
         Object.entries(product).some(([key, value]) =>
@@ -450,12 +454,69 @@ const OrcamentoGerarScreen = () => {
 
   }, [productsList]);
 
-  // useEffect(() => {
-  //   console.log(
-  //     `produtosComAtributoZerado (após atualização): ${produtosComAtributoZerado ? 'SIM' : 'NÃO'}`
-  //   );
+  // Tratamento da lista de produtos para brinde
 
-  // }, [produtosComAtributoZerado]); // Executa este useEffect quando produtosComAtributoZerado mudar
+  useEffect(() => {
+    if (selectedProductBrinde) {
+      adicionarProdutoBrinde(selectedProductBrinde);
+      // console.log('selectedProductBrinde:', selectedProductBrinde);
+    }
+  }, [selectedProductBrinde]);
+
+  function adicionarProdutoBrinde(novoProduto: Product) {
+    // Se já está na productsList, não adiciona novamente, soma 1 na sua quantidade.
+    const existingProduct = productsBrindeList.find((product) => product.id === novoProduto.id);
+
+    if (existingProduct) {
+      const updatedProduct = {
+        ...existingProduct,
+        quantidade: isNaN(existingProduct.quantidade) ? 1 : existingProduct.quantidade + 1,
+      };
+      const updatedProductsList = productsBrindeList.map((product) =>
+        product.id === existingProduct.id ? updatedProduct : product
+      );
+      setProductsBrindeList(updatedProductsList);
+    } else {
+      setProductsBrindeList([
+        {
+          ...novoProduto,
+          quantidade: 1,
+          preco: 0,
+          prazo: 0,
+        },
+      ]);
+    }
+  }
+
+  const removerProdutoUnidadeBrinde = (productToRemove: Product) => {
+    const updatedProductsList = productsBrindeList.map((product) => {
+      if (product.id === productToRemove.id) {
+        if (product.quantidade > 1) {
+          // Reduz a quantidade em 1 unidade
+          return { ...product, quantidade: product.quantidade - 1 };
+        } else {
+          // Remove o produto completamente
+          return null;
+        }
+      }
+      return product;
+    });
+
+    // Remove os elementos null (produtos removidos) do array
+    setProductsBrindeList(updatedProductsList.filter((product): product is Product => product !== null));
+  };
+
+  const removerProdutoBrinde = (productToRemove: Product) => {
+    const updatedProductsList = productsBrindeList.filter((product) => product.id !== productToRemove.id);
+    setProductsBrindeList(updatedProductsList);
+  };
+
+  const atualizarProdutoBrinde = (updatedProduct: Product) => {
+    const updatedProductsList = productsBrindeList.map((product) =>
+      product.id === updatedProduct.id ? updatedProduct : product
+    );
+    setProductsBrindeList(updatedProductsList);
+  };
 
   const handleCloseSnackbarProdutosComAtributoZerado = () => {
     setOpenSnackbarProdutosComAtributoZerado(false);
@@ -947,6 +1008,7 @@ const OrcamentoGerarScreen = () => {
   const gerarOrcamento = () => {
     let totalOrçamento = 0;
     let produtosTexto = '';
+    let produtosBrindeTexto = '';
 
     var prazoProducaoTextoOrcamento: string = "";
 
@@ -1015,6 +1077,21 @@ const OrcamentoGerarScreen = () => {
       totalOrçamento += taxaAntecipa;
     }
 
+    productsBrindeList.forEach((product) => {
+
+      const produtoTotal = product.preco * product.quantidade;
+
+      // Formatação da linha do produto para garantir alinhamento
+      const quantidade = `${product.quantidade} un`;
+      const nomeProduto = product.nome;
+      const precoUnitario = `R$ ${product.preco.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`;
+      const totalProduto = `R$ ${produtoTotal.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`;
+
+      // Concatena as informações do produto
+      produtosBrindeTexto += `${quantidade} ${nomeProduto} ${precoUnitario} (${totalProduto})\n`;
+    });
+
+
     let precoFreteTexto = '0.00';
     if (precoFrete) {
       precoFreteTexto = precoFrete.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
@@ -1035,6 +1112,8 @@ const OrcamentoGerarScreen = () => {
 Lista de Produtos:
 
 ${produtosTexto.trim()}
+
+${checkedBrinde ? `Brinde: ${produtosBrindeTexto.trim()}` : ''}
 ${shippingOption === 'RETIRADA' ? 'Frete: R$ 0,00 (Retirada)' : `Frete: R$ ${precoFreteTexto} (Dia da postagem + ${prazoFrete} dias úteis via ${shippingOption} para o CEP ${cep})`}
 ${isAnticipation && taxaAntecipa ? `Taxa de Antecipação: R$ ${taxaAntecipa.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}` : ''}
 ${checkedDesconto ? `Desconto: R$ ${valorDescontado.toFixed(2)}` : ''}
@@ -1074,18 +1153,18 @@ Orçamento válido somente hoje.
       descontado: checkedDesconto || false,
       tipo_desconto: tipoDesconto || null,
       valor_desconto: checkedDesconto && tipoDesconto
-      ? tipoDesconto === 'valor'
-        ? valorDesconto ?? 0 // If valorDesconto is null, use 0
-        : tipoDesconto === 'percentual'
-          ? (totalProductsValue ?? 0) * ((percentualDesconto ?? 0) / 100) // If either is null, use 0
-        : null
-      : null,
+        ? tipoDesconto === 'valor'
+          ? valorDesconto ?? 0 // If valorDesconto is null, use 0
+          : tipoDesconto === 'percentual'
+            ? (totalProductsValue ?? 0) * ((percentualDesconto ?? 0) / 100) // If either is null, use 0
+            : null
+        : null,
       percentual_desconto: percentualDesconto ? parseFloat(percentualDesconto.toFixed(2)) : null,
       total_orcamento: isAnticipation && !checkedDesconto
-      ? (totalProductsValue ?? 0) + (taxaAntecipa ?? 0)
-      : !isAnticipation && checkedDesconto
-        ? (totalProductsValue ?? 0) - (valorDesconto ?? 0)
-        : (totalProductsValue ?? 0) + (shippingOption !== 'RETIRADA' ? precoFrete ?? 0 : 0),
+        ? (totalProductsValue ?? 0) + (taxaAntecipa ?? 0)
+        : !isAnticipation && checkedDesconto
+          ? (totalProductsValue ?? 0) - (valorDesconto ?? 0)
+          : (totalProductsValue ?? 0) + (shippingOption !== 'RETIRADA' ? precoFrete ?? 0 : 0),
     };
 
     try {
@@ -1133,7 +1212,7 @@ Orçamento válido somente hoje.
   }, [checkedDesconto]);
 
   const handleDesconto = () => {
-    
+
     setOpenDesconto(false)
   }
 
@@ -1475,533 +1554,839 @@ Orçamento válido somente hoje.
                 Cuidado: produto contém algum atributo zerado!
               </Alert>
             </Snackbar>
+          </div>
 
-            <CustomFormLabel
-              sx={{
-                mt: 5,
-              }}
-              htmlFor="transportadora"
-            >
-              Transportadora
-            </CustomFormLabel>
-
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'left',
-                mt: 2,
-                pointerEvents: clientId ? (productsList.length > 0 ? 'auto' : 'none') : 'none',
-                opacity: clientId ? (productsList.length > 0 ? 1 : 0.5) : 0.5,
-              }}
-            >
-              <CustomTextField
-                id="transportadora"
-                label="CEP do cliente"
-                value={cep}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setCEP(event.target.value)}
-                onBlur={handleCEPBlur}
-                variant="outlined"
-                size="small"
-                sx={{ width: '200px' }}
-                disabled={!clientId || productsList.length === 0 || produtosComAtributoZerado}
+          <div>
+            <FormControl sx={{ mt: 2 }} disabled={isAnticipation || !(clientId && productsList.length > 0)}>
+              <FormControlLabel
+                control={
+                  <CustomCheckbox
+                    checked={checkedBrinde}
+                    onChange={(e) => !isAnticipation && setCheckedBrinde(e.target.checked)}
+                  />
+                }
+                label="Brinde"
               />
-            </Box>
+            </FormControl>
+          </div>
 
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'left',
-                mt: 2,
-                pointerEvents: cep ? 'auto' : 'none',
-                opacity: cep ? 1 : 0.5,
-              }}
-            >
-              <CustomTextField
-                label="Endereço do Cliente"
-                value={address}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => setAddress(event.target.value)}
-                variant="outlined"
-                size="small"
-                fullWidth
-                disabled={!cep}
-              />
-            </Box>
-
-            <Box sx={{ display: 'flex', justifyContent: 'left', mt: 2, flexDirection: 'row' }}>
-              {isFetchingFrete && <><CircularProgress size={20} sx={{ mr: 1 }} /><br /></>}
-
-              <FormControl>
-                <RadioGroup
-                  aria-labelledby="demo-controlled-radio-buttons-group"
-                  name="controlled-radio-buttons-group"
-                  value={shippingOption}
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                    console.log('event', event);
-                    setShippingOption(event.target.value)
-                  }}
-                >
-
-                  <FormControlLabel
-                    value={"RETIRADA"}
-                    control={<Radio disabled={!clientId || productsList.length === 0} />}
-                    label={`Retirada - R$ 0,00.`}
-                  />
-
-                  <FormControlLabel
+          {checkedBrinde && (
+            <div style={{ marginTop: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '20px' }}>
+                <div style={{ flex: 1 }}>
+                  <CustomFormLabel
                     sx={{
-                      display: !precoMiniEnvios && !prazoMiniEnvios ? 'none' : 'flex',
-                      alignItems: 'center'
+                      mt: 0,
                     }}
-                    value={"MINIENVIOS"}
-                    control={<Radio disabled={!precoMiniEnvios} />}
-                    label={precoMiniEnvios ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                        <Typography sx={{ ml: 1 }}>
-                          Mini Envios - R$ {precoMiniEnvios}{" "}
-                          - Tempo de transporte:{" "}
-                          {prazoMiniEnvios !== null ? prazoMiniEnvios : "não disponível"} dias úteis.{" "}
-                        </Typography>
-                      </Box>
-                    ) : (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                        <Typography sx={{ ml: 1 }}>Mini Envios</Typography>
-                      </Box>
-                    )}
-                  />
+                    htmlFor="produto-brinde"
+                  >
+                    Produto (Brinde)
+                  </CustomFormLabel>
 
-                  <FormControlLabel
-                    sx={{
-                      display: !precoPac && !prazoPac ? 'none' : 'flex',
-                      alignItems: 'center'
-                    }}
-                    value={"PAC"}
-                    control={<Radio disabled={!precoPac} />}
-                    label={precoPac ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                        <Typography sx={{ ml: 1 }}>
-                          {"PAC - R$ " + precoPac +
-                            " - Tempo de transporte: " +
-                            (prazoPac !== null ? prazoPac : "não disponível") + " dias úteis."
-                          }
-                        </Typography>
-                      </Box>
-                    ) : (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                        <Typography sx={{ ml: 1 }}>PAC</Typography>
-                      </Box>
-                    )}
-                  />
+                  <Stack spacing={2} direction="row" alignItems="center" mb={2}>
+                    <Autocomplete
+                      fullWidth
+                      id="produto-brinde"
+                      options={productNames}
+                      getOptionLabel={(option) => option}
+                      disabled={!isLoadedProducts || !clientId || isFetchingProducts || !checkedBrinde}
+                      loading={isFetchingProducts}
+                      onChange={(event, selectedValue) => {
+                        if (selectedValue) {
+                          const selectedProductBrinde = dataProducts.find((product: Product) => product.nome === selectedValue) as Product | undefined;
+                          setSelectedProductBrinde(selectedProductBrinde ? selectedProductBrinde : null); // Set selected product for adding
+                        } else {
+                          setSelectedProductBrinde(null); // Reset selected product
+                        }
+                      }}
+                      renderInput={(params) => (
+                        <CustomTextField
+                          {...params}
+                          placeholder="Buscar produto..."
+                          aria-label="Buscar produto"
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <>
+                                {isFetchingProducts ? <CircularProgress size={24} /> : null}
+                                {params.InputProps.endAdornment}
+                              </>
+                            ),
+                          }}
+                        />
+                      )}
+                    />
+                  </Stack>
+                </div>
+              </div>
 
-                  <FormControlLabel
-                    sx={{
-                      display: !precoSedex && !prazoSedex ? 'none' : 'flex',
-                      alignItems: 'center'
-                    }}
-                    value={"SEDEX"}
-                    control={<Radio disabled={!precoSedex} />}
-                    label={precoSedex ? (
-                      <Box sx={{
-                        display: 'flex',
-                        alignItems: 'center'
-                      }}>
-                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                        <Typography sx={{ ml: 1, whiteSpace: 'nowrap' }}>
-                          {"SEDEX - R$ " + precoSedex +
-                            " - Tempo de transporte: " +
-                            (prazoSedex !== null ? prazoSedex : "não disponível") + " dias úteis."
-                          }
-                        </Typography>
-                      </Box>
-                    ) : (
-                      <Box sx={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
-                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                        <Typography sx={{ ml: 1, whiteSpace: 'nowrap' }}>SEDEX</Typography>
-                      </Box>
-                    )}
-                  />
+              <TableContainer component={Paper}>
+                <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Produto</TableCell>
+                      <TableCell align="right">Preço</TableCell>
+                      <TableCell align="right">Quantidade</TableCell>
+                      <TableCell align="right">Prazo de Produção</TableCell>
+                      <TableCell align="right">Peso</TableCell>
+                      <TableCell align="right">Largura</TableCell>
+                      <TableCell align="right">Altura</TableCell>
+                      <TableCell align="right">Comprimento</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {productsBrindeList.map((product: Product, index) => (
+                      <TableRow key={index}>
 
-                  <FormControlLabel
-                    style={{ display: 'none' }}
-                    value={"SEDEX10"}
-                    control={<Radio disabled={!precoSedex10} />}
-                    label={precoSedex10 ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                        <Typography sx={{ ml: 1 }}>
-                          {"SEDEX 10 - R$ " + precoSedex10 +
-                            " - Tempo de transporte: " +
-                            (prazoSedex10 !== null ? prazoSedex10 : "não disponível") +
-                            " dias úteis. Previsão: " +
-                            (() => {
-                              const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                              return prazoSedex10 !== null
-                                ? (maxPrazo + prazoSedex10) + " dias úteis."
-                                : "não disponível";
-                            })()}
-                        </Typography>
-                      </Box>
-                    ) : (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                        <Typography sx={{ ml: 1 }}>SEDEX 10</Typography>
-                      </Box>
-                    )}
-                  />
+                        <TableCell>
+                          <CustomTextField
+                            value={product.nome}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                              const updatedProductBrinde = { ...product, nome: event.target.value };
+                              atualizarProdutoBrinde(updatedProductBrinde);
+                            }}
+                            variant="outlined"
+                            size="small"
+                          />
+                        </TableCell>
 
-                  <FormControlLabel
-                    style={{ display: 'none' }}
-                    value={"SEDEX12"}
-                    control={<Radio disabled={!precoSedex12} />}
-                    label={precoSedex12 ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                        <Typography sx={{ ml: 1 }}>
-                          {"SEDEX 12 - R$ " + precoSedex12 +
-                            " - Tempo de transporte: " +
-                            (prazoSedex12 !== null ? prazoSedex12 : "não disponível") +
-                            " dias úteis. Previsão: " +
-                            (() => {
-                              const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
-                              return prazoSedex12 !== null
-                                ? (maxPrazo + prazoSedex12) + " dias úteis."
-                                : "não disponível";
-                            })()}
-                        </Typography>
-                      </Box>
-                    ) : (
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
-                        <Typography sx={{ ml: 1 }}>SEDEX 12</Typography>
-                      </Box>
-                    )}
-                  />
+                        <TableCell align="right">
+                          <NumericFormat
+                            value={product.preco}
+                            customInput={CustomTextField}
+                            thousandSeparator="."
+                            decimalSeparator=","
+                            prefix="R$ "
+                            allowNegative={false}
+                            fixedDecimalScale={true}
+                            decimalScale={2}
+                            onValueChange={(values) => {
+                              const updatedProductBrinde = { ...product, preco: values.floatValue || 0 };
+                              atualizarProdutoBrinde(updatedProductBrinde);
+                            }}
+                            variant="outlined"
+                            size="small"
+                            sx={{ width: '110px' }}
+                          />
+                        </TableCell>
 
-                </RadioGroup>
-              </FormControl>
-            </Box>
+                        <TableCell align="right">
+                          <CustomTextField
+                            value={product.quantidade}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                              const newProductValue = Math.max(0, +event.target.value);
+                              const updatedProductBrinde = { ...product, quantidade: newProductValue };
+                              atualizarProdutoBrinde(updatedProductBrinde);
+                            }}
+                            type="number"
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                              width: '50px',
+                              '& input[type=number]::-webkit-inner-spin-button': {
+                                display: 'none',
+                              },
+                              '& input[type=number]::-webkit-outer-spin-button': {
+                                display: 'none',
+                              },
+                              '& input[type=number]': {
+                                MozAppearance: 'textfield', // Para Firefox
+                              },
+                            }}
+                          />
+                        </TableCell>
 
-            <CustomFormLabel
-              sx={{
-                mt: 4,
-              }}
-              htmlFor="cliente"
-            >
-              Urgência de Entrega
-            </CustomFormLabel>
+                        <TableCell align="right">
+                          <CustomTextField
+                            value={isAnticipation ? 1 : product.prazo}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                              if (!isAnticipation) {
+                                const newProductValue = Math.max(0, +event.target.value);
+                                const updatedProductBrinde = { ...product, prazo: newProductValue };
+                                atualizarProdutoBrinde(updatedProductBrinde);
+                              }
+                            }}
+                            type="number"
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                              width: '50px',
+                              '& input[type=number]::-webkit-inner-spin-button': {
+                                display: 'none',
+                              },
+                              '& input[type=number]::-webkit-outer-spin-button': {
+                                display: 'none',
+                              },
+                              '& input[type=number]': {
+                                MozAppearance: 'textfield', // Para Firefox
+                              },
+                            }}
+                            disabled={isAnticipation}
+                          />
+                        </TableCell>
+
+                        <TableCell align="right">
+                          <CustomTextField
+                            value={product.peso}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                              const newProductValue = Math.max(0, +event.target.value);
+                              const updatedProductBrinde = { ...product, peso: newProductValue };
+                              atualizarProdutoBrinde(updatedProductBrinde);
+                            }}
+                            type="number"
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                              width: '70px',
+                              '& input[type=number]::-webkit-inner-spin-button': {
+                                display: 'none',
+                              },
+                              '& input[type=number]::-webkit-outer-spin-button': {
+                                display: 'none',
+                              },
+                              '& input[type=number]': {
+                                MozAppearance: 'textfield', // Para Firefox
+                              },
+                            }}
+                          />
+                        </TableCell>
+
+                        <TableCell align="right">
+                          <CustomTextField
+                            value={product.largura}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                              const newProductValue = Math.max(0, +event.target.value);
+                              const updatedProductBrinde = { ...product, largura: newProductValue };
+                              atualizarProdutoBrinde(updatedProductBrinde);
+                            }}
+                            type="number"
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                              width: '70px',
+                              '& input[type=number]::-webkit-inner-spin-button': {
+                                display: 'none',
+                              },
+                              '& input[type=number]::-webkit-outer-spin-button': {
+                                display: 'none',
+                              },
+                              '& input[type=number]': {
+                                MozAppearance: 'textfield', // Para Firefox
+                              },
+                            }}
+                          />
+                        </TableCell>
+
+                        <TableCell align="right">
+                          <CustomTextField
+                            value={product.altura}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                              const newProductValue = Math.max(0, +event.target.value);
+                              const updatedProductBrinde = { ...product, altura: newProductValue };
+                              atualizarProdutoBrinde(updatedProductBrinde);
+                            }}
+                            type="number"
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                              width: '70px',
+                              '& input[type=number]::-webkit-inner-spin-button': {
+                                display: 'none',
+                              },
+                              '& input[type=number]::-webkit-outer-spin-button': {
+                                display: 'none',
+                              },
+                              '& input[type=number]': {
+                                MozAppearance: 'textfield', // Para Firefox
+                              },
+                            }}
+                          />
+                        </TableCell>
+
+                        <TableCell align="right">
+                          <CustomTextField
+                            value={product.comprimento}
+                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                              const newProductValue = Math.max(0, +event.target.value);
+                              const updatedProductBrinde = { ...product, comprimento: newProductValue };
+                              atualizarProdutoBrinde(updatedProductBrinde);
+                            }}
+                            type="number"
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                              width: '70px',
+                              '& input[type=number]::-webkit-inner-spin-button': {
+                                display: 'none',
+                              },
+                              '& input[type=number]::-webkit-outer-spin-button': {
+                                display: 'none',
+                              },
+                              '& input[type=number]': {
+                                MozAppearance: 'textfield', // Para Firefox
+                              },
+                            }}
+                          />
+                        </TableCell>
+
+                        <TableCell align="right" sx={{ display: 'flex', gap: 1 }}>
+                          <IconButton onClick={() => removerProdutoBrinde(product)}>
+                            <DeleteIcon />
+                          </IconButton>
+                          <IconButton onClick={() => removerProdutoUnidadeBrinde(product)}>
+                            <IconMinus />
+                          </IconButton>
+                          <IconButton onClick={() => adicionarProdutoBrinde(product)}>
+                            <IconPlus />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              <Snackbar
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                open={openSnackbarProdutosComAtributoZerado}
+                onClose={handleCloseSnackbarProdutosComAtributoZerado}
+                key={'top' + 'center'}
+              >
+                <Alert onClose={handleCloseSnackbarProdutosComAtributoZerado} severity="error" sx={{ width: '100%' }}>
+                  Cuidado: produto contém algum atributo zerado!
+                </Alert>
+              </Snackbar>
+            </div>
+          )}
+
+
+          <CustomFormLabel
+            sx={{
+              mt: 5,
+            }}
+            htmlFor="transportadora"
+          >
+            Transportadora
+          </CustomFormLabel>
+
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'left',
+              mt: 2,
+              pointerEvents: clientId ? (productsList.length > 0 ? 'auto' : 'none') : 'none',
+              opacity: clientId ? (productsList.length > 0 ? 1 : 0.5) : 0.5,
+            }}
+          >
+            <CustomTextField
+              id="transportadora"
+              label="CEP do cliente"
+              value={cep}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setCEP(event.target.value)}
+              onBlur={handleCEPBlur}
+              variant="outlined"
+              size="small"
+              sx={{ width: '200px' }}
+              disabled={!clientId || productsList.length === 0 || produtosComAtributoZerado}
+            />
+          </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'left',
+              mt: 2,
+              pointerEvents: cep ? 'auto' : 'none',
+              opacity: cep ? 1 : 0.5,
+            }}
+          >
+            <CustomTextField
+              label="Endereço do Cliente"
+              value={address}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setAddress(event.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+              disabled={!cep}
+            />
+          </Box>
+
+          <Box sx={{ display: 'flex', justifyContent: 'left', mt: 2, flexDirection: 'row' }}>
+            {isFetchingFrete && <><CircularProgress size={20} sx={{ mr: 1 }} /><br /></>}
 
             <FormControl>
               <RadioGroup
-                aria-label="urgencia"
-                name="urgencia"
-                value={isAnticipation ? 'antecipacao' : 'prazoNormal'}
-                onClick={() => {
-                  setIsUrgentDeliverySelected(true);
+                aria-labelledby="demo-controlled-radio-buttons-group"
+                name="controlled-radio-buttons-group"
+                value={shippingOption}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  console.log('event', event);
+                  setShippingOption(event.target.value)
                 }}
               >
+
                 <FormControlLabel
-                  value="prazoNormal"
-                  control={<Radio />}
-                  label="Prazo Normal"
-                  checked={isUrgentDeliverySelected && !isAnticipation}
-                  // disabled={!shippingOption}
-                  onClick={() => {
-                    setIsAnticipation(false);
-                  }}
+                  value={"RETIRADA"}
+                  control={<Radio disabled={!clientId || productsList.length === 0} />}
+                  label={`Retirada - R$ 0,00.`}
                 />
+
                 <FormControlLabel
-                  value="antecipacao"
-                  control={<Radio />}
-                  label="Antecipação"
-                  onClick={() => {
-                    setIsAnticipation(true);
-                    setOpenAnticipation(true);
+                  sx={{
+                    display: !precoMiniEnvios && !prazoMiniEnvios ? 'none' : 'flex',
+                    alignItems: 'center'
                   }}
-                  checked={isUrgentDeliverySelected && isAnticipation}
-                // disabled={!shippingOption}
+                  value={"MINIENVIOS"}
+                  control={<Radio disabled={!precoMiniEnvios} />}
+                  label={precoMiniEnvios ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                      <Typography sx={{ ml: 1 }}>
+                        Mini Envios - R$ {precoMiniEnvios}{" "}
+                        - Tempo de transporte:{" "}
+                        {prazoMiniEnvios !== null ? prazoMiniEnvios : "não disponível"} dias úteis.{" "}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                      <Typography sx={{ ml: 1 }}>Mini Envios</Typography>
+                    </Box>
+                  )}
                 />
+
+                <FormControlLabel
+                  sx={{
+                    display: !precoPac && !prazoPac ? 'none' : 'flex',
+                    alignItems: 'center'
+                  }}
+                  value={"PAC"}
+                  control={<Radio disabled={!precoPac} />}
+                  label={precoPac ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                      <Typography sx={{ ml: 1 }}>
+                        {"PAC - R$ " + precoPac +
+                          " - Tempo de transporte: " +
+                          (prazoPac !== null ? prazoPac : "não disponível") + " dias úteis."
+                        }
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                      <Typography sx={{ ml: 1 }}>PAC</Typography>
+                    </Box>
+                  )}
+                />
+
+                <FormControlLabel
+                  sx={{
+                    display: !precoSedex && !prazoSedex ? 'none' : 'flex',
+                    alignItems: 'center'
+                  }}
+                  value={"SEDEX"}
+                  control={<Radio disabled={!precoSedex} />}
+                  label={precoSedex ? (
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}>
+                      <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                      <Typography sx={{ ml: 1, whiteSpace: 'nowrap' }}>
+                        {"SEDEX - R$ " + precoSedex +
+                          " - Tempo de transporte: " +
+                          (prazoSedex !== null ? prazoSedex : "não disponível") + " dias úteis."
+                        }
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
+                      <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                      <Typography sx={{ ml: 1, whiteSpace: 'nowrap' }}>SEDEX</Typography>
+                    </Box>
+                  )}
+                />
+
+                <FormControlLabel
+                  style={{ display: 'none' }}
+                  value={"SEDEX10"}
+                  control={<Radio disabled={!precoSedex10} />}
+                  label={precoSedex10 ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                      <Typography sx={{ ml: 1 }}>
+                        {"SEDEX 10 - R$ " + precoSedex10 +
+                          " - Tempo de transporte: " +
+                          (prazoSedex10 !== null ? prazoSedex10 : "não disponível") +
+                          " dias úteis. Previsão: " +
+                          (() => {
+                            const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                            return prazoSedex10 !== null
+                              ? (maxPrazo + prazoSedex10) + " dias úteis."
+                              : "não disponível";
+                          })()}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                      <Typography sx={{ ml: 1 }}>SEDEX 10</Typography>
+                    </Box>
+                  )}
+                />
+
+                <FormControlLabel
+                  style={{ display: 'none' }}
+                  value={"SEDEX12"}
+                  control={<Radio disabled={!precoSedex12} />}
+                  label={precoSedex12 ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                      <Typography sx={{ ml: 1 }}>
+                        {"SEDEX 12 - R$ " + precoSedex12 +
+                          " - Tempo de transporte: " +
+                          (prazoSedex12 !== null ? prazoSedex12 : "não disponível") +
+                          " dias úteis. Previsão: " +
+                          (() => {
+                            const maxPrazo = Math.max(...productsList.map(product => product.prazo ?? 0));
+                            return prazoSedex12 !== null
+                              ? (maxPrazo + prazoSedex12) + " dias úteis."
+                              : "não disponível";
+                          })()}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Image src="/images/correios.png" alt="Correios" width={30} height={30} />
+                      <Typography sx={{ ml: 1 }}>SEDEX 12</Typography>
+                    </Box>
+                  )}
+                />
+
               </RadioGroup>
             </FormControl>
+          </Box>
 
-            <Dialog
-              open={openAnticipation}
-              onClose={() => setIsAnticipation(false)}
-              aria-labelledby="alert-dialog-title"
-              aria-describedby="alert-dialog-description"
+          <CustomFormLabel
+            sx={{
+              mt: 4,
+            }}
+            htmlFor="cliente"
+          >
+            Urgência de Entrega
+          </CustomFormLabel>
+
+          <FormControl>
+            <RadioGroup
+              aria-label="urgencia"
+              name="urgencia"
+              value={isAnticipation ? 'antecipacao' : 'prazoNormal'}
+              onClick={() => {
+                setIsUrgentDeliverySelected(true);
+              }}
             >
-              <DialogTitle id="alert-dialog-title" sx={{ mt: 3 }}>
-                {"Definições de Antecipação"}
-              </DialogTitle>
-              <DialogContent sx={{ mt: 5, px: 3 }}>
-                <CustomFormLabel
-                  htmlFor="dataAntecipa"
-                  sx={{
-                    mt: 0,
-                  }}
-                >
-                  Data de Antecipação
-                </CustomFormLabel>
-                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
-                  <DatePicker
-                    label="Data de entrega"
-                    value={dataDesejadaEntregaInput ? dataDesejadaEntregaInput.toJSDate() : null}
-                    onChange={(newValue: Date | null) => {
-                      if (newValue) {
-                        const luxonDate = DateTime.fromJSDate(newValue);
-                        setDataDesejadaEntregaInput(luxonDate);
-                      } else {
-                        setDataDesejadaEntregaInput(null);
-                      }
-                    }}
-                    // minDate={tomorrow}
-                    renderInput={(params) => (
-                      <CustomTextField
-                        {...params}
-                        sx={{ mb: 2 }}
-                        id="dataAntecipa"
-                        name="dataAntecipa"
-                      />
-                    )}
-                  // renderInput={(params) => <CustomTextField {...params} sx={{ mb: 2 }} id="dataAntecipa" name="dataAntecipa" />}
-                  />
-                </LocalizationProvider>
-                <CustomFormLabel
-                  htmlFor="taxaAntecipacao"
-                  sx={{
-                    mt: 0,
-                  }}
-                >
-                  Taxa de Antecipação
-                </CustomFormLabel>
-                <NumericFormat
-                  id="taxaAntecipacao"
-                  name="taxaAntecipacao"
-                  value={taxaAntecipaInput}
-                  onValueChange={(values) => {
-                    setTaxaAntecipaInput(values.floatValue ?? 0);
-                  }}
-                  thousandSeparator="."
-                  decimalSeparator=","
-                  allowLeadingZeros={false}
-                  decimalScale={2}
-                  fixedDecimalScale
-                  prefix="R$ "
-                  customInput={CustomTextField}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">R$</InputAdornment>
-                    ),
-                  }}
-                  sx={{ mb: 2 }}
-                />
-              </DialogContent>
-              <DialogActions sx={{ px: 3 }}>
-                <Button onClick={() => {
-                  setOpenAnticipation(false);
-                  if (!isAnticipation) {
-                    setIsAnticipation(false);
+              <FormControlLabel
+                value="prazoNormal"
+                control={<Radio />}
+                label="Prazo Normal"
+                checked={isUrgentDeliverySelected && !isAnticipation}
+                // disabled={!shippingOption}
+                onClick={() => {
+                  setIsAnticipation(false);
+                }}
+              />
+              <FormControlLabel
+                value="antecipacao"
+                control={<Radio />}
+                label="Antecipação"
+                onClick={() => {
+                  if (!checkedBrinde && !checkedDesconto) {
+                    setIsAnticipation(true);
+                    setOpenAnticipation(true);
                   }
-                }}>
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleAntecipa}
-                  autoFocus
-                  disabled={!taxaAntecipaInput || !dataDesejadaEntregaInput}
-                >
-                  Antecipar
-                </Button>
-              </DialogActions>
-            </Dialog>
+                }}
+                checked={isUrgentDeliverySelected && isAnticipation}
+              disabled={checkedBrinde || checkedDesconto}
+              />
+            </RadioGroup>
+          </FormControl>
 
-            {isAnticipation && (
-              <Typography variant="body2" color="text Secondary" sx={{ mt: 2 }}>
-                Data de entrega desejada: {dataDesejadaEntrega ? dataDesejadaEntrega.setLocale('pt-BR').toLocaleString({ day: 'numeric', month: 'long', year: 'numeric' }) : 'Nenhuma data selecionada'}
-              </Typography>
-            )}
-
-            {isUrgentDeliverySelected && (
-              <Typography variant="body2" color="text Secondary" sx={{ mt: 2 }}>
-                Data de entrega prevista: {loadingPrevisao ? (
-                  <CircularProgress size={20} />
-                ) : (
-                  previsaoEntrega ? previsaoEntrega.setLocale('pt-BR').toLocaleString({ day: 'numeric', month: 'long', year: 'numeric' }) : ''
-                )}
-              </Typography>
-            )}
-
-            <div style={{ marginTop: '20px' }}>
-              <FormControl sx={{ mt: 2 }}>
-                <FormControlLabel
-                  control={
-                    <CustomCheckbox
-                      checked={checkedOcultaPrevisao}
-                      onChange={(e) => setCheckedOcultaPrevisao(e.target.checked)}
-                    />
-                  }
-                  label="Ocultar Previsão de Entrega"
-                />
-              </FormControl>
-            </div>
-
-            <div>
-              <FormControl sx={{ mt: 2 }} disabled={isAnticipation || !(clientId && productsList.length > 0)}>
-                <FormControlLabel
-                  control={
-                    <CustomCheckbox
-                      checked={checkedDesconto}
-                      onChange={(e) => !isAnticipation && setCheckedDesconto(e.target.checked)}
-                    />
-                  }
-                  label="Desconto"
-                />
-              </FormControl>
-            </div>
-
-            <Dialog
-              open={openDesconto}
-              onClose={() => setIsAnticipation(false)}
-              aria-labelledby="alert-dialog-title"
-              aria-describedby="alert-dialog-description"
-            >
-              <DialogTitle id="alert-dialog-title" sx={{ mt: 3 }}>
-                {"Definições de Desconto"}
-              </DialogTitle>
-              <DialogContent sx={{ mt: 3, px: 3 }}>
-
-                <RadioGroup
-                  sx={{ mb: 3 }}
-                  aria-label="selecionar-tipo-desconto"
-                  name="selecionar-tipo-desconto"
-                  value={tipoDesconto}
-                  onChange={(e) => setTipoDesconto(e.target.value)}
-                  row
-                >
-                  <FormControlLabel
-
-                    value="percentual"
-                    control={<CustomRadio />}
-                    label="Aplicar Percentual"
-                  />
-                  <FormControlLabel
-                    value="valor"
-                    control={<CustomRadio />}
-                    label="Aplicar Valor"
-                  />
-                </RadioGroup>
-
-                {tipoDesconto === 'percentual' && (
-                  <>
-                    <CustomFormLabel
-                      htmlFor="taxaAntecipacao"
-                      sx={{
-                        mt: 0,
-                      }}
-                    >
-                      Percentual de Desconto
-                    </CustomFormLabel>
-                    <NumericFormat
-                      id="percentualDesconto"
-                      name="percentualDesconto"
-                      value={percentualDesconto}
-                      onValueChange={(values) => {
-                        setPercentualDesconto(values.floatValue ?? 0);
-                      }}
-                      thousandSeparator="."
-                      decimalSeparator=","
-                      allowLeadingZeros={false}
-                      decimalScale={2}
-                      fixedDecimalScale
-                      customInput={CustomTextField}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="end">%</InputAdornment>
-                        ),
-                      }}
-                      sx={{ mb: 2 }}
-                    />
-                  </>
-                )}
-
-                {tipoDesconto === 'valor' && (
-                  <>
-                    <CustomFormLabel
-                      htmlFor="taxaAntecipacao"
-                      sx={{
-                        mt: 0,
-                      }}
-                    >
-                      Taxa de Antecipação
-                    </CustomFormLabel>
-                    <NumericFormat
-                      id="taxaAntecipacao"
-                      name="taxaAntecipacao"
-                      value={valorDesconto}
-                      onValueChange={(values) => {
-                        setValorDesconto(values.floatValue ?? 0);
-                      }}
-                      thousandSeparator="."
-                      decimalSeparator=","
-                      allowLeadingZeros={false}
-                      decimalScale={2}
-                      fixedDecimalScale
-                      customInput={CustomTextField}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">R$</InputAdornment>
-                        ),
-                      }}
-                      sx={{ mb: 2 }}
-                    />
-                  </>
-                )}
-
-              </DialogContent>
-              <DialogActions sx={{ px: 3 }}>
-                <Button onClick={() => {
-                  setOpenDesconto(false);
-                  // if (!isAnticipation) {
-                  //   setIsAnticipation(false);
-                  // }
-                }}>
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleDesconto}
-                  autoFocus
-                  disabled={!tipoDesconto || (!percentualDesconto && !valorDesconto)}
-                >
-                  Aplicar Desconto
-                </Button>
-              </DialogActions>
-            </Dialog>
-
-            {checkedDesconto && tipoDesconto && (valorDesconto !== null || percentualDesconto !== null) && (
-              <div>
-                Valor Descontado: <strong>
-                  R$ {tipoDesconto === 'valor'
-                    ? valorDesconto?.toFixed(2)
-                    : totalProductsValue !== null && percentualDesconto !== null
-                      ? (totalProductsValue * (percentualDesconto / 100)).toFixed(2)
-                      : '0.00'}
-                </strong>
-              </div>
-            )}
-
-            <div style={{ marginTop: '20px' }}>
-              <Button
-                color="primary"
-                variant="contained"
-                onClick={handleSubmit}
-                disabled={!isUrgentDeliverySelected || !shippingOption || !clientId || productsList.length === 0 || loadingPrevisao}
+          <Dialog
+            open={openAnticipation}
+            onClose={() => setIsAnticipation(false)}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title" sx={{ mt: 3 }}>
+              {"Definições de Antecipação"}
+            </DialogTitle>
+            <DialogContent sx={{ mt: 5, px: 3 }}>
+              <CustomFormLabel
+                htmlFor="dataAntecipa"
+                sx={{
+                  mt: 0,
+                }}
               >
-                <IconDeviceFloppy style={{ marginRight: '8px' }} />
-                Gerar Orçamento
+                Data de Antecipação
+              </CustomFormLabel>
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
+                <DatePicker
+                  label="Data de entrega"
+                  value={dataDesejadaEntregaInput ? dataDesejadaEntregaInput.toJSDate() : null}
+                  onChange={(newValue: Date | null) => {
+                    if (newValue) {
+                      const luxonDate = DateTime.fromJSDate(newValue);
+                      setDataDesejadaEntregaInput(luxonDate);
+                    } else {
+                      setDataDesejadaEntregaInput(null);
+                    }
+                  }}
+                  // minDate={tomorrow}
+                  renderInput={(params) => (
+                    <CustomTextField
+                      {...params}
+                      sx={{ mb: 2 }}
+                      id="dataAntecipa"
+                      name="dataAntecipa"
+                    />
+                  )}
+                // renderInput={(params) => <CustomTextField {...params} sx={{ mb: 2 }} id="dataAntecipa" name="dataAntecipa" />}
+                />
+              </LocalizationProvider>
+              <CustomFormLabel
+                htmlFor="taxaAntecipacao"
+                sx={{
+                  mt: 0,
+                }}
+              >
+                Taxa de Antecipação
+              </CustomFormLabel>
+              <NumericFormat
+                id="taxaAntecipacao"
+                name="taxaAntecipacao"
+                value={taxaAntecipaInput}
+                onValueChange={(values) => {
+                  setTaxaAntecipaInput(values.floatValue ?? 0);
+                }}
+                thousandSeparator="."
+                decimalSeparator=","
+                allowLeadingZeros={false}
+                decimalScale={2}
+                fixedDecimalScale
+                prefix="R$ "
+                customInput={CustomTextField}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">R$</InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 2 }}
+              />
+            </DialogContent>
+            <DialogActions sx={{ px: 3 }}>
+              <Button onClick={() => {
+                setOpenAnticipation(false);
+                if (!isAnticipation) {
+                  setIsAnticipation(false);
+                }
+              }}>
+                Cancelar
               </Button>
+              <Button
+                onClick={handleAntecipa}
+                autoFocus
+                disabled={!taxaAntecipaInput || !dataDesejadaEntregaInput}
+              >
+                Antecipar
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {isAnticipation && (
+            <Typography variant="body2" color="text Secondary" sx={{ mt: 2 }}>
+              Data de entrega desejada: {dataDesejadaEntrega ? dataDesejadaEntrega.setLocale('pt-BR').toLocaleString({ day: 'numeric', month: 'long', year: 'numeric' }) : 'Nenhuma data selecionada'}
+            </Typography>
+          )}
+
+          {isUrgentDeliverySelected && (
+            <Typography variant="body2" color="text Secondary" sx={{ mt: 2 }}>
+              Data de entrega prevista: {loadingPrevisao ? (
+                <CircularProgress size={20} />
+              ) : (
+                previsaoEntrega ? previsaoEntrega.setLocale('pt-BR').toLocaleString({ day: 'numeric', month: 'long', year: 'numeric' }) : ''
+              )}
+            </Typography>
+          )}
+
+          <div style={{ marginTop: '20px' }}>
+            <FormControl sx={{ mt: 2 }}>
+              <FormControlLabel
+                control={
+                  <CustomCheckbox
+                    checked={checkedOcultaPrevisao}
+                    onChange={(e) => setCheckedOcultaPrevisao(e.target.checked)}
+                  />
+                }
+                label="Ocultar Previsão de Entrega"
+              />
+            </FormControl>
+          </div>
+
+          <div>
+            <FormControl sx={{ mt: 2 }} disabled={isAnticipation || !(clientId && productsList.length > 0)}>
+              <FormControlLabel
+                control={
+                  <CustomCheckbox
+                    checked={checkedDesconto}
+                    onChange={(e) => !isAnticipation && setCheckedDesconto(e.target.checked)}
+                  />
+                }
+                label="Desconto"
+              />
+            </FormControl>
+          </div>
+
+          <Dialog
+            open={openDesconto}
+            onClose={() => setIsAnticipation(false)}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title" sx={{ mt: 3 }}>
+              {"Definições de Desconto"}
+            </DialogTitle>
+            <DialogContent sx={{ mt: 3, px: 3 }}>
+
+              <RadioGroup
+                sx={{ mb: 3 }}
+                aria-label="selecionar-tipo-desconto"
+                name="selecionar-tipo-desconto"
+                value={tipoDesconto}
+                onChange={(e) => setTipoDesconto(e.target.value)}
+                row
+              >
+                <FormControlLabel
+
+                  value="percentual"
+                  control={<CustomRadio />}
+                  label="Aplicar Percentual"
+                />
+                <FormControlLabel
+                  value="valor"
+                  control={<CustomRadio />}
+                  label="Aplicar Valor"
+                />
+              </RadioGroup>
+
+              {tipoDesconto === 'percentual' && (
+                <>
+                  <CustomFormLabel
+                    htmlFor="taxaAntecipacao"
+                    sx={{
+                      mt: 0,
+                    }}
+                  >
+                    Percentual de Desconto
+                  </CustomFormLabel>
+                  <NumericFormat
+                    id="percentualDesconto"
+                    name="percentualDesconto"
+                    value={percentualDesconto}
+                    onValueChange={(values) => {
+                      setPercentualDesconto(values.floatValue ?? 0);
+                    }}
+                    thousandSeparator="."
+                    decimalSeparator=","
+                    allowLeadingZeros={false}
+                    decimalScale={2}
+                    fixedDecimalScale
+                    customInput={CustomTextField}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="end">%</InputAdornment>
+                      ),
+                    }}
+                    sx={{ mb: 2 }}
+                  />
+                </>
+              )}
+
+              {tipoDesconto === 'valor' && (
+                <>
+                  <CustomFormLabel
+                    htmlFor="taxaAntecipacao"
+                    sx={{
+                      mt: 0,
+                    }}
+                  >
+                    Taxa de Antecipação
+                  </CustomFormLabel>
+                  <NumericFormat
+                    id="taxaAntecipacao"
+                    name="taxaAntecipacao"
+                    value={valorDesconto}
+                    onValueChange={(values) => {
+                      setValorDesconto(values.floatValue ?? 0);
+                    }}
+                    thousandSeparator="."
+                    decimalSeparator=","
+                    allowLeadingZeros={false}
+                    decimalScale={2}
+                    fixedDecimalScale
+                    customInput={CustomTextField}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">R$</InputAdornment>
+                      ),
+                    }}
+                    sx={{ mb: 2 }}
+                  />
+                </>
+              )}
+
+            </DialogContent>
+            <DialogActions sx={{ px: 3 }}>
+              <Button onClick={() => {
+                setOpenDesconto(false);
+                // if (!isAnticipation) {
+                //   setIsAnticipation(false);
+                // }
+              }}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleDesconto}
+                autoFocus
+                disabled={!tipoDesconto || (!percentualDesconto && !valorDesconto)}
+              >
+                Aplicar Desconto
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          {checkedDesconto && tipoDesconto && (valorDesconto !== null || percentualDesconto !== null) && (
+            <div>
+              Valor Descontado: <strong>
+                R$ {tipoDesconto === 'valor'
+                  ? valorDesconto?.toFixed(2)
+                  : totalProductsValue !== null && percentualDesconto !== null
+                    ? (totalProductsValue * (percentualDesconto / 100)).toFixed(2)
+                    : '0.00'}
+              </strong>
             </div>
+          )}
+
+          <div style={{ marginTop: '20px' }}>
+            <Button
+              color="primary"
+              variant="contained"
+              onClick={handleSubmit}
+              disabled={!isUrgentDeliverySelected || !shippingOption || !clientId || productsList.length === 0 || loadingPrevisao}
+            >
+              <IconDeviceFloppy style={{ marginRight: '8px' }} />
+              Gerar Orçamento
+            </Button>
           </div>
 
           <Dialog
