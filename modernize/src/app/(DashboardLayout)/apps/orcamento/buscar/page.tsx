@@ -18,9 +18,11 @@ import { IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import { IconProgressCheck, IconEdit, IconCircleCheck, IconBan, IconProgressHelp, IconX } from '@tabler/icons-react';
+import { IconProgressCheck, IconEdit, IconCircleCheck, IconBan, IconProgressHelp, IconX, IconArrowBackUp } from '@tabler/icons-react';
 import Tooltip from '@mui/material/Tooltip';
 import { useRouter } from 'next/navigation';
+
+// IMPORTAR FUNÇÕES DE MUDANÇA NO BACKEND (fazer num arquivo só e ter varios exports)
 
 
 interface Orcamento {
@@ -107,10 +109,106 @@ const OrcamentoBuscarScreen = () => {
   if (errorOrcamentos) return <p>Ocorreu um erro: {errorOrcamentos.message}</p>;
   if (dataOrcamentos) console.log(dataOrcamentos);
 
+  // TODOS OS HANDLES DE APROVAÇÃO
 
-  const handleAprovar = (rowId: number) => {
+  const handleAprovarArteArena = (rowId: number) => {
     window.open(`/apps/orcamento/aprovar/${rowId}`, '_blank');
   };
+
+  const handleAprovarCliente = (rowId: number) =>{
+    return null;
+  }
+
+  const handleAprovarEnvioPedido = (rowId: number) =>{
+    return null;
+  }
+
+  const handleAprovarAmostraArteArena = (rowId: number) =>{
+    return null;
+  }
+
+  const handleAprovarEnvioAmostra = (rowId: number) =>{
+    return null;
+  }
+
+  const handleAprovarAmostraCliente = (rowId: number) =>{
+    return null;
+  }
+
+  const handleAprovarFaturamento = (rowId: number) =>{
+    return null;
+  }
+
+  const handleAprovarPagamento = (rowId: number) =>{
+    return null;
+  }
+
+  const handleAprovarProducaoEsboco = (rowId: number) =>{
+    return null;
+  }
+
+  const handleAprovarProducaoArteFinal = (rowId: number) =>{
+    return null;
+  }
+
+  const handleAprovarEsboco = (rowId: number) =>{
+    return null;
+  }
+
+  const handleAprovarArteFinal = (rowId: number) =>{
+    return null;
+  }
+
+
+  // TODOS OS HANDLES DE MUDANÇA DE STATUS
+
+  const handleDesaprovarArteArena = (rowId: number) =>{
+    return null;
+  }
+
+  const handleDesaprovarCliente = (rowId: number) =>{
+    return null;
+  }
+
+  const handleDesaprovarEnvioPedido = (rowId: number) =>{
+    return null;
+  }
+
+  const handleDesaprovarAmostraArteArena = (rowId: number) =>{
+    return null;
+  }
+
+  const handleDesaprovarEnvioAmostra = (rowId: number) =>{
+    return null;
+  }
+
+  const handleDesaprovarAmostraCliente = (rowId: number) =>{
+    return null;
+  }
+
+  const handleDesaprovarFaturamento = (rowId: number) =>{
+    return null;
+  }
+
+  const handleDesaprovarPagamento = (rowId: number) =>{
+    return null;
+  }
+
+  const handleDesaprovarProducaoEsboco = (rowId: number) =>{
+    return null;
+  }
+
+  const handleDesaprovarProducaoArteFinal = (rowId: number) =>{
+    return null;
+  }
+
+  const handleDesaprovarEsboco = (rowId: number) =>{
+    return null;
+  }
+
+  const handleDesaprovarArteFinal = (rowId: number) =>{
+    return null;
+  }
 
   const handleEditOrcamento = (orcamentoId: number) => {
     // router.push(`/apps/orcamento/editar?id=${orcamentoId}`);
@@ -156,19 +254,18 @@ const OrcamentoBuscarScreen = () => {
                   <TableCell>ID</TableCell>
                   <TableCell>Número do Cliente</TableCell>
                   <TableCell>Data de Criação</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Status Aprovação Arte Arena</TableCell>
-                  <TableCell>Status Aprovação Cliente</TableCell>
-                  <TableCell>Status Envio Pedido</TableCell>
-                  <TableCell>Status Aprovação Amostra Arte Arena</TableCell>
-                  <TableCell>Status Envio Amostra</TableCell>
-                  <TableCell>Status Aprovação Amostra Cliente</TableCell>
-                  <TableCell>Status Faturamento</TableCell>
-                  <TableCell>Status Pagamento</TableCell>
-                  <TableCell>Status Produção Esboço</TableCell>
-                  <TableCell>Status Produção Arte Final</TableCell>
-                  <TableCell>Status Aprovação Esboço</TableCell>
-                  <TableCell>Status Aprovação Arte Final</TableCell>
+                  <TableCell>Aprovação Arte Arena</TableCell>
+                  <TableCell>Aprovação Cliente</TableCell>
+                  <TableCell>Envio Pedido</TableCell>
+                  <TableCell>Aprovação Amostra Arte Arena</TableCell>
+                  <TableCell>Envio Amostra</TableCell>
+                  <TableCell>Aprovação Amostra Cliente</TableCell>
+                  <TableCell>Faturamento</TableCell>
+                  <TableCell>Pagamento</TableCell>
+                  <TableCell>Produção Esboço</TableCell>
+                  <TableCell>Produção Arte Final</TableCell>
+                  <TableCell>Aprovação Esboço</TableCell>
+                  <TableCell>Aprovação Arte Final</TableCell>
 
                   <TableCell>Ações</TableCell>
                 </TableRow>
@@ -189,68 +286,339 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>{row.id}</TableCell>
                       <TableCell>{row.cliente_octa_number}</TableCell>
                       <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
+                      
+                      {/* status handles */}
                       <TableCell>
-                        {row.status === "aprovado" ? (
-                          <Stack direction="row" alignItems="center" spacing={1}>
-                            <IconCircleCheck />
-                            <Typography>Aprovado</Typography>
-                          </Stack>
-                        ) : (
-                          row.status === "reprovado" ? (
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                              <IconBan />
-                              <Typography>Reprovado</Typography>
-                            </Stack>
-                          ) : (
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                              <IconProgressHelp />
-                              <Typography>Pendente</Typography>
-                            </Stack>
-                          )
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={1}>
-                          <Tooltip title="Alterar Status">
-                          {row.status === "aprovado" ? (
-                            <IconButton
-                              disabled
-                              aria-label="alterar status"
-                              onClick={() => handleAprovar(row.id)}
-                            >
-                              <IconProgressCheck />
-                            </IconButton>
+                        <Stack direction="column" spacing={1} alignItems="center">
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography align="center">
+                              {row.status === "aprovado" ? "Aprovado" : "Não Aprovado"}
+                            </Typography>
+                              {row.status === "aprovado" ? (
+                                <IconCircleCheck color="green" size={20} />
                               ) : (
-                                <IconButton
-                                aria-label="alterar status"
-                                onClick={() => handleAprovar(row.id)}
-                              >
-                                <IconProgressCheck />
-                              </IconButton>
+                                <IconBan color="red" size={20} />
                               )}
-                          </Tooltip>
-
-
+                          </Stack>
+                            <Tooltip title="Alterar Status">
+                              <IconButton
+                                aria-label="alterar status"
+                                onClick={() =>
+                                  row.status === "aprovado"
+                                    ? handleDesaprovarArteArena(row.id)
+                                    : handleAprovarArteArena(row.id)
+                                }
+                              >
+                                {row.status === "aprovado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                              </IconButton>
+                            </Tooltip>                          
+                        </Stack>
+                      </TableCell>
                           {/* <IconButton
                             aria-label="edit"
                             onClick={() => handleEditOrcamento(row.id)}
                           >
                             <IconEdit />
                           </IconButton> */}
+
+
+                      <TableCell>
+                        <Stack direction="column" spacing={1} alignItems="center">
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography align="center">
+                              {row.status_aprovacao_cliente ?? "Aguardando Aprovação"}
+                            </Typography>
+                            {row.status_aprovacao_cliente === "Aprovado" ? (
+                              <IconCircleCheck color="green" size={20} />
+                            ) : (
+                              <IconBan color="red" size={20} />
+                            )}
+                          </Stack>
+                          <Tooltip title="Alterar Status">
+                            <IconButton
+                              aria-label="alterar status"
+                              onClick={() =>
+                                row.status_aprovacao_cliente === "Aprovado"
+                                  ? handleDesaprovarCliente(row.id)
+                                  : handleAprovarCliente(row.id)
+                              }
+                            >
+                              {row.status_aprovacao_cliente === "Aprovado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                            </IconButton>
+                          </Tooltip>
                         </Stack>
                       </TableCell>
-                      <TableCell>{ row.status_aprovacao_arte_arena ?? "Não Aprovado"}</TableCell>
-                      <TableCell>{ row.status_aprovacao_cliente ?? "Aguardando Aprovação"}</TableCell>
-                      <TableCell>{ row.status_envio_pedido ?? "Não Enviado"}</TableCell>
-                      <TableCell>{ row.status_aprovacao_amostra_arte_arena ?? "Não Aprovado"}</TableCell>
-                      <TableCell>{ row.status_envio_amostra ?? "Não Enviada"}</TableCell>
-                      <TableCell>{ row.status_aprovacao_amostra_cliente ?? "Não Aprovado"}</TableCell>
-                      <TableCell>{ row.status_faturamento ?? "Em Análise"}</TableCell>
-                      <TableCell>{ row.status_pagamento ?? "Aguardando"}</TableCell>
-                      <TableCell>{ row.status_producao_esboco ?? "Aguardando Primeira Versão"}</TableCell>
-                      <TableCell>{ row.status_producao_arte_final ?? "Aguardando Primeira Versão"}</TableCell>
-                      <TableCell>{ row.status_aprovacao_esboco ?? "Não Aprovado"}</TableCell>
-                      <TableCell>{ row.status_aprovacao_arte_final ?? "Não Aprovado"}</TableCell>
+
+                      <TableCell>
+                        <Stack direction="column" spacing={1} alignItems="center">
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography align="center">
+                              {row.status_envio_pedido ?? "Não Enviado"}
+                            </Typography>
+                            {row.status_envio_pedido === "Enviado" ? (
+                              <IconCircleCheck color="green" size={20} />
+                            ) : (
+                              <IconBan color="red" size={20} />
+                            )}
+                          </Stack>
+                          <Tooltip title="Alterar Status">
+                            <IconButton
+                              aria-label="alterar status"
+                              onClick={() =>
+                                row.status_envio_pedido === "Enviado"
+                                  ? handleDesaprovarEnvioPedido(row.id)
+                                  : handleAprovarEnvioPedido(row.id)
+                              }
+                            >
+                              {row.status_envio_pedido === "Enviado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+
+                      <TableCell>
+                        <Stack direction="column" spacing={1} alignItems="center">
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography align="center">
+                              {row.status_aprovacao_amostra_arte_arena ?? "Não Aprovado"}
+                            </Typography>
+                            {row.status_aprovacao_amostra_arte_arena === "Aprovado" ? (
+                              <IconCircleCheck color="green" size={20} />
+                            ) : (
+                              <IconBan color="red" size={20} />
+                            )}
+                          </Stack>
+                          <Tooltip title="Alterar Status">
+                            <IconButton
+                              aria-label="alterar status"
+                              onClick={() =>
+                                row.status_aprovacao_amostra_arte_arena === "Aprovado"
+                                  ? handleDesaprovarAmostraArteArena(row.id)
+                                  : handleAprovarAmostraArteArena(row.id)
+                              }
+                            >
+                              {row.status_aprovacao_amostra_arte_arena === "Aprovado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+
+                      <TableCell>
+                        <Stack direction="column" spacing={1} alignItems="center">
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography align="center">
+                              {row.status_envio_amostra ?? "Não Enviada"}
+                            </Typography>
+                            {row.status_envio_amostra === "Enviada" ? (
+                              <IconCircleCheck color="green" size={20} />
+                            ) : (
+                              <IconBan color="red" size={20} />
+                            )}
+                          </Stack>
+                          <Tooltip title="Alterar Status">
+                            <IconButton
+                              aria-label="alterar status"
+                              onClick={() =>
+                                row.status_envio_amostra === "Enviada"
+                                  ? handleDesaprovarEnvioAmostra(row.id)
+                                  : handleAprovarEnvioAmostra(row.id)
+                              }
+                            >
+                              {row.status_envio_amostra === "Enviada" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+
+                      <TableCell>
+                        <Stack direction="column" spacing={1} alignItems="center">
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography align="center">
+                              {row.status_aprovacao_amostra_cliente ?? "Não Aprovado"}
+                            </Typography>
+                            {row.status_aprovacao_amostra_cliente === "Aprovado" ? (
+                              <IconCircleCheck color="green" size={20} />
+                            ) : (
+                              <IconBan color="red" size={20} />
+                            )}
+                          </Stack>
+                          <Tooltip title="Alterar Status">
+                            <IconButton
+                              aria-label="alterar status"
+                              onClick={() =>
+                                row.status_aprovacao_amostra_cliente === "Aprovado"
+                                  ? handleDesaprovarAmostraCliente(row.id)
+                                  : handleAprovarAmostraCliente(row.id)
+                              }
+                            >
+                              {row.status_aprovacao_amostra_cliente === "Aprovado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+
+                      <TableCell>
+                        <Stack direction="column" spacing={1} alignItems="center">
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography align="center">
+                              {row.status_faturamento ?? "Em Análise"}
+                            </Typography>
+                            {row.status_faturamento === "Faturado" ? (
+                              <IconCircleCheck color="green" size={20} />
+                            ) : (
+                              <IconBan color="red" size={20} />
+                            )}
+                          </Stack>
+                          <Tooltip title="Alterar Status">
+                            <IconButton
+                              aria-label="alterar status"
+                              onClick={() =>
+                                row.status_faturamento === "Faturado"
+                                  ? handleDesaprovarFaturamento(row.id)
+                                  : handleAprovarFaturamento(row.id)
+                              }
+                            >
+                              {row.status_faturamento === "Faturado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+
+                      <TableCell>
+                        <Stack direction="column" spacing={1} alignItems="center">
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography align="center">
+                              {row.status_pagamento ?? "Aguardando"}
+                            </Typography>
+                            {row.status_pagamento === "Pago" ? (
+                              <IconCircleCheck color="green" size={20} />
+                            ) : (
+                              <IconBan color="red" size={20} />
+                            )}
+                          </Stack>
+                          <Tooltip title="Alterar Status">
+                            <IconButton
+                              aria-label="alterar status"
+                              onClick={() =>
+                                row.status_pagamento === "Pago"
+                                  ? handleDesaprovarPagamento(row.id)
+                                  : handleAprovarPagamento(row.id)
+                              }
+                            >
+                              {row.status_pagamento === "Pago" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+
+                      <TableCell>
+                        <Stack direction="column" spacing={1} alignItems="center">
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography align="center">
+                              {row.status_producao_esboco ?? "Aguardando Primeira Versão"}
+                            </Typography>
+                            {row.status_producao_esboco === "Finalizado" ? (
+                              <IconCircleCheck color="green" size={20} />
+                            ) : (
+                              <IconBan color="red" size={20} />
+                            )}
+                          </Stack>
+                          <Tooltip title="Alterar Status">
+                            <IconButton
+                              aria-label="alterar status"
+                              onClick={() =>
+                                row.status_producao_esboco === "Finalizado"
+                                  ? handleDesaprovarProducaoEsboco(row.id)
+                                  : handleAprovarProducaoEsboco(row.id)
+                              }
+                            >
+                              {row.status_producao_esboco === "Finalizado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+
+                      <TableCell>
+                        <Stack direction="column" spacing={1} alignItems="center">
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography align="center">
+                              {row.status_producao_arte_final ?? "Aguardando Primeira Versão"}
+                            </Typography>
+                            {row.status_producao_arte_final === "Finalizado" ? (
+                              <IconCircleCheck color="green" size={20} />
+                            ) : (
+                              <IconBan color="red" size={20} />
+                            )}
+                          </Stack>
+                          <Tooltip title="Alterar Status">
+                            <IconButton
+                              aria-label="alterar status"
+                              onClick={() =>
+                                row.status_producao_arte_final === "Finalizado"
+                                  ? handleDesaprovarProducaoArteFinal(row.id)
+                                  : handleAprovarProducaoArteFinal(row.id)
+                              }
+                            >
+                              {row.status_producao_arte_final === "Finalizado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+
+                      <TableCell>
+                        <Stack direction="column" spacing={1} alignItems="center">
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography align="center">
+                              {row.status_aprovacao_esboco ?? "Não Aprovado"}
+                            </Typography>
+                            {row.status_aprovacao_esboco === "Aprovado" ? (
+                              <IconCircleCheck color="green" size={20} />
+                            ) : (
+                              <IconBan color="red" size={20} />
+                            )}
+                          </Stack>
+                          <Tooltip title="Alterar Status">
+                            <IconButton
+                              aria-label="alterar status"
+                              onClick={() =>
+                                row.status_aprovacao_esboco === "Aprovado"
+                                  ? handleDesaprovarEsboco(row.id)
+                                  : handleAprovarEsboco(row.id)
+                              }
+                            >
+                              {row.status_aprovacao_esboco === "Aprovado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+
+                      <TableCell>
+                        <Stack direction="column" spacing={1} alignItems="center">
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography align="center">
+                              {row.status_aprovacao_arte_final ?? "Não Aprovado"}
+                            </Typography>
+                            {row.status_aprovacao_arte_final === "Aprovado" ? (
+                              <IconCircleCheck color="green" size={20} />
+                            ) : (
+                              <IconBan color="red" size={20} />
+                            )}
+                          </Stack>
+                          <Tooltip title="Alterar Status">
+                            <IconButton
+                              aria-label="alterar status"
+                              onClick={() =>
+                                row.status_aprovacao_arte_final === "Aprovado"
+                                  ? handleDesaprovarArteFinal(row.id)
+                                  : handleAprovarArteFinal(row.id)
+                              }
+                            >
+                              {row.status_aprovacao_arte_final === "Aprovado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+
                     </TableRow>
                     <TableRow>
                       <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
