@@ -261,7 +261,7 @@ const OrcamentoBuscarScreen = () => {
                   <TableCell></TableCell>
                   <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >ID</TableCell>
                   <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Número do Cliente</TableCell>
-                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Data de Criação</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center', padding: '0'}} >Data de Criação</TableCell>
                   <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Arte Arena</TableCell>
                   <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Cliente</TableCell>
                   <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Envio Pedido</TableCell>
@@ -292,7 +292,7 @@ const OrcamentoBuscarScreen = () => {
                       </TableCell>
                       <TableCell sx={{fontSize: '8px'}} >{row.id}</TableCell>
                       <TableCell sx={{fontSize: '8px'}} >{row.cliente_octa_number}</TableCell>
-                      <TableCell sx={{fontSize: '8px'}} >{new Date(row.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell sx={{fontSize: '8px', padding: '0'}} >{new Date(row.created_at).toLocaleDateString()}</TableCell>
                       
                       {/* status handles */}
                       <TableCell>
