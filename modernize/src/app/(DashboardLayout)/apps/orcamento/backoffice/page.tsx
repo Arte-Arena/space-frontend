@@ -218,10 +218,12 @@ const OrcamentoBackofficeScreen = () => {
                           <Button variant="outlined">
                             <IconShirtSport />
                           </Button>
+
                           {/* botão da chamada da api */}
                           <Button variant="contained" color="primary"> 
                             <IconCheck />
                           </Button>
+
                         </Stack>
                       </TableCell>
                     </TableRow>
@@ -229,7 +231,7 @@ const OrcamentoBackofficeScreen = () => {
                       <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
                         <Collapse in={openRow[row.id]} timeout="auto" unmountOnExit>
                           <Box margin={1}>
-                            {/* trazer os outros dados dos orcamentos do banco de dados */}
+                            
                             <Typography variant="body2" gutterBottom>
                               <strong>Lista de Produtos:</strong> {row.lista_produtos}
                             </Typography>
