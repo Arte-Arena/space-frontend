@@ -29,6 +29,11 @@ const reports: Report[] = [
     icon: <IconChartLine />
   },
   {
+    report: "Orçamentos Por Data Filtrada",
+    path: "/apps/vendas/relatorios/quantidade-orcamentos-por-data-filtrada",
+    icon: <IconChartLine />
+  },
+  {
     report: "Orçamentos Por Status",
     path: "/apps/vendas/relatorios/quantidade-orcamentos-por-status",
     icon: <IconChartLine />
