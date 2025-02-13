@@ -38,6 +38,12 @@ interface Orcamento {
   status: string;
   created_at: string;
   updated_at: string;
+  brinde: number;
+  tipo_desconto: string;
+  valor_desconto: number;
+  data_antecipa: string;
+  taxa_antecipa: string;
+  total_orcamento: number;
 }
 const OrcamentoBuscarScreen = () => {
   const router = useRouter();
@@ -86,10 +92,11 @@ const OrcamentoBuscarScreen = () => {
 
   if (isFetchingOrcamentos) return <CircularProgress />;
   if (errorOrcamentos) return <p>Ocorreu um erro: {errorOrcamentos.message}</p>;
+  if (dataOrcamentos) console.log(dataOrcamentos);
 
 
   const handleAprovar = (rowId: number) => {
-    router.push(`/apps/orcamento/aprovar/${rowId}`);
+    window.open(`/apps/orcamento/aprovar/${rowId}`, '_blank');
   };
 
   const handleEditOrcamento = (orcamentoId: number) => {
@@ -223,6 +230,50 @@ const OrcamentoBuscarScreen = () => {
                             <Typography variant="body2" gutterBottom>
                               <strong>Pre&ccedil;o da Op&ccedil;&atilde;o de Entrega:</strong> {row.preco_opcao_entrega?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                             </Typography>
+
+                            {/* variaveis de gustavo */}
+                            {row.brinde !== null && (
+                              <Typography variant="body2" gutterBottom>
+                              <strong>Brinde:</strong> {row.brinde === 1 ? "Com Brinde" : "Sem Brinde"}
+                            </Typography>
+                            )}
+
+                            {row.valor_desconto !== null && (
+                              <Typography variant="body2" gutterBottom>
+                              <strong>Desconto:</strong>{" Com Desconto"}
+                            </Typography>
+                            )}
+                              
+                            {row.tipo_desconto !== null && (
+                              <Typography variant="body2" gutterBottom>
+                              <strong>Tipo Descontado:</strong> {row.tipo_desconto ?? "Nenhum"}
+                            </Typography>
+                            )}
+
+                            {row.valor_desconto !== null &&(
+                              <Typography variant="body2" gutterBottom>
+                              <strong>Valor Descontado:</strong> R$ {row.valor_desconto ?? "Sem Desconto"}
+                            </Typography>
+                            )}
+
+                            {row.data_antecipa !== null && (
+                              <Typography variant="body2" gutterBottom>
+                              <strong>Data Antecipação:</strong> {row.data_antecipa ?? "Sem Antecipação"}
+                            </Typography>
+                            )}
+
+                            {row.taxa_antecipa !== null && (
+                              <Typography variant="body2" gutterBottom>
+                              <strong>Taxa Antecipação:</strong> R$ {row.taxa_antecipa ?? "Sem Taxa de Antecipação"}
+                            </Typography>
+                            )}
+
+                            {row.total_orcamento !== null && (
+                              <Typography variant="body2" gutterBottom>
+                              <strong>Total Orçamento:</strong> R$ {row.total_orcamento ?? "Sem total Definido"}
+                            </Typography>
+                            )}
+
                           </Box>
                         </Collapse>
                       </TableCell>

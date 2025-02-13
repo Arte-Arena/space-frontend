@@ -6,12 +6,14 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import MenuItem from '@mui/material/MenuItem';
 import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
+import { format, parseISO } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import InputAdornment from '@mui/material/InputAdornment';
 import { NumericFormat, NumericFormatProps } from 'react-number-format';
 import { useRouter } from 'next/navigation';
+import useAprovarOrcamentos from '@/utils/SelectAprovarOrcamento';
 
 // Wrapper para o NumericFormat com forwardRef
 const NumericFormatCustom = React.forwardRef<HTMLElement, NumericFormatProps>((props, ref) => (
@@ -28,13 +30,15 @@ NumericFormatCustom.displayName = 'NumericFormatCustom';
 
 const OrcamentoBuscarScreen = ({ params }: { params: { id: string } }) => {
   const orcamentoId = params.id || null;
+  // id para puxar os dados do orçamento.
+  const id = parseFloat(params.id);
 
   const router = useRouter();
 
   const [formaPagamento, setFormaPagamento] = useState('');
   const [tipoFaturamento, setTipoFaturamento] = useState('');
   const [qtdParcelas, setQtdParcelas] = useState('1'); // Default para "1" no tipo faturado
-  const [dataFatura1, setDataFatura1] = useState<Date | null>(null);
+  const [dataFatura1, setDataFatura1] = useState<Date | null>(new Date());
   const [valorFatura1, setValorFatura1] = useState('');
   const [dataFatura2, setDataFatura2] = useState<Date | null>(null);
   const [valorFatura2, setValorFatura2] = useState('');
@@ -43,6 +47,14 @@ const OrcamentoBuscarScreen = ({ params }: { params: { id: string } }) => {
   const [dataEntrega, setDataEntrega] = useState<Date | null>(null);
   const [linkTrello, setLinkTrello] = useState('');
   const [comentarios, setComentarios] = useState('');
+  const { data: orcamento, error: orcamentoError, isLoading: orcamentoLoading } = useAprovarOrcamentos(id); 
+
+  console.log(orcamento?.[0])
+
+  const formatarData = (dataString?: string) => {
+    if (!dataString) return "Data não disponível";
+    return format(parseISO(dataString), "dd/MM/yyyy");
+  };
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -69,6 +81,34 @@ const OrcamentoBuscarScreen = ({ params }: { params: { id: string } }) => {
       <Typography variant="h4" sx={{ mb: 4, mt: 4 }}>
         Aprovar Orçamento #{orcamentoId}
       </Typography>
+
+      <Box sx={{marginBottom: '30px', display: 'flex', gap: '2rem'}}>
+        {orcamento?.[0]?.total_orcamento !== null &&(
+          <Typography style={{fontWeight: '600'}}>
+            Total Orçamento: R$ {orcamento?.[0]?.total_orcamento}
+          </Typography>
+        )}
+
+        {orcamento?.[0]?.taxa_antecipa !== null &&(
+          <Typography style={{fontWeight: '600'}}>
+            Total de taxa de atencipação: R$ {orcamento?.[0]?.taxa_antecipa}
+          </Typography>
+        )}
+
+        {orcamento?.[0]?.data_antecipa !== null &&(
+          <Typography style={{fontWeight: '600'}}>
+            Data de antecipação {formatarData(orcamento?.[0]?.data_antecipa)}
+          </Typography>
+        )}
+
+        {orcamento?.[0]?.created_at !== null &&(
+          <Typography style={{fontWeight: '600'}}>
+            Data de Criação: {formatarData(orcamento?.[0]?.created_at )}
+          </Typography>
+        )}
+
+      </Box>
+
 
       <Stack spacing={2}>
         {/* Forma de Pagamento */}
