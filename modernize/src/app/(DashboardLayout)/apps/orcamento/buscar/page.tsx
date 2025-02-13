@@ -44,7 +44,20 @@ interface Orcamento {
   data_antecipa: string;
   taxa_antecipa: string;
   total_orcamento: number;
+  status_aprovacao_arte_arena: string;
+  status_aprovacao_cliente: string;
+  status_envio_pedido: string;
+  status_aprovacao_amostra_arte_arena: string;
+  status_envio_amostra: string;
+  status_aprovacao_amostra_cliente: string;
+  status_faturamento: string;
+  status_pagamento: string;
+  status_producao_esboco: string;
+  status_producao_arte_final: string;
+  status_aprovacao_esboco: string;
+  status_aprovacao_arte_final: string;
 }
+
 const OrcamentoBuscarScreen = () => {
   const router = useRouter();
 
@@ -144,6 +157,19 @@ const OrcamentoBuscarScreen = () => {
                   <TableCell>Número do Cliente</TableCell>
                   <TableCell>Data de Criação</TableCell>
                   <TableCell>Status</TableCell>
+                  <TableCell>Status Aprovação Arte Arena</TableCell>
+                  <TableCell>Status Aprovação Cliente</TableCell>
+                  <TableCell>Status Envio Pedido</TableCell>
+                  <TableCell>Status Aprovação Amostra Arte Arena</TableCell>
+                  <TableCell>Status Envio Amostra</TableCell>
+                  <TableCell>Status Aprovação Amostra Cliente</TableCell>
+                  <TableCell>Status Faturamento</TableCell>
+                  <TableCell>Status Pagamento</TableCell>
+                  <TableCell>Status Produção Esboço</TableCell>
+                  <TableCell>Status Produção Arte Final</TableCell>
+                  <TableCell>Status Aprovação Esboço</TableCell>
+                  <TableCell>Status Aprovação Arte Final</TableCell>
+
                   <TableCell>Ações</TableCell>
                 </TableRow>
               </TableHead>
@@ -186,12 +212,22 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="row" spacing={1}>
                           <Tooltip title="Alterar Status">
+                          {row.status === "aprovado" ? (
                             <IconButton
+                              disabled
                               aria-label="alterar status"
                               onClick={() => handleAprovar(row.id)}
                             >
                               <IconProgressCheck />
                             </IconButton>
+                              ) : (
+                                <IconButton
+                                aria-label="alterar status"
+                                onClick={() => handleAprovar(row.id)}
+                              >
+                                <IconProgressCheck />
+                              </IconButton>
+                              )}
                           </Tooltip>
 
 
@@ -203,7 +239,18 @@ const OrcamentoBuscarScreen = () => {
                           </IconButton> */}
                         </Stack>
                       </TableCell>
-
+                      <TableCell>{ row.status_aprovacao_arte_arena ?? "Não Aprovado"}</TableCell>
+                      <TableCell>{ row.status_aprovacao_cliente ?? "Aguardando Aprovação"}</TableCell>
+                      <TableCell>{ row.status_envio_pedido ?? "Não Enviado"}</TableCell>
+                      <TableCell>{ row.status_aprovacao_amostra_arte_arena ?? "Não Aprovado"}</TableCell>
+                      <TableCell>{ row.status_envio_amostra ?? "Não Enviada"}</TableCell>
+                      <TableCell>{ row.status_aprovacao_amostra_cliente ?? "Não Aprovado"}</TableCell>
+                      <TableCell>{ row.status_faturamento ?? "Em Análise"}</TableCell>
+                      <TableCell>{ row.status_pagamento ?? "Aguardando"}</TableCell>
+                      <TableCell>{ row.status_producao_esboco ?? "Aguardando Primeira Versão"}</TableCell>
+                      <TableCell>{ row.status_producao_arte_final ?? "Aguardando Primeira Versão"}</TableCell>
+                      <TableCell>{ row.status_aprovacao_esboco ?? "Não Aprovado"}</TableCell>
+                      <TableCell>{ row.status_aprovacao_arte_final ?? "Não Aprovado"}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
