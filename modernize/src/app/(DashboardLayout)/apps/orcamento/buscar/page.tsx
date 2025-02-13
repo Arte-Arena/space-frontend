@@ -96,7 +96,7 @@ const OrcamentoBuscarScreen = () => {
 
 
   const handleAprovar = (rowId: number) => {
-    router.push(`/apps/orcamento/aprovar/${rowId}`);
+    window.open(`/apps/orcamento/aprovar/${rowId}`, '_blank');
   };
 
   const handleEditOrcamento = (orcamentoId: number) => {
