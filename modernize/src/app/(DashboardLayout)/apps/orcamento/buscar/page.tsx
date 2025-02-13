@@ -11,7 +11,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
-import { Pagination, Stack, Button, Box, Typography, Collapse, Popover } from '@mui/material';
+import { Pagination, Stack, Button, Box, Typography, Collapse, Popover, TablePagination } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { IconSearch } from '@tabler/icons-react';
@@ -67,6 +67,8 @@ const OrcamentoBuscarScreen = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
+  const [rowsPerPage, setRowsPerPage] = useState(10); // Definir estado para rowsPerPage
+
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -215,13 +217,19 @@ const OrcamentoBuscarScreen = () => {
     console.log('Aguarde.');
   };
 
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reseta para a primeira página ao alterar o número de linhas por página
+  };
+  
+
   return (
     <PageContainer title="Orçamento / Buscar" description="Buscar Orçamento da Arte Arena">
       <Breadcrumb title="Orçamento / Buscar" subtitle="Gerencie os Orçamentos da Arte Arena / Buscar" />
       <ParentCard title="Buscar Orçamento" >
         <>
 
-          <Stack spacing={2} direction="row" alignItems="center" mb={2}>
+          <Stack spacing={1} direction="row" alignItems="center" mb={2}>
             <CustomTextField
               fullWidth
               value={query}
@@ -247,57 +255,53 @@ const OrcamentoBuscarScreen = () => {
           </Stack>
 
           <TableContainer>
-            <Table>
+            <Table size='small'>
               <TableHead>
                 <TableRow>
                   <TableCell></TableCell>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Número do Cliente</TableCell>
-                  <TableCell>Data de Criação</TableCell>
-                  <TableCell>Aprovação Arte Arena</TableCell>
-                  <TableCell>Aprovação Cliente</TableCell>
-                  <TableCell>Envio Pedido</TableCell>
-                  <TableCell>Aprovação Amostra Arte Arena</TableCell>
-                  <TableCell>Envio Amostra</TableCell>
-                  <TableCell>Aprovação Amostra Cliente</TableCell>
-                  <TableCell>Faturamento</TableCell>
-                  <TableCell>Pagamento</TableCell>
-                  <TableCell>Produção Esboço</TableCell>
-                  <TableCell>Produção Arte Final</TableCell>
-                  <TableCell>Aprovação Esboço</TableCell>
-                  <TableCell>Aprovação Arte Final</TableCell>
-
-                  <TableCell>Ações</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >ID</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Número do Cliente</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Data de Criação</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Arte Arena</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Cliente</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Envio Pedido</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Amostra Arte Arena</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Envio Amostra</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Amostra Cliente</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Faturamento</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Pagamento</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Produção Esboço</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Produção Arte Final</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Esboço</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Arte Final</TableCell>
+                  {/* <TableCell>Ações</TableCell> */}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {dataOrcamentos?.data.map((row: Orcamento) => (
                   <React.Fragment key={row.id}>
                     <TableRow>
-                      <TableCell>
+                      <TableCell sx={{fontSize: '8px'}}>
                         <IconButton
                           aria-label="expand row"
                           size="small"
                           onClick={() => handleToggleRow(row.id)}
                         >
-                          {openRow[row.id] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                          {openRow[row.id] ? <KeyboardArrowUpIcon sx={{fontSize: '15px'}}/> : <KeyboardArrowDownIcon sx={{fontSize: '15px'}}/>}
                         </IconButton>
                       </TableCell>
-                      <TableCell>{row.id}</TableCell>
-                      <TableCell>{row.cliente_octa_number}</TableCell>
-                      <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell sx={{fontSize: '8px'}} >{row.id}</TableCell>
+                      <TableCell sx={{fontSize: '8px'}} >{row.cliente_octa_number}</TableCell>
+                      <TableCell sx={{fontSize: '8px'}} >{new Date(row.created_at).toLocaleDateString()}</TableCell>
                       
                       {/* status handles */}
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography align="center">
-                              {row.status === "aprovado" ? "Aprovado" : "Não Aprovado"}
-                            </Typography>
                               {row.status === "aprovado" ? (
-                                <IconCircleCheck color="green" size={20} />
+                                <IconCircleCheck color="green" size={22} />
                               ) : (
-                                <IconBan color="red" size={20} />
+                                <IconBan color="red" size={22} />
                               )}
                           </Stack>
                             <Tooltip title="Alterar Status">
@@ -309,7 +313,7 @@ const OrcamentoBuscarScreen = () => {
                                     : handleAprovarArteArena(row.id)
                                 }
                               >
-                                {row.status === "aprovado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                                {row.status === "aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                               </IconButton>
                             </Tooltip>                          
                         </Stack>
@@ -325,13 +329,10 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography align="center">
-                              {row.status_aprovacao_cliente ?? "Aguardando Aprovação"}
-                            </Typography>
                             {row.status_aprovacao_cliente === "Aprovado" ? (
-                              <IconCircleCheck color="green" size={20} />
+                              <IconCircleCheck color="green" size={22} />
                             ) : (
-                              <IconBan color="red" size={20} />
+                              <IconBan color="red" size={22} />
                             )}
                           </Stack>
                           <Tooltip title="Alterar Status">
@@ -343,7 +344,7 @@ const OrcamentoBuscarScreen = () => {
                                   : handleAprovarCliente(row.id)
                               }
                             >
-                              {row.status_aprovacao_cliente === "Aprovado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                              {row.status_aprovacao_cliente === "Aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -352,13 +353,10 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography align="center">
-                              {row.status_envio_pedido ?? "Não Enviado"}
-                            </Typography>
                             {row.status_envio_pedido === "Enviado" ? (
-                              <IconCircleCheck color="green" size={20} />
+                              <IconCircleCheck color="green" size={22} />
                             ) : (
-                              <IconBan color="red" size={20} />
+                              <IconBan color="red" size={22} />
                             )}
                           </Stack>
                           <Tooltip title="Alterar Status">
@@ -370,7 +368,7 @@ const OrcamentoBuscarScreen = () => {
                                   : handleAprovarEnvioPedido(row.id)
                               }
                             >
-                              {row.status_envio_pedido === "Enviado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                              {row.status_envio_pedido === "Enviado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -379,13 +377,10 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography align="center">
-                              {row.status_aprovacao_amostra_arte_arena ?? "Não Aprovado"}
-                            </Typography>
                             {row.status_aprovacao_amostra_arte_arena === "Aprovado" ? (
-                              <IconCircleCheck color="green" size={20} />
+                              <IconCircleCheck color="green" size={22} />
                             ) : (
-                              <IconBan color="red" size={20} />
+                              <IconBan color="red" size={22} />
                             )}
                           </Stack>
                           <Tooltip title="Alterar Status">
@@ -397,7 +392,7 @@ const OrcamentoBuscarScreen = () => {
                                   : handleAprovarAmostraArteArena(row.id)
                               }
                             >
-                              {row.status_aprovacao_amostra_arte_arena === "Aprovado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                              {row.status_aprovacao_amostra_arte_arena === "Aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -406,13 +401,10 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography align="center">
-                              {row.status_envio_amostra ?? "Não Enviada"}
-                            </Typography>
                             {row.status_envio_amostra === "Enviada" ? (
-                              <IconCircleCheck color="green" size={20} />
+                              <IconCircleCheck color="green" size={22} />
                             ) : (
-                              <IconBan color="red" size={20} />
+                              <IconBan color="red" size={22} />
                             )}
                           </Stack>
                           <Tooltip title="Alterar Status">
@@ -424,7 +416,7 @@ const OrcamentoBuscarScreen = () => {
                                   : handleAprovarEnvioAmostra(row.id)
                               }
                             >
-                              {row.status_envio_amostra === "Enviada" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                              {row.status_envio_amostra === "Enviada" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -433,13 +425,10 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography align="center">
-                              {row.status_aprovacao_amostra_cliente ?? "Não Aprovado"}
-                            </Typography>
                             {row.status_aprovacao_amostra_cliente === "Aprovado" ? (
-                              <IconCircleCheck color="green" size={20} />
+                              <IconCircleCheck color="green" size={22} />
                             ) : (
-                              <IconBan color="red" size={20} />
+                              <IconBan color="red" size={22} />
                             )}
                           </Stack>
                           <Tooltip title="Alterar Status">
@@ -451,7 +440,7 @@ const OrcamentoBuscarScreen = () => {
                                   : handleAprovarAmostraCliente(row.id)
                               }
                             >
-                              {row.status_aprovacao_amostra_cliente === "Aprovado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                              {row.status_aprovacao_amostra_cliente === "Aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -460,13 +449,10 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography align="center">
-                              {row.status_faturamento ?? "Em Análise"}
-                            </Typography>
                             {row.status_faturamento === "Faturado" ? (
-                              <IconCircleCheck color="green" size={20} />
+                              <IconCircleCheck color="green" size={22} />
                             ) : (
-                              <IconBan color="red" size={20} />
+                              <IconBan color="red" size={22} />
                             )}
                           </Stack>
                           <Tooltip title="Alterar Status">
@@ -478,7 +464,7 @@ const OrcamentoBuscarScreen = () => {
                                   : handleAprovarFaturamento(row.id)
                               }
                             >
-                              {row.status_faturamento === "Faturado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                              {row.status_faturamento === "Faturado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -487,13 +473,10 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography align="center">
-                              {row.status_pagamento ?? "Aguardando"}
-                            </Typography>
                             {row.status_pagamento === "Pago" ? (
-                              <IconCircleCheck color="green" size={20} />
+                              <IconCircleCheck color="green" size={22} />
                             ) : (
-                              <IconBan color="red" size={20} />
+                              <IconBan color="red" size={22} />
                             )}
                           </Stack>
                           <Tooltip title="Alterar Status">
@@ -505,7 +488,7 @@ const OrcamentoBuscarScreen = () => {
                                   : handleAprovarPagamento(row.id)
                               }
                             >
-                              {row.status_pagamento === "Pago" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                              {row.status_pagamento === "Pago" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -514,13 +497,10 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography align="center">
-                              {row.status_producao_esboco ?? "Aguardando Primeira Versão"}
-                            </Typography>
                             {row.status_producao_esboco === "Finalizado" ? (
-                              <IconCircleCheck color="green" size={20} />
+                              <IconCircleCheck color="green" size={22} />
                             ) : (
-                              <IconBan color="red" size={20} />
+                              <IconBan color="red" size={22} />
                             )}
                           </Stack>
                           <Tooltip title="Alterar Status">
@@ -532,7 +512,7 @@ const OrcamentoBuscarScreen = () => {
                                   : handleAprovarProducaoEsboco(row.id)
                               }
                             >
-                              {row.status_producao_esboco === "Finalizado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                              {row.status_producao_esboco === "Finalizado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -541,13 +521,10 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography align="center">
-                              {row.status_producao_arte_final ?? "Aguardando Primeira Versão"}
-                            </Typography>
                             {row.status_producao_arte_final === "Finalizado" ? (
-                              <IconCircleCheck color="green" size={20} />
+                              <IconCircleCheck color="green" size={22} />
                             ) : (
-                              <IconBan color="red" size={20} />
+                              <IconBan color="red" size={22} />
                             )}
                           </Stack>
                           <Tooltip title="Alterar Status">
@@ -559,7 +536,7 @@ const OrcamentoBuscarScreen = () => {
                                   : handleAprovarProducaoArteFinal(row.id)
                               }
                             >
-                              {row.status_producao_arte_final === "Finalizado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                              {row.status_producao_arte_final === "Finalizado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -568,13 +545,10 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography align="center">
-                              {row.status_aprovacao_esboco ?? "Não Aprovado"}
-                            </Typography>
                             {row.status_aprovacao_esboco === "Aprovado" ? (
-                              <IconCircleCheck color="green" size={20} />
+                              <IconCircleCheck color="green" size={22} />
                             ) : (
-                              <IconBan color="red" size={20} />
+                              <IconBan color="red" size={22} />
                             )}
                           </Stack>
                           <Tooltip title="Alterar Status">
@@ -586,7 +560,7 @@ const OrcamentoBuscarScreen = () => {
                                   : handleAprovarEsboco(row.id)
                               }
                             >
-                              {row.status_aprovacao_esboco === "Aprovado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                              {row.status_aprovacao_esboco === "Aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -595,13 +569,10 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography align="center">
-                              {row.status_aprovacao_arte_final ?? "Não Aprovado"}
-                            </Typography>
                             {row.status_aprovacao_arte_final === "Aprovado" ? (
-                              <IconCircleCheck color="green" size={20} />
+                              <IconCircleCheck color="green" size={22} />
                             ) : (
-                              <IconBan color="red" size={20} />
+                              <IconBan color="red" size={22} />
                             )}
                           </Stack>
                           <Tooltip title="Alterar Status">
@@ -613,7 +584,7 @@ const OrcamentoBuscarScreen = () => {
                                   : handleAprovarArteFinal(row.id)
                               }
                             >
-                              {row.status_aprovacao_arte_final === "Aprovado" ? <IconArrowBackUp /> : <IconProgressCheck />}
+                              {row.status_aprovacao_arte_final === "Aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
