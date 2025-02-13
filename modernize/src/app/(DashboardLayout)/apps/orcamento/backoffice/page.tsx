@@ -40,7 +40,6 @@ interface Orcamento {
   created_at: string;
   updated_at: string;
   brinde: number;
-  descontado: number;
   tipo_desconto: string;
   valor_desconto: number;
   data_antecipa: string;
@@ -260,9 +259,9 @@ const OrcamentoBackofficeScreen = () => {
                             </Typography>
                             )}
 
-                            {row.descontado !== null && (
+                            {row.valor_desconto !== null && (
                               <Typography variant="body2" gutterBottom>
-                              <strong>Desconto:</strong>{row.descontado === 1 ? "Com Desconto" : "Sem Desconto"}
+                              <strong>Desconto:</strong>{" Com Desconto"}
                             </Typography>
                             )}
 
