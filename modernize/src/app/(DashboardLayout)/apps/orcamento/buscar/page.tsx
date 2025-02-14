@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
@@ -21,6 +21,8 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { IconProgressCheck, IconEdit, IconCircleCheck, IconBan, IconProgressHelp, IconX, IconArrowBackUp } from '@tabler/icons-react';
 import Tooltip from '@mui/material/Tooltip';
 import { useRouter } from 'next/navigation';
+import { useStatusChangeAprovado, useStatusChangeDesaprovado } from '@/utils/PutStatusOrcamentos';
+
 
 // IMPORTAR FUNÇÕES DE MUDANÇA NO BACKEND (fazer num arquivo só e ter varios exports)
 
@@ -60,22 +62,10 @@ interface Orcamento {
   status_aprovacao_arte_final: string;
 }
 
-const OrcamentoBuscarScreen = () => {
-  const router = useRouter();
+const useFetchOrcamentos = (searchQuery: string, page: number) => {
+  const accessToken = typeof window !== "undefined" ? localStorage.getItem('accessToken') : null;
 
-  const [query, setQuery] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [page, setPage] = useState<number>(1);
-  const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
-  const [rowsPerPage, setRowsPerPage] = useState(10); // Definir estado para rowsPerPage
-
-
-  const accessToken = localStorage.getItem('accessToken');
-  if (!accessToken) {
-    throw new Error('Access token is missing');
-  }
-
-  const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos, refetch } = useQuery({
+  return useQuery({
     queryKey: ['budgetData', searchQuery, page],
     queryFn: () =>
       fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/get-orcamentos-status?q=${encodeURIComponent(searchQuery)}&page=${page}`, {
@@ -86,6 +76,36 @@ const OrcamentoBuscarScreen = () => {
         },
       }).then((res) => res.json()),
   });
+};
+
+const OrcamentoBuscarScreen = () => {
+  const router = useRouter();
+
+  const [query, setQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [page, setPage] = useState<number>(1);
+  const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
+  // busca os dados
+  const { isFetching, error, data, refetch } = useFetchOrcamentos(searchQuery, page);
+
+  const accessToken = localStorage.getItem('accessToken');
+  if (!accessToken) {
+    throw new Error('Access token is missing');
+  }
+
+  // const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos, refetch } = useQuery({
+  //   queryKey: ['budgetData', searchQuery, page],
+  //   queryFn: () =>
+  //     fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/get-orcamentos-status?q=${encodeURIComponent(searchQuery)}&page=${page}`, {
+  //       method: 'GET',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         Authorization: `Bearer ${accessToken}`,
+  //       },
+  //     }).then((res) => res.json()),
+  // });
+
+
 
 
   const handleSearch = () => {
@@ -107,9 +127,9 @@ const OrcamentoBuscarScreen = () => {
     setOpenRow(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  if (isFetchingOrcamentos) return <CircularProgress />;
-  if (errorOrcamentos) return <p>Ocorreu um erro: {errorOrcamentos.message}</p>;
-  if (dataOrcamentos) console.log(dataOrcamentos);
+  if (isFetching) return <CircularProgress />;
+  if (error) return <p>Ocorreu um erro: {error.message}</p>;
+  // if (data) console.log(data);
 
   // TODOS OS HANDLES DE APROVAÇÃO
 
@@ -117,111 +137,36 @@ const OrcamentoBuscarScreen = () => {
     window.open(`/apps/orcamento/aprovar/${rowId}`, '_blank');
   };
 
-  const handleAprovarCliente = (rowId: number) =>{
+  const handleAprovar = async (campo: string, rowId: number) =>{
+    try{
+      await useStatusChangeAprovado(campo, rowId);
+      refetch();    
+    }
+    catch(err){
+      console.log(err)
+    }
+  }
+
+  // TODOS OS HANDLES DE MUDANÇA DE STATUS DESAPROVADOS
+
+  const handleDesaprovarArteArena = async (rowId: number) =>{
     return null;
   }
 
-  const handleAprovarEnvioPedido = (rowId: number) =>{
-    return null;
+  const handleDesaprovar = async (campo: string, rowId: number) =>{
+    try{
+      await useStatusChangeDesaprovado(campo, rowId);
+      window.location.reload()
+    }
+    catch(err){
+      console.log(err)
+    }
   }
-
-  const handleAprovarAmostraArteArena = (rowId: number) =>{
-    return null;
-  }
-
-  const handleAprovarEnvioAmostra = (rowId: number) =>{
-    return null;
-  }
-
-  const handleAprovarAmostraCliente = (rowId: number) =>{
-    return null;
-  }
-
-  const handleAprovarFaturamento = (rowId: number) =>{
-    return null;
-  }
-
-  const handleAprovarPagamento = (rowId: number) =>{
-    return null;
-  }
-
-  const handleAprovarProducaoEsboco = (rowId: number) =>{
-    return null;
-  }
-
-  const handleAprovarProducaoArteFinal = (rowId: number) =>{
-    return null;
-  }
-
-  const handleAprovarEsboco = (rowId: number) =>{
-    return null;
-  }
-
-  const handleAprovarArteFinal = (rowId: number) =>{
-    return null;
-  }
-
-
-  // TODOS OS HANDLES DE MUDANÇA DE STATUS
-
-  const handleDesaprovarArteArena = (rowId: number) =>{
-    return null;
-  }
-
-  const handleDesaprovarCliente = (rowId: number) =>{
-    return null;
-  }
-
-  const handleDesaprovarEnvioPedido = (rowId: number) =>{
-    return null;
-  }
-
-  const handleDesaprovarAmostraArteArena = (rowId: number) =>{
-    return null;
-  }
-
-  const handleDesaprovarEnvioAmostra = (rowId: number) =>{
-    return null;
-  }
-
-  const handleDesaprovarAmostraCliente = (rowId: number) =>{
-    return null;
-  }
-
-  const handleDesaprovarFaturamento = (rowId: number) =>{
-    return null;
-  }
-
-  const handleDesaprovarPagamento = (rowId: number) =>{
-    return null;
-  }
-
-  const handleDesaprovarProducaoEsboco = (rowId: number) =>{
-    return null;
-  }
-
-  const handleDesaprovarProducaoArteFinal = (rowId: number) =>{
-    return null;
-  }
-
-  const handleDesaprovarEsboco = (rowId: number) =>{
-    return null;
-  }
-
-  const handleDesaprovarArteFinal = (rowId: number) =>{
-    return null;
-  }
-
-  const handleEditOrcamento = (orcamentoId: number) => {
-    // router.push(`/apps/orcamento/editar?id=${orcamentoId}`);
-    console.log('Aguarde.');
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Reseta para a primeira página ao alterar o número de linhas por página
-  };
   
+  // const handleEditOrcamento = (orcamentoId: number) => {
+  //   // router.push(`/apps/orcamento/editar?id=${orcamentoId}`);
+  //   console.log('Aguarde.');
+  // };
 
   return (
     <PageContainer title="Orçamento / Buscar" description="Buscar Orçamento da Arte Arena">
@@ -278,7 +223,7 @@ const OrcamentoBuscarScreen = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {dataOrcamentos?.data.map((row: Orcamento) => (
+                {data?.data.map((row: Orcamento) => (
                   <React.Fragment key={row.id}>
                     <TableRow>
                       <TableCell sx={{fontSize: '8px'}}>
@@ -329,7 +274,7 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_aprovacao_cliente === "Aprovado" ? (
+                            {row.status_aprovacao_cliente === "aprovado" ? (
                               <IconCircleCheck color="green" size={22} />
                             ) : (
                               <IconBan color="red" size={22} />
@@ -339,12 +284,12 @@ const OrcamentoBuscarScreen = () => {
                             <IconButton
                               aria-label="alterar status"
                               onClick={() =>
-                                row.status_aprovacao_cliente === "Aprovado"
-                                  ? handleDesaprovarCliente(row.id)
-                                  : handleAprovarCliente(row.id)
+                                row.status_aprovacao_cliente === "aprovado"
+                                  ? handleDesaprovar('status_aprovacao_cliente', row.id)
+                                  : handleAprovar('status_aprovacao_cliente', row.id)
                               }
                             >
-                              {row.status_aprovacao_cliente === "Aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
+                              {row.status_aprovacao_cliente === "aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -353,7 +298,7 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_envio_pedido === "Enviado" ? (
+                            {row.status_envio_pedido === "enviado" ? (
                               <IconCircleCheck color="green" size={22} />
                             ) : (
                               <IconBan color="red" size={22} />
@@ -363,12 +308,12 @@ const OrcamentoBuscarScreen = () => {
                             <IconButton
                               aria-label="alterar status"
                               onClick={() =>
-                                row.status_envio_pedido === "Enviado"
-                                  ? handleDesaprovarEnvioPedido(row.id)
-                                  : handleAprovarEnvioPedido(row.id)
+                                row.status_envio_pedido === "enviado"
+                                  ? handleDesaprovar('status_envio_pedido', row.id)
+                                  : handleAprovar('status_envio_pedido', row.id)
                               }
                             >
-                              {row.status_envio_pedido === "Enviado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
+                              {row.status_envio_pedido === "enviado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -377,7 +322,7 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_aprovacao_amostra_arte_arena === "Aprovado" ? (
+                            {row.status_aprovacao_amostra_arte_arena === "aprovada" ? (
                               <IconCircleCheck color="green" size={22} />
                             ) : (
                               <IconBan color="red" size={22} />
@@ -387,12 +332,12 @@ const OrcamentoBuscarScreen = () => {
                             <IconButton
                               aria-label="alterar status"
                               onClick={() =>
-                                row.status_aprovacao_amostra_arte_arena === "Aprovado"
-                                  ? handleDesaprovarAmostraArteArena(row.id)
-                                  : handleAprovarAmostraArteArena(row.id)
+                                row.status_aprovacao_amostra_arte_arena === "aprovada"
+                                  ? handleDesaprovar('status_aprovacao_amostra_arte_arena', row.id)
+                                  : handleAprovar('status_aprovacao_amostra_arte_arena', row.id)
                               }
                             >
-                              {row.status_aprovacao_amostra_arte_arena === "Aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
+                              {row.status_aprovacao_amostra_arte_arena === "aprovada" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -401,7 +346,7 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_envio_amostra === "Enviada" ? (
+                            {row.status_envio_amostra === "enviada" ? (
                               <IconCircleCheck color="green" size={22} />
                             ) : (
                               <IconBan color="red" size={22} />
@@ -411,12 +356,12 @@ const OrcamentoBuscarScreen = () => {
                             <IconButton
                               aria-label="alterar status"
                               onClick={() =>
-                                row.status_envio_amostra === "Enviada"
-                                  ? handleDesaprovarEnvioAmostra(row.id)
-                                  : handleAprovarEnvioAmostra(row.id)
+                                row.status_envio_amostra === "enviada"
+                                  ? handleDesaprovar('status_envio_amostra',row.id)
+                                  : handleAprovar('status_envio_amostra',row.id)
                               }
                             >
-                              {row.status_envio_amostra === "Enviada" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
+                              {row.status_envio_amostra === "enviada" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -425,7 +370,7 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_aprovacao_amostra_cliente === "Aprovado" ? (
+                            {row.status_aprovacao_amostra_cliente === "aprovada" ? (
                               <IconCircleCheck color="green" size={22} />
                             ) : (
                               <IconBan color="red" size={22} />
@@ -435,12 +380,12 @@ const OrcamentoBuscarScreen = () => {
                             <IconButton
                               aria-label="alterar status"
                               onClick={() =>
-                                row.status_aprovacao_amostra_cliente === "Aprovado"
-                                  ? handleDesaprovarAmostraCliente(row.id)
-                                  : handleAprovarAmostraCliente(row.id)
+                                row.status_aprovacao_amostra_cliente === "aprovada"
+                                  ? handleDesaprovar('status_aprovacao_amostra_cliente',row.id)
+                                  : handleAprovar('status_aprovacao_amostra_cliente',row.id)
                               }
                             >
-                              {row.status_aprovacao_amostra_cliente === "Aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
+                              {row.status_aprovacao_amostra_cliente === "aprovada" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -449,7 +394,7 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_faturamento === "Faturado" ? (
+                            {row.status_faturamento === "faturado" ? (
                               <IconCircleCheck color="green" size={22} />
                             ) : (
                               <IconBan color="red" size={22} />
@@ -459,12 +404,12 @@ const OrcamentoBuscarScreen = () => {
                             <IconButton
                               aria-label="alterar status"
                               onClick={() =>
-                                row.status_faturamento === "Faturado"
-                                  ? handleDesaprovarFaturamento(row.id)
-                                  : handleAprovarFaturamento(row.id)
+                                row.status_faturamento === "faturado"
+                                  ? handleDesaprovar('status_faturamento',row.id)
+                                  : handleAprovar('status_faturamento',row.id)
                               }
                             >
-                              {row.status_faturamento === "Faturado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
+                              {row.status_faturamento === "faturado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -473,7 +418,7 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_pagamento === "Pago" ? (
+                            {row.status_pagamento === "pago" ? (
                               <IconCircleCheck color="green" size={22} />
                             ) : (
                               <IconBan color="red" size={22} />
@@ -483,12 +428,12 @@ const OrcamentoBuscarScreen = () => {
                             <IconButton
                               aria-label="alterar status"
                               onClick={() =>
-                                row.status_pagamento === "Pago"
-                                  ? handleDesaprovarPagamento(row.id)
-                                  : handleAprovarPagamento(row.id)
+                                row.status_pagamento === "pago"
+                                  ? handleDesaprovar('status_pagamento',row.id)
+                                  : handleAprovar('status_pagamento',row.id)
                               }
                             >
-                              {row.status_pagamento === "Pago" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
+                              {row.status_pagamento === "pago" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -497,7 +442,7 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_producao_esboco === "Finalizado" ? (
+                            {row.status_producao_esboco === "aguardando_melhoria" ? (
                               <IconCircleCheck color="green" size={22} />
                             ) : (
                               <IconBan color="red" size={22} />
@@ -507,12 +452,12 @@ const OrcamentoBuscarScreen = () => {
                             <IconButton
                               aria-label="alterar status"
                               onClick={() =>
-                                row.status_producao_esboco === "Finalizado"
-                                  ? handleDesaprovarProducaoEsboco(row.id)
-                                  : handleAprovarProducaoEsboco(row.id)
+                                row.status_producao_esboco === "aguardando_melhoria"
+                                  ? handleDesaprovar('status_producao_esboco',row.id)
+                                  : handleAprovar('status_producao_esboco',row.id)
                               }
                             >
-                              {row.status_producao_esboco === "Finalizado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
+                              {row.status_producao_esboco === "aguardando_melhoria" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -521,7 +466,7 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_producao_arte_final === "Finalizado" ? (
+                            {row.status_producao_arte_final === "aguardando_melhoria" ? (
                               <IconCircleCheck color="green" size={22} />
                             ) : (
                               <IconBan color="red" size={22} />
@@ -531,12 +476,12 @@ const OrcamentoBuscarScreen = () => {
                             <IconButton
                               aria-label="alterar status"
                               onClick={() =>
-                                row.status_producao_arte_final === "Finalizado"
-                                  ? handleDesaprovarProducaoArteFinal(row.id)
-                                  : handleAprovarProducaoArteFinal(row.id)
+                                row.status_producao_arte_final === "aguardando_melhoria"
+                                  ? handleDesaprovar('status_producao_arte_final',row.id)
+                                  : handleAprovar('status_producao_arte_final',row.id)
                               }
                             >
-                              {row.status_producao_arte_final === "Finalizado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
+                              {row.status_producao_arte_final === "aguardando_melhoria" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -545,7 +490,7 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_aprovacao_esboco === "Aprovado" ? (
+                            {row.status_aprovacao_esboco === "aprovado" ? (
                               <IconCircleCheck color="green" size={22} />
                             ) : (
                               <IconBan color="red" size={22} />
@@ -555,12 +500,12 @@ const OrcamentoBuscarScreen = () => {
                             <IconButton
                               aria-label="alterar status"
                               onClick={() =>
-                                row.status_aprovacao_esboco === "Aprovado"
-                                  ? handleDesaprovarEsboco(row.id)
-                                  : handleAprovarEsboco(row.id)
+                                row.status_aprovacao_esboco === "aprovado"
+                                  ? handleDesaprovar('status_aprovacao_esboco',row.id)
+                                  : handleAprovar('status_aprovacao_esboco',row.id)
                               }
                             >
-                              {row.status_aprovacao_esboco === "Aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
+                              {row.status_aprovacao_esboco === "aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -569,7 +514,7 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
                           <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_aprovacao_arte_final === "Aprovado" ? (
+                            {row.status_aprovacao_arte_final === "aprovada" ? (
                               <IconCircleCheck color="green" size={22} />
                             ) : (
                               <IconBan color="red" size={22} />
@@ -579,12 +524,12 @@ const OrcamentoBuscarScreen = () => {
                             <IconButton
                               aria-label="alterar status"
                               onClick={() =>
-                                row.status_aprovacao_arte_final === "Aprovado"
-                                  ? handleDesaprovarArteFinal(row.id)
-                                  : handleAprovarArteFinal(row.id)
+                                row.status_aprovacao_arte_final === "aprovada"
+                                  ? handleDesaprovar('status_aprovacao_arte_final',row.id)
+                                  : handleAprovar('status_aprovacao_arte_final',row.id)
                               }
                             >
-                              {row.status_aprovacao_arte_final === "Aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
+                              {row.status_aprovacao_arte_final === "aprovada" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
                             </IconButton>
                           </Tooltip>
                         </Stack>
@@ -673,8 +618,8 @@ const OrcamentoBuscarScreen = () => {
           {/* Paginação */}
           <Stack spacing={2} mt={2} alignItems="center">
             <Pagination
-              count={Math.ceil(dataOrcamentos.total / dataOrcamentos.per_page)}
-              page={dataOrcamentos.current_page}
+              count={Math.ceil(data.total / data.per_page)}
+              page={data.current_page}
               onChange={handlePageChange}
             />
           </Stack>
@@ -687,4 +632,3 @@ const OrcamentoBuscarScreen = () => {
 
 
 export default OrcamentoBuscarScreen;
-
