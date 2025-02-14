@@ -47,6 +47,7 @@
     "fslightbox-react": "^1.7.6",
     "gray-matter": "^4.0.3",
     "i18next": "^23.5.1",
+    "jspdf": "^2.5.2",
     "lodash": "^4.17.21",
     "luxon": "^3.5.0",
     "moment": "^2.29.4",
