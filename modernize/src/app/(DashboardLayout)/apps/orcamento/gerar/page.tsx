@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/utils/useAuth';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
@@ -209,6 +209,8 @@ const OrcamentoGerarScreen = () => {
       }
     }
   }, [dataClients]);
+
+  const memoizedAllClients = useMemo(() => allClients, [allClients]);
 
   useEffect(() => {
     if (allClients.length > 0 && !isFetchingClients && !errorClients) {
@@ -1244,7 +1246,7 @@ Orçamento válido somente hoje.
               id="cliente"
               loading={isFetchingClients || !isLoadedClients}
               disabled={isFetchingClients}
-              options={allClients}
+              options={memoizedAllClients}
               getOptionLabel={(option) =>
                 `${option.id} :: ${option.nome} :: (${option.telefone} ${option.email ? ` - ${option.email}` : ''})`
               }
