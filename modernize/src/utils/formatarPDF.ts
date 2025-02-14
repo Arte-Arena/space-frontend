@@ -16,9 +16,9 @@ const formatarPDF = async(htmlContent: string) => {
 
   // filtragem por Regex
   const produtos = linhas.filter(linha => regexProduto.test(linha));
-  const brinde = linhas.find(linha => regexBrinde.test(linha)) || "Brinde não informado";
+  const brinde = linhas.find(linha => regexBrinde.test(linha)) || "";
   const frete = linhas.find(linha => regexFrete.test(linha)) || "Frete não informado";
-  const desconto = linhas.find(linha => regexDesconto.test(linha)) || "Desconto não informado";
+  const desconto = linhas.find(linha => regexDesconto.test(linha)) || "";
   const total = linhas.find(linha => regexTotal.test(linha)) || "Total não informado";
   const prazoProducao = linhas.find(linha => regexPrazoProducao.test(linha)) || "Prazo de produção não informado";
   const previsaoRetirada = linhas.find(linha => regexPrevisao.test(linha)) || "Não é possível prever a data de entrega.";
@@ -65,7 +65,7 @@ const formatarPDF = async(htmlContent: string) => {
         margin-top: 20px;
       }
       .table th, .table td, .info-table th, .info-table td, .total-table th, .total-table td {
-        border: 1px solid #ddd;
+        border: 2px solid #1C1C1C;
         padding: 8px;
         text-align: left;
       }
