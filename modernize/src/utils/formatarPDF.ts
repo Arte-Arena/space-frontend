@@ -12,7 +12,9 @@ const formatarPDF = async(htmlContent: string) => {
   const regexTotal = /Total:\s*R\$\s*\d{1,3}(?:\.\d{3})*(?:,\d{2})?/;
   const regexPrazoProducao = /Prazo de Produção:\s*\d+\s+dias\s+úteis/;
   const regexPrevisao = /(Previsão de (Retirada|Entrega):\s*\d{1,2}\s+de\s+[a-zA-Zçáéíóúãõ]+\s+de\s+\d{4}(?:\s*\(.*?\))?|Não é possível prever a data de entrega\.)/i;
-  
+  const regexTaxaAntecipacao = /Taxa de Antecipação:\s*R\$\s*\d{1,3}(?:\.\d{3})*(?:,\d{2})?/i;
+
+
   // // regex numerico
   // const regexFreteValor = /Frete:\s*R\$\s*([\d.,]+)/i;
   // const regexTotalValor = /Total:\s*R\$\s*([\d.,]+)/i;
@@ -65,6 +67,8 @@ const formatarPDF = async(htmlContent: string) => {
   const total = linhas.find(linha => regexTotal.test(linha)) || "Total não informado";
   const prazoProducao = linhas.find(linha => regexPrazoProducao.test(linha)) || "Prazo de produção não informado";
   const previsaoRetirada = linhas.find(linha => regexPrevisao.test(linha)) || "Não é possível prever a data de entrega.";
+  const TaxaAntecipacao = linhas.find(linha => regexTaxaAntecipacao.test(linha)) || "";
+
   
   console.log(produtos)
   // Função auxiliar para calcular soma das quantidades
@@ -101,7 +105,7 @@ const formatarPDF = async(htmlContent: string) => {
         size: auto;
       }
 
-      body { font-family: Arial, sans-serif; padding: 20px; }
+      body { font-family: Arial, sans-serif; font-size: 15px; padding: 20px; margin-right: 5%; margin-left: 5%; padding-top: 20px;}
       .container-header { display: flex; }
       .header { padding-left: 0; padding-top: 0;}
       .info-header {text-align: end; width: 100%; padding: 0; margin 0;}
@@ -112,6 +116,7 @@ const formatarPDF = async(htmlContent: string) => {
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
+        font-size: 15px; !important
       }
       .table th, .table td, .info-table th, .info-table td, .total-table th, .total-table td {
         border: 2px solid #1C1C1C;
@@ -196,6 +201,14 @@ const formatarPDF = async(htmlContent: string) => {
         <td>${somaQuantidades}</td>
       </tr>
 
+      ${TaxaAntecipacao ? `
+        <tr>
+          <td class="td-titulo"><b>Taxa de Antecipação:</b></td>
+          <td>${TaxaAntecipacao}</td>
+        </tr>
+      ` : ""}
+
+
       ${brinde ? `
         <tr>
         <td class="td-titulo"><b>Brinde:</b></td>
@@ -244,7 +257,6 @@ const formatarPDF = async(htmlContent: string) => {
     </script>
   </body>
   </html>
-
   `;
 
   // Abre uma nova janela com o conteúdo HTML
