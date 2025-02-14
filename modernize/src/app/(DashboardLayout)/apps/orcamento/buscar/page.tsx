@@ -150,15 +150,14 @@ const OrcamentoBuscarScreen = () => {
   // TODOS OS HANDLES DE MUDANÇA DE STATUS DESAPROVADOS
 
   const handleDesaprovarArteArena = async (rowId: number) =>{
-    return null;
+    return null
   }
 
   const handleDesaprovar = async (campo: string, rowId: number) =>{
     try{
       await useStatusChangeDesaprovado(campo, rowId);
-      window.location.reload()
-    }
-    catch(err){
+      refetch();
+    }catch(err){
       console.log(err)
     }
   }
