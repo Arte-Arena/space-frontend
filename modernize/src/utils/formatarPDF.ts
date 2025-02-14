@@ -69,13 +69,14 @@ const formatarPDF = async(htmlContent: string) => {
   const previsaoRetirada = linhas.find(linha => regexPrevisao.test(linha)) || "Não é possível prever a data de entrega.";
   const TaxaAntecipacao = linhas.find(linha => regexTaxaAntecipacao.test(linha)) || "";
 
-  
   console.log(produtos)
   // Função auxiliar para calcular soma das quantidades
   const somaQuantidades = produtos.reduce((acc, produto) => {
     const partes = produto.match(/(\d+)\s+un/);
     return acc + (partes ? parseInt(partes[1], 10) : 0);
   }, 0);
+  
+  let somaTotalItens = 0;
 
   // const somaTotalItens = produtos.reduce((acc, produto) => {
     //   const partes = produto.match(/(\d+)\s+un\s+.+\s+R\$\s*([\d.]+,\d{2})/);
@@ -90,10 +91,7 @@ const formatarPDF = async(htmlContent: string) => {
   // let somaTotalItens = 0;  
 
   // caso tenha total dos itens futuramente:
-  //   <tr>
-  //    <td class="td-titulo"><b>Total dos itens:</b></td>
-  //    <td></td>
-  //   </tr>
+
 
   // Geração do HTML formatado
   const html = `
@@ -175,7 +173,7 @@ const formatarPDF = async(htmlContent: string) => {
             const quantidade = parseInt(partes[1], 10);
             const precoUnitario = parseFloat(partes[3].replace(',', '.'));
             const totalPorItens = precoUnitario * quantidade;
-            // somaTotalItens += totalPorItens;
+            somaTotalItens += totalPorItens
             return `<tr>
                         <td>${index + 1}</td>
                         <td>${partes[2]}</td>
@@ -192,6 +190,11 @@ const formatarPDF = async(htmlContent: string) => {
 
     <table class="total-table">
       <tr><th colspan="2">Resumo</th></tr>
+      
+      <tr>
+        <td class="td-titulo"><b>Total dos itens:</b></td>
+        <td>${somaTotalItens.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+      </tr>
       <tr>
         <td class="td-titulo"><b>Número de itens:</b></td>
         <td>${produtos.length}</td>
