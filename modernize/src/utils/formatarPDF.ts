@@ -5,14 +5,57 @@ const formatarPDF = async(htmlContent: string) => {
   const logo = Logo.src;
 
   // Regex
-  const regexProduto = /^\d+\s+un\s+.+\s+R\$\s*\d+,\d{2}/;
+  const regexProduto = /^\d+\s+un\s+.+\s+R\$\s*[\d.,]+\s*(\(R\$\s*[\d.,]+\))?/;
   const regexBrinde = /Brinde:\s*\d+\s+un\s+.+\s+R\$\s*\d+,\d{2}\s*\(R\$\s*\d+,\d{2}\)/i;
   const regexFrete = /Frete:\s*R\$\s*\d+,\d{2}/;
   const regexDesconto = /Desconto:\s*R\$\s*\d{1,3}(?:\.\d{3})*(?:,\d{2})?/i;
   const regexTotal = /Total:\s*R\$\s*\d{1,3}(?:\.\d{3})*(?:,\d{2})?/;
   const regexPrazoProducao = /Prazo de Produção:\s*\d+\s+dias\s+úteis/;
   const regexPrevisao = /(Previsão de (Retirada|Entrega):\s*\d{1,2}\s+de\s+[a-zA-Zçáéíóúãõ]+\s+de\s+\d{4}(?:\s*\(.*?\))?|Não é possível prever a data de entrega\.)/i;
+  
+  // // regex numerico
+  // const regexFreteValor = /Frete:\s*R\$\s*([\d.,]+)/i;
+  // const regexTotalValor = /Total:\s*R\$\s*([\d.,]+)/i;
+  // const regexDescontoValor = /Desconto:\s*R\$\s*([\d.,]+)/i;
+  
+  // console.log(regexFreteValor,regexTotalValor,regexDescontoValor )
 
+  // // Função para converter valor de string para número
+  // const converterParaNumero = (valor: string | undefined): number => {
+  //   // Se o valor for undefined, use "0" como padrão
+  //   const valorString = valor || "0";
+  //   return parseFloat(valorString.replace('.', '').replace(',', '.'));
+  // };
+  
+  // // Extrair e somar os valores
+  // let freteValor = 0;
+  // let totalValor = 0;
+  // let descontoValor = 0;
+
+  // linhas.forEach((linha) => {
+  //   const matchFrete = linha.match(regexFrete);
+  //   const matchTotal = linha.match(regexTotal);
+  //   const matchDesconto = linha.match(regexDesconto);
+  
+  //   if (matchFrete) {
+  //     const valorFrete = matchFrete[1]; // Acessa o grupo de captura
+  //     freteValor = converterParaNumero(valorFrete);
+  //   }
+  
+  //   if (matchTotal) {
+  //     const valorTotal = matchTotal[1]; // Acessa o grupo de captura
+  //     totalValor = converterParaNumero(valorTotal);
+  //   }
+  
+  //   if (matchDesconto) {
+  //     const valorDesconto = matchDesconto[1]; // Acessa o grupo de captura
+  //     descontoValor = converterParaNumero(valorDesconto);
+  //   }
+  // });
+
+  // // Calcular o valor final (total + frete - desconto)
+  // const valorFinal = totalValor + freteValor - descontoValor;
+  // console.log(regexFreteValor,regexTotalValor,regexDescontoValor)
 
   // filtragem por Regex
   const produtos = linhas.filter(linha => regexProduto.test(linha));
@@ -23,24 +66,30 @@ const formatarPDF = async(htmlContent: string) => {
   const prazoProducao = linhas.find(linha => regexPrazoProducao.test(linha)) || "Prazo de produção não informado";
   const previsaoRetirada = linhas.find(linha => regexPrevisao.test(linha)) || "Não é possível prever a data de entrega.";
   
+  console.log(produtos)
   // Função auxiliar para calcular soma das quantidades
   const somaQuantidades = produtos.reduce((acc, produto) => {
     const partes = produto.match(/(\d+)\s+un/);
     return acc + (partes ? parseInt(partes[1], 10) : 0);
   }, 0);
 
-  const somaTotalItens = produtos.reduce((acc, produto) => {
-    const partes = produto.match(/(\d+)\s+un\s+.+\s+R\$\s*([\d.]+,\d{2})/);
-    if (partes) {
-      const quantidade = parseInt(partes[1], 10); // Captura a quantidade
-      const precoUnitario = parseFloat(partes[2].replace(/\./g, "").replace(",", ".")); // Converte o preço corretamente
-      return acc + (quantidade * precoUnitario); // Multiplica e soma no acumulador
-    }
-    return acc;
-  }, 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  // const somaTotalItens = produtos.reduce((acc, produto) => {
+    //   const partes = produto.match(/(\d+)\s+un\s+.+\s+R\$\s*([\d.]+,\d{2})/);
+  //   if (partes) {
+  //     const quantidade = parseInt(partes[1], 10); // Captura a quantidade
+  //     const precoUnitario = parseFloat(partes[2].replace(/\./g, "").replace(",", ".")); // Converte o preço corretamente
+  //     return acc + (quantidade * precoUnitario); // Multiplica e soma no acumulador
+  //   }
+  //   return acc;
+  // }, 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   
+  // let somaTotalItens = 0;  
 
-  
+  // caso tenha total dos itens futuramente:
+  //   <tr>
+  //    <td class="td-titulo"><b>Total dos itens:</b></td>
+  //    <td></td>
+  //   </tr>
 
   // Geração do HTML formatado
   const html = `
@@ -116,12 +165,13 @@ const formatarPDF = async(htmlContent: string) => {
         <th>Total un</th>
       </tr>
       ${produtos.map((produto, index) => {
-          const partes = produto.match(/(\d+)\s+un\s+(.+)\s+R\$\s*(\d+,\d{2})/);
+          const partes = produto.match(/^(\d+)\s+un\s+(.+)\s+R\$\s*([\d.,]+)\s*(\(R\$\s*([\d.,]+)\))?/);
           if (partes) {
             const quantidade = parseInt(partes[1], 10);
             const precoUnitario = parseFloat(partes[3].replace(',', '.'));
             const totalPorItens = precoUnitario * quantidade;
-              return `<tr>
+            // somaTotalItens += totalPorItens;
+            return `<tr>
                         <td>${index + 1}</td>
                         <td>${partes[2]}</td>
                         <td>-</td>
@@ -152,11 +202,6 @@ const formatarPDF = async(htmlContent: string) => {
         <td>${brinde}</td>
         </tr>
         ` : ""}
-        
-      <tr>
-        <td class="td-titulo"><b>Total dos itens:</b></td>
-        <td>${somaTotalItens}</td>
-      </tr>
 
       ${desconto ? `
           <tr>
