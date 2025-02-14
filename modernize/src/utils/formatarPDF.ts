@@ -78,21 +78,6 @@ const formatarPDF = async(htmlContent: string) => {
   
   let somaTotalItens = 0;
 
-  // const somaTotalItens = produtos.reduce((acc, produto) => {
-    //   const partes = produto.match(/(\d+)\s+un\s+.+\s+R\$\s*([\d.]+,\d{2})/);
-  //   if (partes) {
-  //     const quantidade = parseInt(partes[1], 10); // Captura a quantidade
-  //     const precoUnitario = parseFloat(partes[2].replace(/\./g, "").replace(",", ".")); // Converte o preço corretamente
-  //     return acc + (quantidade * precoUnitario); // Multiplica e soma no acumulador
-  //   }
-  //   return acc;
-  // }, 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  
-  // let somaTotalItens = 0;  
-
-  // caso tenha total dos itens futuramente:
-
-
   // Geração do HTML formatado
   const html = `
   <html>
