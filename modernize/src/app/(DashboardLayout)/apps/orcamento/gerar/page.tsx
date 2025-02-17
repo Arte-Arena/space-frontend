@@ -247,36 +247,33 @@ const OrcamentoGerarScreen = () => {
 
   const handleSearchClientes = () => {
     setIsLoadedClients(false);
-
-    setTimeout(() => {
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/search-clientes-consolidados?search=${searchQueryClients}&page=${currentPageClients}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
+    fetch(`${process.env.NEXT_PUBLIC_API}/api/search-clientes-consolidados?search=${searchQueryClients}&page=${currentPageClients}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (Array.isArray(data.data) && data.data.length === 0) {
+          console.log('Sem opções disponíveis para essa busca [clientes]')
+          setAllClients([
+            {
+              id: 1,
+              nome: searchQueryClients,
+              telefone: searchQueryClients,
+              email: searchQueryClients,
+            },
+          ]);
+          setIsLoadedClients(true);
+        } else {
+          // console.log('Opções encontradas [busca de clientes]');
+          setAllClients(data.data);
+          setIsLoadedClients(true);
+        }
       })
-        .then((response) => response.json())
-        .then((data) => {
-          if (Array.isArray(data.data) && data.data.length === 0) {
-            console.log('Sem opções disponíveis para essa busca [clientes]')
-            setAllClients([
-              {
-                id: 1,
-                nome: searchQueryClients,
-                telefone: searchQueryClients,
-                email: searchQueryClients,
-              },
-            ]);
-            setIsLoadedClients(true);
-          } else {
-            // console.log('Opções encontradas [busca de clientes]');
-            setAllClients(data.data);
-            setIsLoadedClients(true);
-          }
-        })
-        .catch((error) => console.error('Erro ao buscar clientes:', error));
-    }, 5000);
+      .catch((error) => console.error('Erro ao buscar clientes:', error));
   };
 
   // Função para reiniciar a pesquisa ao pressionar Enter
