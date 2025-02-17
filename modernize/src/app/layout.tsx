@@ -2,6 +2,7 @@ import React from "react";
 import { Providers } from "@/store/providers";
 import MyApp from "./app";
 import "./global.css";
+import BackgroundUpdater from "@/utils/BackgroundUpdater";
 
 
 export const metadata = {
@@ -17,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <BackgroundUpdater />
         <Providers>
           <MyApp>{children}</MyApp>
         </Providers>
