@@ -51,6 +51,7 @@ import {
 } from '@mui/material';
 import { calcularDataFuturaDiasUteis, calcDiasNaoUteisEntreDatas } from '@/utils/calcDiasUteis';
 import CustomRadio from '@/app/components/forms/theme-elements/CustomRadio';
+import Address from '@/app/components/frontend-pages/contact/form/Address';
 
 
 interface Cliente {
@@ -2429,7 +2430,7 @@ Orçamento válido somente hoje.
                   </div>
                 `;
 
-                  formatarPDF(htmlContent); // Passa o HTML com a cor ajustada
+                  formatarPDF(htmlContent, address); // Passa o HTML com a cor ajustada
                 }}
               >
                 <IconFileTypePdf />
