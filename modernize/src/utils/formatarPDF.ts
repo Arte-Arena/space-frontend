@@ -1,11 +1,6 @@
-
 import Logo from '../../public/images/logos/logo.png'
-import useLatestOrcamento from './SelectUltimoOrcamento';
 
-const  ultimoOrcamento = useLatestOrcamento();
-
-
-const formatarPDF = async(htmlContent: string) => {
+const formatarPDF = async(htmlContent: string, endereco: string) => {
   const linhas = htmlContent.split("\n").map(linha => linha.trim()).filter(linha => linha !== "");
   const logo = Logo.src;
 
@@ -41,8 +36,13 @@ const formatarPDF = async(htmlContent: string) => {
   // apenas o tempo da previsão de retirada 
   const tempoPrevisaoRetirada = previsaoRetirada.includes(":") ? previsaoRetirada.split(":")[1].trim() : previsaoRetirada;
 
+  // puxa o nome e email do user
+  const emailVendedor =
+  typeof window !== "undefined" ? localStorage.getItem("email") : null;
 
-  console.log(ultimoOrcamento)
+  const nomeVendedor = 
+  typeof window !== "undefined" ? localStorage.getItem("name") : null;
+
   // orcamento.[0] te created_at: id: nome_cliente: prazo_opcao_entrega, telefone_cliente vendedor_email: vendedor_nome: 
   console.log(produtos)
 
@@ -109,8 +109,8 @@ const formatarPDF = async(htmlContent: string) => {
        <div><b>Arte Arena</b></div>
        <div>46.745.203/0001-08</div>
        <div>(11) 2337-1548</div>
-       <div>Avenida Doutor Luís Arrobas Martins, 335, Galdivão</div>
-       <div><span>Cadivela do Socorro, São divaulo - Sdiv</span></div>
+       <div>Avenida Doutor Luís Arrobas Martins, 335, Galpão</div>
+       <div><span>Capela do Socorro, São Paulo - SP</span></div>
        <div><span>04.781-000</span></div>
        <div><span>136254528111</span></div>
       </div>
@@ -201,11 +201,11 @@ const formatarPDF = async(htmlContent: string) => {
       <tr><th colspan="2">Contato</th></tr>
             <tr>
         <td class="td-titulo"><b>Vededor:</b></td>
-        <td>${(await ultimoOrcamento).nomeVendedor}</td>
+        <td>${nomeVendedor}</td>
       </tr>
       <tr>
-        <td class="td-titulo"><b>Contato:</b></td>
-        <td>${(await ultimoOrcamento).emailVendedor}</td>
+        <td class="td-titulo"><b>Email:</b></td>
+        <td>${emailVendedor}</td>
       </tr>          
     </table>
 
@@ -215,7 +215,11 @@ const formatarPDF = async(htmlContent: string) => {
         <td class="td-titulo"><b>Prazo de Produção:</b></td>
         <td>${tempoPrazoProducao}</td>
       </tr>
-            <tr>
+      <tr>
+        <td class="td-titulo"><b>Endereço:</b></td>
+        <td>${endereco}</td>
+      </tr>
+      <tr>
         <td class="td-titulo"><b>Frete:</b></td>
         <td>${textoFrete}</td>
       </tr>
