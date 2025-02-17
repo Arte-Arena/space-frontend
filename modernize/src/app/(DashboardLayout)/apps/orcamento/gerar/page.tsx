@@ -51,6 +51,7 @@ import {
 } from '@mui/material';
 import { calcularDataFuturaDiasUteis, calcDiasNaoUteisEntreDatas } from '@/utils/calcDiasUteis';
 import CustomRadio from '@/app/components/forms/theme-elements/CustomRadio';
+import Address from '@/app/components/frontend-pages/contact/form/Address';
 
 
 interface Cliente {
@@ -98,6 +99,8 @@ interface FreteData {
 }
 
 const OrcamentoGerarScreen = () => {
+  const [optionsProdutos, setOptionsProdutos] = useState(['a', 'b', 'c']);
+
   const isLoggedIn = useAuth();
 
   const router = useRouter();
@@ -167,56 +170,36 @@ const OrcamentoGerarScreen = () => {
 
   const accessToken = localStorage.getItem('accessToken');
 
-  const { isFetching: isFetchingClients, error: errorClients, data: dataClients } = useQuery<ApiResponseClientes>({
-    queryKey: ['clientData', currentPageClients],
-    queryFn: async () => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/clientes-consolidados?page=${currentPageClients}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar clientes: ${response.statusText}`);
-      }
-
-      return response.json();
-    }
-  });
+  const dataClients = localStorage.getItem('clientesConsolidadosOrcamento');
 
   useEffect(() => {
     if (dataClients) {
-      // console.log('Resposta da API:', dataClients);
-      if (dataClients.status === 'success' && Array.isArray(dataClients.data)) {
-        setAllClients((prevClients) => [
-          ...prevClients,
-          ...dataClients.data.map(({ id, nome, telefone, email }) => ({
-            id,
-            nome,
-            telefone,
-            email,
-          })),
-        ]);
 
-        // Atualiza o total de páginas (se for a primeira resposta)
-        if (dataClients.pagination) {
-          setTotalPagesClients(dataClients.pagination.total_pages);
-        }
-      } else {
-        console.error('Formato inesperado nos dados da API:', dataClients);
-      }
+      console.log("Arrascaeata: ", dataClients);
+
+      const dataClientsObject = JSON.parse(dataClients) as {
+        status: string;
+        data: { data: Cliente[]; total: number };
+        pagination: { current_page: number; total_pages: number; total_items: number };
+      };
+
+      console.log('dataClientsObject: ', dataClientsObject);
+
+      setAllClients(dataClientsObject.data.data);
+
+    } else {
+      console.warn('Os dados de clientes não foram encontrados.');
     }
   }, [dataClients]);
 
-  const memoizedAllClients = useMemo(() => allClients, [allClients]);
+  // const memoizedAllClients = useMemo(() => allClients, [allClients]);
 
   useEffect(() => {
-    if (allClients.length > 0 && !isFetchingClients && !errorClients) {
+    console.log('allClients: ', allClients);
+    if (allClients.length > 0) {
       setIsLoadedClients(true);
     }
-  }, [allClients, isFetchingClients, errorClients]);
+  }, [allClients]);
 
   const handleScrollClients = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -235,7 +218,7 @@ const OrcamentoGerarScreen = () => {
 
   useEffect(() => {
     if (clientId) {
-      // console.log('Cliente selecionado:', clientId);
+      console.log('Cliente selecionado:', clientId);
     }
   }, [clientId]);
 
@@ -245,17 +228,19 @@ const OrcamentoGerarScreen = () => {
     }
   }, [allClients]);
 
-  useEffect(() => {
-    if (id) {
-      // console.log("O valor do parâmetro id ou valor padrão:", id);
-      setClientId(Number(id));
-    }
-  }, [id]);
+  // useEffect(() => {
+  //   if (id) {
+  //     // console.log("O valor do parâmetro id ou valor padrão:", id);
+  //     setClientId(Number(id));
+  //   }
+  // }, [id]);
 
   const handleChangeClientesConsolidadosInput = (
     event: React.ChangeEvent<{}>,
     value: Cliente | null
   ) => {
+    console.log("teste");
+    console.log("client teste: ", value);
     setClientId(value ? value.id : '');
     setClientInputValue(value ? value.nome : '');
   };
@@ -263,33 +248,35 @@ const OrcamentoGerarScreen = () => {
   const handleSearchClientes = () => {
     setIsLoadedClients(false);
 
-    fetch(`${process.env.NEXT_PUBLIC_API}/api/clientes-consolidados?search=${searchQueryClients}&page=${currentPageClients}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (Array.isArray(data.data) && data.data.length === 0) {
-          console.log('Sem opções disponíveis para essa busca [clientes]')
-          setAllClients([
-            {
-              id: 1,
-              nome: searchQueryClients,
-              telefone: searchQueryClients,
-              email: searchQueryClients,
-            },
-          ]);
-          setIsLoadedClients(true);
-        } else {
-          // console.log('Opções encontradas [busca de clientes]');
-          setAllClients(data.data);
-          setIsLoadedClients(true);
-        }
+    setTimeout(() => {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/search-clientes-consolidados?search=${searchQueryClients}&page=${currentPageClients}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
       })
-      .catch((error) => console.error('Erro ao buscar clientes:', error));
+        .then((response) => response.json())
+        .then((data) => {
+          if (Array.isArray(data.data) && data.data.length === 0) {
+            console.log('Sem opções disponíveis para essa busca [clientes]')
+            setAllClients([
+              {
+                id: 1,
+                nome: searchQueryClients,
+                telefone: searchQueryClients,
+                email: searchQueryClients,
+              },
+            ]);
+            setIsLoadedClients(true);
+          } else {
+            // console.log('Opções encontradas [busca de clientes]');
+            setAllClients(data.data);
+            setIsLoadedClients(true);
+          }
+        })
+        .catch((error) => console.error('Erro ao buscar clientes:', error));
+    }, 5000);
   };
 
   // Função para reiniciar a pesquisa ao pressionar Enter
@@ -301,23 +288,14 @@ const OrcamentoGerarScreen = () => {
     }
   };
 
-  const { isFetching: isFetchingProducts, error: errorProducts, data: dataProducts } = useQuery({
-    queryKey: ['productData'],
-    queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/produto-orcamento-consolidado`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }).then((res) => res.json()),
-  });
+  const dataProducts = localStorage.getItem('produtosConsolidadosOrcamento');
 
   useEffect(() => {
     if (dataProducts) {
-      // console.log('productData:', dataProducts);
-      if (Array.isArray(dataProducts)) {
-        const transformedProducts = dataProducts.map((item: Product) => ({
+      const dataProductsArray = JSON.parse(dataProducts);
+      console.log('productData:', dataProductsArray);
+      if (Array.isArray(dataProductsArray)) {
+        const transformedProducts = dataProductsArray.map((item: Product) => ({
           id: item.id,
           nome: item.nome,
           preco: item.preco,
@@ -330,7 +308,7 @@ const OrcamentoGerarScreen = () => {
         }));
         setAllProducts(transformedProducts);
       } else {
-        console.error('Dados inválidos recebidos da API:', dataProducts);
+        console.error('Dados inválidos recebidos da API:', dataProductsArray);
       }
     } else {
       console.warn('Os dados de produtos não foram encontrados.');
@@ -338,18 +316,19 @@ const OrcamentoGerarScreen = () => {
   }, [dataProducts]);
 
   useEffect(() => {
-    if (allProducts.length > 0 && !isFetchingProducts && !errorProducts) {
+    if (allProducts.length > 0) {
       setIsLoadedProducts(true);
     }
-  }, [allProducts, isFetchingProducts, errorProducts]);
+  }, [allProducts]);
 
   useEffect(() => {
     if (allProducts) {
-      // console.log('allProducts:', allProducts);
+      console.log('allProducts:', allProducts);
     }
   }, [allProducts]);
 
   const productNames = allProducts.map((product) => product.nome);
+  console.log('productNames: ', productNames);
 
   // Tratamento da lista de produtos (exceto brinde)
 
@@ -1244,9 +1223,8 @@ Orçamento válido somente hoje.
               fullWidth
               disablePortal
               id="cliente"
-              loading={isFetchingClients || !isLoadedClients}
-              disabled={isFetchingClients}
-              options={memoizedAllClients}
+              // loading={!isLoadedClients}
+              options={allClients}
               getOptionLabel={(option) =>
                 `${option.id} :: ${option.nome} :: (${option.telefone} ${option.email ? ` - ${option.email}` : ''})`
               }
@@ -1263,7 +1241,6 @@ Orçamento válido somente hoje.
                     ...params.InputProps,
                     endAdornment: (
                       <>
-                        {isFetchingClients ? <CircularProgress size={24} /> : null}
                         {params.InputProps.endAdornment}
                       </>
                     ),
@@ -1285,40 +1262,38 @@ Orçamento válido somente hoje.
                   Produto
                 </CustomFormLabel>
 
-                <Stack spacing={2} direction="row" alignItems="center" mb={2}>
-                  <Autocomplete
-                    fullWidth
-                    id="produto"
-                    options={productNames}
-                    getOptionLabel={(option) => option}
-                    disabled={!isLoadedProducts || !clientId || isFetchingProducts}
-                    loading={isFetchingProducts}
-                    onChange={(event, selectedValue) => {
-                      if (selectedValue) {
-                        const selectedProduct = dataProducts.find((product: Product) => product.nome === selectedValue) as Product | undefined;
+                {/* <Stack spacing={2} direction="row" alignItems="center" mb={2}> */}
+
+
+                <Autocomplete
+                  freeSolo
+                  id="produto"
+                  options={productNames}
+                  // getOptionLabel={(option) => option}
+                  onChange={(event, selectedValue) => {
+                    if (selectedValue) {
+                      if (dataProducts) {
+                        const dataProductsArray = JSON.parse(dataProducts);
+                        const selectedProduct = dataProductsArray.find((product: Product) => product.nome === selectedValue) as Product | undefined;
                         setSelectedProduct(selectedProduct ? selectedProduct : null); // Set selected product for adding
                       } else {
                         setSelectedProduct(null); // Reset selected product
                       }
-                    }}
-                    renderInput={(params) => (
-                      <CustomTextField
-                        {...params}
-                        placeholder="Buscar produto..."
-                        aria-label="Buscar produto"
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment: (
-                            <>
-                              {isFetchingProducts ? <CircularProgress size={24} /> : null}
-                              {params.InputProps.endAdornment}
-                            </>
-                          ),
-                        }}
-                      />
-                    )}
-                  />
-                </Stack>
+                    }
+                  }}
+                  renderInput={params => (
+                    <CustomTextField
+                      {...params}
+                      label="Produtos"
+                      margin="normal"
+                      variant="outlined"
+                      fullWidth
+                    />
+                  )}
+                />
+
+
+                {/* </Stack> */}
               </div>
             </div>
 
@@ -1587,14 +1562,41 @@ Orçamento válido somente hoje.
                     Produto (Brinde)
                   </CustomFormLabel>
 
-                  <Stack spacing={2} direction="row" alignItems="center" mb={2}>
+
+                  <Autocomplete
+                    freeSolo
+                    id="produto-brinde"
+                    options={productNames}
+                    // getOptionLabel={(option) => option}
+                    onChange={(event, selectedValue) => {
+                      if (selectedValue) {
+                        if (dataProducts) {
+                          const dataProductsArray = JSON.parse(dataProducts);
+                          const selectedProductBrinde = dataProductsArray.find((product: Product) => product.nome === selectedValue) as Product | undefined;
+                          setSelectedProductBrinde(selectedProductBrinde ? selectedProductBrinde : null); // Set selected product for adding
+                        } else {
+                          setSelectedProductBrinde(null); // Reset selected product
+                        }
+                      }
+                    }}
+                    renderInput={params => (
+                      <CustomTextField
+                        {...params}
+                        label="Produtos"
+                        margin="normal"
+                        variant="outlined"
+                        fullWidth
+                      />
+                    )}
+                  />
+
+                  {/* <Stack spacing={2} direction="row" alignItems="center" mb={2}>
                     <Autocomplete
                       fullWidth
                       id="produto-brinde"
                       options={productNames}
                       getOptionLabel={(option) => option}
-                      disabled={!isLoadedProducts || !clientId || isFetchingProducts || !checkedBrinde}
-                      loading={isFetchingProducts}
+                      disabled={!isLoadedProducts || !clientId || !checkedBrinde}
                       onChange={(event, selectedValue) => {
                         if (selectedValue) {
                           const selectedProductBrinde = dataProducts.find((product: Product) => product.nome === selectedValue) as Product | undefined;
@@ -1620,7 +1622,7 @@ Orçamento válido somente hoje.
                         />
                       )}
                     />
-                  </Stack>
+                  </Stack> */}
                 </div>
               </div>
 
@@ -2105,7 +2107,7 @@ Orçamento válido somente hoje.
                   }
                 }}
                 checked={isUrgentDeliverySelected && isAnticipation}
-              disabled={checkedBrinde || checkedDesconto}
+                disabled={checkedBrinde || checkedDesconto}
               />
             </RadioGroup>
           </FormControl>
@@ -2429,7 +2431,7 @@ Orçamento válido somente hoje.
                   </div>
                 `;
 
-                  formatarPDF(htmlContent); // Passa o HTML com a cor ajustada
+                  formatarPDF(htmlContent, address); // Passa o HTML com a cor ajustada
                 }}
               >
                 <IconFileTypePdf />

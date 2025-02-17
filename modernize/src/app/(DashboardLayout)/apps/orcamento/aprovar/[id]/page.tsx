@@ -89,12 +89,6 @@ const OrcamentoBuscarScreen = ({ params }: { params: { id: string } }) => {
           </Typography>
         )}
 
-        {orcamento?.[0]?.taxa_antecipa !== null &&(
-          <Typography style={{fontWeight: '600'}}>
-            Total de taxa de atencipação: R$ {orcamento?.[0]?.taxa_antecipa}
-          </Typography>
-        )}
-
         {orcamento?.[0]?.data_antecipa !== null &&(
           <Typography style={{fontWeight: '600'}}>
             Data de antecipação {formatarData(orcamento?.[0]?.data_antecipa)}
