@@ -112,7 +112,6 @@ const formatarPDF = async(htmlContent: string, endereco: string) => {
        <div>Avenida Doutor Luís Arrobas Martins, 335, Galpão</div>
        <div><span>Capela do Socorro, São Paulo - SP</span></div>
        <div><span>04.781-000</span></div>
-       <div><span>136254528111</span></div>
       </div>
     </div>
 
