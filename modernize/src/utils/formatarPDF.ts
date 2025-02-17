@@ -1,4 +1,9 @@
+
 import Logo from '../../public/images/logos/logo.png'
+import useLatestOrcamento from './SelectUltimoOrcamento';
+
+const  ultimoOrcamento = useLatestOrcamento();
+
 
 const formatarPDF = async(htmlContent: string) => {
   const linhas = htmlContent.split("\n").map(linha => linha.trim()).filter(linha => linha !== "");
@@ -14,62 +19,33 @@ const formatarPDF = async(htmlContent: string) => {
   const regexPrevisao = /(Previsão de (Retirada|Entrega):\s*\d{1,2}\s+de\s+[a-zA-Zçáéíóúãõ]+\s+de\s+\d{4}(?:\s*\(.*?\))?|Não é possível prever a data de entrega\.)/i;
   const regexTaxaAntecipacao = /Taxa de Antecipação:\s*R\$\s*\d{1,3}(?:\.\d{3})*(?:,\d{2})?/i;
 
-
-  // // regex numerico
-  // const regexFreteValor = /Frete:\s*R\$\s*([\d.,]+)/i;
-  // const regexTotalValor = /Total:\s*R\$\s*([\d.,]+)/i;
-  // const regexDescontoValor = /Desconto:\s*R\$\s*([\d.,]+)/i;
-  
-  // console.log(regexFreteValor,regexTotalValor,regexDescontoValor )
-
-  // // Função para converter valor de string para número
-  // const converterParaNumero = (valor: string | undefined): number => {
-  //   // Se o valor for undefined, use "0" como padrão
-  //   const valorString = valor || "0";
-  //   return parseFloat(valorString.replace('.', '').replace(',', '.'));
-  // };
-  
-  // // Extrair e somar os valores
-  // let freteValor = 0;
-  // let totalValor = 0;
-  // let descontoValor = 0;
-
-  // linhas.forEach((linha) => {
-  //   const matchFrete = linha.match(regexFrete);
-  //   const matchTotal = linha.match(regexTotal);
-  //   const matchDesconto = linha.match(regexDesconto);
-  
-  //   if (matchFrete) {
-  //     const valorFrete = matchFrete[1]; // Acessa o grupo de captura
-  //     freteValor = converterParaNumero(valorFrete);
-  //   }
-  
-  //   if (matchTotal) {
-  //     const valorTotal = matchTotal[1]; // Acessa o grupo de captura
-  //     totalValor = converterParaNumero(valorTotal);
-  //   }
-  
-  //   if (matchDesconto) {
-  //     const valorDesconto = matchDesconto[1]; // Acessa o grupo de captura
-  //     descontoValor = converterParaNumero(valorDesconto);
-  //   }
-  // });
-
-  // // Calcular o valor final (total + frete - desconto)
-  // const valorFinal = totalValor + freteValor - descontoValor;
-  // console.log(regexFreteValor,regexTotalValor,regexDescontoValor)
-
   // filtragem por Regex
   const produtos = linhas.filter(linha => regexProduto.test(linha));
   const brinde = linhas.find(linha => regexBrinde.test(linha)) || "";
-  const frete = linhas.find(linha => regexFrete.test(linha)) || "Frete não informado";
+  const frete = linhas.find(linha => regexFrete.test(linha)) || "";
   const desconto = linhas.find(linha => regexDesconto.test(linha)) || "";
   const total = linhas.find(linha => regexTotal.test(linha)) || "Total não informado";
   const prazoProducao = linhas.find(linha => regexPrazoProducao.test(linha)) || "Prazo de produção não informado";
   const previsaoRetirada = linhas.find(linha => regexPrevisao.test(linha)) || "Não é possível prever a data de entrega.";
   const TaxaAntecipacao = linhas.find(linha => regexTaxaAntecipacao.test(linha)) || "";
 
+  // pega o valor e a descrição do frete
+  const valorFreteMatch = frete.match(/R\$\s?[\d,.]+/);
+  const valorFrete = valorFreteMatch ? valorFreteMatch[0] : "Frete não informado";
+  const descricaoMatch = frete.match(/\((.*?)\)/);
+  const textoFrete = descricaoMatch ? descricaoMatch[1] : "Frete não informado";
+
+  // apenas o tempo do prazo de produção
+  const tempoPrazoProducao = prazoProducao.includes(":") ? prazoProducao.split(":")[1].trim() : prazoProducao;
+
+  // apenas o tempo da previsão de retirada 
+  const tempoPrevisaoRetirada = previsaoRetirada.includes(":") ? previsaoRetirada.split(":")[1].trim() : previsaoRetirada;
+
+
+  console.log(ultimoOrcamento)
+  // orcamento.[0] te created_at: id: nome_cliente: prazo_opcao_entrega, telefone_cliente vendedor_email: vendedor_nome: 
   console.log(produtos)
+
   // Função auxiliar para calcular soma das quantidades
   const somaQuantidades = produtos.reduce((acc, produto) => {
     const partes = produto.match(/(\d+)\s+un/);
@@ -210,7 +186,11 @@ const formatarPDF = async(htmlContent: string) => {
           <td>${desconto}</td>
           </tr>
           ` : ""}
-
+      
+      <tr>
+        <td class="td-titulo"><b>Frete:</b></td>
+        <td>${valorFrete}</td>
+      </tr>  
       <tr>
         <td class="td-titulo"><b>Total a pagar:</b></td>
         <td> ${total}</td>
@@ -218,18 +198,30 @@ const formatarPDF = async(htmlContent: string) => {
     </table>
 
     <table class="info-table">
-      <tr><th colspan="2">Informações de Entrega</th></tr>
+      <tr><th colspan="2">Contato</th></tr>
+            <tr>
+        <td class="td-titulo"><b>Vededor:</b></td>
+        <td>${(await ultimoOrcamento).nomeVendedor}</td>
+      </tr>
       <tr>
-        <td class="td-titulo"><b>Frete:</b></td>
-        <td>${frete}</td>
+        <td class="td-titulo"><b>Contato:</b></td>
+        <td>${(await ultimoOrcamento).emailVendedor}</td>
       </tr>          
+    </table>
+
+    <table class="info-table">
+      <tr><th colspan="2">Informações de Entrega</th></tr>        
       <tr>
         <td class="td-titulo"><b>Prazo de Produção:</b></td>
-        <td>${prazoProducao}</td>
+        <td>${tempoPrazoProducao}</td>
+      </tr>
+            <tr>
+        <td class="td-titulo"><b>Frete:</b></td>
+        <td>${textoFrete}</td>
       </tr>
       <tr>
         <td class="td-titulo"><b>Previsão De Retirada:</b></td>
-        <td>${previsaoRetirada}</td>
+        <td>${tempoPrevisaoRetirada}</td>
       </tr>
     </table>
 
