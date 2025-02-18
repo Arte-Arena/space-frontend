@@ -17,7 +17,7 @@ const BackgroundUpdater = () => {
         });
         const clientesConsolidados = await response.json();
         localStorage.setItem('clientesConsolidadosOrcamento', JSON.stringify(clientesConsolidados));
-        console.log('clientesConsolidadosOrcamento: ', clientesConsolidados);
+        // console.log('clientesConsolidadosOrcamento: ', clientesConsolidados);
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
       }
@@ -42,7 +42,7 @@ const BackgroundUpdater = () => {
         });
         const produtosConsolidadosOrcamento = await response.json();
         localStorage.setItem('produtosConsolidadosOrcamento', JSON.stringify(produtosConsolidadosOrcamento));
-        console.log('produtosConsolidadosOrcamento: ', produtosConsolidadosOrcamento);
+        // console.log('produtosConsolidadosOrcamento: ', produtosConsolidadosOrcamento);
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
       }

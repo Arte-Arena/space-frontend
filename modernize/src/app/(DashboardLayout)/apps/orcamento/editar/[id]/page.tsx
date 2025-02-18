@@ -1,6 +1,6 @@
 'use client'
 import { useParams } from 'next/navigation';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/utils/useAuth';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
@@ -80,15 +80,15 @@ interface Orcamento {
   preco_opcao_entrega: number | null; // Corrigido para número
   created_at: string;
   updated_at: string;
-  antecipado: number;
+  antecipado: boolean | null;
   data_antecipa: string | null;
   taxa_antecipa: string | null;
-  descontado: number;
+  descontado: boolean | null;
   tipo_desconto: string | null;
   valor_desconto: number | null;
   percentual_desconto: number | null;
   total_orcamento: number | null; // Corrigido para número
-  brinde: number;
+  brinde: boolean | null;
   produtos_brinde: string | null;
 }
 
@@ -196,25 +196,10 @@ const OrcamentoEditarIdScreen = () => {
   const [percentualDesconto, setPercentualDesconto] = useState<number | null>(null);
   const [valorDesconto, setValorDesconto] = useState<number | null>(null);
 
+  const primeiraExecucaoOrcamentoEditarDesconto = useRef(true);
+  const primeiraExecucaoOrcamentoEditarEntrega = useRef(true);
+
   const accessToken = localStorage.getItem('accessToken');
-
-  // useEffect(() => {
-  //   if (orcamento) {
-  //     const clienteOctaNumber = Number(orcamento.cliente_octa_number);
-  //     if (!isNaN(clienteOctaNumber)) {
-  //       setClientId(clienteOctaNumber);
-  //       // Aqui você pode encontrar o cliente correspondente na lista de clientes
-  //       const foundClient = allClients.find(client => client.id === clienteOctaNumber);
-  //       setSelectedClient(foundClient || null); // Define o cliente selecionado ou nulo
-  //       console.log('setSelectedClient', foundClient);
-  //     } else {
-  //       throw new Error('cliente_octa_number não é um número válido');
-  //     }
-  //   }
-  // }, [orcamento]);
-
-
-  const dataClients = localStorage.getItem('clientesConsolidadosOrcamento');
 
   const getOrcamentoById = async (): Promise<Orcamento | null> => {
     const accessToken = localStorage.getItem('accessToken');
@@ -262,10 +247,10 @@ const OrcamentoEditarIdScreen = () => {
     preco_opcao_entrega: number | null;
     created_at: string;
     updated_at: string;
-    antecipado: number;
+    antecipado: boolean | null;
     data_antecipa: string | null;
     taxa_antecipa: string | null;
-    descontado: number;
+    descontado: boolean | null;
     tipo_desconto: string | null;
     valor_desconto: number | null;
     percentual_desconto: number | null;
@@ -273,19 +258,108 @@ const OrcamentoEditarIdScreen = () => {
     brinde: number;
     produtos_brinde: string | null;
   } | null;
-  
-  useEffect(() => {
-    if (!orcamento) return; // Retorna se orcamento for nulo
-    
-    const clienteOctaNumber = Number(orcamento.cliente_octa_number);
-    setClientId (clienteOctaNumber);
-    handleSearchClientes(clienteOctaNumber);
-}, [orcamento]);
-  
-  // const memoizedAllClients = useMemo(() => allClients, [allClients]);
 
   useEffect(() => {
-    console.log('allClients: ', allClients);
+    if (!orcamento) return; // Retorna se orcamento for nulo
+
+    console.log('orcamento', orcamento);
+
+    const clienteOctaNumber = Number(orcamento.cliente_octa_number);
+    handleSearchClientes(clienteOctaNumber);
+    setClientId(clienteOctaNumber);
+
+    if (orcamento?.lista_produtos) {
+      const convertedProducts: Product[] = orcamento.lista_produtos.map(produto => ({
+        id: produto.id,
+        nome: produto.nome,
+        preco: produto.preco,
+        quantidade: produto.quantidade,
+        prazo: produto.prazo,
+        // Convertendo strings para números
+        peso: Number(produto.peso),
+        comprimento: Number(produto.comprimento),
+        largura: Number(produto.largura),
+        altura: Number(produto.altura)
+      }));
+
+      setProductsList(convertedProducts);
+
+      if (orcamentoData?.brinde) {
+        setCheckedBrinde(orcamentoData?.brinde === 1);
+      }
+
+      if (orcamentoData?.produtos_brinde) {
+        
+        try {
+          const parsedBrindeProducts: Produto[] = JSON.parse(orcamentoData?.produtos_brinde);
+          
+          const convertedBrindeProducts: Product[] = parsedBrindeProducts.map(produto => ({
+            id: produto.id,
+            nome: produto.nome,
+            preco: produto.preco,
+            quantidade: produto.quantidade,
+            prazo: produto.prazo,
+            peso: Number(produto.peso),
+            comprimento: Number(produto.comprimento),
+            largura: Number(produto.largura),
+            altura: Number(produto.altura)
+          }));
+          
+          setProductsBrindeList(convertedBrindeProducts);
+          console.log('convertedBrindeProducts', convertedBrindeProducts);
+        } catch (error) {
+          console.error('Erro ao parsear produtos_brinde:', error);
+          setProductsBrindeList([]);
+        }
+      } else {
+        setProductsBrindeList([]);
+      }
+
+      if (orcamentoData?.endereco_cep) {
+        setCEP(orcamentoData?.endereco_cep);
+        getFrete(orcamentoData?.endereco_cep);
+      }
+
+      if (orcamentoData?.endereco) {
+        setAddress(orcamentoData?.endereco);
+      }
+
+      if (orcamentoData?.opcao_entrega) {
+        console.log('orcamentoData?.opcao_entrega', orcamentoData?.opcao_entrega);
+        setShippingOption(orcamentoData?.opcao_entrega);
+      }
+      
+      if (orcamentoData?.antecipado) {
+        setIsUrgentDeliverySelected(orcamentoData?.antecipado);
+        setIsAnticipation(orcamentoData?.antecipado);
+        setDataDesejadaEntrega(orcamentoData?.data_antecipa ? DateTime.fromISO(orcamentoData.data_antecipa) : null);
+        setTaxaAntecipa(Number(orcamentoData?.taxa_antecipa) || 0);
+      } else {
+        setIsUrgentDeliverySelected(true);
+        setIsAnticipation(false);
+        setDataDesejadaEntrega(null);
+        setTaxaAntecipa(0);
+      }
+      
+      if (orcamentoData?.opcao_entrega) {
+        setShippingOption(orcamentoData?.opcao_entrega);
+      }
+      
+      calcPrevisao();
+      
+      if (orcamentoData?.descontado) {
+        setCheckedDesconto(true);
+        setTipoDesconto(orcamentoData?.tipo_desconto);
+        setPercentualDesconto(Number(orcamentoData?.percentual_desconto));
+        setValorDesconto(Number(orcamentoData?.valor_desconto));
+        setOpenDesconto(false);
+
+      }
+    }
+  }, [orcamento]);
+
+  useEffect(() => {
+    // console.log('allClients: ', allClients);
     if (allClients.length > 0) {
       setIsLoadedClients(true);
     }
@@ -300,7 +374,7 @@ const OrcamentoEditarIdScreen = () => {
 
   useEffect(() => {
     if (clientId) {
-      console.log('Cliente selecionado:', clientId);
+      // console.log('Cliente selecionado:', clientId);
     }
   }, [clientId]);
 
@@ -309,13 +383,6 @@ const OrcamentoEditarIdScreen = () => {
       // console.log('allClients:', allClients);
     }
   }, [allClients]);
-
-  // useEffect(() => {
-  //   if (id) {
-  //     // console.log("O valor do parâmetro id ou valor padrão:", id);
-  //     setClientId(Number(id));
-  //   }
-  // }, [id]);
 
   const handleChangeClientesConsolidadosInput = (
     event: React.ChangeEvent<{}>,
@@ -332,24 +399,24 @@ const OrcamentoEditarIdScreen = () => {
 
     // Fetch clients based on search parameter
     fetch(`${process.env.NEXT_PUBLIC_API}/api/search-clientes-consolidados?search=${searchParam}&page=${currentPageClients}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-        },
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
     })
-    .then((response) => response.json())
-    .then((data) => {
-      setAllClients(data.data);
-    })
-    .catch((error) => {
+      .then((response) => response.json())
+      .then((data) => {
+        setAllClients(data.data);
+      })
+      .catch((error) => {
         console.error('Erro ao buscar clientes:', error);
         setIsLoadedClients(true); // Ensure loading state is updated even on error
         return undefined; // Return undefined in case of an error
-    });
+      });
 
     return undefined; // Default return value before async completion
-};
+  };
 
 
   // Função para reiniciar a pesquisa ao pressionar Enter
@@ -898,20 +965,12 @@ const OrcamentoEditarIdScreen = () => {
   }, [prazoProducao]);
 
   useEffect(() => {
-
-    // if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
-    //   console.log('0099');
-    //   calcPrevisao();
-    // }
-
-    // console.log("isAnticipation4444: ", isAnticipation);
-    // console.log("taxaAntecipa: ", taxaAntecipa);
-    // console.log("dataDesejadaEntrega: ", dataDesejadaEntrega);
-
-    setShippingOption('');
-    getFrete(cep);
-
-
+    if (primeiraExecucaoOrcamentoEditarEntrega) {
+      getFrete(cep);
+    } else {
+      setShippingOption('');
+      getFrete(cep);
+    }
   }, [isAnticipation]);
 
   async function calcPrazoAntecipa() {
@@ -937,7 +996,7 @@ const OrcamentoEditarIdScreen = () => {
         const prazoProducaoAntecipado = diffDias - prazoFrete;
         setPrazoProducaoAntecipado(prazoProducaoAntecipado - qtdDiasNaoUteis);
       } else {
-        console.log('0023');
+        // console.log('0023');
         setPrazoProducaoAntecipado(dataDesejadaEntregaStart.diff(hojeLuxon, 'days').days + -qtdDiasNaoUteis);
       }
 
@@ -959,7 +1018,7 @@ const OrcamentoEditarIdScreen = () => {
   }, [dataDesejadaEntrega]);
 
   useEffect(() => {
-    console.log(diffHojeDataDesejadaEntrega);
+    // console.log(diffHojeDataDesejadaEntrega);
   }, [diffHojeDataDesejadaEntrega]);
 
 
@@ -1140,7 +1199,6 @@ const OrcamentoEditarIdScreen = () => {
       produtosBrindeTexto += `${quantidade} ${nomeProduto} ${precoUnitario} (${totalProduto})\n`;
     });
 
-
     let precoFreteTexto = '0.00';
     if (precoFrete) {
       precoFreteTexto = precoFrete.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
@@ -1151,9 +1209,7 @@ const OrcamentoEditarIdScreen = () => {
         }
       }
     }
-
     // console.log('Testando o estado previsaoEntrega: ', previsaoEntrega);
-
     // console.log('0019');
     // console.log(prazoProducaoAntecipado);
 
@@ -1248,7 +1304,6 @@ Orçamento válido somente hoje.
     setOpenSnackbarCopiarOrcamento(false);
   }
 
-  // Definindo a data mínima para amanhã
   const tomorrow = DateTime.now().plus({ days: 1 });
 
   const handleAntecipa = () => {
@@ -1259,11 +1314,14 @@ Orçamento válido somente hoje.
   }
 
   useEffect(() => {
-    setOpenDesconto(checkedDesconto);
+    if (primeiraExecucaoOrcamentoEditarDesconto.current && orcamento?.descontado === true) {
+      primeiraExecucaoOrcamentoEditarDesconto.current = false;
+    } else {
+      setOpenDesconto(checkedDesconto);
+    }
   }, [checkedDesconto]);
 
   const handleDesconto = () => {
-
     setOpenDesconto(false)
   }
 
@@ -1657,40 +1715,6 @@ Orçamento válido somente hoje.
                       />
                     )}
                   />
-
-                  {/* <Stack spacing={2} direction="row" alignItems="center" mb={2}>
-                    <Autocomplete
-                      fullWidth
-                      id="produto-brinde"
-                      options={productNames}
-                      getOptionLabel={(option) => option}
-                      disabled={!isLoadedProducts || !clientId || !checkedBrinde}
-                      onChange={(event, selectedValue) => {
-                        if (selectedValue) {
-                          const selectedProductBrinde = dataProducts.find((product: Product) => product.nome === selectedValue) as Product | undefined;
-                          setSelectedProductBrinde(selectedProductBrinde ? selectedProductBrinde : null); // Set selected product for adding
-                        } else {
-                          setSelectedProductBrinde(null); // Reset selected product
-                        }
-                      }}
-                      renderInput={(params) => (
-                        <CustomTextField
-                          {...params}
-                          placeholder="Buscar produto..."
-                          aria-label="Buscar produto"
-                          InputProps={{
-                            ...params.InputProps,
-                            endAdornment: (
-                              <>
-                                {isFetchingProducts ? <CircularProgress size={24} /> : null}
-                                {params.InputProps.endAdornment}
-                              </>
-                            ),
-                          }}
-                        />
-                      )}
-                    />
-                  </Stack> */}
                 </div>
               </div>
 
@@ -2417,9 +2441,6 @@ Orçamento válido somente hoje.
             <DialogActions sx={{ px: 3 }}>
               <Button onClick={() => {
                 setOpenDesconto(false);
-                // if (!isAnticipation) {
-                //   setIsAnticipation(false);
-                // }
               }}>
                 Cancelar
               </Button>
