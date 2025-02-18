@@ -120,6 +120,12 @@ const getMenuItems = (): MenuitemsType[] => {
         },
         {
           id: uniqueId(),
+          title: "Status de Orçamento",
+          icon: IconZoomMoney,
+          href: "/apps/orcamento/status",
+        },
+        {
+          id: uniqueId(),
           title: "Backoffice",
           icon: IconBuilding,
           href: "/apps/orcamento/backoffice",
