@@ -24,8 +24,15 @@ import { useRouter } from 'next/navigation';
 import { useStatusChangeAprovado, useStatusChangeDesaprovado } from '@/utils/PutStatusOrcamentos';
 
 
-// IMPORTAR FUNÇÕES DE MUDANÇA NO BACKEND (fazer num arquivo só e ter varios exports)
-
+interface StatusCellProps {
+  status: string;
+  statusKey: string;
+  rowId: number;
+  handleAprovar: (key: string, id: number) => void;
+  handleDesaprovar: (key: string, id: number) => void;
+  approvedValue: string; // Valor que representa "aprovado" ou equivalente
+  disabled?: boolean; // Se o botão deve estar desabilitado
+}
 
 interface Orcamento {
   id: number;
@@ -93,20 +100,45 @@ const OrcamentoBuscarScreen = () => {
     throw new Error('Access token is missing');
   }
 
-  // const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos, refetch } = useQuery({
-  //   queryKey: ['budgetData', searchQuery, page],
-  //   queryFn: () =>
-  //     fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/get-orcamentos-status?q=${encodeURIComponent(searchQuery)}&page=${page}`, {
-  //       method: 'GET',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         Authorization: `Bearer ${accessToken}`,
-  //       },
-  //     }).then((res) => res.json()),
-  // });
-
-
-
+  // renderização dos botoes da tabela
+  const renderStatusCell = ({
+    status,
+    statusKey,
+    rowId,
+    handleAprovar,
+    handleDesaprovar,
+    approvedValue,
+  }: StatusCellProps) => {
+    return (
+      <TableCell>
+      <Stack direction="column" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} alignItems="center">
+          {status === approvedValue ? (
+            <IconCircleCheck color="green" size={22} />
+          ) : (
+            <IconBan color="red" size={22} />
+          )}
+        </Stack>
+        <Tooltip title="Alterar Status">
+          <IconButton
+            aria-label="alterar status"
+            onClick={() =>
+              status === approvedValue
+                ? handleDesaprovar(statusKey, rowId)
+                : handleAprovar(statusKey, rowId)
+            }
+          >
+            {status === approvedValue ? (
+              <IconArrowBackUp size={18} />
+            ) : (
+              <IconProgressCheck size={18} />
+            )}
+          </IconButton>
+        </Tooltip>
+      </Stack>
+    </TableCell>
+    );
+  };
 
   const handleSearch = () => {
     setSearchQuery(query); // Atualiza a busca
@@ -148,10 +180,6 @@ const OrcamentoBuscarScreen = () => {
   }
 
   // TODOS OS HANDLES DE MUDANÇA DE STATUS DESAPROVADOS
-
-  const handleDesaprovarArteArena = async (rowId: number) =>{
-    return null
-  }
 
   const handleDesaprovar = async (campo: string, rowId: number) =>{
     try{
@@ -206,18 +234,18 @@ const OrcamentoBuscarScreen = () => {
                   <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >ID</TableCell>
                   <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Número do Cliente</TableCell>
                   <TableCell sx={{fontSize: '8px', textAlign: 'center', padding: '0'}} >Data de Criação</TableCell>
-                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Arte Arena</TableCell>
-                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Cliente</TableCell>
-                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Envio Pedido</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Produção Esboço</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Esboço</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Produção Arte Final</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Arte Final</TableCell>
                   <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Amostra Arte Arena</TableCell>
                   <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Envio Amostra</TableCell>
                   <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Amostra Cliente</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Cliente</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Arte Arena</TableCell>
                   <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Faturamento</TableCell>
                   <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Pagamento</TableCell>
-                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Produção Esboço</TableCell>
-                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Produção Arte Final</TableCell>
-                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Esboço</TableCell>
-                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Arte Final</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Envio Pedido</TableCell>
                   {/* <TableCell>Ações</TableCell> */}
                 </TableRow>
               </TableHead>
@@ -238,6 +266,86 @@ const OrcamentoBuscarScreen = () => {
                       <TableCell sx={{fontSize: '8px'}} >{row.cliente_octa_number}</TableCell>
                       <TableCell sx={{fontSize: '8px', padding: '0'}} >{new Date(row.created_at).toLocaleDateString()}</TableCell>
                       
+                      {/* Célula de status_producao_esboco */}
+                      {renderStatusCell({
+                        status: row.status_producao_esboco,
+                        statusKey: 'status_producao_esboco',
+                        rowId: row.id,
+                        handleAprovar,
+                        handleDesaprovar,
+                        approvedValue: 'aguardando_melhoria',
+                      })}
+
+                      {/* Célula de status_aprovacao_esboco */}
+                      {renderStatusCell({
+                        status: row.status_aprovacao_esboco,
+                        statusKey: 'status_aprovacao_esboco',
+                        rowId: row.id,
+                        handleAprovar,
+                        handleDesaprovar,
+                        approvedValue: 'aprovado',
+                      })}
+                      
+                      {/* Célula de status_producao_arte_final */}
+                      {renderStatusCell({
+                        status: row.status_producao_arte_final,
+                        statusKey: 'status_producao_arte_final',
+                        rowId: row.id,
+                        handleAprovar,
+                        handleDesaprovar,
+                        approvedValue: 'aguardando_melhoria',
+                      })}
+
+
+                      {/* Célula de status_aprovacao_arte_final */}
+                      {renderStatusCell({
+                        status: row.status_aprovacao_arte_final,
+                        statusKey: 'status_aprovacao_arte_final',
+                        rowId: row.id,
+                        handleAprovar,
+                        handleDesaprovar,
+                        approvedValue: 'aprovada',
+                      })}
+
+                      {/* Célula de status_aprovacao_amostra_arte_arena */}
+                      {renderStatusCell({
+                        status: row.status_aprovacao_amostra_arte_arena,
+                        statusKey: 'status_aprovacao_amostra_arte_arena',
+                        rowId: row.id,
+                        handleAprovar,
+                        handleDesaprovar,
+                        approvedValue: 'aprovada',
+                      })}
+
+                      {/* Célula de status_envio_amostra */}
+                      {renderStatusCell({
+                        status: row.status_envio_amostra,
+                        statusKey: 'status_envio_amostra',
+                        rowId: row.id,
+                        handleAprovar,
+                        handleDesaprovar,
+                        approvedValue: 'enviada',
+                      })}
+
+                      {/* Célula de status_aprovacao_amostra_cliente */}
+                      {renderStatusCell({
+                        status: row.status_aprovacao_amostra_cliente,
+                        statusKey: 'status_aprovacao_amostra_cliente',
+                        rowId: row.id,
+                        handleAprovar,
+                        handleDesaprovar,
+                        approvedValue: 'aprovada',
+                      })}
+
+                      {renderStatusCell({
+                        status: row.status_aprovacao_cliente,
+                        statusKey: 'status_aprovacao_cliente',
+                        rowId: row.id,
+                        handleAprovar,
+                        handleDesaprovar,
+                        approvedValue: 'aprovado',
+                      })}
+                      
                       {/* status handles */}
                       <TableCell>
                         <Stack direction="column" spacing={1} alignItems="center">
@@ -252,8 +360,8 @@ const OrcamentoBuscarScreen = () => {
                               <IconButton
                                 aria-label="alterar status"
                                 onClick={() =>
-                                  row.status === "aprovado"
-                                    ? handleDesaprovarArteArena(row.id)
+                                  row.status_aprovacao_arte_arena === "aprovado"
+                                    ? handleDesaprovar(row.status_aprovacao_arte_arena, row.id)
                                     : handleAprovarArteArena(row.id)
                                 }
                               >
@@ -261,280 +369,39 @@ const OrcamentoBuscarScreen = () => {
                               </IconButton>
                             </Tooltip>                          
                         </Stack>
-                      </TableCell>
-                          {/* <IconButton
-                            aria-label="edit"
-                            onClick={() => handleEditOrcamento(row.id)}
-                          >
-                            <IconEdit />
-                          </IconButton> */}
+                      </TableCell>                         
 
+                      {/* Célula de status_faturamento */}
+                      {renderStatusCell({
+                        status: row.status_faturamento,
+                        statusKey: 'status_faturamento',
+                        rowId: row.id,
+                        handleAprovar,
+                        handleDesaprovar,
+                        approvedValue: 'faturado',
+                      })}
+                              
+                      {/* Célula de status_pagamento */}
+                      {renderStatusCell({
+                        status: row.status_pagamento,
+                        statusKey: 'status_pagamento',
+                        rowId: row.id,
+                        handleAprovar,
+                        handleDesaprovar,
+                        approvedValue: 'pago',
+                      })}
 
-                      <TableCell>
-                        <Stack direction="column" spacing={1} alignItems="center">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_aprovacao_cliente === "aprovado" ? (
-                              <IconCircleCheck color="green" size={22} />
-                            ) : (
-                              <IconBan color="red" size={22} />
-                            )}
-                          </Stack>
-                          <Tooltip title="Alterar Status">
-                            <IconButton
-                              aria-label="alterar status"
-                              onClick={() =>
-                                row.status_aprovacao_cliente === "aprovado"
-                                  ? handleDesaprovar('status_aprovacao_cliente', row.id)
-                                  : handleAprovar('status_aprovacao_cliente', row.id)
-                              }
-                            >
-                              {row.status_aprovacao_cliente === "aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
+                      {/* Célula de status_envio_pedido */}
+                      {renderStatusCell({
+                        status: row.status_envio_pedido,
+                        statusKey: 'status_envio_pedido',
+                        rowId: row.id,
+                        handleAprovar,
+                        handleDesaprovar,
+                        approvedValue: 'enviado',
+                      })}
 
-                      <TableCell>
-                        <Stack direction="column" spacing={1} alignItems="center">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_envio_pedido === "enviado" ? (
-                              <IconCircleCheck color="green" size={22} />
-                            ) : (
-                              <IconBan color="red" size={22} />
-                            )}
-                          </Stack>
-                          <Tooltip title="Alterar Status">
-                            <IconButton
-                              aria-label="alterar status"
-                              onClick={() =>
-                                row.status_envio_pedido === "enviado"
-                                  ? handleDesaprovar('status_envio_pedido', row.id)
-                                  : handleAprovar('status_envio_pedido', row.id)
-                              }
-                            >
-                              {row.status_envio_pedido === "enviado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-
-                      <TableCell>
-                        <Stack direction="column" spacing={1} alignItems="center">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_aprovacao_amostra_arte_arena === "aprovada" ? (
-                              <IconCircleCheck color="green" size={22} />
-                            ) : (
-                              <IconBan color="red" size={22} />
-                            )}
-                          </Stack>
-                          <Tooltip title="Alterar Status">
-                            <IconButton
-                              aria-label="alterar status"
-                              onClick={() =>
-                                row.status_aprovacao_amostra_arte_arena === "aprovada"
-                                  ? handleDesaprovar('status_aprovacao_amostra_arte_arena', row.id)
-                                  : handleAprovar('status_aprovacao_amostra_arte_arena', row.id)
-                              }
-                            >
-                              {row.status_aprovacao_amostra_arte_arena === "aprovada" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-
-                      <TableCell>
-                        <Stack direction="column" spacing={1} alignItems="center">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_envio_amostra === "enviada" ? (
-                              <IconCircleCheck color="green" size={22} />
-                            ) : (
-                              <IconBan color="red" size={22} />
-                            )}
-                          </Stack>
-                          <Tooltip title="Alterar Status">
-                            <IconButton
-                              aria-label="alterar status"
-                              onClick={() =>
-                                row.status_envio_amostra === "enviada"
-                                  ? handleDesaprovar('status_envio_amostra',row.id)
-                                  : handleAprovar('status_envio_amostra',row.id)
-                              }
-                            >
-                              {row.status_envio_amostra === "enviada" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-
-                      <TableCell>
-                        <Stack direction="column" spacing={1} alignItems="center">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_aprovacao_amostra_cliente === "aprovada" ? (
-                              <IconCircleCheck color="green" size={22} />
-                            ) : (
-                              <IconBan color="red" size={22} />
-                            )}
-                          </Stack>
-                          <Tooltip title="Alterar Status">
-                            <IconButton
-                              aria-label="alterar status"
-                              onClick={() =>
-                                row.status_aprovacao_amostra_cliente === "aprovada"
-                                  ? handleDesaprovar('status_aprovacao_amostra_cliente',row.id)
-                                  : handleAprovar('status_aprovacao_amostra_cliente',row.id)
-                              }
-                            >
-                              {row.status_aprovacao_amostra_cliente === "aprovada" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-
-                      <TableCell>
-                        <Stack direction="column" spacing={1} alignItems="center">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_faturamento === "faturado" ? (
-                              <IconCircleCheck color="green" size={22} />
-                            ) : (
-                              <IconBan color="red" size={22} />
-                            )}
-                          </Stack>
-                          <Tooltip title="Alterar Status">
-                            <IconButton
-                              aria-label="alterar status"
-                              onClick={() =>
-                                row.status_faturamento === "faturado"
-                                  ? handleDesaprovar('status_faturamento',row.id)
-                                  : handleAprovar('status_faturamento',row.id)
-                              }
-                            >
-                              {row.status_faturamento === "faturado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-
-                      <TableCell>
-                        <Stack direction="column" spacing={1} alignItems="center">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_pagamento === "pago" ? (
-                              <IconCircleCheck color="green" size={22} />
-                            ) : (
-                              <IconBan color="red" size={22} />
-                            )}
-                          </Stack>
-                          <Tooltip title="Alterar Status">
-                            <IconButton
-                              aria-label="alterar status"
-                              onClick={() =>
-                                row.status_pagamento === "pago"
-                                  ? handleDesaprovar('status_pagamento',row.id)
-                                  : handleAprovar('status_pagamento',row.id)
-                              }
-                            >
-                              {row.status_pagamento === "pago" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-
-                      <TableCell>
-                        <Stack direction="column" spacing={1} alignItems="center">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_producao_esboco === "aguardando_melhoria" ? (
-                              <IconCircleCheck color="green" size={22} />
-                            ) : (
-                              <IconBan color="red" size={22} />
-                            )}
-                          </Stack>
-                          <Tooltip title="Alterar Status">
-                            <IconButton
-                              aria-label="alterar status"
-                              onClick={() =>
-                                row.status_producao_esboco === "aguardando_melhoria"
-                                  ? handleDesaprovar('status_producao_esboco',row.id)
-                                  : handleAprovar('status_producao_esboco',row.id)
-                              }
-                            >
-                              {row.status_producao_esboco === "aguardando_melhoria" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-
-                      <TableCell>
-                        <Stack direction="column" spacing={1} alignItems="center">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_producao_arte_final === "aguardando_melhoria" ? (
-                              <IconCircleCheck color="green" size={22} />
-                            ) : (
-                              <IconBan color="red" size={22} />
-                            )}
-                          </Stack>
-                          <Tooltip title="Alterar Status">
-                            <IconButton
-                              aria-label="alterar status"
-                              onClick={() =>
-                                row.status_producao_arte_final === "aguardando_melhoria"
-                                  ? handleDesaprovar('status_producao_arte_final',row.id)
-                                  : handleAprovar('status_producao_arte_final',row.id)
-                              }
-                            >
-                              {row.status_producao_arte_final === "aguardando_melhoria" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-
-                      <TableCell>
-                        <Stack direction="column" spacing={1} alignItems="center">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_aprovacao_esboco === "aprovado" ? (
-                              <IconCircleCheck color="green" size={22} />
-                            ) : (
-                              <IconBan color="red" size={22} />
-                            )}
-                          </Stack>
-                          <Tooltip title="Alterar Status">
-                            <IconButton
-                              aria-label="alterar status"
-                              onClick={() =>
-                                row.status_aprovacao_esboco === "aprovado"
-                                  ? handleDesaprovar('status_aprovacao_esboco',row.id)
-                                  : handleAprovar('status_aprovacao_esboco',row.id)
-                              }
-                            >
-                              {row.status_aprovacao_esboco === "aprovado" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-
-                      <TableCell>
-                        <Stack direction="column" spacing={1} alignItems="center">
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            {row.status_aprovacao_arte_final === "aprovada" ? (
-                              <IconCircleCheck color="green" size={22} />
-                            ) : (
-                              <IconBan color="red" size={22} />
-                            )}
-                          </Stack>
-                          <Tooltip title="Alterar Status">
-                            <IconButton
-                              aria-label="alterar status"
-                              onClick={() =>
-                                row.status_aprovacao_arte_final === "aprovada"
-                                  ? handleDesaprovar('status_aprovacao_arte_final',row.id)
-                                  : handleAprovar('status_aprovacao_arte_final',row.id)
-                              }
-                            >
-                              {row.status_aprovacao_arte_final === "aprovada" ? <IconArrowBackUp size={18} /> : <IconProgressCheck size={18} />}
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-
-                    </TableRow>
+                  </TableRow>
                     <TableRow>
                       <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
                         <Collapse in={openRow[row.id]} timeout="auto" unmountOnExit>
