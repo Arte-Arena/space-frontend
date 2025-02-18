@@ -29,7 +29,6 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { DateTime } from 'luxon';
 import exportarPDF from '@/utils/formatarPDF';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf } from '@tabler/icons-react';
 import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -47,28 +46,57 @@ import {
   Radio,
   RadioGroup,
   FormControlLabel,
-  Stack,
   Typography
 } from '@mui/material';
 import { calcularDataFuturaDiasUteis, calcDiasNaoUteisEntreDatas } from '@/utils/calcDiasUteis';
 import CustomRadio from '@/app/components/forms/theme-elements/CustomRadio';
 
 
+interface Produto {
+  id: number;
+  nome: string;
+  peso: string;
+  prazo: number;
+  preco: number;
+  altura: string;
+  largura: string;
+  created_at: string | null;
+  quantidade: number;
+  updated_at: string | null;
+  comprimento: string;
+}
+
+interface Orcamento {
+  id: number;
+  user_id: number;
+  cliente_octa_number: string;
+  nome_cliente: string | null;
+  lista_produtos: Produto[]; // Aqui estamos assumindo que você vai parsear a lista de produtos de JSON
+  texto_orcamento: string | null;
+  endereco_cep: string;
+  endereco: string;
+  opcao_entrega: string;
+  prazo_opcao_entrega: number;
+  preco_opcao_entrega: number | null; // Corrigido para número
+  created_at: string;
+  updated_at: string;
+  antecipado: number;
+  data_antecipa: string | null;
+  taxa_antecipa: string | null;
+  descontado: number;
+  tipo_desconto: string | null;
+  valor_desconto: number | null;
+  percentual_desconto: number | null;
+  total_orcamento: number | null; // Corrigido para número
+  brinde: number;
+  produtos_brinde: string | null;
+}
+
 interface Cliente {
   id: number;
   nome: string | null;
   telefone: string | null;
   email: string | null;
-}
-
-interface ApiResponseClientes {
-  status: string;
-  data: Cliente[];
-  pagination?: {
-    current_page: number;
-    total_pages: number;
-    total_items: number;
-  };
 }
 
 interface Product {
@@ -111,6 +139,9 @@ const OrcamentoEditarIdScreen = () => {
   const [searchQueryClients, setSearchQueryClients] = useState<string>('');
   const [clientInputValue, setClientInputValue] = useState<string | null>(null);
   const [clientId, setClientId] = useState<number | ''>('');
+
+  // const [selectedClient, setSelectedClient] = useState<any | null>(null);
+
   const [isLoadedProducts, setIsLoadedProducts] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
@@ -167,28 +198,90 @@ const OrcamentoEditarIdScreen = () => {
 
   const accessToken = localStorage.getItem('accessToken');
 
+  // useEffect(() => {
+  //   if (orcamento) {
+  //     const clienteOctaNumber = Number(orcamento.cliente_octa_number);
+  //     if (!isNaN(clienteOctaNumber)) {
+  //       setClientId(clienteOctaNumber);
+  //       // Aqui você pode encontrar o cliente correspondente na lista de clientes
+  //       const foundClient = allClients.find(client => client.id === clienteOctaNumber);
+  //       setSelectedClient(foundClient || null); // Define o cliente selecionado ou nulo
+  //       console.log('setSelectedClient', foundClient);
+  //     } else {
+  //       throw new Error('cliente_octa_number não é um número válido');
+  //     }
+  //   }
+  // }, [orcamento]);
+
+
   const dataClients = localStorage.getItem('clientesConsolidadosOrcamento');
 
-  useEffect(() => {
-    if (dataClients) {
+  const getOrcamentoById = async (): Promise<Orcamento | null> => {
+    const accessToken = localStorage.getItem('accessToken');
 
-      console.log("Arrascaeata: ", dataClients);
-
-      const dataClientsObject = JSON.parse(dataClients) as {
-        status: string;
-        data: { data: Cliente[]; total: number };
-        pagination: { current_page: number; total_pages: number; total_items: number };
-      };
-
-      console.log('dataClientsObject: ', dataClientsObject);
-
-      setAllClients(dataClientsObject.data.data);
-
-    } else {
-      console.warn('Os dados de clientes não foram encontrados.');
+    if (!accessToken || !id) {
+      return null; // Alterado para retornar null explicitamente
     }
-  }, [dataClients]);
 
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/get-orcamento/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return {
+        ...data,
+        lista_produtos: JSON.parse(data.lista_produtos), // Parseando a lista de produtos
+      } as Orcamento; // Usando a interface Orcamento
+    } else {
+      return null; // Retornando null em caso de erro
+    }
+  };
+
+  const { data: orcamento, isLoading: isLoadingOrcamento } = useQuery<Orcamento | null>({
+    queryKey: ['orcamento', id],
+    queryFn: getOrcamentoById,
+    enabled: !!id,
+  });
+
+  const orcamentoData = orcamento as unknown as {
+    id: number;
+    user_id: number;
+    cliente_octa_number: string;
+    nome_cliente: string | null;
+    lista_produtos: string | null;
+    texto_orcamento: string | null;
+    endereco_cep: string;
+    endereco: string;
+    opcao_entrega: string;
+    prazo_opcao_entrega: number;
+    preco_opcao_entrega: number | null;
+    created_at: string;
+    updated_at: string;
+    antecipado: number;
+    data_antecipa: string | null;
+    taxa_antecipa: string | null;
+    descontado: number;
+    tipo_desconto: string | null;
+    valor_desconto: number | null;
+    percentual_desconto: number | null;
+    total_orcamento: number | null;
+    brinde: number;
+    produtos_brinde: string | null;
+  } | null;
+  
+  useEffect(() => {
+    if (!orcamento) return; // Retorna se orcamento for nulo
+    
+    const clienteOctaNumber = Number(orcamento.cliente_octa_number);
+    setClientId (clienteOctaNumber);
+    handleSearchClientes(clienteOctaNumber);
+}, [orcamento]);
+  
   // const memoizedAllClients = useMemo(() => allClients, [allClients]);
 
   useEffect(() => {
@@ -198,14 +291,6 @@ const OrcamentoEditarIdScreen = () => {
     }
   }, [allClients]);
 
-  const handleScrollClients = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    const isBottom = scrollHeight - scrollTop === clientHeight;
-
-    if (isBottom && totalPagesClients !== null && currentPageClients < totalPagesClients) {
-      setCurrentPageClients((prevPage) => prevPage + 1);
-    }
-  };
 
   useEffect(() => {
     if (allClients.length > 0) {
@@ -236,42 +321,36 @@ const OrcamentoEditarIdScreen = () => {
     event: React.ChangeEvent<{}>,
     value: Cliente | null
   ) => {
-    console.log("teste");
-    console.log("client teste: ", value);
     setClientId(value ? value.id : '');
     setClientInputValue(value ? value.nome : '');
+    // setSelectedClient(value);
   };
 
-  const handleSearchClientes = () => {
+  const handleSearchClientes = (idCliente?: number): Cliente | undefined => {
     setIsLoadedClients(false);
-    fetch(`${process.env.NEXT_PUBLIC_API}/api/search-clientes-consolidados?search=${searchQueryClients}&page=${currentPageClients}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
+    const searchParam = idCliente ? idCliente.toString() : searchQueryClients;
+
+    // Fetch clients based on search parameter
+    fetch(`${process.env.NEXT_PUBLIC_API}/api/search-clientes-consolidados?search=${searchParam}&page=${currentPageClients}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+        },
     })
-      .then((response) => response.json())
-      .then((data) => {
-        if (Array.isArray(data.data) && data.data.length === 0) {
-          console.log('Sem opções disponíveis para essa busca [clientes]')
-          setAllClients([
-            {
-              id: 1,
-              nome: searchQueryClients,
-              telefone: searchQueryClients,
-              email: searchQueryClients,
-            },
-          ]);
-          setIsLoadedClients(true);
-        } else {
-          // console.log('Opções encontradas [busca de clientes]');
-          setAllClients(data.data);
-          setIsLoadedClients(true);
-        }
-      })
-      .catch((error) => console.error('Erro ao buscar clientes:', error));
-  };
+    .then((response) => response.json())
+    .then((data) => {
+      setAllClients(data.data);
+    })
+    .catch((error) => {
+        console.error('Erro ao buscar clientes:', error);
+        setIsLoadedClients(true); // Ensure loading state is updated even on error
+        return undefined; // Return undefined in case of an error
+    });
+
+    return undefined; // Default return value before async completion
+};
+
 
   // Função para reiniciar a pesquisa ao pressionar Enter
   const handleKeyPress = (event: React.KeyboardEvent) => {
@@ -287,7 +366,7 @@ const OrcamentoEditarIdScreen = () => {
   useEffect(() => {
     if (dataProducts) {
       const dataProductsArray = JSON.parse(dataProducts);
-      console.log('productData:', dataProductsArray);
+      // console.log('productData:', dataProductsArray);
       if (Array.isArray(dataProductsArray)) {
         const transformedProducts = dataProductsArray.map((item: Product) => ({
           id: item.id,
@@ -317,12 +396,12 @@ const OrcamentoEditarIdScreen = () => {
 
   useEffect(() => {
     if (allProducts) {
-      console.log('allProducts:', allProducts);
+      // console.log('allProducts:', allProducts);
     }
   }, [allProducts]);
 
   const productNames = allProducts.map((product) => product.nome);
-  console.log('productNames: ', productNames);
+  // console.log('productNames: ', productNames);
 
   // Tratamento da lista de produtos (exceto brinde)
 
@@ -672,7 +751,7 @@ const OrcamentoEditarIdScreen = () => {
       } finally {
         setIsFetchingFrete(false);
         if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
-          console.log("0000");
+          // console.log("0000");
           calcPrevisao();
         }
       }
@@ -736,7 +815,7 @@ const OrcamentoEditarIdScreen = () => {
     }
 
     if (clientId && productsList && isUrgentDeliverySelected && shippingOption === 'RETIRADA') {
-      console.log('0010');
+      // console.log('0010');
       calcPrevisao();
     }
 
@@ -745,61 +824,61 @@ const OrcamentoEditarIdScreen = () => {
   useEffect(() => {
     if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
       if (isUrgentDeliverySelected) {
-        console.log('0011');
+        // console.log('0011');
         calcPrevisao();
       }
     }
     else if (clientId && productsList && prazoProducao && prazoFrete && shippingOption === 'RETIRADA' && isUrgentDeliverySelected) {
-      console.log('0012');
+      // console.log('0012');
       calcPrevisao();
     }
   }, [isUrgentDeliverySelected]);
 
   useEffect(() => {
     if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
-      console.log('00001');
+      // console.log('00001');
       calcPrevisao();
     }
   }, [clientId]);
 
   useEffect(() => {
     if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
-      console.log('00002');
+      // console.log('00002');
       calcPrevisao();
     }
   }, [productsList]);
 
   useEffect(() => {
     if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
-      console.log('00003');
+      // console.log('00003');
       calcPrevisao();
     }
   }, [shippingOption]);
 
   useEffect(() => {
     if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
-      console.log('00004');
+      // console.log('00004');
       calcPrevisao();
     }
   }, [cep]);
 
   useEffect(() => {
     if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
-      console.log('00005');
+      // console.log('00005');
       calcPrevisao();
     }
   }, [address]);
 
   useEffect(() => {
     if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
-      console.log('00006');
+      // console.log('00006');
       calcPrevisao();
     }
   }, [prazoProducao]);
 
   useEffect(() => {
     if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
-      console.log('00007');
+      // console.log('00007');
       calcPrevisao();
     }
   }, [prazoFrete]);
@@ -813,7 +892,7 @@ const OrcamentoEditarIdScreen = () => {
 
   useEffect(() => {
     if (clientId && productsList && shippingOption && cep && address && prazoProducao && (prazoFrete === 0 || prazoFrete)) {
-      console.log('00009');
+      // console.log('00009');
       calcPrevisao();
     }
   }, [prazoProducao]);
@@ -837,7 +916,7 @@ const OrcamentoEditarIdScreen = () => {
 
   async function calcPrazoAntecipa() {
     if (isAnticipation && dataDesejadaEntrega) {
-      console.log('0020');
+      // console.log('0020');
       const hojeDate = getBrazilTime();
       const hojeLuxon = DateTime.fromJSDate(hojeDate).startOf('day'); // Arredonda para o início do dia
       const dataDesejadaEntregaStart = dataDesejadaEntrega.startOf('day'); // Arredonda para o início do dia
@@ -852,7 +931,7 @@ const OrcamentoEditarIdScreen = () => {
       // depois disso, vamos adicionar esse número de dias não úteis a uma variavao DiasNaoUtesi 
 
       if (prazoFrete) {
-        console.log('0021');
+        // console.log('0021');
         const diffDias = dataDesejadaEntregaStart.diff(hojeLuxon, 'days').days;
         setDiffHojeDataDesejadaEntrega(diffDias);
         const prazoProducaoAntecipado = diffDias - prazoFrete;
@@ -868,9 +947,6 @@ const OrcamentoEditarIdScreen = () => {
 
   useEffect(() => {
     if (cep) {
-      console.log('mudei a data desejada e vou chamar o getFrete');
-      console.log('1 isAnticipation: ', isAnticipation);
-      console.log('2 prazoPac: ', prazoPac);
       getFrete(cep);
     }
 
@@ -917,12 +993,10 @@ const OrcamentoEditarIdScreen = () => {
 
         await new Promise(resolve => setTimeout(resolve, 300));
         const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
-        console.log(safeDataFeriados);
-
-        console.log('Calculando a previsão... inciando... shippingOption: ', shippingOption);
-
-        console.log('Calculando a previsão... prazoProducao: ', prazoProducao);
-        console.log('Calculando a previsão... prazoFrete: ', prazoFrete);
+        // console.log(safeDataFeriados);
+        // console.log('Calculando a previsão... inciando... shippingOption: ', shippingOption);
+        // console.log('Calculando a previsão... prazoProducao: ', prazoProducao);
+        // console.log('Calculando a previsão... prazoFrete: ', prazoFrete);
 
         await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -932,7 +1006,7 @@ const OrcamentoEditarIdScreen = () => {
         await new Promise(resolve => setTimeout(resolve, 300));
 
         setPrevisaoEntrega(dataPrevistaEntrega);
-        console.log('dataPrevistaEntrega', dataPrevistaEntrega.toLocaleString(DateTime.DATE_FULL));
+        // console.log('dataPrevistaEntrega', dataPrevistaEntrega.toLocaleString(DateTime.DATE_FULL));
 
         await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -1080,8 +1154,8 @@ const OrcamentoEditarIdScreen = () => {
 
     // console.log('Testando o estado previsaoEntrega: ', previsaoEntrega);
 
-    console.log('0019');
-    console.log(prazoProducaoAntecipado);
+    // console.log('0019');
+    // console.log(prazoProducaoAntecipado);
 
     const textoOrcamento = `
 Lista de Produtos:
@@ -1194,7 +1268,7 @@ Orçamento válido somente hoje.
   }
 
   useEffect(() => {
-    console.log('tipoDesconto:', tipoDesconto);
+    // console.log('tipoDesconto:', tipoDesconto);
   }, [tipoDesconto]);
 
 
@@ -1212,7 +1286,7 @@ Orçamento válido somente hoje.
             Cliente
           </CustomFormLabel>
 
-          <div onScroll={handleScrollClients} style={{ maxHeight: 300, overflowY: 'auto' }}>
+          <div style={{ maxHeight: 300, overflowY: 'auto' }}>
             <Autocomplete
               fullWidth
               disablePortal
@@ -1222,6 +1296,7 @@ Orçamento válido somente hoje.
               getOptionLabel={(option) =>
                 `${option.id} :: ${option.nome} :: (${option.telefone} ${option.email ? ` - ${option.email}` : ''})`
               }
+              value={allClients.find(client => client.id === Number(clientId)) || null}
               onChange={handleChangeClientesConsolidadosInput}
               onKeyDown={handleKeyPress}
               renderInput={(params) => (
@@ -1229,7 +1304,6 @@ Orçamento válido somente hoje.
                   {...params}
                   placeholder="Selecione um cliente"
                   aria-label="Selecione um cliente"
-                  value={searchQueryClients} // Controla o valor da pesquisa
                   onChange={(e: any) => setSearchQueryClients(e.target.value)}
                   InputProps={{
                     ...params.InputProps,
@@ -1914,7 +1988,7 @@ Orçamento válido somente hoje.
                 name="controlled-radio-buttons-group"
                 value={shippingOption}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  console.log('event', event);
+                  // console.log('event', event);
                   setShippingOption(event.target.value)
                 }}
               >
