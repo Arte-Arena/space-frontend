@@ -1,4 +1,5 @@
 'use client'
+import { useParams } from 'next/navigation';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/utils/useAuth';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
@@ -27,7 +28,7 @@ import Image from "next/image";
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { DateTime } from 'luxon';
-import exportarPDF from '@/utils/exportarPDF';
+import exportarPDF from '@/utils/formatarPDF';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf } from '@tabler/icons-react';
 import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
@@ -97,14 +98,11 @@ interface FreteData {
   delivery_time: number;
 }
 
-const OrcamentoGerarScreen = () => {
-  const [optionsProdutos, setOptionsProdutos] = useState(['a', 'b', 'c']);
+const OrcamentoEditarIdScreen = () => {
+  const params = useParams();
+  const id = params.id;
 
   const isLoggedIn = useAuth();
-
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const id = searchParams.get('id') ?? null;
 
   const [isLoadedClients, setIsLoadedClients] = useState(false);
   const [allClients, setAllClients] = useState<Cliente[]>([]);
@@ -1201,9 +1199,9 @@ Orçamento válido somente hoje.
 
 
   return (
-    <PageContainer title="Orçamento / Gerar" description="Gerar Orçamento da Arte Arena">
-      <Breadcrumb title="Orçamento / Gerar" subtitle="Gerencie os Orçamentos da Arte Arena / Adicionar" />
-      <ParentCard title="Gerar Novo Orçamento" >
+    <PageContainer title="Orçamento / Editar" description="Editar Orçamento da Arte Arena">
+      <Breadcrumb title="Orçamento / Editar" subtitle="Gerencie os Orçamentos da Arte Arena / Editar" />
+      <ParentCard title={`Editar Orçamento #${id}`} >
         <>
           <CustomFormLabel
             sx={{
@@ -2457,5 +2455,5 @@ Orçamento válido somente hoje.
   );
 };
 
-export default OrcamentoGerarScreen;
+export default OrcamentoEditarIdScreen;
 
