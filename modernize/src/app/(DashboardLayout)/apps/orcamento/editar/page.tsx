@@ -21,6 +21,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { IconProgressCheck, IconEdit, IconCircleCheck, IconBan, IconProgressHelp, IconX } from '@tabler/icons-react';
 import Tooltip from '@mui/material/Tooltip';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 
 interface Orcamento {
@@ -98,9 +99,9 @@ const OrcamentoBuscarScreen = () => {
   };
 
   return (
-    <PageContainer title="Orçamento / Buscar" description="Buscar Orçamento da Arte Arena">
-      <Breadcrumb title="Orçamento / Buscar" subtitle="Gerencie os Orçamentos da Arte Arena / Buscar" />
-      <ParentCard title="Buscar Orçamento" >
+    <PageContainer title="Orçamento / Editar" description="Editar Orçamento da Arte Arena">
+      <Breadcrumb title="Orçamento / Editar" subtitle="Gerencie os Orçamentos da Arte Arena / Editar" />
+      <ParentCard title="Editar Orçamento" >
         <>
 
           <Stack spacing={2} direction="row" alignItems="center" mb={2}>
@@ -153,7 +154,37 @@ const OrcamentoBuscarScreen = () => {
                           {openRow[row.id] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                         </IconButton>
                       </TableCell>
-                      <TableCell>{row.id}</TableCell>
+                      <TableCell>
+                        <Link 
+                          href={`/apps/orcamento/editar/${row.id}`}
+                          passHref
+                          style={{ textDecoration: "none" }} // Remove o sublinhado do link
+                        >
+                          <Box
+                            sx={{
+                              cursor: "pointer",
+                              textAlign: "center",
+                              position: "relative",
+                              borderRadius: "50%",
+                              backgroundColor: "#5D87FF",
+                              color: "white",
+                              fontWeight: "bold",
+                              width: "40px",
+                              height: "40px",
+                              transition: "background-color 0.3s ease, transform 0.2s",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              "&:hover": {
+                                backgroundColor: "darkblue",
+                                transform: "scale(1.1)", // Pequeno efeito de zoom ao passar o mouse
+                              },
+                            }}
+                          >
+                            {row.id}
+                          </Box>
+                        </Link>
+                      </TableCell>
                       <TableCell>{row.cliente_octa_number}</TableCell>
                       <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>
