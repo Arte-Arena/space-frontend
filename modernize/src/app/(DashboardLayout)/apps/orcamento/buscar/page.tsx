@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { useThemeMode } from '@/utils/useThemeMode';
+import Link from 'next/link';
 
 interface Produto {
   id: number;
@@ -196,7 +197,37 @@ const OrcamentoBuscarScreen = () => {
                           {openRow[row.id] ? <KeyboardArrowUpIcon sx={{fontSize: '25px'}}/> : <KeyboardArrowDownIcon sx={{fontSize: '25px'}}/>}
                         </IconButton>
                       </TableCell>
-                      <TableCell>{row.id}</TableCell>
+                      <TableCell>
+                        <Link 
+                          href={`/apps/orcamento/editar/${row.id}`}
+                          passHref
+                          style={{ textDecoration: "none" }} // Remove o sublinhado do link
+                        >
+                          <Box
+                            sx={{
+                              cursor: "pointer",
+                              textAlign: "center",
+                              position: "relative",
+                              borderRadius: "50%",
+                              backgroundColor: "#5D87FF",
+                              color: "white",
+                              fontWeight: "bold",
+                              width: "30px",
+                              height: "30px",
+                              transition: "background-color 0.3s ease, transform 0.2s",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              "&:hover": {
+                                backgroundColor: "darkblue",
+                                transform: "scale(1.1)", // Pequeno efeito de zoom ao passar o mouse
+                              },
+                            }}
+                          >
+                            {row.id}
+                          </Box>
+                        </Link>
+                      </TableCell>
                       <TableCell>{row.cliente_octa_number}</TableCell>
                       <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
                     </TableRow>
