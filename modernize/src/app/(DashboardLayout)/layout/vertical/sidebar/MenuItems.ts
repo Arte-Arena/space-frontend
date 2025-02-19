@@ -108,9 +108,21 @@ const getMenuItems = (): MenuitemsType[] => {
         },
         {
           id: uniqueId(),
+          title: "Editar Orçamento",
+          icon: IconReportMoney,
+          href: "/apps/orcamento/editar",
+        },
+        {
+          id: uniqueId(),
           title: "Buscar Orçamento",
           icon: IconZoomMoney,
           href: "/apps/orcamento/buscar",
+        },
+        {
+          id: uniqueId(),
+          title: "Status de Orçamento",
+          icon: IconZoomMoney,
+          href: "/apps/orcamento/status",
         },
         {
           id: uniqueId(),

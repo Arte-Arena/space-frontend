@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
@@ -11,14 +11,18 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
-import { Pagination, Stack, Button, Box, Typography, Collapse } from '@mui/material';
+import { Pagination, Stack, Button, Box, Typography, Collapse, Dialog, DialogContent, DialogContentText, DialogTitle, DialogActions } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import { useThemeMode } from '@/utils/useThemeMode';
+import { IconProgressCheck, IconCircleCheck, IconBan } from '@tabler/icons-react';
+import Tooltip from '@mui/material/Tooltip';
+import { useStatusChangeAprovado, useStatusChangeDesaprovado } from '@/utils/PutStatusOrcamentos';
+import { useThemeMode } from "@/utils/useThemeMode";
+
 
 interface Produto {
   id: number;
@@ -32,6 +36,15 @@ interface Produto {
   created_at: string | null; // Pode ser null ou uma string
   quantidade: number;
   updated_at: string | null; // Pode ser null ou uma string
+}
+
+
+interface StatusCellProps {
+  status: string;
+  statusKey: string;
+  rowId: number;
+  approvedValue: string; // Valor que representa "aprovado" ou equivalente
+  disabled?: boolean; // Se o botão deve estar desabilitado
 }
 
 interface Orcamento {
@@ -85,27 +98,68 @@ const useFetchOrcamentos = (searchQuery: string, page: number) => {
   });
 };
 
-const OrcamentoBuscarScreen = () => {
+const OrcamentoStatusScreen = () => {
 
   const [query, setQuery] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogData, setDialogData] = useState<{
+    statusKey: string;
+    rowId: number;
+    status: string;
+    approvedValue: string;
+  } | null>(null);
   const mode = useThemeMode();
-  
+  // busca os dados
+  const { isFetching, error, data, refetch } = useFetchOrcamentos(searchQuery, page);
+
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
   const regexPrazo = /Prazo de Produção:\s*(\d{1,3})\s*dias úteis/;
   const regexEntrega = /Previsão de Entrega:\s*([\d]{1,2} de [a-zA-Z]+ de \d{4})\s?\(([^)]+)\)/;
   const regexBrinde = /Brinde:\s*\d+\s*un\s*[\w\s]*\s*R\$\s*\d{1,3}(?:,\d{2})*\s*\(R\$\s*\d{1,3}(?:,\d{2})*\)/;
 
-
-  // busca os dados
-  const { isFetching, error, data, refetch } = useFetchOrcamentos(searchQuery, page);
-
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
     throw new Error('Access token is missing');
   }
+
+  // renderização dos botoes da tabela
+  const renderStatusCell = ({
+    status,
+    statusKey,
+    rowId,
+    approvedValue,
+  }: StatusCellProps) => {
+    return (
+      <TableCell>
+      <Stack direction="column" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} alignItems="center">
+          <IconButton
+            sx={{cursor: 'pointer'}}
+            onClick={() => handleOpenDialog(statusKey, rowId, status, approvedValue)}
+          >
+            <Tooltip title={status}>
+              {status === approvedValue ? (
+                <IconCircleCheck color="green" size={22} />
+              ) : (
+                statusKey == "status" ? (
+                  <Tooltip title={"Não Aprovado"}>
+                  <IconProgressCheck color="white" size={22} />
+                  </Tooltip>
+                ): (
+                  <IconBan color="red" size={22} />
+                )
+              )}
+            </Tooltip>
+          </IconButton>
+        </Stack>
+      </Stack>
+    </TableCell>
+    );
+  };
 
   const handleSearch = () => {
     setSearchQuery(query); // Atualiza a busca
@@ -128,11 +182,50 @@ const OrcamentoBuscarScreen = () => {
 
   if (isFetching) return <CircularProgress />;
   if (error) return <p>Ocorreu um erro: {error.message}</p>;
+  // if (data) console.log(data);
+
+  // TODOS OS HANDLES DE APROVAÇÃO
+
+  const handleAprovarArteArena = (rowId: number) => {
+    window.open(`/apps/orcamento/aprovar/${rowId}`, '_blank');
+  };
+
+  const handleAprovar = async (campo: string, rowId: number) =>{
+    try{
+      await useStatusChangeAprovado(campo, rowId);
+      refetch();    
+    }
+    catch(err){
+      console.log(err)
+    }
+  }
+
+  // TODOS OS HANDLES DE MUDANÇA DE STATUS DESAPROVADOS
+
+  const handleDesaprovar = async (campo: string, rowId: number) =>{
+    try{
+      await useStatusChangeDesaprovado(campo, rowId);
+      refetch();
+    }catch(err){
+      console.log(err)
+    }
+  }
+  
+  const handleOpenDialog = (statusKey: string, rowId: number, status: string, approvedValue: string) => {
+    setDialogData({ statusKey, rowId, status, approvedValue });
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setDialogData(null);
+  };
 
   return (
-    <PageContainer title="Orçamento / Buscar" description="Buscar Orçamento da Arte Arena">
-      <Breadcrumb title="Orçamento / Buscar" subtitle="Gerencie os Orçamentos da Arte Arena / Buscar" />
-      <ParentCard title="Buscar Orçamento" >
+    <PageContainer title="Orçamento / Status" description="Status Orçamento da Arte Arena">
+      <Breadcrumb title="Orçamento / Status" subtitle="Gerencie os Orçamentos da Arte Arena / Status" />
+      <Box sx={{width: '101%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+      <ParentCard  title="Status Orçamento">
         <>
 
           <Stack spacing={1} direction="row" alignItems="center" mb={2}>
@@ -165,10 +258,21 @@ const OrcamentoBuscarScreen = () => {
               <TableHead sx={{position: 'sticky', top: '0', zIndex: '10', backgroundColor: mode === 'dark' ? '#2A3447' : '#fff', color: mode === 'dark' ? '#fff' : '#2A3547'}}>
                 <TableRow>
                   <TableCell></TableCell>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Número do Cliente</TableCell>
-                  <TableCell>Data de Criação</TableCell>
-
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >ID</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Número do Cliente</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center', padding: '0'}} >Data de Criação</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Faturamento</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Pagamento</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Produção Arte Final</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Arte Final</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Amostra Arte Arena</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Envio Amostra</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Amostra Cliente</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Cliente</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Produção Esboço</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Aprovação Esboço</TableCell>
+                  <TableCell sx={{fontSize: '8px', textAlign: 'center'}} >Envio Pedido</TableCell>
+                  <TableCell sx={{fontSize: '9px', textAlign: 'center', fontWeight: '700'}} >Aprovação Arte Arena</TableCell>
                   {/* <TableCell>Ações</TableCell> */}
                 </TableRow>
               </TableHead>
@@ -187,18 +291,169 @@ const OrcamentoBuscarScreen = () => {
                 return (
                   <React.Fragment key={row.id}>
                     <TableRow>
-                      <TableCell>
+                      <TableCell sx={{fontSize: '8px'}}>
                         <IconButton
                           aria-label="expand row"
                           size="small"
                           onClick={() => handleToggleRow(row.id)}
                         >
-                          {openRow[row.id] ? <KeyboardArrowUpIcon sx={{fontSize: '25px'}}/> : <KeyboardArrowDownIcon sx={{fontSize: '25px'}}/>}
+                          {openRow[row.id] ? <KeyboardArrowUpIcon sx={{fontSize: '15px'}}/> : <KeyboardArrowDownIcon sx={{fontSize: '15px'}}/>}
                         </IconButton>
                       </TableCell>
-                      <TableCell>{row.id}</TableCell>
-                      <TableCell>{row.cliente_octa_number}</TableCell>
-                      <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell sx={{fontSize: '8px'}} >{row.id}</TableCell>
+                      <TableCell sx={{fontSize: '8px'}} >{row.cliente_octa_number}</TableCell>
+                      <TableCell sx={{fontSize: '8px', padding: '0'}} >{new Date(row.created_at).toLocaleDateString()}</TableCell>
+                      
+
+                      {/* Célula de status_faturamento */}
+                      {renderStatusCell({
+                        status: row.status_faturamento,
+                        statusKey: 'status_faturamento',
+                        rowId: row.id,
+                        approvedValue: 'faturado',
+                      })}
+                                                    
+                      {/* Célula de status_pagamento */}
+                      {renderStatusCell({
+                      status: row.status_pagamento,
+                      statusKey: 'status_pagamento',
+                      rowId: row.id,
+                      approvedValue: 'pago',
+                      })}
+                      
+                      {/* Célula de status_producao_arte_final */}
+                      {renderStatusCell({
+                        status: row.status_producao_arte_final,
+                        statusKey: 'status_producao_arte_final',
+                        rowId: row.id,
+                        approvedValue: 'aguardando_melhoria',
+                      })}
+
+
+                      {/* Célula de status_aprovacao_arte_final */}
+                      {renderStatusCell({
+                        status: row.status_aprovacao_arte_final,
+                        statusKey: 'status_aprovacao_arte_final',
+                        rowId: row.id,
+                        approvedValue: 'aprovada',
+                      })}
+
+                      {/* Célula de status_aprovacao_amostra_arte_arena */}
+                      {renderStatusCell({
+                        status: row.status_aprovacao_amostra_arte_arena,
+                        statusKey: 'status_aprovacao_amostra_arte_arena',
+                        rowId: row.id,
+                        approvedValue: 'aprovada',
+                      })}
+                      
+                      {/* Célula de status_envio_amostra */}
+                      {renderStatusCell({
+                        status: row.status_envio_amostra,
+                        statusKey: 'status_envio_amostra',
+                        rowId: row.id,
+                        approvedValue: 'enviada',
+                      })}
+
+                      {/* Célula de status_aprovacao_amostra_cliente */}
+                      {renderStatusCell({
+                        status: row.status_aprovacao_amostra_cliente,
+                        statusKey: 'status_aprovacao_amostra_cliente',
+                        rowId: row.id,
+                        approvedValue: 'aprovada',
+                      })}
+
+                      {renderStatusCell({
+                        status: row.status_aprovacao_cliente,
+                        statusKey: 'status_aprovacao_cliente',
+                        rowId: row.id,
+                        approvedValue: 'aprovado',
+                      })}
+
+                      {/* Célula de status_producao_esboco */}
+                      {renderStatusCell({
+                        status: row.status_producao_esboco,
+                        statusKey: 'status_producao_esboco',
+                        rowId: row.id,
+                        approvedValue: 'aguardando_melhoria',
+                      })}
+
+                      {/* Célula de status_aprovacao_esboco */}
+                      {renderStatusCell({
+                        status: row.status_aprovacao_esboco,
+                        statusKey: 'status_aprovacao_esboco',
+                        rowId: row.id,
+                        approvedValue: 'aprovado',
+                      })}
+
+                      {/* Célula de status_envio_pedido */}
+                      {renderStatusCell({
+                        status: row.status_envio_pedido,
+                        statusKey: 'status_envio_pedido',
+                        rowId: row.id,
+                        approvedValue: 'enviado',
+                      })}
+                        
+                      {renderStatusCell({
+                        status: row.status,
+                        statusKey: 'status',
+                        rowId: row.id,
+                        approvedValue: 'aprovado',
+                      })}
+
+                      <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+                        <DialogTitle>Alterar Status</DialogTitle>
+                        <DialogContent>
+                        <Typography sx={{marginBottom: '10px'}}>
+                            {dialogData?.statusKey}
+                          </Typography>
+                          <DialogContentText>
+                            Selecione a ação desejada para o status:
+                          </DialogContentText>
+                          <Typography>
+                            Status atual: {dialogData?.status}
+                          </Typography>
+                          <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
+                            <Button
+                              variant="contained"
+                              color="success"
+                              disabled={dialogData?.status === dialogData?.approvedValue}
+                              onClick={() => {
+                               
+                                if(dialogData?.statusKey === "status"){
+                                    handleAprovarArteArena(dialogData.rowId);
+                                }
+                               
+                                if (dialogData) {
+                                  handleAprovar(dialogData.statusKey, dialogData.rowId);
+                                }
+                               
+                                handleCloseDialog();
+                              }}
+                            >
+                              Aprovar
+                            </Button>
+                            <Button
+                              variant="contained"
+                              color="error"
+                              disabled={dialogData?.status !== dialogData?.approvedValue} 
+                              onClick={() => {
+                                if (dialogData) {
+                                  handleDesaprovar(dialogData.statusKey, dialogData.rowId);
+                                }
+                                handleCloseDialog();
+                              }}
+                            >
+                              Desaprovar
+                            </Button>
+                          </Stack>
+                        </DialogContent>
+                        <DialogActions>
+                          <Button onClick={handleCloseDialog} color="primary">
+                            Fechar
+                          </Button>
+                        </DialogActions>
+                      </Dialog>
+
                     </TableRow>
 
                     <TableRow>
@@ -435,9 +690,10 @@ const OrcamentoBuscarScreen = () => {
 
         </>
       </ParentCard>
+      </Box>
     </PageContainer>
   );
 }
 
 
-export default OrcamentoBuscarScreen;
+export default OrcamentoStatusScreen;
