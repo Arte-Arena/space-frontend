@@ -20,6 +20,7 @@ import {
   IconBrandSlack,
   IconBusinessplan,
   IconLink,
+  IconPencil
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -109,7 +110,7 @@ const getMenuItems = (): MenuitemsType[] => {
         {
           id: uniqueId(),
           title: "Editar Orçamento",
-          icon: IconReportMoney,
+          icon: IconPencil,
           href: "/apps/orcamento/editar",
         },
         {

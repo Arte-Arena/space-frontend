@@ -38,7 +38,6 @@ interface Produto {
   updated_at: string | null; // Pode ser null ou uma string
 }
 
-
 interface StatusCellProps {
   status: string;
   statusKey: string;
@@ -117,7 +116,7 @@ const OrcamentoStatusScreen = () => {
   const { isFetching, error, data, refetch } = useFetchOrcamentos(searchQuery, page);
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
-  const regexPrazo = /Prazo de Produção:\s*(\d{1,3})\s*dias úteis/;
+  const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
   const regexEntrega = /Previsão de Entrega:\s*([\d]{1,2} de [a-zA-Z]+ de \d{4})\s?\(([^)]+)\)/;
   const regexBrinde = /Brinde:\s*\d+\s*un\s*[\w\s]*\s*R\$\s*\d{1,3}(?:,\d{2})*\s*\(R\$\s*\d{1,3}(?:,\d{2})*\)/;
 
@@ -285,6 +284,7 @@ const OrcamentoStatusScreen = () => {
                 const texto = row.texto_orcamento;
                 const frete = texto?.match(regexFrete);
                 const prazo = texto?.match(regexPrazo);
+                console.log(prazo)
                 const entrega = texto?.match(regexEntrega);
                 const brinde = texto?.match(regexBrinde);
 
@@ -518,12 +518,12 @@ const OrcamentoStatusScreen = () => {
                                 </TableRow>
 
                                 {/* Texto do Orçamento */}
-                                {/* <TableRow>
+                                <TableRow>
                                   <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                    Texto do Orçamento:
+                                    Cliente:
                                   </TableCell>
-                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.texto_orcamento}</TableCell>
-                                </TableRow> */}
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.nome_cliente}</TableCell>
+                                </TableRow>
 
                                 {brinde !== null && (
                                   <TableRow>
