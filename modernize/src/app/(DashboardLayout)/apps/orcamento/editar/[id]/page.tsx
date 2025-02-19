@@ -28,7 +28,6 @@ import Image from "next/image";
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { DateTime } from 'luxon';
-import exportarPDF from '@/utils/formatarPDF';
 import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf } from '@tabler/icons-react';
 import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -50,7 +49,7 @@ import {
 } from '@mui/material';
 import { calcularDataFuturaDiasUteis, calcDiasNaoUteisEntreDatas } from '@/utils/calcDiasUteis';
 import CustomRadio from '@/app/components/forms/theme-elements/CustomRadio';
-
+import formatarPDF from '@/utils/formatarPDF';
 
 interface Produto {
   id: number;
@@ -2520,7 +2519,7 @@ Orçamento válido somente hoje.
                   </div>
                 `;
 
-                  exportarPDF(htmlContent); // Passa o HTML com a cor ajustada
+                  formatarPDF(htmlContent, address);
                 }}
               >
                 <IconFileTypePdf />
