@@ -86,145 +86,6 @@ interface FreteData {
   delivery_time: number;
 }
 
-const UNIT_CONVERSION = {
-  metersToCm: (m: number) => m * 100, // Converte metros para cm
-  litersToCm3: (l: number) => l * 1000, // Converte litros para cm³ (apenas para referência)
-  tonsToKg: (t: number) => t * 1000 // Converte toneladas para kg
-};
-
-const FOLDABLE_KEYWORDS = [
-  'bandeira', 'uniforme', 'toalha',
-  'faixa', 'flâmula', 'meião', 'abadá'
-];
-
-type VehicleDimensions = {
-  maxLengthCm: number;
-  maxWidthCm: number;
-  maxHeightCm: number;
-  maxWeightKg: number;
-};
-
-interface TransportOption {
-  name: string;
-  limits: VehicleDimensions;
-}
-
-const TRANSPORT_OPTIONS: TransportOption[] = [
-  {
-    name: "LalaGo",
-    limits: {
-      maxLengthCm: 35,
-      maxWidthCm: 40,
-      maxHeightCm: 30,
-      maxWeightKg: 20
-    }
-  },
-  {
-    name: "CarroCompacto",
-    limits: {
-      maxLengthCm: 60,   // 200 litros ≈ 60x50x66cm
-      maxWidthCm: 50,
-      maxHeightCm: 66,
-      maxWeightKg: 200
-    }
-  },
-  {
-    name: "Fiorino",
-    limits: {
-      maxLengthCm: 130,  // 2500 litros ≈ 130x100x192cm
-      maxWidthCm: 100,
-      maxHeightCm: 192,
-      maxWeightKg: 500
-    }
-  },
-  {
-    name: "Carreto",
-    limits: {
-      maxLengthCm: 300,
-      maxWidthCm: 180,
-      maxHeightCm: 200,
-      maxWeightKg: 1500 // 1.5 toneladas
-    }
-  }
-];
-
-const calculateFoldedDimensions = (
-  product: Product,
-  maxFolds: number = 5
-): Product => {
-  let folds = 0;
-  let [l, w, h] = [
-    UNIT_CONVERSION.metersToCm(product.comprimento),
-    UNIT_CONVERSION.metersToCm(product.largura),
-    UNIT_CONVERSION.metersToCm(product.altura)
-  ];
-
-  while (folds < maxFolds &&
-    (l > 40 || w > 40 || h > 60)) { // Limites da menor caixa
-    // Dobra estratégica: menor dimensão é reduzida
-    if (l >= w && l >= h) {
-      l /= 2;
-      h *= 1.5;
-    } else if (w >= l && w >= h) {
-      w /= 2;
-      h *= 1.5;
-    } else {
-      h /= 2;
-      l *= 1.5;
-    }
-    folds++;
-  }
-
-  return {
-    ...product,
-    comprimento: Math.ceil(l),
-    largura: Math.ceil(w),
-    altura: Math.ceil(h)
-  };
-};
-
-const validateDimensions = (
-  product: Product,
-  vehicle: VehicleDimensions
-): boolean => {
-  return (
-    product.comprimento <= vehicle.maxLengthCm &&
-    product.largura <= vehicle.maxWidthCm &&
-    product.altura <= vehicle.maxHeightCm &&
-    product.peso <= vehicle.maxWeightKg
-  );
-};
-
-const selectOptimalVehicle = (products: Product[]): string => {
-  const processedProducts = products.map(p =>
-    FOLDABLE_KEYWORDS.some(kw => p.nome.toLowerCase().includes(kw))
-      ? calculateFoldedDimensions(p)
-      : {
-        ...p,
-        comprimento: UNIT_CONVERSION.metersToCm(p.comprimento),
-        largura: UNIT_CONVERSION.metersToCm(p.largura),
-        altura: UNIT_CONVERSION.metersToCm(p.altura)
-      }
-  );
-
-  // Ordenar veículos do menor para o maior
-  const sortedVehicles = [...TRANSPORT_OPTIONS].sort((a, b) =>
-    a.limits.maxLengthCm - b.limits.maxLengthCm
-  );
-
-  for (const vehicle of sortedVehicles) {
-    const allFit = processedProducts.every(p =>
-      validateDimensions(p, vehicle.limits)
-    );
-
-    if (allFit) {
-      return vehicle.name;
-    }
-  }
-
-  return "Carreto"; // Fallback para maior veículo
-};
-
 const OrcamentoGerarScreen = () => {
   const isLoggedIn = useAuth();
 
@@ -269,8 +130,6 @@ const OrcamentoGerarScreen = () => {
   const [prazoSedex12, setPrazoSedex12] = useState<number | null>(null);
   const [precoMiniEnvios, setPrecoMiniEnvios] = useState<number | null>(null);
   const [prazoMiniEnvios, setPrazoMiniEnvios] = useState<number | null>(null);
-  const [precoLalamove, setPrecoLalamove] = useState<number | null>(null);
-  const [prazoLalamove, setPrazoLalamove] = useState<number | null>(null);
   const [shippingOption, setShippingOption] = useState('');
   const [isUrgentDeliverySelected, setIsUrgentDeliverySelected] = useState(false);
   const [isAnticipation, setIsAnticipation] = useState(false);
@@ -754,27 +613,100 @@ const OrcamentoGerarScreen = () => {
 
         // Requisição para Lalamove
         if (isGrandeSP && location) {
-          const selectedVehicle = selectOptimalVehicle(productsList);
-
+          const foldableKeywords = ['uniforme', 'camiseta', 'camisa', 'bandeira', 'abadá', 'meia', 'meião', 'toalha', 'faixa', 'flâmula'];
+          let maxComprimento = 0;
+          let maxLargura = 0;
+          let maxAltura = 0;
+          let totalWeight = 0;
+        
+          productsList.forEach((product) => {
+            const isFoldable = foldableKeywords.some(keyword =>
+              product.nome.toLowerCase().includes(keyword.toLowerCase())
+            );
+        
+            let comprimento = product.comprimento;
+            let largura = product.largura;
+            let altura = product.altura;
+        
+            if (isFoldable) {
+              comprimento /= 2;
+              largura /= 2;
+              altura /= 2;
+            }
+        
+            maxComprimento = Math.max(maxComprimento, comprimento);
+            maxLargura = Math.max(maxLargura, largura);
+            maxAltura = Math.max(maxAltura, altura);
+        
+            totalWeight += product.peso * product.quantidade;
+          });
+        
+          const packageVolume = maxComprimento * maxLargura * maxAltura;
+        
+          const transportLimits = {
+            LalaGo: { weight: '20kg', volume: '35 x 40 x 30 cm' },
+            LalaGoPro: { weight: '20kg', volume: '40 x 40 x 35 cm' },
+            CarroCompacto: { weight: '200kg', volume: '200 litros' },
+            CarroSedan: { weight: '300kg', volume: '375 litros' },
+            Fiorino: { weight: '500kg', volume: '2500 litros' },
+            Van: { weight: '1000kg', volume: '267x179x166 cm' },
+            Carreto: { weight: '1.5T', volume: '300 x 180 x 200 cm' },
+          };
+        
+          const parseWeight = (weightStr: string) => {
+            const match = weightStr.match(/(\d+(\.\d+)?)(kg|T)/);
+            if (!match) return 0;
+            const value = parseFloat(match[1]);
+            const unit = match[3];
+            return unit === 'kg' ? value : value * 1000;
+          };
+        
+          const parseVolume = (volumeStr: string) => {
+            if (volumeStr.includes('litros')) {
+              const liters = parseFloat(volumeStr.replace(' litros', ''));
+              return { maxVolume: liters * 1000 };
+            }
+        
+            const dimensions = volumeStr.replace(/ cm/g, '').split(/x| x /);
+            if (dimensions.length === 3) {
+              const [maxLength, maxWidth, maxHeight] = dimensions.map(d => parseFloat(d));
+              return { maxLength, maxWidth, maxHeight };
+            }
+        
+            return {};
+          };
+        
+          const vehicles = Object.entries(transportLimits).map(([name, limits]) => {
+            const weightLimit = parseWeight(limits.weight);
+            const volumeInfo = parseVolume(limits.volume);
+            return { name, weightLimit, ...volumeInfo };
+          });
+        
+          vehicles.sort((a, b) => a.weightLimit - b.weightLimit);
+        
+          let selectedVehicle = 'Carreto';
+          for (const vehicle of vehicles) {
+            if (totalWeight > vehicle.weightLimit) continue;
+        
+            if (vehicle.maxVolume !== undefined) {
+              if (packageVolume > vehicle.maxVolume) continue;
+            } else {
+              if (maxComprimento > vehicle.maxLength! || maxLargura > vehicle.maxWidth! || maxAltura > vehicle.maxHeight!) {
+                continue;
+              }
+            }
+        
+            selectedVehicle = vehicle.name;
+            break;
+          }
+        
           const bodyLalamove = {
             latitude: location.latitude.toString(),
             longitude: location.longitude.toString(),
             endereco: address,
             veiculo: selectedVehicle,
-            dimensoes: {
-              comprimento: Math.max(...productsList.map(p =>
-                UNIT_CONVERSION.metersToCm(p.comprimento)
-              )),
-              largura: Math.max(...productsList.map(p =>
-                UNIT_CONVERSION.metersToCm(p.largura)
-              )),
-              altura: Math.max(...productsList.map(p =>
-                UNIT_CONVERSION.metersToCm(p.altura)
-              ))
-            },
-            peso_total: productsList.reduce((sum, p) => sum + p.peso * p.quantidade, 0)
           };
-
+        
           const response2 = await fetch(`${process.env.NEXT_PUBLIC_API}/api/frete-lalamove`, {
             method: 'POST',
             headers: {
@@ -783,15 +715,16 @@ const OrcamentoGerarScreen = () => {
             },
             body: JSON.stringify(bodyLalamove)
           });
-
+        
           if (!response2.ok) {
             throw new Error('Failed to fetch frete from Lalamove API');
           }
-
+        
           const data2: FreteData[] = await response2.json();
           data.push(...data2);
         }
 
+        
         const fretesByName: { [key: string]: FreteData } = {};
 
         data.forEach(frete => {
@@ -799,28 +732,6 @@ const OrcamentoGerarScreen = () => {
         });
 
         const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
-
-        if (fretesByName.lalamove) {
-          if (!isAnticipation) {
-            setPrecoLalamove(Number(fretesByName.lalamove.price));
-            setPrazoLalamove(fretesByName.lalamove.delivery_time);
-          } else {
-            if (prazoEntregaMenordataDesejadaAntecipa(
-              fretesByName.lalamove.delivery_time,
-              dataDesejadaEntrega,
-              safeDataFeriados
-            )) {
-              setPrecoLalamove(Number(fretesByName.lalamove.price));
-              setPrazoLalamove(fretesByName.lalamove.delivery_time);
-            } else {
-              setPrecoLalamove(null);
-              setPrazoLalamove(null);
-            }
-          }
-        } else {
-          setPrecoLalamove(null);
-          setPrazoLalamove(null);
-        }
 
         if (fretesByName.pac) {
           if (!isAnticipation) {
@@ -2080,28 +1991,6 @@ Orçamento válido somente hoje.
                   control={<Radio disabled={!clientId || productsList.length === 0} />}
                   label={`Retirada - R$ 0,00.`}
                 />
-
-                {precoLalamove && (
-                  <FormControlLabel
-                    value="LALAMOVE"
-                    control={<Radio />}
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Image
-                          src="/images/lalamove-logo.png"
-                          alt="Lalamove"
-                          width={30}
-                          height={30}
-                          style={{ marginRight: '10px' }}
-                        />
-                        <Typography>
-                          {`Lalamove - R$ ${precoLalamove.toFixed(2)}`}
-                          {prazoLalamove && ` (${prazoLalamove} dias úteis)`}
-                        </Typography>
-                      </Box>
-                    }
-                  />
-                )}
 
                 <FormControlLabel
                   sx={{

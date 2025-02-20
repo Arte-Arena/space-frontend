@@ -16,7 +16,7 @@ const validateCEP = async (cep: string) => {
         const address = data.logradouro + " " + data.localidade + " " + data.uf + " " + data.cep;
         const location = await getGeoLocation(data.logradouro + " " + data.localidade + " " + data.uf + " " + data.cep);
 
-        return {address: address, location: location, uf: data.uf};
+        return {address: address, location: location, cidade: data.localidade, uf: data.uf};
       } else {
         console.log('CEP inválido');
         return false;
