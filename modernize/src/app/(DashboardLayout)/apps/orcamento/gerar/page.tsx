@@ -102,6 +102,7 @@ const OrcamentoGerarScreen = () => {
   const [clientId, setClientId] = useState<number | ''>('');
   const [isLoadedProducts, setIsLoadedProducts] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [productNames, setProductNames] = useState<string[] | null>([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [produtosComAtributoZerado, setProdutosComAtributoZerado] = useState(false);
@@ -117,6 +118,7 @@ const OrcamentoGerarScreen = () => {
   const [isFetchingFrete, setIsFetchingFrete] = useState(false);
   const [cepSuccess, setCepSuccess] = useState(false);
   const [address, setAddress] = useState('');
+  const [isSP, setIsSP] = useState<boolean>(false);
   const [precoPac, setPrecoPac] = useState<number | null>(null);
   const [prazoPac, setPrazoPac] = useState<number | null>(null);
   const [precoSedex, setPrecoSedex] = useState<number | null>(null);
@@ -137,7 +139,6 @@ const OrcamentoGerarScreen = () => {
   const [precoFrete, setPrecoFrete] = useState<number | null>(null);
   const [prazoFrete, setPrazoFrete] = useState<number | null>(null);
   const [prazoProducao, setPrazoProducao] = useState<number | null>(null);
-  // const [freteAtualizado, setFreteAtualizado] = useState<boolean>(false);
   const [loadingPrevisao, setLoadingPrevisao] = useState(false);
   const [previsaoEntrega, setPrevisaoEntrega] = useState<DateTime | null>(null)
   const [checkedOcultaPrevisao, setCheckedOcultaPrevisao] = useState<boolean>(false);
@@ -154,7 +155,6 @@ const OrcamentoGerarScreen = () => {
   const [percentualDesconto, setPercentualDesconto] = useState<number | null>(null);
   const [valorDesconto, setValorDesconto] = useState<number | null>(null);
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-
 
   const accessToken = localStorage.getItem('accessToken');
 
@@ -309,13 +309,10 @@ const OrcamentoGerarScreen = () => {
   useEffect(() => {
     if (allProducts) {
       console.log('allProducts:', allProducts);
+      setProductNames(allProducts.map((product) => product.nome));
+      console.log('productNames: ', productNames);
     }
   }, [allProducts]);
-
-  const productNames = allProducts.map((product) => product.nome);
-  console.log('productNames: ', productNames);
-
-  // Tratamento da lista de produtos (exceto brinde)
 
   useEffect(() => {
     if (selectedProduct) {
@@ -386,7 +383,10 @@ const OrcamentoGerarScreen = () => {
       const maxPrazo = productsList.length > 0
         ? Math.max(...productsList.map(product => product.prazo ?? 0))
         : 0;
-      setPrazoProducao(maxPrazo);
+      const previousPrazoProducao = prazoProducao;
+      if (previousPrazoProducao !== maxPrazo) {
+        setPrazoProducao(maxPrazo);
+      }
 
       if (cep) {
         getFrete(cep);
@@ -521,12 +521,20 @@ const OrcamentoGerarScreen = () => {
     const validationResult = await validateCEP(cep);
 
     if (validationResult) {
-      const { address, location } = validationResult;
-      console.log("Endereço Validado:", address);
-      console.log("Localização Validada:", location);
-
+      const { address, location, uf } = validationResult;
       setAddress(address);
       setLocation(location);
+
+      if (uf === "SP") {
+        console.log("uf sp");
+        setIsSP(true);
+      } else {
+        // Faixa de CEP de SP normalmente começa com 0 ou 1
+        if (/^0|^1/.test(cep)) {
+          setIsSP(true);
+        }
+        setIsSP(false);
+      }
       return true;
     } else {
       console.log("CEP inválido ou erro na validação.");
@@ -540,20 +548,6 @@ const OrcamentoGerarScreen = () => {
       console.log('location: ', location);
     }
   }, [location]);
-
-
-  // const prazoEntregaMenordataDesejadaAntecipa = (delivery_time: number): boolean => {
-  //   if (dataDesejadaEntrega) {
-  //     const diff = dataDesejadaEntrega.diff(DateTime.now(), 'days');
-
-  //     return diff.days > delivery_time;
-
-  //   } else {
-  //     console.log('Erro critico: ');
-  //     return false
-  //   }
-
-  // };
 
   const prazoEntregaMenordataDesejadaAntecipa = (
     delivery_time: number,
@@ -577,6 +571,8 @@ const OrcamentoGerarScreen = () => {
     if (clientId && productsList) {
       setIsFetchingFrete(true);
       try {
+
+        // Requisição para Melhor Envio
         const body = {
           cepTo,
           largura: productsList.reduce((max, product) => Math.max(max, product.largura), 0),
@@ -601,6 +597,34 @@ const OrcamentoGerarScreen = () => {
         }
 
         const data: FreteData[] = await response.json();
+
+        // Requisição para Lalamove
+        if (isSP && location) {
+
+          console.log("arrasca");
+          const bodyLalamove = {
+            latitude: location.latitude.toString(),
+            longitude: location.longitude.toString(),
+            endereco: "Avenida Paulista, São Paulo, SP, Brasil" // Ou obter o endereço de outra forma
+          };
+
+          const response2 = await fetch(`${process.env.NEXT_PUBLIC_API}/api/frete-lalamove`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify(bodyLalamove)
+          });
+
+          if (!response2.ok) {
+            throw new Error('Failed to fetch frete from Lalamove API');
+          }
+
+          const data2: FreteData[] = await response2.json();
+          data.push(...data2);
+        }
+
 
         const fretesByName: { [key: string]: FreteData } = {};
 
@@ -1265,7 +1289,7 @@ Orçamento válido somente hoje.
                 <Autocomplete
                   freeSolo
                   id="produto"
-                  options={productNames}
+                  options={productNames?.length ? productNames : []}
                   // getOptionLabel={(option) => option}
                   onChange={(event, selectedValue) => {
                     if (selectedValue) {
@@ -1559,11 +1583,10 @@ Orçamento válido somente hoje.
                     Produto (Brinde)
                   </CustomFormLabel>
 
-
                   <Autocomplete
                     freeSolo
                     id="produto-brinde"
-                    options={productNames}
+                    options={productNames?.length ? productNames : []}
                     // getOptionLabel={(option) => option}
                     onChange={(event, selectedValue) => {
                       if (selectedValue) {
@@ -1586,40 +1609,6 @@ Orçamento válido somente hoje.
                       />
                     )}
                   />
-
-                  {/* <Stack spacing={2} direction="row" alignItems="center" mb={2}>
-                    <Autocomplete
-                      fullWidth
-                      id="produto-brinde"
-                      options={productNames}
-                      getOptionLabel={(option) => option}
-                      disabled={!isLoadedProducts || !clientId || !checkedBrinde}
-                      onChange={(event, selectedValue) => {
-                        if (selectedValue) {
-                          const selectedProductBrinde = dataProducts.find((product: Product) => product.nome === selectedValue) as Product | undefined;
-                          setSelectedProductBrinde(selectedProductBrinde ? selectedProductBrinde : null); // Set selected product for adding
-                        } else {
-                          setSelectedProductBrinde(null); // Reset selected product
-                        }
-                      }}
-                      renderInput={(params) => (
-                        <CustomTextField
-                          {...params}
-                          placeholder="Buscar produto..."
-                          aria-label="Buscar produto"
-                          InputProps={{
-                            ...params.InputProps,
-                            endAdornment: (
-                              <>
-                                {isFetchingProducts ? <CircularProgress size={24} /> : null}
-                                {params.InputProps.endAdornment}
-                              </>
-                            ),
-                          }}
-                        />
-                      )}
-                    />
-                  </Stack> */}
                 </div>
               </div>
 
