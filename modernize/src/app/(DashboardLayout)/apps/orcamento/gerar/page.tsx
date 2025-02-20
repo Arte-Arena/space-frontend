@@ -167,6 +167,8 @@ const OrcamentoGerarScreen = () => {
   const [tipoDesconto, setTipoDesconto] = useState<string | null>(null);
   const [percentualDesconto, setPercentualDesconto] = useState<number | null>(null);
   const [valorDesconto, setValorDesconto] = useState<number | null>(null);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+
 
   const accessToken = localStorage.getItem('accessToken');
 
@@ -528,6 +530,25 @@ const OrcamentoGerarScreen = () => {
     }
   });
 
+  const getGeoLocation = async (address: string): Promise<{ latitude: number; longitude: number } | null> => {
+    try {
+      const encodedAddress = encodeURIComponent(address);
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}`);
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        return { latitude: parseFloat(lat), longitude: parseFloat(lon) };
+      } else {
+        console.error('Endereço não encontrado');
+        return null;
+      }
+    } catch (error) {
+      console.error('Erro ao obter localização geográfica:', error);
+      return null;
+    }
+  };
+
   const validateCEP = async (cep: string) => {
 
     if (!cep) {
@@ -539,10 +560,17 @@ const OrcamentoGerarScreen = () => {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
 
+      console.log("Felipe Luís");
+      console.log(data);
+
       if (response.ok && data.cep) {
         // console.log('cep válido');
         // console.log(data);
         setAddress(data.logradouro + " " + data.localidade + " " + data.uf + " " + data.cep);
+
+        const location = await getGeoLocation(data.logradouro + " " + data.localidade + " " + data.uf + " " + data.cep);
+        setLocation(location);
+
         return true;
       } else {
         console.log('CEP inválido');
@@ -553,6 +581,13 @@ const OrcamentoGerarScreen = () => {
       return false;
     }
   }
+
+  useEffect(() => {
+    if (location) {
+      console.log('location: ', location);
+    }
+  }, [location]);
+
 
   // const prazoEntregaMenordataDesejadaAntecipa = (delivery_time: number): boolean => {
   //   if (dataDesejadaEntrega) {
@@ -584,7 +619,6 @@ const OrcamentoGerarScreen = () => {
       return false;
     }
   };
-
 
   const getFrete = async (cepTo: string) => {
     if (clientId && productsList) {
