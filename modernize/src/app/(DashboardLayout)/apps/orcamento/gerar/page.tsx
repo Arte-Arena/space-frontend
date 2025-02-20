@@ -46,29 +46,17 @@ import {
   Radio,
   RadioGroup,
   FormControlLabel,
-  Stack,
   Typography
 } from '@mui/material';
 import { calcularDataFuturaDiasUteis, calcDiasNaoUteisEntreDatas } from '@/utils/calcDiasUteis';
 import CustomRadio from '@/app/components/forms/theme-elements/CustomRadio';
-import getGeoLocation from '@/utils/getGeolocation';
-
+import validateCEP from '@/utils/validateCEP';
 
 interface Cliente {
   id: number;
   nome: string | null;
   telefone: string | null;
   email: string | null;
-}
-
-interface ApiResponseClientes {
-  status: string;
-  data: Cliente[];
-  pagination?: {
-    current_page: number;
-    total_pages: number;
-    total_items: number;
-  };
 }
 
 interface Product {
@@ -99,8 +87,6 @@ interface FreteData {
 }
 
 const OrcamentoGerarScreen = () => {
-  const [optionsProdutos, setOptionsProdutos] = useState(['a', 'b', 'c']);
-
   const isLoggedIn = useAuth();
 
   const router = useRouter();
@@ -530,38 +516,24 @@ const OrcamentoGerarScreen = () => {
     }
   });
 
-  const validateCEP = async (cep: string) => {
 
-    if (!cep) {
-      console.log('CEP não fornecido');
-      return false;
-    }
+  async function processCEP(cep: string) {
+    const validationResult = await validateCEP(cep);
 
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data = await response.json();
+    if (validationResult) {
+      const { address, location } = validationResult;
+      console.log("Endereço Validado:", address);
+      console.log("Localização Validada:", location);
 
-      console.log("Felipe Luís");
-      console.log(data);
-
-      if (response.ok && data.cep) {
-        // console.log('cep válido');
-        // console.log(data);
-        setAddress(data.logradouro + " " + data.localidade + " " + data.uf + " " + data.cep);
-
-        const location = await getGeoLocation(data.logradouro + " " + data.localidade + " " + data.uf + " " + data.cep);
-        setLocation(location);
-
-        return true;
-      } else {
-        console.log('CEP inválido');
-        return false;
-      }
-    } catch (error) {
-      console.error('Error validating CEP:', error);
+      setAddress(address);
+      setLocation(location);
+      return true;
+    } else {
+      console.log("CEP inválido ou erro na validação.");
       return false;
     }
   }
+
 
   useEffect(() => {
     if (location) {
@@ -969,12 +941,25 @@ const OrcamentoGerarScreen = () => {
 
   const handleCEPBlur = async (event: React.FocusEvent<HTMLInputElement>) => {
     const cep = event.target.value;
-    const isValidCEP = await validateCEP(cep);
+    const isValidCEP = await processCEP(cep);
     if (!isValidCEP) {
       setCepError(true);
     } else {
       setCepError(false);
       getFrete(cep);
+    }
+  };
+
+  const handleCEPKeyPressEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      // Criar um objeto de evento de foco simulado
+      const simulatedFocusEvent = {
+        target: {
+          value: cep // ou o valor atual do CEP
+        }
+      } as React.FocusEvent<HTMLInputElement>;
+
+      handleCEPBlur(simulatedFocusEvent);
     }
   };
 
@@ -985,7 +970,7 @@ const OrcamentoGerarScreen = () => {
   }, [cepError]);
 
   const handleSubmit = async () => {
-    const isValidCEP = await validateCEP(cep);
+    const isValidCEP = await processCEP(cep);
     if (isValidCEP) {
       gerarOrcamento();
     } else {
@@ -1894,8 +1879,9 @@ Orçamento válido somente hoje.
               id="transportadora"
               label="CEP do cliente"
               value={cep}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setCEP(event.target.value)}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setCEP(event.target.value.replace(/[\s.-]/g, ''))}
               onBlur={handleCEPBlur}
+              onKeyPress={handleCEPKeyPressEnter}
               variant="outlined"
               size="small"
               sx={{ width: '200px' }}
