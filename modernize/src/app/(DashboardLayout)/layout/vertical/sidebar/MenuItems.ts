@@ -20,7 +20,8 @@ import {
   IconBrandSlack,
   IconBusinessplan,
   IconLink,
-  IconPencil
+  IconPencil,
+  IconChartBar
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -124,6 +125,12 @@ const getMenuItems = (): MenuitemsType[] => {
           title: "Status de Orçamento",
           icon: IconZoomMoney,
           href: "/apps/orcamento/status",
+        },
+        {
+          id: uniqueId(),
+          title: "Orçamento Status Trello",
+          icon: IconChartBar,
+          href: "/apps/orcamento/status-trello",
         },
         {
           id: uniqueId(),
