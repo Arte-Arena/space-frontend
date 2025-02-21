@@ -1,12 +1,12 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { Box, Card, CardContent, Typography, useTheme, TextField, Button, InputAdornment, Stack, Dialog, DialogTitle, DialogContentText, DialogContent, DialogActions, FormControlLabel, Checkbox, Select, MenuItem } from "@mui/material";
 import useFetchOrcamentos from "@/utils/useGetAllOrcamentos"; // Importe o hook
 import { useStatusChangeAprovado, useStatusChangeDesaprovado } from '@/utils/PutStatusOrcamentos';
 import { IconSearch } from "@tabler/icons-react";
 import CustomTextField from "../forms/theme-elements/CustomTextField";
-import StatusArray from "./statusArray";
+// import StatusArray from "./statusArray";
 
 interface Orcamento {
   id: number;
@@ -57,10 +57,6 @@ const initialColumns: Columns = {
     name: "Não Aprovado",
     items: [],
   },
-  etapa2: {
-    name: "Aprovação Arte Arena",
-    items: [],
-  },
   etapa3: {
     name: "Faturamento",
     items: [],
@@ -105,6 +101,10 @@ const initialColumns: Columns = {
     name: "Envio Pedido",
     items: [],
   },
+  etapa2: {
+    name: "Aprovação Arte Arena",
+    items: [],
+  },
 
 };
 
@@ -114,21 +114,34 @@ const KanbanBoard: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [columns, setColumns] = useState<Columns>(initialColumns);
   const [currentPage, setCurrentPage] = useState<Record<string, number>>({});
+  const [isDragging, setIsDragging] = useState(false);
   const theme = useTheme();
-  const [isAprovar, setIsAprovar] = useState(false);
-  const [isDesaprovar, setIsDesaprovar] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState("Status");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogData, setDialogData] = useState<{
-    statusKey: string;
-    rowId: number;
-    approvedValue: string;
-  } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  // const [dialogOpen, setDialogOpen] = useState(false);
+  // const [isAprovar, setIsAprovar] = useState(false);
+  // const [isDesaprovar, setIsDesaprovar] = useState(false);
+  // const [selectedStatus, setSelectedStatus] = useState("Status");
+  // const [dialogData, setDialogData] = useState<{
+  //   statusKey: string;
+  //   rowId: number;
+  //   approvedValue: string;
+  // } | null>(null);
   
   // busca os tipos de status
-  const statusOptions = StatusArray || {};
+  // const statusOptions = StatusArray || {};
+
 
   // Busca os orçamentos da API
+  
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+
   const { data, isLoading, isError, refetch} = useFetchOrcamentos(searchQuery, page);
 
   // Mapeia os orçamentos para as colunas
@@ -321,6 +334,7 @@ const KanbanBoard: React.FC = () => {
     }
   }, [data]);
 
+
   // Atualiza quando `columns` mudar
   useEffect(() => {
     const initialPages = Object.keys(columns).reduce((acc, columnId) => {
@@ -330,9 +344,9 @@ const KanbanBoard: React.FC = () => {
     setCurrentPage(initialPages);
  }, [columns]);
 
- useEffect(() => {
-  console.log(dialogData)
- }, [dialogData])
+//  useEffect(() => {
+//   console.log(dialogData)
+//  }, [dialogData])
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
@@ -356,7 +370,8 @@ const KanbanBoard: React.FC = () => {
     });
 
     // Chama a função para atualizar o status no banco de dados
-    // handleChangeStatus(movedItem, destColumnId);
+    handleChangeStatus(movedItem, destColumnId);
+    handleDragEnd();
   };
 
   const handleSearch = () => {
@@ -394,72 +409,85 @@ const KanbanBoard: React.FC = () => {
     }
   }
 
-  const handleOpenDialog = (statusKey: string, rowId: number, approvedValue: string) => {
-    setDialogData({ statusKey, rowId, approvedValue });
-    setDialogOpen(true);
-  };
-
-  const handleCloseDialog = () => {
-    setDialogOpen(false);
-    setDialogData(null);
-  };
   
 
-  const handleAprovarChange = () => {
-    setIsAprovar(!isAprovar);
-    setIsDesaprovar(false); // Desmarca "Desaprovar" ao selecionar "Aprovar"
-  };
+  // const handleOpenDialog = (statusKey: string, rowId: number, approvedValue: string) => {
+  //   setDialogData({ statusKey, rowId, approvedValue });
+  //   setDialogOpen(true);
+  // };
 
-  const handleDesaprovarChange = () => {
-    setIsDesaprovar(!isDesaprovar);
-    setIsAprovar(false); // Desmarca "Aprovar" ao selecionar "Desaprovar"
-  };
-
-
-// arrumar os campos
-  // const handleChangeStatus = async (orcamento: Orcamento, newColumnId: string) => {
-  //   const statusMap: Record<string, { campo: string; valor: string }> = {
-  //     etapa1: { campo: "status_producao_esboco", valor: "aguardando_melhoria" },
-  //     etapa2: { campo: "status_aprovacao_arte_arena", valor: "aprovada" },
-  //     etapa3: { campo: "status_envio_pedido", valor: "enviado" },
-  //     etapa4: { campo: "status_faturamento", valor: "faturado" },
-  //     etapa5: { campo: "status_pagamento", valor: "pago" },
-  //   };
-  
-  //   const statusInfo = statusMap[newColumnId];
-  //   if (!statusInfo) return;
-  
-  //   try {
-  //     // Chama a API para atualizar o status no backend
-  //     await useStatusChangeAprovado(statusInfo.campo, orcamento.id);
-  
-  //     // Atualiza o estado da tela com o novo status
-  //     setColumns((prevColumns) => {
-  //       const newColumns = JSON.parse(JSON.stringify(prevColumns));
-  
-  //       // Remove o item da coluna atual
-  //       Object.keys(newColumns).forEach((colId) => {
-  //         newColumns[colId].items = newColumns[colId].items.filter((item: { id: number; }) => item.id !== orcamento.id);
-  //       });
-  
-  //       // Adiciona na nova coluna
-  //       newColumns[newColumnId].items.push({
-  //         ...orcamento,
-  //         [statusInfo.campo]: statusInfo.valor, // Atualiza o status no item
-  //       });
-  
-  //       return newColumns;
-  //     });
-  
-  //     refetch(); // Recarrega os dados do backend
-  //   } catch (err) {
-  //     console.log("Erro ao mudar status:", err);
-  //   }
+  // const handleCloseDialog = () => {
+  //   setDialogOpen(false);
+  //   setDialogData(null);
   // };
   
 
+  // const handleAprovarChange = () => {
+  //   setIsAprovar(!isAprovar);
+  //   setIsDesaprovar(false); // Desmarca "Desaprovar" ao selecionar "Aprovar"
+  // };
+
+  // const handleDesaprovarChange = () => {
+  //   setIsDesaprovar(!isDesaprovar);
+  //   setIsAprovar(false); // Desmarca "Aprovar" ao selecionar "Desaprovar"
+  // };
+
+
+// arrumar os campos
+  const handleChangeStatus = async (orcamento: Orcamento, newColumnId: string) => {
+    const statusMap: Record<string, { campo: string; valor: string }> = {
+      etapa1: { campo: "status", valor: "nao_aprovado" },
+      etapa3: { campo: "status_faturamento", valor: "faturado" },
+      etapa4: { campo: "status_pagamento", valor: "pago" },
+      etapa5: { campo: "status_producao_arte_final", valor: "aguardando_melhoria" },
+      etapa6: { campo: "status_aprovacao_arte_final", valor: "aprovada" },
+      etapa7: { campo: "status_aprovacao_amostra_arte_arena", valor: "aprovada" },
+      etapa8: { campo: "status_envio_amostra", valor: "enviada" },
+      etapa9: { campo: "status_aprovacao_amostra_cliente", valor: "aprovada" },
+      etapa10: { campo: "status_aprovacao_cliente", valor: "aprovado" },
+      etapa11: { campo: "status_producao_esboco", valor: "aguardando_melhoria" },
+      etapa12: { campo: "status_aprovacao_esboco", valor: "aprovado" },
+      etapa13: { campo: "status_envio_pedido", valor: "enviado" },
+      etapa2: { campo: "status_aprovacao_arte_arena", valor: "aprovada" },
+    };
+  
+    const statusInfo = statusMap[newColumnId];
+    if (!statusInfo) return;
+    
+    try {
+
+      console.log(statusInfo)
+      // Chama a API para atualizar o status no backend
+      handleAprovar(statusInfo.campo, orcamento.id);
+  
+      // Atualiza o estado da tela com o novo status
+      setColumns((prevColumns) => {
+        const newColumns = JSON.parse(JSON.stringify(prevColumns));
+  
+        // Remove o item da coluna atual
+        Object.keys(newColumns).forEach((colId) => {
+          newColumns[colId].items = newColumns[colId].items.filter((item: { id: number; }) => item.id !== orcamento.id);
+        });
+  
+        // Adiciona na nova coluna
+        newColumns[newColumnId].items.push({
+          ...orcamento,
+          [statusInfo.campo]: statusInfo.valor, // Atualiza o status no item
+        });
+  
+        return newColumns;
+      });
+  
+      refetch(); // Recarrega os dados do backend
+    } catch (err) {
+      console.log("Erro ao mudar status:", err);
+    }
+  };
+  
+
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+    <Box>   
+    <DragDropContext onDragStart={handleDragStart} onDragEnd={onDragEnd}>
       <Stack spacing={1} direction="row" alignItems="center" mb={2} >
             <CustomTextField
               fullWidth
@@ -486,7 +514,7 @@ const KanbanBoard: React.FC = () => {
           </Stack>
 
           
-      <Box display="flex" gap={2} p={2} sx={{marginLeft: '10px', overflow: 'auto', overflowX: 'auto', display: 'flex', gap: 2,}}>
+      <Box id="container" display="flex" gap={2} p={2} sx={{marginLeft: '10px', overflowX: 'auto', display: 'flex', gap: 2, width: '100%', whiteSpace: 'nowrap'}}>
         {Object.entries(columns).map(([columnId, column]) => {
           const paginatedItems = column.items?.slice(
             ((currentPage[columnId] || 1) - 1) * 10,
@@ -501,10 +529,11 @@ const KanbanBoard: React.FC = () => {
 
           console.log("Itens da coluna", columnId, paginatedItems, column);
           return (
-            <Box key={columnId} sx={{overflowY: 'initial'}}>
-            <Droppable key={columnId} droppableId={columnId} isDropDisabled={true}>
+            <Box  key={columnId} sx={{overflowY: 'initial'}}>
+            <Droppable key={columnId} droppableId={columnId} isDropDisabled={false}>
               {(provided) => (
                 <Box
+                className='component'
                   ref={provided.innerRef}
                   {...provided.droppableProps}
                   sx={{
@@ -533,7 +562,7 @@ const KanbanBoard: React.FC = () => {
                       flexDirection: 'column',
                       gap: 1, 
                       width: '100%',
-                      '&::-webkit-scrollbar': {width: '8px'}
+                      '&::-webkit-scrollbar': {width: '8px'},
                     }}
                   >
 
@@ -597,22 +626,22 @@ const KanbanBoard: React.FC = () => {
                     if(item.status_envio_pedido == "enviado"){
                       statusAprovado = item.status_envio_pedido;
                       statusKey = 'status_aprovacao_arte_arena';
-
                     }
 
                     const clienteNome = item.nome_cliente;
 
                     return (
-                      <Draggable key={itemId} draggableId={itemId} index={index} isDragDisabled={true}>
+                      <Draggable key={itemId} draggableId={itemId} index={index} isDragDisabled={false}>
                         {(provided) => (
                           <Card
+                          
                           ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             sx={{ marginBottom: 1, background: theme.palette.background.default, padding: 0, width: '100%', minHeight: '35%'}}
                           >
                           {/* VAI SER AQUI QUE VAI TER A LOGICA DE PASSAR PRA UM STATUS OU OUTRO */}
-                          <button style={{backgroundColor: 'transparent', border: '0', cursor: 'pointer'}} onClick={() => handleOpenDialog(statusKey, item.id, statusAprovado)}>
+                          {/* <button style={{backgroundColor: 'transparent', border: '0', cursor: 'pointer'}} onClick={() => handleOpenDialog(statusKey, item.id, statusAprovado)}> */}
                             <CardContent sx={{textAlign: 'start', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
                               <Typography variant="body1" sx={{ color: theme.palette.text.primary}}>
                                 #{itemId}
@@ -624,7 +653,7 @@ const KanbanBoard: React.FC = () => {
                                 Status {column.name}: <br/> <b>{statusAprovado = statusAprovado === "aguardando_melhoria" ? "aguardando melhoria" : statusAprovado}</b>
                               </Typography>
                             </CardContent>
-                            </button>
+                            {/* </button> */}
                           </Card>
                         )}
                       </Draggable>
@@ -718,6 +747,7 @@ const KanbanBoard: React.FC = () => {
         })}
       </Box>
     </DragDropContext>
+    </Box>
   );
 };
 
