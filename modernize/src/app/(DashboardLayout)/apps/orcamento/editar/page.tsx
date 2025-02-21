@@ -11,18 +11,31 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
-import { Pagination, Stack, Button, Box, Typography, Collapse, Popover } from '@mui/material';
+import { Pagination, Stack, Button, Box, Typography, Collapse } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import { IconProgressCheck, IconEdit, IconCircleCheck, IconBan, IconProgressHelp, IconX } from '@tabler/icons-react';
+import { IconEdit, IconCircleCheck, IconBan, IconProgressHelp } from '@tabler/icons-react';
 import Tooltip from '@mui/material/Tooltip';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+interface Produto {
+  id: number;
+  nome: string;
+  peso: string; // Caso o peso seja uma string
+  prazo: number;
+  preco: number;
+  altura: string; // Considerando que altura, largura e comprimento são strings
+  largura: string;
+  comprimento: string;
+  created_at: string | null; // Pode ser null ou uma string
+  quantidade: number;
+  updated_at: string | null; // Pode ser null ou uma string
+}
 
 interface Orcamento {
   id: number;
@@ -39,7 +52,14 @@ interface Orcamento {
   status: string;
   created_at: string;
   updated_at: string;
+  brinde: number;
+  tipo_desconto: string;
+  valor_desconto: number;
+  data_antecipa: string;
+  taxa_antecipa: string;
+  total_orcamento: number;
 }
+
 const OrcamentoBuscarScreen = () => {
   const router = useRouter();
 
@@ -47,6 +67,11 @@ const OrcamentoBuscarScreen = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
+
+  const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
+  const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
+  const regexEntrega = /Previsão de Entrega:\s*([\d]{1,2} de [a-zA-Z]+ de \d{4})\s?\(([^)]+)\)/;
+  const regexBrinde = /Brinde:\s*\d+\s*un\s*[\w\s]*\s*R\$\s*\d{1,3}(?:,\d{2})*\s*\(R\$\s*\d{1,3}(?:,\d{2})*\)/;
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -88,13 +113,8 @@ const OrcamentoBuscarScreen = () => {
   if (isFetchingOrcamentos) return <CircularProgress />;
   if (errorOrcamentos) return <p>Ocorreu um erro: {errorOrcamentos.message}</p>;
 
-
-  const handleAprovar = (rowId: number) => {
-    router.push(`/apps/orcamento/aprovar/${rowId}`);
-  };
-
   const handleEditOrcamento = (orcamentoId: number) => {
-    // router.push(`/apps/orcamento/editar?id=${orcamentoId}`);
+    router.push(`/apps/orcamento/editar/${orcamentoId}`);
     console.log('Aguarde.');
   };
 
@@ -142,7 +162,19 @@ const OrcamentoBuscarScreen = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {dataOrcamentos?.data.map((row: Orcamento) => (
+                {dataOrcamentos?.data.map((row: Orcamento) => {
+                const listaProdutos = row.lista_produtos
+                ? (typeof row.lista_produtos === 'string' ? JSON.parse(row.lista_produtos) : row.lista_produtos)
+                : [];
+
+                const texto = row.texto_orcamento;
+                const frete = texto?.match(regexFrete);
+                const prazo = texto?.match(regexPrazo);
+                console.log(prazo)
+                const entrega = texto?.match(regexEntrega);
+                const brinde = texto?.match(regexBrinde);
+
+                return (
                   <React.Fragment key={row.id}>
                     <TableRow>
                       <TableCell>
@@ -209,57 +241,238 @@ const OrcamentoBuscarScreen = () => {
                       </TableCell>
                       <TableCell>
                         <Stack direction="row" spacing={1}>
-                          <Tooltip title="Alterar Status">
+                          <Tooltip title="Alterar Orçamento">
                             <IconButton
-                              aria-label="alterar status"
-                              onClick={() => handleAprovar(row.id)}
+                              aria-label="alterar Orçamento"
+                              onClick={() => handleEditOrcamento(row.id)}
                             >
-                              <IconProgressCheck />
+                              <IconEdit />
                             </IconButton>
                           </Tooltip>
 
-
-                          {/* <IconButton
-                            aria-label="edit"
-                            onClick={() => handleEditOrcamento(row.id)}
-                          >
-                            <IconEdit />
-                          </IconButton> */}
                         </Stack>
                       </TableCell>
 
                     </TableRow>
                     <TableRow>
-                      <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+                      {/* colSpan deve ter o mesmo número que o número de cabeçalhos da tabela, no caso 16 */}
+                      <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={16}>
                         <Collapse in={openRow[row.id]} timeout="auto" unmountOnExit>
                           <Box margin={1}>
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Lista de Produtos:</strong> {row.lista_produtos}
-                            </Typography>
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Texto do Orçamento:</strong> {row.texto_orcamento}
-                            </Typography>
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Endereço CEP:</strong> {row.endereco_cep}
-                            </Typography>
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Endereço:</strong> {row.endereco}
-                            </Typography>
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Op&ccedil;&atilde;o de Entrega:</strong> {row.opcao_entrega}
-                            </Typography>
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Prazo da Op&ccedil;&atilde;o de Entrega:</strong> {row.prazo_opcao_entrega} dias
-                            </Typography>
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Pre&ccedil;o da Op&ccedil;&atilde;o de Entrega:</strong> {row.preco_opcao_entrega?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                            </Typography>
+                            <Table size="small" aria-label="detalhes">
+                              <TableBody>
+                               <TableRow>
+                                  <TableCell sx={{ border: 'none' }} colSpan={16}>
+                                    <strong>Lista de Produtos</strong>
+                                    <TableHead>
+                                      <TableRow>
+                                        <TableCell></TableCell>
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                          quantidade:
+                                        </TableCell>
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                          Preço:
+                                        </TableCell>
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                          Tamanho:
+                                        </TableCell>
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                          Peso:
+                                        </TableCell>
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                          Prazo:
+                                        </TableCell>
+                                      </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                      {listaProdutos.length > 0 ? (
+                                        listaProdutos.map((produto:Produto, index: number) => (
+                                        <TableRow key={produto.id || index}>
+                                            <TableCell sx={{ fontWeight: 'bold', padding: '8px' }} colSpan={1}>
+                                              {produto.nome}
+                                            </TableCell>
+                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                              {produto.quantidade}
+                                            </TableCell>
+                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                              {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                            </TableCell>
+                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                              {produto.altura} x {produto.largura} x {produto.comprimento} cm
+                                            </TableCell>
+                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                              {produto.peso} kg
+                                            </TableCell>
+                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                              {produto.prazo} dias
+                                            </TableCell>
+                                          </TableRow>
+                                          ))
+                                        ) : (
+                                        <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
+                                      )}
+                                    </TableBody>
+                                  </TableCell>
+                                </TableRow>
+
+                                {/* Texto do Orçamento */}
+                                <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Cliente:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.nome_cliente}</TableCell>
+                                </TableRow>
+
+                                {brinde !== null && (
+                                  <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Brinde:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{brinde}</TableCell>
+                                </TableRow>
+                                )}
+
+                                {entrega !== null && (
+                                  <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Entrega:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{entrega}</TableCell>
+                                </TableRow>
+                                )}
+                                {prazo !== null && (
+                                  <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Prazo:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{prazo}</TableCell>
+                                </TableRow>
+                                )}
+
+                                {frete !== null && (
+                                  <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Frete:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{frete}</TableCell>
+                                </TableRow>
+                                )}
+
+                                {/* Endereço CEP */}
+                                <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Endereço CEP:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.endereco_cep}</TableCell>
+                                </TableRow>
+
+                                {/* Endereço */}
+                                <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Endereço:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.endereco}</TableCell>
+                                </TableRow>
+
+                                {/* Opção de Entrega */}
+                                <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Opção de Entrega:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.opcao_entrega}</TableCell>
+                                </TableRow>
+
+                                {/* Prazo da Opção de Entrega */}
+                                <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Prazo da Opção de Entrega:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.prazo_opcao_entrega} dias</TableCell>
+                                </TableRow>
+
+                                {/* Preço da Opção de Entrega */}
+                                <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Preço da Opção de Entrega:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>
+                                    {row.preco_opcao_entrega?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                  </TableCell>
+                                </TableRow>
+
+                                {/* Brinde */}
+                                {row.brinde !== null && (
+                                  <TableRow>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                      Brinde:
+                                    </TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>{row.brinde === 1 ? 'Com Brinde' : 'Sem Brinde'}</TableCell>
+                                  </TableRow>
+                                )}
+
+                                {/* Desconto */}
+                                {row.valor_desconto !== null && (
+                                  <>
+                                    <TableRow>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                        Desconto:
+                                      </TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>Com Desconto</TableCell>
+                                    </TableRow>
+
+                                    <TableRow>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                        Tipo Descontado:
+                                      </TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>{row.tipo_desconto ?? 'Nenhum'}</TableCell>
+                                    </TableRow>
+
+                                    <TableRow>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                        Valor Descontado:
+                                      </TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {row.valor_desconto ?? 'Sem Desconto'}</TableCell>
+                                    </TableRow>
+                                  </>
+                                )}
+
+                                {/* Data Antecipação */}
+                                {row.data_antecipa !== null && (
+                                  <TableRow>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                      Data Antecipação:
+                                    </TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>{row.data_antecipa ?? 'Sem Antecipação'}</TableCell>
+                                  </TableRow>
+                                )}
+
+                                {/* Taxa Antecipação */}
+                                {row.taxa_antecipa !== null && (
+                                  <TableRow>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                      Taxa Antecipação:
+                                    </TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {row.taxa_antecipa ?? 'Sem Taxa de Antecipação'}</TableCell>
+                                  </TableRow>
+                                )}
+
+                                {/* Total Orçamento */}
+                                {row.total_orcamento !== null && (
+                                  <TableRow>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                      Total Orçamento:
+                                    </TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {row.total_orcamento ?? 'Sem total Definido'}</TableCell>
+                                  </TableRow>
+                                )}
+                              </TableBody>
+                            </Table>
                           </Box>
                         </Collapse>
                       </TableCell>
                     </TableRow>
                   </React.Fragment>
-                ))}
+                )})}
               </TableBody>
             </Table>
           </TableContainer>
