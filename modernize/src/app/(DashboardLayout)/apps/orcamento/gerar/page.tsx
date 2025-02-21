@@ -788,7 +788,14 @@ const OrcamentoGerarScreen = () => {
             throw new Error('Failed to fetch frete from Lalamove API');
           }
 
-          const data2: FreteData[] = await response2.json();
+          const responseLalamove = await response2.json();
+
+          const data2: FreteData[] = [{
+            name: 'Lalamove',
+            price: responseLalamove.data.priceBreakdown.totalBeforeOptimization,
+            delivery_time: 1,
+          }];
+
           data.push(...data2);
         }
 
@@ -2088,7 +2095,7 @@ Orçamento válido somente hoje.
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Image
-                          src="/images/lalamove-logo.png"
+                          src="/images/lalamove.png"
                           alt="Lalamove"
                           width={30}
                           height={30}
@@ -2096,7 +2103,7 @@ Orçamento válido somente hoje.
                         />
                         <Typography>
                           {`Lalamove - R$ ${precoLalamove.toFixed(2)}`}
-                          {prazoLalamove && ` (${prazoLalamove} dias úteis)`}
+                          {prazoLalamove && ` (${prazoLalamove} dia útil)`}
                         </Typography>
                       </Box>
                     }
