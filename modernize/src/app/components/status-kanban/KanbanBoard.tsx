@@ -460,7 +460,7 @@ const KanbanBoard: React.FC = () => {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Stack spacing={1} direction="row" alignItems="center" mb={2}>
+      <Stack spacing={1} direction="row" alignItems="center" mb={2} >
             <CustomTextField
               fullWidth
               value={query}
@@ -484,7 +484,9 @@ const KanbanBoard: React.FC = () => {
               Buscar
             </Button>
           </Stack>
-      <Box display="flex" gap={2} p={2} sx={{marginLeft: '10px', overflow: 'auto', overflowX: 'auto',}}>
+
+          
+      <Box display="flex" gap={2} p={2} sx={{marginLeft: '10px', overflow: 'auto', overflowX: 'auto', display: 'flex', gap: 2,}}>
         {Object.entries(columns).map(([columnId, column]) => {
           const paginatedItems = column.items?.slice(
             ((currentPage[columnId] || 1) - 1) * 10,
@@ -499,24 +501,43 @@ const KanbanBoard: React.FC = () => {
 
           console.log("Itens da coluna", columnId, paginatedItems, column);
           return (
-            <Box sx={{overflowY: 'initial'}}>
+            <Box key={columnId} sx={{overflowY: 'initial'}}>
             <Droppable key={columnId} droppableId={columnId} isDropDisabled={true}>
               {(provided) => (
                 <Box
                   ref={provided.innerRef}
                   {...provided.droppableProps}
                   sx={{
-                    width: '210px',
-                    height: 'auto',
+                    width: '270px',
+                    height: '70vh',
+                    overflowY: 'scroll',
                     background: theme.palette.background.paper,
                     padding: 2,
                     borderRadius: 2,
                     border: `1px solid ${theme.palette.divider}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1,
                   }}
                 >
-                  <Typography variant="h6" sx={{ textAlign: "center", mb: 2, color: theme.palette.text.primary, overflow: "hidden", textOverflow: "ellipsis", }}>
+                  <Typography variant="h6" sx={{ textAlign: "start", paddingRight: 2, mb: 0.1, color: theme.palette.text.primary, overflow: "hidden", textOverflow: "ellipsis", paddingBottom: '8%'}}>
                     {column.name}
                   </Typography>
+                  {/* box dos itens */}
+                  <Box
+                    sx={{
+                      overflowX: 'hidden', 
+                      overflowY: 'auto', // Scroll vertical
+                      paddingRight: 1, // Espaço para evitar sobreposição com a barra de scroll
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      gap: 1, 
+                      width: '100%',
+                      '&::-webkit-scrollbar': {width: '8px'}
+                    }}
+                  >
+
+
                   {paginatedItems.map((item, index) => {
                     const itemId = item.id.toString();
 
@@ -588,19 +609,19 @@ const KanbanBoard: React.FC = () => {
                           ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
-                            sx={{ marginBottom: 2, background: theme.palette.background.default, padding: 0}}
+                            sx={{ marginBottom: 1, background: theme.palette.background.default, padding: 0, width: '100%', minHeight: '35%'}}
                           >
                           {/* VAI SER AQUI QUE VAI TER A LOGICA DE PASSAR PRA UM STATUS OU OUTRO */}
                           <button style={{backgroundColor: 'transparent', border: '0', cursor: 'pointer'}} onClick={() => handleOpenDialog(statusKey, item.id, statusAprovado)}>
-                            <CardContent sx={{textAlign: 'center'}}>
+                            <CardContent sx={{textAlign: 'start', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
                               <Typography variant="body1" sx={{ color: theme.palette.text.primary}}>
                                 #{itemId}
                               </Typography>
                               <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 1 }}>
                                 {clienteNome}
                               </Typography>
-                              <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 1, paddingX: '20px' }}>
-                                Status {column.name}: {statusAprovado = statusAprovado === "aguardando_melhoria" ? "aguardando melhoria" : statusAprovado}
+                              <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 1,}}>
+                                Status {column.name}: <br/> <b>{statusAprovado = statusAprovado === "aguardando_melhoria" ? "aguardando melhoria" : statusAprovado}</b>
                               </Typography>
                             </CardContent>
                             </button>
@@ -610,6 +631,7 @@ const KanbanBoard: React.FC = () => {
                     );
                   })}
                   {provided.placeholder}
+                  </Box>
 
                   {/* <Dialog open={dialogOpen} onClose={handleCloseDialog}>
                     <DialogTitle>Alterar Status #{dialogData?.rowId}</DialogTitle>
