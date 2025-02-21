@@ -114,9 +114,8 @@ const KanbanBoard: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [columns, setColumns] = useState<Columns>(initialColumns);
   const [currentPage, setCurrentPage] = useState<Record<string, number>>({});
-  const [isDragging, setIsDragging] = useState(false);
   const theme = useTheme();
-  const containerRef = useRef<HTMLDivElement>(null);
+  // const [isDragging, setIsDragging] = useState(false); 
   // const [dialogOpen, setDialogOpen] = useState(false);
   // const [isAprovar, setIsAprovar] = useState(false);
   // const [isDesaprovar, setIsDesaprovar] = useState(false);
@@ -133,17 +132,18 @@ const KanbanBoard: React.FC = () => {
 
   // Busca os orçamentos da API
   
-  const handleDragStart = () => {
-    setIsDragging(true);
-  };
+  // const handleDragStart = () => {
+  //   setIsDragging(true);
+  // };
 
-  const handleDragEnd = () => {
-    setIsDragging(false);
-  };
+  // const handleDragEnd = () => {
+  //   setIsDragging(false);
+  // };
 
 
   const { data, isLoading, isError, refetch} = useFetchOrcamentos(searchQuery, page);
 
+  // tem que mudar toda a logica desse campo aqui e pegar da rota do backend de outro arquivo. 
   // Mapeia os orçamentos para as colunas
   useEffect(() => {
     console.log('dados: ', data)
@@ -371,7 +371,7 @@ const KanbanBoard: React.FC = () => {
 
     // Chama a função para atualizar o status no banco de dados
     handleChangeStatus(movedItem, destColumnId);
-    handleDragEnd();
+    // handleDragEnd();
   };
 
   const handleSearch = () => {
@@ -396,9 +396,18 @@ const KanbanBoard: React.FC = () => {
     }
   }
 
+  // tenho que pensar em como fazer esse campo, se faço manualmente um card novo clicavel e vai pra pagina de alterar status de backlog
+  //  ou se algo que for dropado na coluna dele automaticamente vai pra pagina de alterar o status pro backlog.
   const handleAprovarArteArena = (rowId: number) => {
     window.open(`/apps/orcamento/aprovar/${rowId}`, '_blank');
   };
+
+  // tenho que pensar em como fazer isso funcionar com as proximas logicas
+  //  ideias: 
+  // 1- toda vez que ele coloca em alguem que ja tenha sido aprovado 
+  // (tem que saber todos os status e passar por eles) e identificar se vai desaprovar ou não 
+  // e dai fazer a opração
+  // 2- ... pensar mais tarde. 
 
   const handleDesaprovar = async (campo: string, rowId: number) =>{
     try{
@@ -487,7 +496,8 @@ const KanbanBoard: React.FC = () => {
 
   return (
     <Box>   
-    <DragDropContext onDragStart={handleDragStart} onDragEnd={onDragEnd}>
+       {/*  onDragStart={handleDragStart} */}
+    <DragDropContext onDragEnd={onDragEnd}> 
       <Stack spacing={1} direction="row" alignItems="center" mb={2} >
             <CustomTextField
               fullWidth
@@ -565,7 +575,6 @@ const KanbanBoard: React.FC = () => {
                       '&::-webkit-scrollbar': {width: '8px'},
                     }}
                   >
-
 
                   {paginatedItems.map((item, index) => {
                     const itemId = item.id.toString();
