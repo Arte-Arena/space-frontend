@@ -40,8 +40,8 @@ interface ClienteCadastroForm {
 }
 
 const OrcamentoBackofficeScreen: React.FC = () => {
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const navigate = useRouter();
   const id = searchParams.get('id') ?? null;
 
   const [formData, setFormData] = useState<ClienteCadastroForm>({
@@ -73,7 +73,6 @@ const OrcamentoBackofficeScreen: React.FC = () => {
     situacao: "A"
   });
 
-  const navigate = useRouter();
 
   const [isTipoPessoaSelected, setIsTipoPessoaSelected] = useState(false);
 
