@@ -10,7 +10,7 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import React, { useEffect } from 'react';
-import BlankCard from '../../../../components/shared/BlankCard';
+import BlankCard from '../../../shared/BlankCard';
 import { useSelector, useDispatch } from'@/store/hooks';
 import { fetchFollwores, onToggleFollow } from '@/store/apps/userProfile/UserProfileSlice';
 import { IconMapPin, IconSearch } from '@tabler/icons-react';

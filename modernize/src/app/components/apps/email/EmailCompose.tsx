@@ -8,7 +8,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Slide from '@mui/material/Slide';
 import TextField from '@mui/material/TextField';
-import CustomFormLabel from '../../../components/forms/theme-elements/CustomFormLabel';
+import CustomFormLabel from '../../forms/theme-elements/CustomFormLabel';
 import { TransitionProps } from '@mui/material/transitions';
 
 const Transition = React.forwardRef(function Transition(

@@ -22,7 +22,7 @@ import { useSelector } from "@/store/hooks";
 import { ChatsType } from '../../../(DashboardLayout)/types/apps/chat';
 import { formatDistanceToNowStrict } from "date-fns";
 import ChatInsideSidebar from "./ChatInsideSidebar";
-import Scrollbar from "../../../components/custom-scroll/Scrollbar";
+import Scrollbar from "../../custom-scroll/Scrollbar";
 import Image from "next/image";
 
 interface ChatContentProps {

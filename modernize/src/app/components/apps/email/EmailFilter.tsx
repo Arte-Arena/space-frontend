@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography';
 import { setVisibilityFilter } from '@/store/apps/email/EmailSlice';
 import EmailCompose from './EmailCompose';
 
-import Scrollbar from '../../../components/custom-scroll/Scrollbar';
+import Scrollbar from '../../custom-scroll/Scrollbar';
 import {
   IconMail,
   IconSend,
