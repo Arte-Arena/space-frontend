@@ -6,6 +6,8 @@ import useFetchOrcamentos from "@/utils/useGetAllOrcamentos"; // Importe o hook
 import { useStatusChangeAprovado, useStatusChangeDesaprovado } from '@/utils/PutStatusOrcamentos';
 import { IconSearch } from "@tabler/icons-react";
 import CustomTextField from "../forms/theme-elements/CustomTextField";
+import useEtapa from "@/utils/useLastStatus";
+import { string } from "yup/lib/locale";
 // import StatusArray from "./statusArray";
 
 interface Orcamento {
@@ -43,9 +45,15 @@ interface Orcamento {
   status_aprovacao_arte_final: string;
 }
 
+interface Etapa {
+  etapa: string;
+  orcamento_id: string;
+  id: string;
+}
+
 interface Column {
   name: string;
-  items: Orcamento[];
+  items: Etapa[];
 }
 
 interface Columns {
@@ -139,10 +147,10 @@ const KanbanBoard: React.FC = () => {
   // const handleDragEnd = () => {
   //   setIsDragging(false);
   // };
-
-
   const { data, isLoading, isError, refetch} = useFetchOrcamentos(searchQuery, page);
 
+  const dataEtapa = useEtapa()
+  
   // tem que mudar toda a logica desse campo aqui e pegar da rota do backend de outro arquivo. 
   // Mapeia os orçamentos para as colunas
   useEffect(() => {
@@ -152,180 +160,59 @@ const KanbanBoard: React.FC = () => {
       const newColumns: Columns = JSON.parse(JSON.stringify(initialColumns));
 
       // valida para os ultimos campos adicionados como aprovados.
-      data.forEach((orcamento) => {
-        if(orcamento.status !== "aprovado" &&
-          orcamento.status_faturamento !== "faturado" &&
-          orcamento.status_pagamento !== "pago" && 
-          orcamento.status_producao_arte_final !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_arte_final !== "aprovada" &&
-          orcamento.status_aprovacao_amostra_arte_arena !== "aprovada" &&
-          orcamento.status_envio_amostra !== "enviada" &&
-          orcamento.status_aprovacao_amostra_cliente !== "aprovada" &&
-          orcamento.status_aprovacao_cliente !== "aprovado" &&
-          orcamento.status_producao_esboco !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_esboco !== "aprovado" &&
-          orcamento.status_envio_pedido !== "enviado"
-        ){
-          newColumns.etapa1.items.push(orcamento);
+      data.forEach((etapa) => {
+        if(etapa.etapa == ""){
+          newColumns.etapa1.items.push(etapa);
         }
 
-        if(orcamento.status == "aprovado"){
-          newColumns.etapa2.items.push(orcamento);
+        if(etapa.etapa == "aprovação_arte_arena"){
+          newColumns.etapa2.items.push(etapa);
         }
         
-        if(orcamento.status_faturamento == "faturado" &&
-          orcamento.status_pagamento !== "pago" && 
-          orcamento.status_producao_arte_final !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_arte_final !== "aprovada" &&
-          orcamento.status_aprovacao_amostra_arte_arena !== "aprovada" &&
-          orcamento.status_envio_amostra !== "enviada" &&
-          orcamento.status_aprovacao_amostra_cliente !== "aprovada" &&
-          orcamento.status_aprovacao_cliente !== "aprovado" &&
-          orcamento.status_producao_esboco !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_esboco !== "aprovado" &&
-          orcamento.status_envio_pedido !== "enviado"
-        )
+        if(etapa.etapa == "status_faturamento")
         {
-          newColumns.etapa3.items.push(orcamento);
+          newColumns.etapa3.items.push(etapa);
         }
 
-        if(orcamento.status_pagamento == "pago" && 
-          orcamento.status_producao_arte_final !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_arte_final !== "aprovada" &&
-          orcamento.status_aprovacao_amostra_arte_arena !== "aprovada" &&
-          orcamento.status_envio_amostra !== "enviada" &&
-          orcamento.status_aprovacao_amostra_cliente !== "aprovada" &&
-          orcamento.status_aprovacao_cliente !== "aprovado" &&
-          orcamento.status_producao_esboco !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_esboco !== "aprovado" &&
-          orcamento.status_envio_pedido !== "enviado" &&
-          orcamento.status_faturamento !== "faturado"
-        ){
-          newColumns.etapa4.items.push(orcamento);
+        if(etapa.etapa == "status_pagamento"){
+          newColumns.etapa4.items.push(etapa);
         }
         
-        if(orcamento.status_producao_arte_final == "aguardando_melhoria" &&
-          orcamento.status_pagamento !== "pago" && 
-          orcamento.status_aprovacao_arte_final !== "aprovada" &&
-          orcamento.status_aprovacao_amostra_arte_arena !== "aprovada" &&
-          orcamento.status_envio_amostra !== "enviada" &&
-          orcamento.status_aprovacao_amostra_cliente !== "aprovada" &&
-          orcamento.status_aprovacao_cliente !== "aprovado" &&
-          orcamento.status_producao_esboco !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_esboco !== "aprovado" &&
-          orcamento.status_envio_pedido !== "enviado" &&
-          orcamento.status_faturamento !== "faturado" 
-        ){
-          newColumns.etapa5.items.push(orcamento);
+        if(etapa.etapa == "status_producao_arte_final"){
+          newColumns.etapa5.items.push(etapa);
         }
         
-        if(orcamento.status_aprovacao_arte_final == "aprovada" &&
-          orcamento.status_pagamento !== "pago" && 
-          orcamento.status_producao_arte_final !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_amostra_arte_arena !== "aprovada" &&
-          orcamento.status_envio_amostra !== "enviada" &&
-          orcamento.status_aprovacao_amostra_cliente !== "aprovada" &&
-          orcamento.status_aprovacao_cliente !== "aprovado" &&
-          orcamento.status_producao_esboco !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_esboco !== "aprovado" &&
-          orcamento.status_envio_pedido !== "enviado" &&
-          orcamento.status_faturamento !== "faturado"
-        ){
-          newColumns.etapa6.items.push(orcamento);
+        if(etapa.etapa == "status_aprovacao_arte_final"){
+          newColumns.etapa6.items.push(etapa);
         }
 
-        if(orcamento.status_aprovacao_amostra_arte_arena == "aprovada" &&
-          orcamento.status_pagamento !== "pago" && 
-          orcamento.status_producao_arte_final !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_arte_final !== "aprovada" &&
-          orcamento.status_envio_amostra !== "enviada" &&
-          orcamento.status_aprovacao_amostra_cliente !== "aprovada" &&
-          orcamento.status_aprovacao_cliente !== "aprovado" &&
-          orcamento.status_producao_esboco !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_esboco !== "aprovado" &&
-          orcamento.status_envio_pedido !== "enviado" &&
-          orcamento.status_faturamento !== "faturado"
-        ){
-          newColumns.etapa7.items.push(orcamento);
+        if(etapa.etapa == "status_aprovacao_amostra_arte_arena"){
+          newColumns.etapa7.items.push(etapa);
         }
         
-        if(orcamento.status_envio_amostra == "enviada" && 
-          orcamento.status_pagamento !== "pago" && 
-          orcamento.status_producao_arte_final !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_arte_final !== "aprovada" &&
-          orcamento.status_aprovacao_amostra_arte_arena !== "aprovada" &&
-          orcamento.status_aprovacao_amostra_cliente !== "aprovada" &&
-          orcamento.status_aprovacao_cliente !== "aprovado" &&
-          orcamento.status_producao_esboco !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_esboco !== "aprovado" &&
-          orcamento.status_envio_pedido !== "enviado" &&
-          orcamento.status_faturamento !== "faturado"
-        ){
-          newColumns.etapa8.items.push(orcamento);
+        if(etapa.etapa == "status_envio_amostra"){
+          newColumns.etapa8.items.push(etapa);
         }
 
-        if(orcamento.status_aprovacao_amostra_cliente == "aprovada" && 
-          orcamento.status_pagamento !== "pago" && 
-          orcamento.status_producao_arte_final !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_arte_final !== "aprovada" &&
-          orcamento.status_aprovacao_amostra_arte_arena !== "aprovada" &&
-          orcamento.status_envio_amostra !== "enviada" &&
-          orcamento.status_aprovacao_cliente !== "aprovado" &&
-          orcamento.status_producao_esboco !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_esboco !== "aprovado" &&
-          orcamento.status_envio_pedido !== "enviado" &&
-          orcamento.status_faturamento !== "faturado"
-        ){
-          newColumns.etapa9.items.push(orcamento);
+        if(etapa.etapa == "status_aprovacao_amostra_cliente"){
+          newColumns.etapa9.items.push(etapa);
         }
 
-        if(orcamento.status_aprovacao_cliente == "aprovado" && 
-          orcamento.status_pagamento !== "pago" && 
-          orcamento.status_producao_arte_final !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_arte_final !== "aprovada" &&
-          orcamento.status_aprovacao_amostra_arte_arena !== "aprovada" &&
-          orcamento.status_envio_amostra !== "enviada" &&
-          orcamento.status_aprovacao_amostra_cliente !== "aprovada" &&
-          orcamento.status_producao_esboco !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_esboco !== "aprovado" &&
-          orcamento.status_envio_pedido !== "enviado" &&
-          orcamento.status_faturamento !== "faturado"
+        if(etapa.etapa == "status_aprovacao_cliente"
         ){
-          newColumns.etapa10.items.push(orcamento);
+          newColumns.etapa10.items.push(etapa);
         }
         
-        if(orcamento.status_producao_esboco == "aguardando_melhoria" && 
-          orcamento.status_pagamento !== "pago" && 
-          orcamento.status_producao_arte_final !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_arte_final !== "aprovada" &&
-          orcamento.status_aprovacao_amostra_arte_arena !== "aprovada" &&
-          orcamento.status_envio_amostra !== "enviada" &&
-          orcamento.status_aprovacao_amostra_cliente !== "aprovada" &&
-          orcamento.status_aprovacao_cliente !== "aprovado" &&
-          orcamento.status_aprovacao_esboco !== "aprovado" &&
-          orcamento.status_envio_pedido !== "enviado" &&
-          orcamento.status_faturamento !== "faturado"
-        ){
-          newColumns.etapa11.items.push(orcamento);
+        if(etapa.etapa == "status_producao_esboco"){
+          newColumns.etapa11.items.push(etapa);
         }
 
-        if(orcamento.status_aprovacao_esboco == "aprovado" && 
-          orcamento.status_pagamento !== "pago" && 
-          orcamento.status_producao_arte_final !== "aguardando_melhoria" &&
-          orcamento.status_aprovacao_arte_final !== "aprovada" &&
-          orcamento.status_aprovacao_amostra_arte_arena !== "aprovada" &&
-          orcamento.status_envio_amostra !== "enviada" &&
-          orcamento.status_aprovacao_amostra_cliente !== "aprovada" &&
-          orcamento.status_aprovacao_cliente !== "aprovado" &&
-          orcamento.status_producao_esboco !== "aguardando_melhoria" &&
-          orcamento.status_envio_pedido !== "enviado" &&
-          orcamento.status_faturamento !== "faturado"
-        ){
-          newColumns.etapa12.items.push(orcamento);
+        if(etapa.etapa == "status_aprovacao_esboco"){
+          newColumns.etapa12.items.push(etapa);
         }
 
-        if(orcamento.status_envio_pedido == "enviado"){
-          newColumns.etapa13.items.push(orcamento);
+        if(etapa.etapa == "status_envio_pedido"){
+          newColumns.etapa13.items.push(etapa);
         }
 
       });
@@ -401,13 +288,7 @@ const KanbanBoard: React.FC = () => {
   const handleAprovarArteArena = (rowId: number) => {
     window.open(`/apps/orcamento/aprovar/${rowId}`, '_blank');
   };
-
-  // tenho que pensar em como fazer isso funcionar com as proximas logicas
-  //  ideias: 
-  // 1- toda vez que ele coloca em alguem que ja tenha sido aprovado 
-  // (tem que saber todos os status e passar por eles) e identificar se vai desaprovar ou não 
-  // e dai fazer a opração
-  // 2- ... pensar mais tarde. 
+ 
 
   const handleDesaprovar = async (campo: string, rowId: number) =>{
     try{
