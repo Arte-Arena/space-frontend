@@ -60,7 +60,7 @@ const OrcamentoBackofficeScreen = () => {
     throw new Error('Access token is missing');
   }
 
-  const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos } = useQuery({
+  const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos, refetch } = useQuery({
     queryKey: ['budgetData', searchQuery, page],
     queryFn: () =>
       fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/get-orcamentos-aprovados?q=${encodeURIComponent(searchQuery)}&page=${page}`, {
@@ -71,6 +71,27 @@ const OrcamentoBackofficeScreen = () => {
         },
       }).then((res) => res.json()),
   });
+
+  const handleMakePedido = async (orcamento: Orcamento) => {
+    try{
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/produto-cadastro`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(orcamento),
+      });
+      
+      if(response.ok){
+        alert('Pedido feito com sucesso!');
+        refetch();
+      }
+    }catch(error){
+      console.error(error);
+      alert('Pedido com erro!');
+    }
+  }
 
   const handleSearch = () => {
     setSearchQuery(query); // Atualiza a busca
@@ -220,7 +241,8 @@ const OrcamentoBackofficeScreen = () => {
                           </Button>
 
                           {/* botão da chamada da api */}
-                          <Button variant="contained" color="primary"> 
+                          <Button variant="contained" color="primary" onClick={handleMakePedido}> 
+
                             <IconCheck />
                           </Button>
 
