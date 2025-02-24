@@ -7,6 +7,7 @@ import {
   Typography,
   Button,
   Stack,
+  CircularProgress,
 } from "@mui/material";
 import Link from "next/link";
 import { loginType } from "@/app/(DashboardLayout)/types/auth/auth";
@@ -16,10 +17,12 @@ import CustomFormLabel from "@/app/components/forms/theme-elements/CustomFormLab
 const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setLoading(true);
     try {
       const dataBody = JSON.stringify({
         email,
@@ -76,6 +79,8 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
     } catch (error) {
       console.error('Login error:', (error as Error).message);
       alert('Falha no login. Verifique seu email e senha.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -140,6 +145,8 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
             size="large"
             fullWidth
             type="submit"
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
           >
             Entrar
           </Button>
