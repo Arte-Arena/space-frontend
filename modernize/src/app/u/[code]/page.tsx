@@ -38,7 +38,7 @@ export default function U({ params }: PageProps) {
     if (!data?.caminho) return console.error('Erro ao resolver URL:', error);
     if (typeof data.caminho !== 'number' || data.caminho <= 0) return console.error('Caminho inválido:', data.caminho);
 
-    const fullShortUrl = `${window.location.origin}/apps/orcamento/backoffice/uniforme?id=${data.caminho}`;
+    const fullShortUrl = `${window.location.origin}/uniformes?id=${data.caminho}`;
     router.push(fullShortUrl);
   }, [data]);
 
