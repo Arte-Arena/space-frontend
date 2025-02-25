@@ -24,6 +24,20 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogActions from '@mui/material/DialogActions';
 
+interface Produto {
+  id: number;
+  nome: string;
+  peso: string; // Caso o peso seja uma string
+  prazo: number;
+  preco: number;
+  altura: string; // Considerando que altura, largura e comprimento são strings
+  largura: string;
+  comprimento: string;
+  created_at: string | null; // Pode ser null ou uma string
+  quantidade: number;
+  updated_at: string | null; // Pode ser null ou uma string
+}
+
 interface Orcamento {
   id: number;
   user_id: number;
@@ -55,6 +69,11 @@ const OrcamentoBackofficeScreen = () => {
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [linkOrcamento, setLinkOrcamento] = useState<string>('');
   const [openLinkDialog, setOpenLinkDialog] = useState<boolean>(false);
+
+  const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
+  const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
+  const regexEntrega = /Previsão de Entrega:\s*([\d]{1,2} de [a-zA-Z]+ de \d{4})\s?\(([^)]+)\)/;
+  const regexBrinde = /Brinde:\s*\d+\s*un\s*[\w\s]*\s*R\$\s*\d{1,3}(?:,\d{2})*\s*\(R\$\s*\d{1,3}(?:,\d{2})*\)/;
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -99,7 +118,7 @@ const OrcamentoBackofficeScreen = () => {
       total_orcamento: orcamento.total_orcamento,
     };
 
-    console.log(orcamentoFormated)
+    // console.log(orcamentoFormated)
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/pedido-cadastro`, {
       method: 'POST',
@@ -109,16 +128,28 @@ const OrcamentoBackofficeScreen = () => {
       },
       body: JSON.stringify(orcamentoFormated),
     });
-    // try{
       
-    //   if(response.ok){
-    //     alert('Pedido feito com sucesso!');
-    //     refetch();
-    //   }
-    // }catch(error){
-    //   console.error(error);
-    //   alert('Pedido com erro!');
-    // }
+    const data = await response.json()
+
+    if(data.retorno.status === "Erro"){
+      const registros = data.retorno.registros;
+      const ultimoRegistro = registros[registros.length - 1];
+      if (ultimoRegistro && ultimoRegistro.registro && ultimoRegistro.registro.erros && ultimoRegistro.registro.erros.length > 0) {
+      const ultimoErro = ultimoRegistro.registro.erros[ultimoRegistro.registro.erros.length - 1];
+      const mensagemErro = ultimoErro.erro;
+      alert('Pedido não salvo! ' + mensagemErro);
+      return
+    }
+    
+    if (response.ok) {
+      alert('Pedido N°'+ orcamento.id + ' salvo com sucesso!');
+      // levar a pessoa pra uma pagina de sucesso pra ela não se confundir e mandar duas vezes ou mais a requisição.
+    } else {
+      const errorData = await response.json();
+      console.log(errorData.message)
+      alert(`Erro ao salvar: ${errorData.message}`);
+    }
+
   }
 
   const handleSearch = () => {
@@ -209,7 +240,18 @@ const OrcamentoBackofficeScreen = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {dataOrcamentos?.data.map((row: Orcamento) => (
+                {dataOrcamentos?.data.map((row: Orcamento) => {
+                  const listaProdutos = row.lista_produtos
+                  ? (typeof row.lista_produtos === 'string' ? JSON.parse(row.lista_produtos) : row.lista_produtos)
+                  : [];
+  
+                  const texto = row.texto_orcamento;
+                  const frete = texto?.match(regexFrete);
+                  const prazo = texto?.match(regexPrazo);
+                  console.log(prazo)
+                  const entrega = texto?.match(regexEntrega);
+                  const brinde = texto?.match(regexBrinde);
+                  return (
                   <React.Fragment key={row.id}>
                     <TableRow>
                       <TableCell>
@@ -274,82 +316,227 @@ const OrcamentoBackofficeScreen = () => {
                         </Stack>
                       </TableCell>
                     </TableRow>
+
+
                     <TableRow>
-                      <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+                      {/* colSpan deve ter o mesmo número que o número de cabeçalhos da tabela, no caso 16 */}
+                      <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={16}>
                         <Collapse in={openRow[row.id]} timeout="auto" unmountOnExit>
                           <Box margin={1}>
-                            
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Lista de Produtos:</strong> {row.lista_produtos}
-                            </Typography>
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Texto do Orçamento:</strong> {row.texto_orcamento}
-                            </Typography>
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Endereço CEP:</strong> {row.endereco_cep}
-                            </Typography>
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Endereço:</strong> {row.endereco}
-                            </Typography>
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Op&ccedil;&atilde;o de Entrega:</strong> {row.opcao_entrega}
-                            </Typography>
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Prazo da Op&ccedil;&atilde;o de Entrega:</strong> {row.prazo_opcao_entrega} dias
-                            </Typography>
-                            <Typography variant="body2" gutterBottom>
-                              <strong>Pre&ccedil;o da Op&ccedil;&atilde;o de Entrega:</strong> {row.preco_opcao_entrega?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                            </Typography>
+                            <Table size="small" aria-label="detalhes">
+                              <TableBody>
+                               <TableRow>
+                                  <TableCell sx={{ border: 'none' }} colSpan={16}>
+                                    <strong>Lista de Produtos</strong>
+                                    <TableHead>
+                                      <TableRow>
+                                        <TableCell></TableCell>
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                          quantidade:
+                                        </TableCell>
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                          Preço:
+                                        </TableCell>
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                          Tamanho:
+                                        </TableCell>
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                          Peso:
+                                        </TableCell>
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                          Prazo:
+                                        </TableCell>
+                                      </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                      {listaProdutos.length > 0 ? (
+                                        listaProdutos.map((produto:Produto, index: number) => (
+                                        <TableRow key={produto.id || index}>
+                                            <TableCell sx={{ fontWeight: 'bold', padding: '8px' }} colSpan={1}>
+                                              {produto.nome}
+                                            </TableCell>
+                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                              {produto.quantidade}
+                                            </TableCell>
+                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                              {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                            </TableCell>
+                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                              {produto.altura} x {produto.largura} x {produto.comprimento} cm
+                                            </TableCell>
+                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                              {produto.peso} kg
+                                            </TableCell>
+                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                              {produto.prazo} dias
+                                            </TableCell>
+                                          </TableRow>
+                                          ))
+                                        ) : (
+                                        <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
+                                      )}
+                                    </TableBody>
+                                  </TableCell>
+                                </TableRow>
 
-                            {/* variaveis de gustavo */}
-                            {row.brinde !== null && (
-                              <Typography variant="body2" gutterBottom>
-                              <strong>Brinde:</strong> {row.brinde === 1 ? "Com Brinde" : "Sem Brinde"}
-                            </Typography>
-                            )}
+                                {/* Texto do Orçamento */}
+                                <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Cliente:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.nome_cliente}</TableCell>
+                                </TableRow>
 
-                            {row.valor_desconto !== null && (
-                              <Typography variant="body2" gutterBottom>
-                              <strong>Desconto:</strong>{" Com Desconto"}
-                            </Typography>
-                            )}
+                                {brinde !== null && (
+                                  <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Brinde:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{brinde}</TableCell>
+                                </TableRow>
+                                )}
 
-                            {row.tipo_desconto !== null && (
-                              <Typography variant="body2" gutterBottom>
-                              <strong>Tipo Descontado:</strong> {row.tipo_desconto ?? "Nenhum"}
-                            </Typography>
-                            )}
+                                {entrega !== null && (
+                                  <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Entrega:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{entrega}</TableCell>
+                                </TableRow>
+                                )}
+                                {prazo !== null && (
+                                  <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Prazo:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{prazo}</TableCell>
+                                </TableRow>
+                                )}
 
-                            {row.valor_desconto !== null &&(
-                              <Typography variant="body2" gutterBottom>
-                              <strong>Valor Descontado:</strong> {row.valor_desconto ?? "Sem Desconto"}
-                            </Typography>
-                            )}
+                                {frete !== null && (
+                                  <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Frete:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{frete}</TableCell>
+                                </TableRow>
+                                )}
 
-                            {row.data_antecipa !== null && (
-                              <Typography variant="body2" gutterBottom>
-                              <strong>Data Antecipação:</strong> {row.data_antecipa ?? "Sem Antecipação"}
-                            </Typography>
-                            )}
+                                {/* Endereço CEP */}
+                                <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Endereço CEP:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.endereco_cep}</TableCell>
+                                </TableRow>
 
-                            {row.taxa_antecipa !== null && (
-                              <Typography variant="body2" gutterBottom>
-                              <strong>Taxa Antecipação:</strong> {row.taxa_antecipa ?? "Sem Taxa de Antecipação"}
-                            </Typography>
-                            )}
+                                {/* Endereço */}
+                                <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Endereço:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.endereco}</TableCell>
+                                </TableRow>
 
-                            {row.total_orcamento !== null && (
-                              <Typography variant="body2" gutterBottom>
-                              <strong>Total Orçamento:</strong> {row.total_orcamento ?? "Sem total Definido"}
-                            </Typography>
-                            )}
+                                {/* Opção de Entrega */}
+                                <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Opção de Entrega:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.opcao_entrega}</TableCell>
+                                </TableRow>
 
+                                {/* Prazo da Opção de Entrega */}
+                                <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Prazo da Opção de Entrega:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.prazo_opcao_entrega} dias</TableCell>
+                                </TableRow>
+
+                                {/* Preço da Opção de Entrega */}
+                                <TableRow>
+                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                    Preço da Opção de Entrega:
+                                  </TableCell>
+                                  <TableCell sx={{ border: 'none' }} colSpan={1}>
+                                    {row.preco_opcao_entrega?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                  </TableCell>
+                                </TableRow>
+
+                                {/* Brinde */}
+                                {row.brinde !== null && (
+                                  <TableRow>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                      Brinde:
+                                    </TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>{row.brinde === 1 ? 'Com Brinde' : 'Sem Brinde'}</TableCell>
+                                  </TableRow>
+                                )}
+
+                                {/* Desconto */}
+                                {row.valor_desconto !== null && (
+                                  <>
+                                    <TableRow>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                        Desconto:
+                                      </TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>Com Desconto</TableCell>
+                                    </TableRow>
+
+                                    <TableRow>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                        Tipo Descontado:
+                                      </TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>{row.tipo_desconto ?? 'Nenhum'}</TableCell>
+                                    </TableRow>
+
+                                    <TableRow>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                        Valor Descontado:
+                                      </TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {row.valor_desconto ?? 'Sem Desconto'}</TableCell>
+                                    </TableRow>
+                                  </>
+                                )}
+
+                                {/* Data Antecipação */}
+                                {row.data_antecipa !== null && (
+                                  <TableRow>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                      Data Antecipação:
+                                    </TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>{row.data_antecipa ?? 'Sem Antecipação'}</TableCell>
+                                  </TableRow>
+                                )}
+
+                                {/* Taxa Antecipação */}
+                                {row.taxa_antecipa !== null && (
+                                  <TableRow>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                      Taxa Antecipação:
+                                    </TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {row.taxa_antecipa ?? 'Sem Taxa de Antecipação'}</TableCell>
+                                  </TableRow>
+                                )}
+
+                                {/* Total Orçamento */}
+                                {row.total_orcamento !== null && (
+                                  <TableRow>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                      Total Orçamento:
+                                    </TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {row.total_orcamento ?? 'Sem total Definido'}</TableCell>
+                                  </TableRow>
+                                )}
+                              </TableBody>
+                            </Table>
                           </Box>
                         </Collapse>
                       </TableCell>
                     </TableRow>
                   </React.Fragment>
-                ))}
+                )})}
               </TableBody>
             </Table>
           </TableContainer>
