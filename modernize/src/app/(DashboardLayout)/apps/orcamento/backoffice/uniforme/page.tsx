@@ -81,7 +81,7 @@ const LETTERS = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)
 
 export default function UniformBackofficeScreen() {
   const [columns] = useState<Column[]>([
-    { id: 1, name: "Gênero", type: "select", options: ['M', 'F'] },
+    { id: 1, name: "Gênero", type: "select", options: ['M', 'F', 'I'] },
     { id: 2, name: "Nome do jogador(a)", type: "text" },
     { id: 3, name: "Número", type: "number" },
     { id: 4, name: "Tamanho da camisa", type: "select", options: SIZES },
