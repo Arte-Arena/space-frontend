@@ -10,15 +10,19 @@ const BCrumb = [
     title: "Home",
   },
   {
-    title: "Kanban",
+    title: "Vendas",
+  },
+  {
+    to: "/apps/vendas/crm",
+    title: "CRM",
   },
 ];
 
-function page() {
+function VendasCrmScreen() {
   return (
     <KanbanDataContextProvider>
-      <PageContainer title="Kanban App" description="this is Kanban App">
-        <Breadcrumb title="Kanban app" items={BCrumb} />
+      <PageContainer title="CRM" description="CRM da Arte Arena">
+        <Breadcrumb title="CRM" items={BCrumb} />
             <KanbanBoard>
             </KanbanBoard>
       </PageContainer>
@@ -26,4 +30,4 @@ function page() {
   );
 }
 
-export default page;
+export default VendasCrmScreen;
