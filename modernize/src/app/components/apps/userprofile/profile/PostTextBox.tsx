@@ -4,7 +4,7 @@ import Fab from '@mui/material/Fab';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import { IconPhoto, IconNotebook } from '@tabler/icons-react';
-import ChildCard from '../../../../components/shared/ChildCard';
+import ChildCard from '../../../shared/ChildCard';
 
 export const PostTextBox = () => {
   return (

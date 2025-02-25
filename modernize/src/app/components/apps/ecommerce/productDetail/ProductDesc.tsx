@@ -11,7 +11,7 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 import { IconPencil } from '@tabler/icons-react';
-import ChildCard from '../../../../components/shared/ChildCard';
+import ChildCard from '../../../shared/ChildCard';
 
 interface ProductCardProps {
   like: number;

@@ -10,7 +10,7 @@ import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import BlankCard from "../../../../components/shared/BlankCard";
+import BlankCard from "../../../shared/BlankCard";
 import { useSelector, useDispatch } from "@/store/hooks";
 import { fetchPhotos } from "@/store/apps/userProfile/UserProfileSlice";
 import { IconDotsVertical, IconSearch } from "@tabler/icons-react";

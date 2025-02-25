@@ -5,7 +5,7 @@ import ImageListItem from '@mui/material/ImageListItem';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import React, { useEffect } from 'react';
-import ChildCard from '../../../../components/shared/ChildCard';
+import ChildCard from '../../../shared/ChildCard';
 import Image from 'next/image';
 
 const photos = [

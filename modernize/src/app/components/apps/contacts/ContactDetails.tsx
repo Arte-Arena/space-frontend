@@ -19,7 +19,7 @@ import {
 import BlankCard from '../../shared/BlankCard';
 import { ContactType } from '../../../(DashboardLayout)/types/apps/contact';
 import { IconPencil, IconStar, IconTrash, IconDeviceFloppy } from '@tabler/icons-react';
-import Scrollbar from '../../../components/custom-scroll/Scrollbar';
+import Scrollbar from '../../custom-scroll/Scrollbar';
 import Image from 'next/image';
 
 const ContactDetails = () => {
