@@ -15,14 +15,16 @@ import {
   IconCalendar,
   IconBuilding,
   IconMessage2,
-  IconReportAnalytics,
   IconMessage2Dollar,
   IconBrandSlack,
-  IconBusinessplan,
   IconLink,
   IconPencil,
   IconChartBar,
-  IconTool
+  IconTool,
+  IconBrandTrello,
+  IconProgressCheck,
+  // IconBusinessplan,
+  // IconReportAnalytics
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -124,7 +126,7 @@ const getMenuItems = (): MenuitemsType[] => {
         {
           id: uniqueId(),
           title: "Status de Orçamento",
-          icon: IconZoomMoney,
+          icon: IconProgressCheck,
           href: "/apps/orcamento/status",
         },
         {
@@ -157,13 +159,13 @@ const getMenuItems = (): MenuitemsType[] => {
         {
           id: uniqueId(),
           title: "CRM",
-          icon: IconBusinessplan,
+          icon: IconBrandTrello,
           href: "/apps/vendas/crm",
         },
         {
           id: uniqueId(),
           title: "Relatórios de Vendas",
-          icon: IconReportAnalytics,
+          icon: IconChartBar,
           href: "/apps/vendas/relatorios",
         },
       ],
