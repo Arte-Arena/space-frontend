@@ -1188,6 +1188,7 @@ const OrcamentoGerarScreen = () => {
   useEffect(() => {
     if (cepError) {
       console.log('cepError:', cepError);
+      resetFrete();
       setOpenSnackbarCepInvalido(true);
     }
   }, [cepError]);
