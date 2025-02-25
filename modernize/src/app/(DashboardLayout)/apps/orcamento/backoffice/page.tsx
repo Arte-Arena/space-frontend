@@ -152,6 +152,7 @@ const OrcamentoBackofficeScreen = () => {
 
   }
 
+}
   const handleSearch = () => {
     setSearchQuery(query); // Atualiza a busca
     setPage(1); // Reseta para a primeira página ao realizar uma nova busca
