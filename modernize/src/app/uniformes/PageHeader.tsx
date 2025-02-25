@@ -5,9 +5,11 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 interface PageHeaderProps {
   orderId: string | null;
   onConfirm: () => void;
+  isSuccess?: boolean;
+  isLoading?: boolean;
 }
 
-export function PageHeader({ orderId, onConfirm }: PageHeaderProps) {
+export function PageHeader({ orderId, onConfirm, isSuccess, isLoading }: PageHeaderProps) {
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
@@ -35,30 +37,33 @@ export function PageHeader({ orderId, onConfirm }: PageHeaderProps) {
           </Typography>
         </Box>
       </Stack>
-      <Button
-        variant="contained"
-        color="primary"
-        size="large"
-        startIcon={<CheckCircleIcon />}
-        onClick={onConfirm}
-        sx={{
-          whiteSpace: 'nowrap',
-          minWidth: 'auto',
-          px: { xs: 2, sm: 3 },
-          '& .MuiButton-startIcon': {
-            mr: { xs: 0.5, sm: 1 }
-          },
-          alignSelf: { xs: 'center', sm: 'flex-start' },
-          width: { xs: '100%', sm: 'auto' }
-        }}
-      >
-        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-          Confirmar
-        </Box>
-        <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-          Confirmar
-        </Box>
-      </Button>
+
+      {!isLoading && !isSuccess && (
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          startIcon={<CheckCircleIcon />}
+          onClick={onConfirm}
+          sx={{
+            whiteSpace: 'nowrap',
+            minWidth: 'auto',
+            px: { xs: 2, sm: 3 },
+            '& .MuiButton-startIcon': {
+              mr: { xs: 0.5, sm: 1 }
+            },
+            alignSelf: { xs: 'center', sm: 'flex-start' },
+            width: { xs: '100%', sm: 'auto' }
+          }}
+        >
+          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+            Confirmar
+          </Box>
+          <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+            Confirmar
+          </Box>
+        </Button>
+      )}
     </Stack>
   );
 }

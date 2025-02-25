@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { Column, TableData } from "./types";
 import { PageHeader } from "./PageHeader";
 import { UniformTable } from "./UniformTable";
+import { LoadingState } from "./LoadingState";
 
 const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG'];
 const LETTERS = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
@@ -14,6 +15,8 @@ export default function UniformBackofficeScreen() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('id');
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [columns] = useState<Column[]>([
     { id: 1, name: "Gênero", type: "select", options: ['M', 'F', 'I'] },
     { id: 2, name: "Nome do jogador(a)", type: "text" },
@@ -80,30 +83,42 @@ export default function UniformBackofficeScreen() {
     setEditValue('');
   };
 
-  const handleConfirm = () => {
-    console.log('Dados confirmados:', tableData);
+  const handleConfirm = async () => {
+    setIsLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Dados confirmados:', tableData);
+      setIsSuccess(true);
+    } catch (error) {
+      console.error('Erro ao confirmar:', error);
+      setIsLoading(false);
+    }
   };
 
   return (
     <Box sx={{ p: 3 }}>
-      <PageHeader orderId={orderId} onConfirm={handleConfirm} />
-      
-      {LETTERS.map((letter) => (
-        <UniformTable
-          key={letter}
-          letter={letter}
-          columns={columns}
-          tableData={tableData}
-          editingCell={editingCell}
-          editValue={editValue}
-          onAddRow={handleAddRow}
-          onCellClick={handleCellClick}
-          onCellEdit={handleCellEdit}
-          onDeleteRow={handleDeleteRow}
-          setEditValue={setEditValue}
-          setEditingCell={setEditingCell}
-        />
-      ))}
+      <PageHeader orderId={orderId} onConfirm={handleConfirm} isSuccess={isSuccess} isLoading={isLoading} />
+
+      {isLoading || isSuccess ? (
+        <LoadingState isSuccess={isSuccess} />
+      ) : (
+        LETTERS.map((letter) => (
+          <UniformTable
+            key={letter}
+            letter={letter}
+            columns={columns}
+            tableData={tableData}
+            editingCell={editingCell}
+            editValue={editValue}
+            onAddRow={handleAddRow}
+            onCellClick={handleCellClick}
+            onCellEdit={handleCellEdit}
+            onDeleteRow={handleDeleteRow}
+            setEditValue={setEditValue}
+            setEditingCell={setEditingCell}
+          />
+        ))
+      )}
     </Box>
   );
 }
