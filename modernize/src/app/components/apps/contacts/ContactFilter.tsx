@@ -6,7 +6,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 import { setVisibilityFilter } from "@/store/apps/contacts/ContactSlice";
-import Scrollbar from "../../../components/custom-scroll/Scrollbar";
+import Scrollbar from "../../custom-scroll/Scrollbar";
 import {
   IconMail,
   IconSend,

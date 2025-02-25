@@ -6,7 +6,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
-import CustomCheckbox from '../../../components/forms/theme-elements/CustomCheckbox';
+import CustomCheckbox from '../../forms/theme-elements/CustomCheckbox';
 import { IconAlertCircle, IconStar, IconTrash } from '@tabler/icons-react';
 import { formatDistanceToNowStrict } from 'date-fns';
 

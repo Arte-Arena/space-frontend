@@ -11,8 +11,8 @@ import { Button, FormControl, FormControlLabel, RadioGroup, Radio, Checkbox } fr
 import { IconDeviceFloppy } from '@tabler/icons-react';
 
 interface ClienteCadastroForm {
-  tipo_pessoa: 'PJ' | 'PF';
-  nome_completo: string;
+  tipo_pessoa: 'J' | 'F';
+  nome: string;
   rg: string;
   cpf: string;
   email: string;
@@ -36,16 +36,17 @@ interface ClienteCadastroForm {
   uf_cobranca: string;
   endereco_cobranca_diferente: boolean;
   orcamento_id: number;
+  situacao: string;
 }
 
 const OrcamentoBackofficeScreen: React.FC = () => {
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const navigate = useRouter();
   const id = searchParams.get('id') ?? null;
 
   const [formData, setFormData] = useState<ClienteCadastroForm>({
-    tipo_pessoa: 'PF',
-    nome_completo: '',
+    tipo_pessoa: 'F',
+    nome: '',
     rg: '',
     cpf: '',
     email: '',
@@ -69,7 +70,9 @@ const OrcamentoBackofficeScreen: React.FC = () => {
     uf_cobranca: '', // Inicializando com valor vazio
     endereco_cobranca_diferente: false,
     orcamento_id: Number(id),
+    situacao: "A"
   });
+
 
   const [isTipoPessoaSelected, setIsTipoPessoaSelected] = useState(false);
 
@@ -78,17 +81,17 @@ const OrcamentoBackofficeScreen: React.FC = () => {
     throw new Error('Access token is missing');
   }
 
-  const { isFetching, error } = useQuery({
-    queryKey: ['clientData'],
-    queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/get-cliente-cadastro?id=${id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }).then((res) => res.json()),
-  });
+  // const { isFetching, error } = useQuery({
+  //   queryKey: ['clientData'],
+  //   queryFn: () =>
+  //     fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/get-cliente-cadastro?id=${id}`, {
+  //       method: 'GET',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         Authorization: `Bearer ${accessToken}`,
+  //       },
+  //     }).then((res) => res.json()),
+  // });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -96,60 +99,54 @@ const OrcamentoBackofficeScreen: React.FC = () => {
   };
 
   const handleTipoPessoaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, tipo_pessoa: event.target.value as 'PJ' | 'PF' }));
+    const value = event.target.value as 'J' | 'F';
+    setFormData((prev) => ({ ...prev, tipo_pessoa: value }));
     setIsTipoPessoaSelected(true);
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, endereco_cobranca_diferente: e.target.checked }));
   };
-
+  
   const handleSubmit = async () => {
+    
     try {
+    const formDataWithOrcamentoId = { ...formData, orcamentoId: id };
+    
+    console.log("Payload enviado:", JSON.stringify(formDataWithOrcamentoId, null, 2));
 
-      const formDataWithOrcamentoId = { ...formData, orcamentoId: id };
-
+    
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/cliente-cadastro`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify(formDataWithOrcamentoId),
       });
 
+      console.log("Status da resposta:", response.status);
+      const data = await response.json();
+      console.log("Resposta completa:", data);
+
+      if(data.retorno.status === "Erro"){
+        const registros = data.retorno.registros;
+        const ultimoRegistro = registros[registros.length - 1];
+        if (ultimoRegistro && ultimoRegistro.registro && ultimoRegistro.registro.erros && ultimoRegistro.registro.erros.length > 0) {
+        const ultimoErro = ultimoRegistro.registro.erros[ultimoRegistro.registro.erros.length - 1];
+        const mensagemErro = ultimoErro.erro;
+        alert('Cliente não salvo! ' + mensagemErro);
+        return
+      }
+    }
+
       if (response.ok) {
         alert('Cliente salvo com sucesso!');
-        setFormData({
-          tipo_pessoa: 'PF',
-          nome_completo: '',
-          rg: '',
-          cpf: '',
-          email: '',
-          celular: '',
-          cep: '',
-          endereco: '',
-          numero: '',
-          complemento: '',
-          bairro: '',
-          cidade: '',
-          uf: '',
-          razao_social: '',
-          cnpj: '',
-          inscricao_estadual: '',
-          cep_cobranca: '',
-          endereco_cobranca: '',
-          numero_cobranca: '',
-          complemento_cobranca: '',
-          bairro_cobranca: '',
-          cidade_cobranca: '',
-          uf_cobranca: '',
-          endereco_cobranca_diferente: false,
-          orcamento_id: Number(id),
-        });
         setIsTipoPessoaSelected(false);
+        // levar a pessoa pra uma pagina de sucesso pra ela não se confundir e mandar duas vezes ou mais a requisição.
+        navigate.push('/apps/orcamento/backoffice/cliente-cadastro/sucesso');
       } else {
         const errorData = await response.json();
+        console.log(errorData.message)
         alert(`Erro ao salvar: ${errorData.message}`);
       }
     } catch (error) {
@@ -158,8 +155,8 @@ const OrcamentoBackofficeScreen: React.FC = () => {
     }
   };
 
-  if (isFetching) return <CircularProgress />;
-  if (error) return <p>Ocorreu um erro ao buscar os dados do cliente.</p>;
+  // if (isFetching) return <CircularProgress />;
+  // if (error) return <p>Ocorreu um erro ao buscar os dados do cliente.</p>;
 
   const estados = [
     'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
@@ -169,22 +166,22 @@ const OrcamentoBackofficeScreen: React.FC = () => {
     <PageContainer title="Orçamento / Backoffice / Cadastro de Cliente" description="Cadastrar Cliente da Arte Arena">
       <Breadcrumb title="Orçamento / Backoffice / Cadastro de Cliente" subtitle="Cadastrar Cliente da Arte Arena / Backoffice" />
       <ParentCard title="Cadastro de Cliente">
-        <div>
+        <>
           <FormControl component="fieldset">
             <RadioGroup row aria-label="tipo_pessoa" name="tipo_pessoa" onChange={handleTipoPessoaChange}>
-              <FormControlLabel value="PF" control={<Radio />} label="Pessoa Física" />
-              <FormControlLabel value="PJ" control={<Radio />} label="Pessoa Jurídica" />
+              <FormControlLabel value="F" control={<Radio />} label="Pessoa Física" />
+              <FormControlLabel value="J" control={<Radio />} label="Pessoa Jurídica" />
             </RadioGroup>
           </FormControl>
 
           {isTipoPessoaSelected && (
             <>
-              {formData.tipo_pessoa === 'PF' && (
+              {formData.tipo_pessoa === 'F' && (
                 <>
                   <CustomTextField
                     label="Nome Completo"
-                    name="nome_completo"
-                    value={formData.nome_completo}
+                    name="nome"
+                    value={formData.nome}
                     onChange={handleInputChange}
                     fullWidth
                     margin="normal"
@@ -211,7 +208,7 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                 </>
               )}
 
-              {formData.tipo_pessoa === 'PJ' && (
+              {formData.tipo_pessoa === 'J' && (
                 <>
                   <CustomTextField
                     label="Razão Social"
@@ -442,7 +439,7 @@ const OrcamentoBackofficeScreen: React.FC = () => {
               </div>
             </>
           )}
-        </div>
+        </>
       </ParentCard>
     </PageContainer>
   );

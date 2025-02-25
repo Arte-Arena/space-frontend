@@ -8,7 +8,7 @@ import {
   toggleStarredContact,
 } from "@/store/apps/contacts/ContactSlice";
 
-import Scrollbar from "../../../components/custom-scroll/Scrollbar";
+import Scrollbar from "../../custom-scroll/Scrollbar";
 import ContactListItem from "./ContactListItem";
 import type { ContactType } from '../../../(DashboardLayout)/types/apps/contact';
 

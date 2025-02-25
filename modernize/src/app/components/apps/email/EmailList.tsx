@@ -11,7 +11,7 @@ import {
   checkEmail,
 } from "@/store/apps/email/EmailSlice";
 
-import Scrollbar from "../../../components/custom-scroll/Scrollbar";
+import Scrollbar from "../../custom-scroll/Scrollbar";
 import { EmailType } from '../../../(DashboardLayout)/types/apps/email';
 
 interface Props {

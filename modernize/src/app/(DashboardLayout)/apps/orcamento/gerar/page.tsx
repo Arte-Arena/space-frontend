@@ -400,12 +400,19 @@ const OrcamentoGerarScreen = () => {
   };
 
   // Função para reiniciar a pesquisa ao pressionar Enter
-  const handleKeyPress = (event: React.KeyboardEvent) => {
+  const handleKeyPressCliente = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter') {
       setCurrentPageClients(1); // Reset para a primeira página
       setAllClients([]); // Limpar resultados anteriores
       handleSearchClientes();
     }
+  };
+
+  const handleBlurCliente = () => {
+    console.log('teste');
+    setCurrentPageClients(1); // Reset para a primeira página
+    setAllClients([]); // Limpar resultados anteriores
+    handleSearchClientes();
   };
 
   const dataProducts = localStorage.getItem('produtosConsolidadosOrcamento');
@@ -736,10 +743,10 @@ const OrcamentoGerarScreen = () => {
   const getFrete = async (cepTo: string) => {
     if (clientId && productsList) {
       setIsFetchingFrete(true);
-      
+
       // Inicializa o array de dados de frete
       let data: FreteData[] = [];
-      
+
       // Requisição para Melhor Envio
       const body = {
         cepTo,
@@ -750,7 +757,7 @@ const OrcamentoGerarScreen = () => {
         valor: productsList.reduce((total, product) => total + product.preco * product.quantidade, 0),
         qtd: productsList.length
       };
-  
+
       // Obter dados do Melhor Envio
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/frete-melhorenvio`, {
@@ -761,7 +768,7 @@ const OrcamentoGerarScreen = () => {
           },
           body: JSON.stringify(body)
         });
-  
+
         if (!response.ok) {
           console.error('Resposta não-OK do Melhor Envio');
         } else {
@@ -772,12 +779,12 @@ const OrcamentoGerarScreen = () => {
         console.error('Erro ao buscar dados do Melhor Envio:', melhorEnvioError);
         // Continua o processamento mesmo se o Melhor Envio falhar
       }
-  
+
       // Tentar obter dados do Lalamove separadamente
       if (isGrandeSP && location) {
         try {
           const selectedVehicle = selectOptimalVehicle(productsList);
-  
+
           const bodyLalamove = {
             latitude: location.latitude.toString(),
             longitude: location.longitude.toString(),
@@ -796,7 +803,7 @@ const OrcamentoGerarScreen = () => {
             },
             peso_total: productsList.reduce((sum, p) => sum + p.peso * p.quantidade, 0)
           };
-  
+
           const response2 = await fetch(`${process.env.NEXT_PUBLIC_API}/api/frete-lalamove`, {
             method: 'POST',
             headers: {
@@ -805,18 +812,18 @@ const OrcamentoGerarScreen = () => {
             },
             body: JSON.stringify(bodyLalamove)
           });
-  
+
           if (!response2.ok) {
             console.error('Resposta não-OK do Lalamove');
           } else {
             const responseLalamove = await response2.json();
-  
+
             const lalamoveData: FreteData[] = [{
               name: 'Lalamove',
               price: responseLalamove.data.priceBreakdown.totalBeforeOptimization,
               delivery_time: 1,
             }];
-  
+
             data.push(...lalamoveData);
           }
         } catch (lalamoveError) {
@@ -824,16 +831,16 @@ const OrcamentoGerarScreen = () => {
           // Continua o processamento sem os dados do Lalamove
         }
       }
-  
+
       // Processa os dados independentemente de quais APIs tiveram sucesso ou falharam
       const fretesByName: { [key: string]: FreteData } = {};
-  
+
       data.forEach(frete => {
         fretesByName[frete.name.toLowerCase().replace(/\s/g, '')] = frete;
       });
-  
+
       const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
-  
+
       // Processa o Lalamove se disponível
       if (fretesByName.lalamove) {
         if (!isAnticipation) {
@@ -856,7 +863,7 @@ const OrcamentoGerarScreen = () => {
         setPrecoLalamove(null);
         setPrazoLalamove(null);
       }
-  
+
       // Sempre processa as opções do Melhor Envio independentemente do sucesso/falha do Lalamove
       if (fretesByName.pac) {
         if (!isAnticipation) {
@@ -875,7 +882,7 @@ const OrcamentoGerarScreen = () => {
         setPrecoPac(null);
         setPrazoPac(null);
       }
-  
+
       if (fretesByName.sedex) {
         if (!isAnticipation) {
           setPrecoSedex(Number(fretesByName.sedex.price));
@@ -893,7 +900,7 @@ const OrcamentoGerarScreen = () => {
         setPrecoSedex(null);
         setPrazoSedex(null);
       }
-  
+
       if (fretesByName.sedex10) {
         setPrecoSedex10(Number(fretesByName.sedex10.price));
         setPrazoSedex10(fretesByName.sedex10.delivery_time);
@@ -901,7 +908,7 @@ const OrcamentoGerarScreen = () => {
         setPrecoSedex10(null);
         setPrazoSedex10(null);
       }
-  
+
       if (fretesByName.sedex12) {
         setPrecoSedex12(Number(fretesByName.sedex12.price));
         setPrazoSedex12(fretesByName.sedex12.delivery_time);
@@ -909,7 +916,7 @@ const OrcamentoGerarScreen = () => {
         setPrecoSedex12(null);
         setPrazoSedex12(null);
       }
-  
+
       if (fretesByName.minienvios) {
         setPrecoMiniEnvios(Number(fretesByName.minienvios.price));
         setPrazoMiniEnvios(fretesByName.minienvios.delivery_time);
@@ -917,9 +924,9 @@ const OrcamentoGerarScreen = () => {
         setPrecoMiniEnvios(null);
         setPrazoMiniEnvios(null);
       }
-  
+
       setCepSuccess(true);
-      
+
       // Finalização comum
       setIsFetchingFrete(false);
       if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
@@ -1450,7 +1457,7 @@ Orçamento válido somente hoje.
                 `${option.id} :: ${option.nome} :: (${option.telefone} ${option.email ? ` - ${option.email}` : ''})`
               }
               onChange={handleChangeClientesConsolidadosInput}
-              onKeyDown={handleKeyPress}
+              onKeyDown={handleKeyPressCliente}
               renderInput={(params) => (
                 <CustomTextField
                   {...params}
@@ -1468,6 +1475,8 @@ Orçamento válido somente hoje.
                   }}
                 />
               )}
+              onBlur={handleBlurCliente}
+
             />
           </div>
 

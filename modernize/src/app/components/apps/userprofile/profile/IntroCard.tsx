@@ -2,7 +2,7 @@
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
-import ChildCard from "../../../../components/shared/ChildCard";
+import ChildCard from "../../../shared/ChildCard";
 import {
   IconBriefcase,
   IconDeviceDesktop,
