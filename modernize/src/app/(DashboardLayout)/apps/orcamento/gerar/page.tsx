@@ -154,9 +154,9 @@ const calculateFoldedDimensions = (
 ): Product => {
   let folds = 0;
   let [l, w, h] = [
-    UNIT_CONVERSION.metersToCm(product.comprimento),
-    UNIT_CONVERSION.metersToCm(product.largura),
-    UNIT_CONVERSION.metersToCm(product.altura)
+    product.comprimento,
+    product.largura,
+    product.altura
   ];
 
   while (folds < maxFolds &&
@@ -201,9 +201,9 @@ const selectOptimalVehicle = (products: Product[]): string => {
       ? calculateFoldedDimensions(p)
       : {
         ...p,
-        comprimento: UNIT_CONVERSION.metersToCm(p.comprimento),
-        largura: UNIT_CONVERSION.metersToCm(p.largura),
-        altura: UNIT_CONVERSION.metersToCm(p.altura)
+        comprimento: p.comprimento,
+        largura: p.largura,
+        altura: p.altura
       }
   );
 
