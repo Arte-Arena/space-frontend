@@ -1,11 +1,13 @@
-import { Box, CircularProgress, Typography } from "@mui/material";
-import { CheckCircle } from "@mui/icons-material";
+import { Box, CircularProgress, Typography, Button } from "@mui/material";
+import { CheckCircle, Error as ErrorIcon } from "@mui/icons-material";
 
 interface LoadingStateProps {
   isSuccess: boolean;
+  isLoading: boolean;
+  onRetry?: () => void;
 }
 
-export const LoadingState = ({ isSuccess }: LoadingStateProps) => {
+export const LoadingState = ({ isSuccess, isLoading, onRetry }: LoadingStateProps) => {
   return (
     <Box
       sx={{
@@ -24,8 +26,20 @@ export const LoadingState = ({ isSuccess }: LoadingStateProps) => {
             Uniformes confirmados com sucesso!
           </Typography>
         </>
-      ) : (
+      ) : isLoading ? (
         <CircularProgress size={60} />
+      ) : (
+        <>
+          <ErrorIcon color="error" sx={{ fontSize: 60 }} />
+          <Typography variant="h6" color="error">
+            Erro ao confirmar uniformes
+          </Typography>
+          {onRetry && (
+            <Button variant="contained" color="primary" onClick={onRetry}>
+              Tentar novamente
+            </Button>
+          )}
+        </>
       )}
     </Box>
   );

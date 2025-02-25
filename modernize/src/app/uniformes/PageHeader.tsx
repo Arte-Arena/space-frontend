@@ -2,14 +2,15 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import Image from 'next/image';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
-interface PageHeaderProps {
+export type PageHeaderProps = {
   orderId: string | null;
   onConfirm: () => void;
-  isSuccess?: boolean;
-  isLoading?: boolean;
-}
+  isSuccess: boolean;
+  isLoading: boolean;
+  isError: boolean;
+};
 
-export function PageHeader({ orderId, onConfirm, isSuccess, isLoading }: PageHeaderProps) {
+export function PageHeader({ orderId, onConfirm, isSuccess, isLoading, isError }: PageHeaderProps) {
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
@@ -38,7 +39,7 @@ export function PageHeader({ orderId, onConfirm, isSuccess, isLoading }: PageHea
         </Box>
       </Stack>
 
-      {!isLoading && !isSuccess && (
+      {!isLoading && !isSuccess && !isError && (
         <Button
           variant="contained"
           color="primary"

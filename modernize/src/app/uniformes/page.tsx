@@ -16,6 +16,7 @@ export default function UniformBackofficeScreen() {
   const orderId = searchParams.get('id');
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [columns] = useState<Column[]>([
     { id: 1, name: "Gênero", type: "select", options: ['M', 'F', 'I'] },
@@ -85,22 +86,37 @@ export default function UniformBackofficeScreen() {
 
   const handleConfirm = async () => {
     setIsLoading(true);
+    setIsError(false);
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
       console.log('Dados confirmados:', tableData);
       setIsSuccess(true);
     } catch (error) {
       console.error('Erro ao confirmar:', error);
+      setIsError(true);
+    } finally {
       setIsLoading(false);
     }
   };
 
+  const handleRetry = () => {
+    setIsError(false);
+    setIsSuccess(false);
+    setIsLoading(false);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
-      <PageHeader orderId={orderId} onConfirm={handleConfirm} isSuccess={isSuccess} isLoading={isLoading} />
+      <PageHeader 
+        orderId={orderId} 
+        onConfirm={handleConfirm} 
+        isSuccess={isSuccess} 
+        isLoading={isLoading}
+        isError={isError}
+      />
 
-      {isLoading || isSuccess ? (
-        <LoadingState isSuccess={isSuccess} />
+      {isLoading || isSuccess || isError ? (
+        <LoadingState isSuccess={isSuccess} isLoading={isLoading} onRetry={handleRetry} />
       ) : (
         LETTERS.map((letter) => (
           <UniformTable
