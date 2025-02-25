@@ -76,55 +76,55 @@ const StyledSelect = styled(Select)(({ theme }) => ({
   },
 }));
 
-const TAMANHOS = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG'];
-const LETRAS = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
+const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG'];
+const LETTERS = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
 
 export default function UniformBackofficeScreen() {
   const [columns] = useState<Column[]>([
-    { id: 1, name: "Sexo", type: "select", options: ['M', 'F'] },
+    { id: 1, name: "Gênero", type: "select", options: ['M', 'F'] },
     { id: 2, name: "Nome do jogador(a)", type: "text" },
     { id: 3, name: "Número", type: "number" },
-    { id: 4, name: "Tamanho camisa", type: "select", options: TAMANHOS },
-    { id: 5, name: "Tamanho calção", type: "select", options: TAMANHOS },
+    { id: 4, name: "Tamanho da camisa", type: "select", options: SIZES },
+    { id: 5, name: "Tamanho do shorts", type: "select", options: SIZES },
   ]);
 
   const [tableData, setTableData] = useState<TableData>(
-    LETRAS.reduce((acc, letra) => ({
+    LETTERS.reduce((acc, letter) => ({
       ...acc,
-      [letra]: [
-        { id: 1, data: ["M", "João Silva", "10", "G", "M"] },
+      [letter]: [
+        { id: 1, data: ["M", "John Smith", "10", "G", "M"] },
       ],
     }), {} as TableData)
   );
 
-  const [editingCell, setEditingCell] = useState<{ letra: string; rowId: number; colIndex: number } | null>(null);
+  const [editingCell, setEditingCell] = useState<{ letter: string; rowId: number; colIndex: number } | null>(null);
   const [editValue, setEditValue] = useState("");
 
-  const handleAddRow = (letra: string) => {
-    const letraRows = tableData[letra] || [];
+  const handleAddRow = (letter: string) => {
+    const letterRows = tableData[letter] || [];
     const newRow: TableRow = {
-      id: letraRows.length + 1,
+      id: letterRows.length + 1,
       data: columns.map(() => ""),
     };
     setTableData({
       ...tableData,
-      [letra]: [...letraRows, newRow],
+      [letter]: [...letterRows, newRow],
     });
   };
 
-  const handleDeleteRow = (letra: string, rowId: number) => {
+  const handleDeleteRow = (letter: string, rowId: number) => {
     setTableData((prevData: TableData) => ({
       ...prevData,
-      [letra]: prevData[letra].filter((row: TableRow) => row.id !== rowId),
+      [letter]: prevData[letter].filter((row: TableRow) => row.id !== rowId),
     }));
   };
 
-  const handleCellClick = (letra: string, rowId: number, colIndex: number, value: string) => {
-    setEditingCell({ letra, rowId, colIndex });
+  const handleCellClick = (letter: string, rowId: number, colIndex: number, value: string) => {
+    setEditingCell({ letter, rowId, colIndex });
     setEditValue(value || '');
   };
 
-  const handleCellEdit = (letra: string, rowId: number, colIndex: number, newValue: string) => {
+  const handleCellEdit = (letter: string, rowId: number, colIndex: number, newValue: string) => {
     const column = columns[colIndex];
 
     if (column.type === 'number' && newValue !== '' && !/^\d+$/.test(newValue)) {
@@ -133,7 +133,7 @@ export default function UniformBackofficeScreen() {
 
     setTableData((prevData: TableData) => ({
       ...prevData,
-      [letra]: prevData[letra].map((row: TableRow) => {
+      [letter]: prevData[letter].map((row: TableRow) => {
         if (row.id === rowId) {
           const newData = [...row.data];
           newData[colIndex] = newValue;
@@ -146,9 +146,9 @@ export default function UniformBackofficeScreen() {
     setEditValue('');
   };
 
-  const renderCell = (letra: string, cell: string, rowId: number, colIndex: number) => {
+  const renderCell = (letter: string, cell: string, rowId: number, colIndex: number) => {
     const column = columns[colIndex];
-    const isEditing = editingCell?.letra === letra &&
+    const isEditing = editingCell?.letter === letter &&
       editingCell?.rowId === rowId &&
       editingCell?.colIndex === colIndex;
 
@@ -160,7 +160,7 @@ export default function UniformBackofficeScreen() {
               value={cell || ''}
               onChange={(e) => {
                 const value = e.target.value as string;
-                handleCellEdit(letra, rowId, colIndex, value);
+                handleCellEdit(letter, rowId, colIndex, value);
               }}
               onBlur={() => setEditingCell(null)}
               autoFocus
@@ -188,10 +188,10 @@ export default function UniformBackofficeScreen() {
               setEditValue(value);
             }
           }}
-          onBlur={() => handleCellEdit(letra, rowId, colIndex, editValue)}
+          onBlur={() => handleCellEdit(letter, rowId, colIndex, editValue)}
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
-              handleCellEdit(letra, rowId, colIndex, editValue);
+              handleCellEdit(letter, rowId, colIndex, editValue);
             }
           }}
           type={column.type === 'number' ? 'text' : 'text'}
@@ -213,17 +213,17 @@ export default function UniformBackofficeScreen() {
 
   return (
     <Box sx={{ p: 3 }}>
-      {LETRAS.map((letra) => (
-        <Accordion key={letra}>
+      {LETTERS.map((letter) => (
+        <Accordion key={letter}>
           <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
-            aria-controls={`panel${letra}-content`}
-            id={`panel${letra}-header`}
+            aria-controls={`panel${letter}-content`}
+            id={`panel${letter}-header`}
           >
             <Typography>
-              Esboço {letra}{" "}
+              Esboço {letter}{" "}
               <Typography component="span" color="text.secondary" sx={{ ml: 1 }}>
-                {(tableData[letra] || []).length} jogador{(tableData[letra] || []).length !== 1 ? 'es(as)' : '(a)'}
+                {(tableData[letter] || []).length} jogador{(tableData[letter] || []).length !== 1 ? 'es(as)' : '(a)'}
               </Typography>
             </Typography>
           </AccordionSummary>
@@ -233,7 +233,7 @@ export default function UniformBackofficeScreen() {
                 variant="contained"
                 color="secondary"
                 startIcon={<AddIcon />}
-                onClick={() => handleAddRow(letra)}
+                onClick={() => handleAddRow(letter)}
               >
                 Adicionar nova linha
               </Button>
@@ -250,23 +250,23 @@ export default function UniformBackofficeScreen() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {(tableData[letra] || []).length === 0 ? (
+                  {(tableData[letter] || []).length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={columns.length + 1}>
                         <Box sx={{ py: 3, textAlign: 'center' }}>
                           <Typography variant="body1" color="text.secondary">
-                            Nenhum jogador(a) adicionado. Clique no botão "Adicionar nova linha" para começar.
+                            Nenhum jogador adicionado. Clique no botão "Adicionar nova linha" para começar.
                           </Typography>
                         </Box>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    (tableData[letra] || []).map((row) => (
+                    (tableData[letter] || []).map((row) => (
                       <TableRow key={row.id}>
                         {row.data.map((cell, index) => (
                           <TableCell
                             key={index}
-                            onClick={() => handleCellClick(letra, row.id, index, cell)}
+                            onClick={() => handleCellClick(letter, row.id, index, cell)}
                             sx={{
                               cursor: 'pointer',
                               '&:hover': {
@@ -276,12 +276,12 @@ export default function UniformBackofficeScreen() {
                               height: '32px',
                             }}
                           >
-                            {renderCell(letra, cell, row.id, index)}
+                            {renderCell(letter, cell, row.id, index)}
                           </TableCell>
                         ))}
                         <TableCell>
                           <IconButton
-                            onClick={() => handleDeleteRow(letra, row.id)}
+                            onClick={() => handleDeleteRow(letter, row.id)}
                             color="error"
                             size="small"
                           >
