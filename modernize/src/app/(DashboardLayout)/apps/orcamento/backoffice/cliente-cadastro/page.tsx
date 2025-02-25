@@ -110,49 +110,149 @@ const OrcamentoBackofficeScreen: React.FC = () => {
   
   const handleSubmit = async () => {
     
-    try {
-    const formDataWithOrcamentoId = { ...formData, orcamentoId: id };
-    
-    console.log("Payload enviado:", JSON.stringify(formDataWithOrcamentoId, null, 2));
 
-    
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/cliente-cadastro`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formDataWithOrcamentoId),
-      });
+    console.log(formData);
 
-      console.log("Status da resposta:", response.status);
-      const data = await response.json();
-      console.log("Resposta completa:", data);
+    // validação de CNPJ
+    if(formData.tipo_pessoa == 'J'){
+      if(formData.razao_social === "" || formData.razao_social === null || formData.razao_social === undefined){
+        alert("razao social é um campo obrigatorio.");
+        return;
+      }
+      if(formData.cnpj === "" || formData.cnpj === null || formData.cnpj === undefined){
+        alert("cnpj é um campo obrigatorio.");
+        return;
+      }
+      if(formData.inscricao_estadual === "" || formData.inscricao_estadual === null || formData.inscricao_estadual === undefined){
+        alert("inscricao estadual é um campo obrigatorio.");
+        return;
+      }
+    }
 
-      if(data.retorno.status === "Erro"){
-        const registros = data.retorno.registros;
-        const ultimoRegistro = registros[registros.length - 1];
-        if (ultimoRegistro && ultimoRegistro.registro && ultimoRegistro.registro.erros && ultimoRegistro.registro.erros.length > 0) {
-        const ultimoErro = ultimoRegistro.registro.erros[ultimoRegistro.registro.erros.length - 1];
-        const mensagemErro = ultimoErro.erro;
-        alert('Cliente não salvo! ' + mensagemErro);
+    // validação de CPF
+    if(formData.tipo_pessoa == 'F'){  
+      if(formData.nome === "" || formData.nome === null || formData.nome === undefined){
+        alert("nome é um campo obrigatorio.");
+        return;
+      }
+      if(formData.cpf === "" || formData.cpf === null || formData.cpf === undefined){
+        alert("CPF é um campo obrigatorio.");
+        return;
+      }
+      if(formData.rg === "" || formData.rg === null || formData.rg === undefined){
+        alert("RG é um campo obrigatorio.");
+        return;
+      }
+    }
+
+
+    for (const [key, value] of Object.entries(formData)) {
+      if (value === "" || value === null || value === undefined) {
+        let mensagem;
+       
+        if (key === "email" && !/\S+@\S+\.\S+/.test(value)) {
+          alert("E-mail inválido.");
+          return;
+        }
+
+        // Define a mensagem de alerta com base no campo
+        switch (key) {
+          case "email":
+            mensagem = "O campo E-mail é obrigatório.";
+            break;
+          case "celular":
+            mensagem = "O campo Celular é obrigatório.";
+            break;
+          case "cep":
+            mensagem = "O campo CEP é obrigatório.";
+            break;
+          case "endereco":
+            mensagem = "O campo Endereço é obrigatório.";
+            break;
+          case "numero":
+            mensagem = "O campo Número é obrigatório.";
+            break;
+          case "bairro":
+            mensagem = "O campo Bairro é obrigatório.";
+            break;
+          case "cidade":
+            mensagem = "O campo Cidade é obrigatório.";
+            break;
+          case "uf":
+            mensagem = "O campo UF é obrigatório.";
+            break;
+          case "cep_cobranca":
+            mensagem = "O campo CEP de Cobrança é obrigatório.";
+            break;
+          case "endereco_cobranca":
+            mensagem = "O campo Endereço de Cobrança é obrigatório.";
+            break;
+          case "numero_cobranca":
+            mensagem = "O campo Número de Cobrança é obrigatório.";
+            break;
+          case "bairro_cobranca":
+            mensagem = "O campo Bairro de Cobrança é obrigatório.";
+            break;
+          case "cidade_cobranca":
+            mensagem = "O campo Cidade de Cobrança é obrigatório.";
+            break;
+          case "uf_cobranca":
+            mensagem = "O campo UF de Cobrança é obrigatório.";
+            break;
+          default:
+            mensagem = `O campo ${key} é obrigatório.`;
+            break;
+          }
+        // Exibe o alerta
+        alert(mensagem);
         return
       }
     }
 
-      if (response.ok) {
-        alert('Cliente salvo com sucesso!');
-        setIsTipoPessoaSelected(false);
-        // levar a pessoa pra uma pagina de sucesso pra ela não se confundir e mandar duas vezes ou mais a requisição.
-        navigate.push('/apps/orcamento/backoffice/cliente-cadastro/sucesso');
-      } else {
-        const errorData = await response.json();
-        console.log(errorData.message)
-        alert(`Erro ao salvar: ${errorData.message}`);
-      }
-    } catch (error) {
-      console.error(error);
-      alert('Ocorreu um erro ao salvar o cliente.');
-    }
+    // try {
+    const formDataWithOrcamentoId = { ...formData, orcamentoId: id };    
+    
+
+    console.log("Payload enviado:", JSON.stringify(formDataWithOrcamentoId, null, 2));
+
+  
+    //   const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/cliente-cadastro`, {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify(formDataWithOrcamentoId),
+    //   });
+
+    //   console.log("Status da resposta:", response.status);
+    //   const data = await response.json();
+    //   console.log("Resposta completa:", data);
+
+    //   if(data.retorno.status === "Erro"){
+    //     const registros = data.retorno.registros;
+    //     const ultimoRegistro = registros[registros.length - 1];
+    //     if (ultimoRegistro && ultimoRegistro.registro && ultimoRegistro.registro.erros && ultimoRegistro.registro.erros.length > 0) {
+    //     const ultimoErro = ultimoRegistro.registro.erros[ultimoRegistro.registro.erros.length - 1];
+    //     const mensagemErro = ultimoErro.erro;
+    //     alert('Cliente não salvo! ' + mensagemErro);
+    //     return
+    //   }
+    // }
+
+    //   if (response.ok) {
+    //     alert('Cliente salvo com sucesso!');
+    //     setIsTipoPessoaSelected(false);
+    //     // levar a pessoa pra uma pagina de sucesso pra ela não se confundir e mandar duas vezes ou mais a requisição.
+    //     navigate.push('/apps/orcamento/backoffice/cliente-cadastro/sucesso');
+    //   } else {
+    //     const errorData = await response.json();
+    //     console.log(errorData.message)
+    //     alert(`Erro ao salvar: ${errorData.message}`);
+    //   }
+    // } catch (error) {
+    //   console.error(error);
+    //   alert('Ocorreu um erro ao salvar o cliente.');
+    // }
   };
 
   // if (isFetching) return <CircularProgress />;
