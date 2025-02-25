@@ -21,7 +21,8 @@ import {
   IconBusinessplan,
   IconLink,
   IconPencil,
-  IconChartBar
+  IconChartBar,
+  IconTool
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -128,15 +129,15 @@ const getMenuItems = (): MenuitemsType[] => {
         },
         {
           id: uniqueId(),
-          title: "Orçamento Status Trello",
-          icon: IconChartBar,
-          href: "/apps/orcamento/status-trello",
-        },
-        {
-          id: uniqueId(),
           title: "Backoffice",
           icon: IconBuilding,
           href: "/apps/orcamento/backoffice",
+        },
+        {
+          id: uniqueId(),
+          title: "Catálogo 2025",
+          icon: IconTool,
+          href: "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Arte%20Arena%20(2025).pdf",
         },
         {
           id: uniqueId(),
