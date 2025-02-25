@@ -30,6 +30,7 @@ interface Orcamento {
   cliente_octa_number: string;
   nome_cliente: string | null;
   lista_produtos: string | null;
+  produtos_brinde: string | null;
   texto_orcamento: string | null;
   endereco_cep: string;
   endereco: string;
@@ -72,25 +73,52 @@ const OrcamentoBackofficeScreen = () => {
       }).then((res) => res.json()),
   });
 
+  // Precisamos validar os botões pro caso de ja terem sido feitos clientes e pedidos.
+
+
   const handleMakePedido = async (orcamento: Orcamento) => {
-    try{
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/produto-cadastro`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(orcamento),
-      });
+
+    const orcamentoFormated = {
+      id: orcamento.id,
+      id_vendedor: orcamento.user_id,
+      cliente_codigo: orcamento.cliente_octa_number,
+      nome_cliente: orcamento.nome_cliente,
+      lista_produtos: orcamento.lista_produtos,
+      produtos_brinde: orcamento.produtos_brinde,
+      brinde: orcamento.brinde,
+      texto_orcamento: orcamento.texto_orcamento,
+      cep: orcamento.endereco_cep,
+      endereco: orcamento.endereco,
+      transportadora: orcamento.opcao_entrega,
+      data_pedido: orcamento.created_at,
+      updated_at: orcamento.updated_at,
+      tipo_desconto: orcamento.tipo_desconto,
+      valor_desconto: orcamento.valor_desconto,
+      data_antecipa: orcamento.data_antecipa,
+      taxa_antecipa: orcamento.taxa_antecipa,
+      total_orcamento: orcamento.total_orcamento,
+    };
+
+    console.log(orcamentoFormated)
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/pedido-cadastro`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(orcamentoFormated),
+    });
+    // try{
       
-      if(response.ok){
-        alert('Pedido feito com sucesso!');
-        refetch();
-      }
-    }catch(error){
-      console.error(error);
-      alert('Pedido com erro!');
-    }
+    //   if(response.ok){
+    //     alert('Pedido feito com sucesso!');
+    //     refetch();
+    //   }
+    // }catch(error){
+    //   console.error(error);
+    //   alert('Pedido com erro!');
+    // }
   }
 
   const handleSearch = () => {
@@ -110,10 +138,6 @@ const OrcamentoBackofficeScreen = () => {
 
   const handleToggleRow = (id: number) => {
     setOpenRow(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const handleDeleteOrcamento = async (orcamentoId: number) => {
-    console.log(`handleDeleteOrcamento: ${orcamentoId}`);
   };
 
   if (isFetchingOrcamentos) return <CircularProgress />;
@@ -241,7 +265,8 @@ const OrcamentoBackofficeScreen = () => {
                           </Button>
 
                           {/* botão da chamada da api */}
-                          <Button variant="contained" color="primary" onClick={handleMakePedido}> 
+                          {}
+                          <Button variant="contained" color="primary" onClick={() => handleMakePedido(row)}> 
 
                             <IconCheck />
                           </Button>
