@@ -154,9 +154,9 @@ const calculateFoldedDimensions = (
 ): Product => {
   let folds = 0;
   let [l, w, h] = [
-    UNIT_CONVERSION.metersToCm(product.comprimento),
-    UNIT_CONVERSION.metersToCm(product.largura),
-    UNIT_CONVERSION.metersToCm(product.altura)
+    product.comprimento,
+    product.largura,
+    product.altura
   ];
 
   while (folds < maxFolds &&
@@ -201,9 +201,9 @@ const selectOptimalVehicle = (products: Product[]): string => {
       ? calculateFoldedDimensions(p)
       : {
         ...p,
-        comprimento: UNIT_CONVERSION.metersToCm(p.comprimento),
-        largura: UNIT_CONVERSION.metersToCm(p.largura),
-        altura: UNIT_CONVERSION.metersToCm(p.altura)
+        comprimento: p.comprimento,
+        largura: p.largura,
+        altura: p.altura
       }
   );
 
@@ -651,6 +651,16 @@ const OrcamentoGerarScreen = () => {
     }
   });
 
+  function resetFrete() {
+    setPrazoFrete(null);
+    setPrecoFrete(null);
+    setPrecoLalamove(null);
+    setPrazoLalamove(null);
+    setPrecoPac(null);
+    setPrazoPac(null);
+    setPrecoSedex(null);
+    setPrazoSedex(null);
+  }
 
   async function processCEP(cep: string) {
     const validationResult = await validateCEP(cep);
@@ -681,6 +691,8 @@ const OrcamentoGerarScreen = () => {
       return true;
     } else {
       // console.log("CEP inválido ou erro na validação.");
+      resetFrete();
+
       setOpenSnackbarCepInvalido(true);
       return false;
     }
@@ -724,19 +736,23 @@ const OrcamentoGerarScreen = () => {
   const getFrete = async (cepTo: string) => {
     if (clientId && productsList) {
       setIsFetchingFrete(true);
+      
+      // Inicializa o array de dados de frete
+      let data: FreteData[] = [];
+      
+      // Requisição para Melhor Envio
+      const body = {
+        cepTo,
+        largura: productsList.reduce((max, product) => Math.max(max, product.largura), 0),
+        altura: productsList.reduce((max, product) => Math.max(max, product.altura), 0),
+        comprimento: productsList.reduce((max, product) => Math.max(max, product.comprimento), 0),
+        peso: productsList.reduce((total, product) => total + product.peso * product.quantidade, 0),
+        valor: productsList.reduce((total, product) => total + product.preco * product.quantidade, 0),
+        qtd: productsList.length
+      };
+  
+      // Obter dados do Melhor Envio
       try {
-
-        // Requisição para Melhor Envio
-        const body = {
-          cepTo,
-          largura: productsList.reduce((max, product) => Math.max(max, product.largura), 0),
-          altura: productsList.reduce((max, product) => Math.max(max, product.altura), 0),
-          comprimento: productsList.reduce((max, product) => Math.max(max, product.comprimento), 0),
-          peso: productsList.reduce((total, product) => total + product.peso * product.quantidade, 0),
-          valor: productsList.reduce((total, product) => total + product.preco * product.quantidade, 0),
-          qtd: productsList.length
-        };
-
         const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/frete-melhorenvio`, {
           method: 'POST',
           headers: {
@@ -745,17 +761,23 @@ const OrcamentoGerarScreen = () => {
           },
           body: JSON.stringify(body)
         });
-
+  
         if (!response.ok) {
-          throw new Error('Failed to fetch frete');
+          console.error('Resposta não-OK do Melhor Envio');
+        } else {
+          const melhorEnvioData = await response.json();
+          data = melhorEnvioData;
         }
-
-        const data: FreteData[] = await response.json();
-
-        // Requisição para Lalamove
-        if (isGrandeSP && location) {
+      } catch (melhorEnvioError) {
+        console.error('Erro ao buscar dados do Melhor Envio:', melhorEnvioError);
+        // Continua o processamento mesmo se o Melhor Envio falhar
+      }
+  
+      // Tentar obter dados do Lalamove separadamente
+      if (isGrandeSP && location) {
+        try {
           const selectedVehicle = selectOptimalVehicle(productsList);
-
+  
           const bodyLalamove = {
             latitude: location.latitude.toString(),
             longitude: location.longitude.toString(),
@@ -774,7 +796,7 @@ const OrcamentoGerarScreen = () => {
             },
             peso_total: productsList.reduce((sum, p) => sum + p.peso * p.quantidade, 0)
           };
-
+  
           const response2 = await fetch(`${process.env.NEXT_PUBLIC_API}/api/frete-lalamove`, {
             method: 'POST',
             headers: {
@@ -783,107 +805,125 @@ const OrcamentoGerarScreen = () => {
             },
             body: JSON.stringify(bodyLalamove)
           });
-
+  
           if (!response2.ok) {
-            throw new Error('Failed to fetch frete from Lalamove API');
+            console.error('Resposta não-OK do Lalamove');
+          } else {
+            const responseLalamove = await response2.json();
+  
+            const lalamoveData: FreteData[] = [{
+              name: 'Lalamove',
+              price: responseLalamove.data.priceBreakdown.totalBeforeOptimization,
+              delivery_time: 1,
+            }];
+  
+            data.push(...lalamoveData);
           }
-
-          const responseLalamove = await response2.json();
-
-          const data2: FreteData[] = [{
-            name: 'Lalamove',
-            price: responseLalamove.data.priceBreakdown.totalBeforeOptimization,
-            delivery_time: 1,
-          }];
-
-          data.push(...data2);
+        } catch (lalamoveError) {
+          console.error('Erro ao buscar dados do Lalamove:', lalamoveError);
+          // Continua o processamento sem os dados do Lalamove
         }
-
-        const fretesByName: { [key: string]: FreteData } = {};
-
-        data.forEach(frete => {
-          fretesByName[frete.name.toLowerCase().replace(/\s/g, '')] = frete; // Use lowercase and remove spaces for consistent keys
-        });
-
-        const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
-
-        if (fretesByName.lalamove) {
-          if (!isAnticipation) {
+      }
+  
+      // Processa os dados independentemente de quais APIs tiveram sucesso ou falharam
+      const fretesByName: { [key: string]: FreteData } = {};
+  
+      data.forEach(frete => {
+        fretesByName[frete.name.toLowerCase().replace(/\s/g, '')] = frete;
+      });
+  
+      const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
+  
+      // Processa o Lalamove se disponível
+      if (fretesByName.lalamove) {
+        if (!isAnticipation) {
+          setPrecoLalamove(Number(fretesByName.lalamove.price));
+          setPrazoLalamove(fretesByName.lalamove.delivery_time);
+        } else {
+          if (prazoEntregaMenordataDesejadaAntecipa(
+            fretesByName.lalamove.delivery_time,
+            dataDesejadaEntrega,
+            safeDataFeriados
+          )) {
             setPrecoLalamove(Number(fretesByName.lalamove.price));
             setPrazoLalamove(fretesByName.lalamove.delivery_time);
           } else {
-            if (prazoEntregaMenordataDesejadaAntecipa(
-              fretesByName.lalamove.delivery_time,
-              dataDesejadaEntrega,
-              safeDataFeriados
-            )) {
-              setPrecoLalamove(Number(fretesByName.lalamove.price));
-              setPrazoLalamove(fretesByName.lalamove.delivery_time);
-            } else {
-              setPrecoLalamove(null);
-              setPrazoLalamove(null);
-            }
+            setPrecoLalamove(null);
+            setPrazoLalamove(null);
           }
-        } else {
-          setPrecoLalamove(null);
-          setPrazoLalamove(null);
         }
-
-        if (fretesByName.pac) {
-          if (!isAnticipation) {
+      } else {
+        setPrecoLalamove(null);
+        setPrazoLalamove(null);
+      }
+  
+      // Sempre processa as opções do Melhor Envio independentemente do sucesso/falha do Lalamove
+      if (fretesByName.pac) {
+        if (!isAnticipation) {
+          setPrecoPac(Number(fretesByName.pac.price));
+          setPrazoPac(fretesByName.pac.delivery_time);
+        } else {
+          if (prazoEntregaMenordataDesejadaAntecipa(fretesByName.pac.delivery_time, dataDesejadaEntrega, safeDataFeriados)) {
             setPrecoPac(Number(fretesByName.pac.price));
             setPrazoPac(fretesByName.pac.delivery_time);
           } else {
-            if (prazoEntregaMenordataDesejadaAntecipa(fretesByName.pac.delivery_time, dataDesejadaEntrega, safeDataFeriados)) {
-              setPrecoPac(Number(fretesByName.pac.price));
-              setPrazoPac(fretesByName.pac.delivery_time);
-            } else {
-              setPrecoPac(null);
-              setPrazoPac(null);
-            }
+            setPrecoPac(null);
+            setPrazoPac(null);
           }
         }
-
-        if (fretesByName.sedex) {
-          if (!isAnticipation) {
+      } else {
+        setPrecoPac(null);
+        setPrazoPac(null);
+      }
+  
+      if (fretesByName.sedex) {
+        if (!isAnticipation) {
+          setPrecoSedex(Number(fretesByName.sedex.price));
+          setPrazoSedex(fretesByName.sedex.delivery_time);
+        } else {
+          if (prazoEntregaMenordataDesejadaAntecipa(fretesByName.sedex.delivery_time, dataDesejadaEntrega, safeDataFeriados)) {
             setPrecoSedex(Number(fretesByName.sedex.price));
             setPrazoSedex(fretesByName.sedex.delivery_time);
           } else {
-            if (prazoEntregaMenordataDesejadaAntecipa(fretesByName.sedex.delivery_time, dataDesejadaEntrega, safeDataFeriados)) {
-              setPrecoSedex(Number(fretesByName.sedex.price));
-              setPrazoSedex(fretesByName.sedex.delivery_time);
-            } else {
-              setPrecoSedex(null);
-              setPrazoSedex(null);
-            }
+            setPrecoSedex(null);
+            setPrazoSedex(null);
           }
         }
-
-        if (fretesByName.sedex10) {
-          setPrecoSedex10(Number(fretesByName.sedex10.price));
-          setPrazoSedex10(fretesByName.sedex10.delivery_time);
-        }
-
-        if (fretesByName.sedex12) {
-          setPrecoSedex12(Number(fretesByName.sedex12.price));
-          setPrazoSedex12(fretesByName.sedex12.delivery_time);
-        }
-
-        if (fretesByName.minienvios) {
-          setPrecoMiniEnvios(Number(fretesByName.minienvios.price));
-          setPrazoMiniEnvios(fretesByName.minienvios.delivery_time);
-        }
-
-        setCepSuccess(true);
-
-      } catch (error) {
-        console.error('Error fetching frete:', error);
-      } finally {
-        setIsFetchingFrete(false);
-        if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
-          // console.log("0000");
-          calcPrevisao();
-        }
+      } else {
+        setPrecoSedex(null);
+        setPrazoSedex(null);
+      }
+  
+      if (fretesByName.sedex10) {
+        setPrecoSedex10(Number(fretesByName.sedex10.price));
+        setPrazoSedex10(fretesByName.sedex10.delivery_time);
+      } else {
+        setPrecoSedex10(null);
+        setPrazoSedex10(null);
+      }
+  
+      if (fretesByName.sedex12) {
+        setPrecoSedex12(Number(fretesByName.sedex12.price));
+        setPrazoSedex12(fretesByName.sedex12.delivery_time);
+      } else {
+        setPrecoSedex12(null);
+        setPrazoSedex12(null);
+      }
+  
+      if (fretesByName.minienvios) {
+        setPrecoMiniEnvios(Number(fretesByName.minienvios.price));
+        setPrazoMiniEnvios(fretesByName.minienvios.delivery_time);
+      } else {
+        setPrecoMiniEnvios(null);
+        setPrazoMiniEnvios(null);
+      }
+  
+      setCepSuccess(true);
+      
+      // Finalização comum
+      setIsFetchingFrete(false);
+      if (clientId && productsList && shippingOption && cep && address && prazoProducao && prazoFrete) {
+        calcPrevisao();
       }
     }
   };
