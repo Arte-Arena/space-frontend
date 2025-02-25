@@ -77,7 +77,7 @@ const StyledSelect = styled(Select)(({ theme }) => ({
 }));
 
 const TAMANHOS = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG'];
-const LETRAS = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)); // A to Z
+const LETRAS = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
 
 export default function UniformBackofficeScreen() {
   const [columns] = useState<Column[]>([
@@ -126,7 +126,7 @@ export default function UniformBackofficeScreen() {
 
   const handleCellEdit = (letra: string, rowId: number, colIndex: number, newValue: string) => {
     const column = columns[colIndex];
-    
+
     if (column.type === 'number' && newValue !== '' && !/^\d+$/.test(newValue)) {
       return;
     }
@@ -148,10 +148,10 @@ export default function UniformBackofficeScreen() {
 
   const renderCell = (letra: string, cell: string, rowId: number, colIndex: number) => {
     const column = columns[colIndex];
-    const isEditing = editingCell?.letra === letra && 
-                     editingCell?.rowId === rowId && 
-                     editingCell?.colIndex === colIndex;
-    
+    const isEditing = editingCell?.letra === letra &&
+      editingCell?.rowId === rowId &&
+      editingCell?.colIndex === colIndex;
+
     if (isEditing) {
       if (column.type === 'select') {
         return (
@@ -196,7 +196,7 @@ export default function UniformBackofficeScreen() {
           }}
           type={column.type === 'number' ? 'text' : 'text'}
           inputProps={{
-            style: { 
+            style: {
               textAlign: column.type === 'number' ? 'right' : 'left',
               padding: '2px 4px'
             }
@@ -264,13 +264,13 @@ export default function UniformBackofficeScreen() {
                     (tableData[letra] || []).map((row) => (
                       <TableRow key={row.id}>
                         {row.data.map((cell, index) => (
-                          <TableCell 
+                          <TableCell
                             key={index}
                             onClick={() => handleCellClick(letra, row.id, index, cell)}
-                            sx={{ 
-                              cursor: 'pointer', 
-                              '&:hover': { 
-                                backgroundColor: 'rgba(255, 255, 255, 0.08)' 
+                            sx={{
+                              cursor: 'pointer',
+                              '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.08)'
                               },
                               padding: '4px 8px',
                               height: '32px',
