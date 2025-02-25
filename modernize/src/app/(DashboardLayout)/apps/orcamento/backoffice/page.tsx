@@ -54,6 +54,8 @@ const OrcamentoBackofficeScreen = () => {
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [linkOrcamento, setLinkOrcamento] = useState<string>('');
   const [openLinkDialog, setOpenLinkDialog] = useState<boolean>(false);
+  const [linkUniform, setLinkUniform] = useState<string>('');
+  const [openUniformDialog, setOpenUniformDialog] = useState<boolean>(false);
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -114,11 +116,29 @@ const OrcamentoBackofficeScreen = () => {
       if (!data.caminho) {
         console.log('Erro: servidor de short URL não disponível');
       } else {
-        setLinkOrcamento(`${window.location.origin}${data.caminho}`);
+        setLinkOrcamento(`${window.location.origin}/s${data.caminho}`);
         setOpenLinkDialog(true);
       }
     }
   };
+
+  async function handleShortlinkUniform(uniformId: number) {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/url/${uniformId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) return console.error('Erro ao criar link do uniforme:', response.status);
+    const data = await response.json();
+    if (!data.caminho) return console.error(
+      'Erro ao criar link do uniforme: servidor de short URL não disponível'
+    );
+    setLinkUniform(`${window.location.origin}/u${data.caminho}`);
+    setOpenUniformDialog(true);
+  }
 
   return (
     <PageContainer title="Orçamento / Backoffice" description="Gerenciar Pedidos da Arte Arena">
@@ -215,9 +235,33 @@ const OrcamentoBackofficeScreen = () => {
                             </Dialog>
 
                           </IconButton>
-                          <Button variant="outlined">
+                          <Button variant="outlined" onClick={() => {
+                            setOpenUniformDialog(true);
+                            handleShortlinkUniform(row.id);
+                          }}>
                             <IconShirtSport />
                           </Button>
+                          <Dialog
+                            open={openUniformDialog}
+                            onClose={() => setOpenUniformDialog(false)}
+                          >
+                            <DialogTitle>Link do Uniforme</DialogTitle>
+                            <DialogContent>
+                              <DialogContentText>
+                                {linkUniform}
+                              </DialogContentText>
+                            </DialogContent>
+                            <DialogActions>
+                              <Button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(linkUniform);
+                                  setOpenUniformDialog(false);
+                                }}
+                              >
+                                Copiar Link
+                              </Button>
+                            </DialogActions>
+                          </Dialog>
 
                           {/* botão da chamada da api */}
                           <Button variant="contained" color="primary"> 
