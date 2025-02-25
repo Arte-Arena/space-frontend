@@ -23,8 +23,9 @@ import {
   IconTool,
   IconBrandTrello,
   IconProgressCheck,
-  // IconBusinessplan,
-  // IconReportAnalytics
+  IconBusinessplan,
+  IconReportAnalytics,
+  IconCircleCheckFilled
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -88,13 +89,13 @@ const getMenuItems = (): MenuitemsType[] => {
         {
           id: uniqueId(),
           title: "Buscar Conta",
-          icon: IconBrandCashapp,
+          icon: IconZoomMoney,
           href: "/apps/contas-pagar-receber/buscar",
         },
         {
           id: uniqueId(),
           title: "Relatórios de Contas",
-          icon: IconBrandCashapp,
+          icon: IconChartBar,
           href: "/apps/contas-pagar-receber/relatorios",
         },
       ],
@@ -110,6 +111,12 @@ const getMenuItems = (): MenuitemsType[] => {
           title: "Gerar Orçamento",
           icon: IconReportMoney,
           href: "/apps/orcamento/gerar",
+        },
+        {
+          id: uniqueId(),
+          title: "Aprovar Orçamento",
+          icon: IconCircleCheckFilled,
+          href: "/apps/orcamento/aprovar",
         },
         {
           id: uniqueId(),
