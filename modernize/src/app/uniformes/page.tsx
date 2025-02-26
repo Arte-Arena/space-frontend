@@ -186,9 +186,11 @@ export default function UniformBackofficeScreen() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Alert severity="warning" sx={{ mb: 3 }}>
-        Importante: Para cada jogador, você deve confirmar os tamanhos escolhidos marcando a caixa de seleção correspondente. Todos os jogadores devem ter seus tamanhos confirmados antes de prosseguir.
-      </Alert>
+      {!isLoading && !isSuccess && !isError && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          Importante: Para cada jogador, você deve confirmar os tamanhos escolhidos marcando a caixa de seleção correspondente. Todos os jogadores devem ter seus tamanhos confirmados antes de prosseguir.
+        </Alert>
+      )}
 
       {showValidationError && (
         <>
