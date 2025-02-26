@@ -86,7 +86,7 @@ export function UniformTableRow({
             }
           }}
           onBlur={() => onCellEdit(letter, row.id, colIndex, editValue)}
-          onKeyPress={(e) => {
+          onKeyUp={(e) => {
             if (e.key === 'Enter') {
               onCellEdit(letter, row.id, colIndex, editValue);
             }
