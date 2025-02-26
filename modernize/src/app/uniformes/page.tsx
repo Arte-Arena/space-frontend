@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from "react";
-import { Box, Alert } from "@mui/material";
+import { Box, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from "@mui/material";
 import { useSearchParams } from 'next/navigation';
 import { Column, TableData } from "./types";
 import { PageHeader } from "./PageHeader";
@@ -41,6 +41,9 @@ export default function UniformBackofficeScreen() {
 
   const [editingCell, setEditingCell] = useState<{ letter: string; rowId: number; colIndex: number } | null>(null);
   const [editValue, setEditValue] = useState("");
+
+  const [openEmptyTeamsDialog, setOpenEmptyTeamsDialog] = useState(false);
+  const [emptyTeams, setEmptyTeams] = useState<string[]>([]);
 
   const handleAddRow = (letter: string) => {
     const letterRows = tableData[letter] || [];
@@ -163,6 +166,17 @@ export default function UniformBackofficeScreen() {
       return;
     }
 
+    const emptyTeams = LETTERS.filter(letter => !tableData[letter] || tableData[letter].length === 0);
+    if (emptyTeams.length > 0) {
+      setEmptyTeams(emptyTeams);
+      setOpenEmptyTeamsDialog(true);
+      return;
+    }
+
+    await submitData();
+  };
+
+  const submitData = async () => {
     setShowValidationError(false);
     setIsLoading(true);
     setIsError(false);
@@ -240,6 +254,30 @@ export default function UniformBackofficeScreen() {
           />
         ))
       )}
+
+      <Dialog
+        open={openEmptyTeamsDialog}
+        onClose={() => setOpenEmptyTeamsDialog(false)}
+      >
+        <DialogTitle>Confirmar envio</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Os seguintes esboços não possuem jogadores cadastrados:
+            {emptyTeams.map(team => ` ${team}`).join(', ')}
+            <br /><br />
+            Deseja continuar mesmo assim?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenEmptyTeamsDialog(false)}>Cancelar</Button>
+          <Button onClick={() => {
+            setOpenEmptyTeamsDialog(false);
+            submitData();
+          }} color="primary" autoFocus>
+            Confirmar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
