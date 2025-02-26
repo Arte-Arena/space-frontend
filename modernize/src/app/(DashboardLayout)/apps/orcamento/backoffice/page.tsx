@@ -24,6 +24,28 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogActions from '@mui/material/DialogActions';
 
+interface Pedidos {
+  id: number;
+  orcamento_id: number;
+  user_id: number | null;
+  numero_pedido: string | null;
+  data_prevista: string | null;
+  pedido_status_id: number | null;
+  pedido_tipo_id: number | null;
+  pedido_produto_categoria: string | null;
+  pedido_material: string | null;
+  rolo: string | null;
+  medida_linear: string | null;
+  prioridade: string | null;
+  estagio: string | null;
+  situacao: string | null;
+  designer_id: number | null;
+  observacoes: string | null;
+  url_trello: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 interface Produto {
   id: number;
   nome: string;
@@ -60,6 +82,7 @@ interface Orcamento {
   data_antecipa: string;
   taxa_antecipa: string;
   total_orcamento: number;
+  pedidos: Pedidos[];
 }
 
 const OrcamentoBackofficeScreen = () => {
@@ -93,6 +116,10 @@ const OrcamentoBackofficeScreen = () => {
         },
       }).then((res) => res.json()),
   });
+
+  useEffect(() => {
+    console.log(dataOrcamentos)
+  },[dataOrcamentos])
 
   // Precisamos validar os botões pro caso de ja terem sido feitos clientes e pedidos.
 
@@ -143,9 +170,9 @@ const OrcamentoBackofficeScreen = () => {
       return
     }
     
+    refetch()
     if (response.ok) {
       alert('Pedido N°'+ orcamento.id + ' salvo com sucesso!');
-      // levar a pessoa pra uma pagina de sucesso pra ela não se confundir e mandar duas vezes ou mais a requisição.
     } else {
       const errorData = await response.json();
       console.log(errorData.message)
@@ -272,6 +299,9 @@ const OrcamentoBackofficeScreen = () => {
                   console.log(prazo)
                   const entrega = texto?.match(regexEntrega);
                   const brinde = texto?.match(regexBrinde);
+  
+                  const hasPedidos = row.pedidos && row.pedidos.length > 0;
+
                   return (
                   <React.Fragment key={row.id}>
                     <TableRow>
@@ -285,7 +315,7 @@ const OrcamentoBackofficeScreen = () => {
                         </IconButton>
                       </TableCell>
                       <TableCell>{row.id}</TableCell>
-                      <TableCell>-</TableCell>
+                      <TableCell>{hasPedidos ? row.pedidos[0].numero_pedido : '-'}</TableCell>
                       <TableCell>{row.cliente_octa_number}</TableCell>
                       <TableCell>{new Date(row.created_at).toLocaleDateString('pt-BR')}</TableCell>
                       <TableCell>
@@ -353,7 +383,7 @@ const OrcamentoBackofficeScreen = () => {
 
                           {/* botão da chamada da api */}
                           {}
-                          <Button variant="contained" color="primary" onClick={() => handleMakePedido(row)}> 
+                          <Button variant="contained" color="primary" onClick={() => handleMakePedido(row)} disabled={hasPedidos}> 
 
                             <IconCheck />
                           </Button>
