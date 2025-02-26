@@ -46,6 +46,7 @@ interface Pedidos {
   url_trello: string | null;
   created_at: string;
   updated_at: string;
+  codigo_rastreamento: string | null;
 }
 
 interface Produto {
@@ -96,14 +97,7 @@ const OrcamentoBackofficeScreen = () => {
   const [openLinkDialog, setOpenLinkDialog] = useState<boolean>(false);
   const [linkUniform, setLinkUniform] = useState<string>('');
   const [openUniformDialog, setOpenUniformDialog] = useState<boolean>(false);
-
   const [openEntregaDialog, setOpenEntregaDialog] = useState(false);
-  // const [entregaDialogData, setEntregaDialogData] = useState<{
-  //   statusKey: string;
-  //   rowId: number;
-  //   status: string;
-  //   approvedValue: string;
-  // } | null>(null);
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
   const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
@@ -138,9 +132,9 @@ const OrcamentoBackofficeScreen = () => {
   const handleCloseDialogEntrega = () => {
     setOpenEntregaDialog(false);
   };
-  
 
-  
+
+
   // Precisamos validar os botões pro caso de ja terem sido feitos clientes e pedidos.
   const handleMakePedido = async (orcamento: Orcamento) => {
 
@@ -175,31 +169,31 @@ const OrcamentoBackofficeScreen = () => {
       },
       body: JSON.stringify(orcamentoFormated),
     });
-      
+
     const data = await response.json()
 
-    if(data.retorno.status === "Erro"){
+    if (data.retorno.status === "Erro") {
       const registros = data.retorno.registros;
       const ultimoRegistro = registros[registros.length - 1];
       if (ultimoRegistro && ultimoRegistro.registro && ultimoRegistro.registro.erros && ultimoRegistro.registro.erros.length > 0) {
-      const ultimoErro = ultimoRegistro.registro.erros[ultimoRegistro.registro.erros.length - 1];
-      const mensagemErro = ultimoErro.erro;
-      alert('Pedido não salvo! ' + mensagemErro);
-      return
-    }
-    
-    refetch()
-    if (response.ok) {
-      alert('Pedido N°'+ orcamento.id + ' salvo com sucesso!');
-    } else {
-      const errorData = await response.json();
-      console.log(errorData.message)
-      alert(`Erro ao salvar: ${errorData.message}`);
+        const ultimoErro = ultimoRegistro.registro.erros[ultimoRegistro.registro.erros.length - 1];
+        const mensagemErro = ultimoErro.erro;
+        alert('Pedido não salvo! ' + mensagemErro);
+        return
+      }
+
+      refetch()
+      if (response.ok) {
+        alert('Pedido N°' + orcamento.id + ' salvo com sucesso!');
+      } else {
+        const errorData = await response.json();
+        console.log(errorData.message)
+        alert(`Erro ao salvar: ${errorData.message}`);
+      }
+
     }
 
   }
-
-}
   const handleSearch = () => {
     setSearchQuery(query); // Atualiza a busca
     setPage(1); // Reseta para a primeira página ao realizar uma nova busca
@@ -308,61 +302,93 @@ const OrcamentoBackofficeScreen = () => {
               <TableBody>
                 {dataOrcamentos?.data.map((row: Orcamento) => {
                   const listaProdutos = row.lista_produtos
-                  ? (typeof row.lista_produtos === 'string' ? JSON.parse(row.lista_produtos) : row.lista_produtos)
-                  : [];
-  
+                    ? (typeof row.lista_produtos === 'string' ? JSON.parse(row.lista_produtos) : row.lista_produtos)
+                    : [];
+
                   const texto = row.texto_orcamento;
                   const frete = texto?.match(regexFrete);
                   const prazo = texto?.match(regexPrazo);
                   console.log(prazo)
                   const entrega = texto?.match(regexEntrega);
                   const brinde = texto?.match(regexBrinde);
-  
+
                   const hasPedidos = row.pedidos && row.pedidos.length > 0;
+                  const idPedido = hasPedidos ? row.pedidos[0]?.id : null;
+                  const numeroPedido = hasPedidos ? row.pedidos[0]?.numero_pedido : null;
+                  const codigoRastreio = hasPedidos ? row.pedidos[0]?.codigo_rastreamento : null;
 
                   return (
-                  <React.Fragment key={row.id}>
-                    <TableRow>
-                      <TableCell>
-                        <IconButton
-                          aria-label="expand row"
-                          size="small"
-                          onClick={() => handleToggleRow(row.id)}
-                        >
-                          {openRow[row.id] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                        </IconButton>
-                      </TableCell>
-                      <TableCell>{row.id}</TableCell>
-                      <TableCell>{hasPedidos ? row.pedidos[0].numero_pedido : '-'}</TableCell>
-                      <TableCell>{row.cliente_octa_number}</TableCell>
-                      <TableCell>{new Date(row.created_at).toLocaleDateString('pt-BR')}</TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={1}>
-                          <IconButton aria-label="link">
-                            <IconButton
-                              aria-label="link"
-                              onClick={() => {
-                                setOpenLinkDialog(true);
-                                handleLinkOrcamento(row.id);
-                              }}
-                            >
-                              <IconLink />
+                    <React.Fragment key={row.id}>
+                      <TableRow>
+                        <TableCell>
+                          <IconButton
+                            aria-label="expand row"
+                            size="small"
+                            onClick={() => handleToggleRow(row.id)}
+                          >
+                            {openRow[row.id] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                          </IconButton>
+                        </TableCell>
+                        <TableCell>{row.id}</TableCell>
+                        <TableCell>{hasPedidos ? row.pedidos[0].numero_pedido : '-'}</TableCell>
+                        <TableCell>{row.cliente_octa_number}</TableCell>
+                        <TableCell>{new Date(row.created_at).toLocaleDateString('pt-BR')}</TableCell>
+                        <TableCell>
+                          <Stack direction="row" spacing={1}>
+                            <IconButton aria-label="link">
+                              <IconButton
+                                aria-label="link"
+                                onClick={() => {
+                                  setOpenLinkDialog(true);
+                                  handleLinkOrcamento(row.id);
+                                }}
+                              >
+                                <IconLink />
+                              </IconButton>
+                              <Dialog
+                                open={openLinkDialog}
+                                onClose={() => setOpenLinkDialog(false)}
+                              >
+                                <DialogTitle>Link do Orçamento</DialogTitle>
+                                <DialogContent>
+                                  <DialogContentText>
+                                    {linkOrcamento}
+                                  </DialogContentText>
+                                </DialogContent>
+                                <DialogActions>
+                                  <Button
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(linkOrcamento);
+                                      setOpenLinkDialog(false);
+                                    }}
+                                  >
+                                    Copiar Link
+                                  </Button>
+                                </DialogActions>
+                              </Dialog>
+
                             </IconButton>
+                            <Button variant="outlined" onClick={() => {
+                              setOpenUniformDialog(true);
+                              handleShortlinkUniform(row.id);
+                            }}>
+                              <IconShirtSport />
+                            </Button>
                             <Dialog
-                              open={openLinkDialog}
-                              onClose={() => setOpenLinkDialog(false)}
+                              open={openUniformDialog}
+                              onClose={() => setOpenUniformDialog(false)}
                             >
-                              <DialogTitle>Link do Orçamento</DialogTitle>
+                              <DialogTitle>Link do Uniforme</DialogTitle>
                               <DialogContent>
                                 <DialogContentText>
-                                  {linkOrcamento}
+                                  {linkUniform}
                                 </DialogContentText>
                               </DialogContent>
                               <DialogActions>
                                 <Button
                                   onClick={() => {
-                                    navigator.clipboard.writeText(linkOrcamento);
-                                    setOpenLinkDialog(false);
+                                    navigator.clipboard.writeText(linkUniform);
+                                    setOpenUniformDialog(false);
                                   }}
                                 >
                                   Copiar Link
@@ -370,273 +396,250 @@ const OrcamentoBackofficeScreen = () => {
                               </DialogActions>
                             </Dialog>
 
-                          </IconButton>
-                          <Button variant="outlined" onClick={() => {
-                            setOpenUniformDialog(true);
-                            handleShortlinkUniform(row.id);
-                          }}>
-                            <IconShirtSport />
-                          </Button>
-                          <Dialog
-                            open={openUniformDialog}
-                            onClose={() => setOpenUniformDialog(false)}
-                          >
-                            <DialogTitle>Link do Uniforme</DialogTitle>
-                            <DialogContent>
-                              <DialogContentText>
-                                {linkUniform}
-                              </DialogContentText>
-                            </DialogContent>
-                            <DialogActions>
-                              <Button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(linkUniform);
-                                  setOpenUniformDialog(false);
-                                }}
-                              >
-                                Copiar Link
-                              </Button>
-                            </DialogActions>
-                          </Dialog>
+                            {/* botão da chamada da api */}
+                            <Button variant="contained" color="primary" onClick={() => handleMakePedido(row)} disabled={hasPedidos}>
+                              <IconCheck />
+                            </Button>
 
-                          {/* botão da chamada da api */}
-                          <Button variant="contained" color="primary" onClick={() => handleMakePedido(row)} disabled={hasPedidos}> 
-                            <IconCheck />
-                          </Button>
-                          
-                          {/* botão para abrir o dialog de pegar o codigo de rastreio */}
-                          <Button color="primary" variant="contained" onClick={handleOpenDialogEntrega}>
-                              <IconTruckDelivery/>
-                          </Button>
-                          {/* pega o dialog como um componente */}
-                          <DialogEntrega
-                            dialogOpen={openEntregaDialog}
-                            handleCloseDialog={handleCloseDialogEntrega}
-                          />        
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
+                            {/* botão para abrir o dialog de pegar o codigo de rastreio */}
+                            <Button color="primary" variant="contained" onClick={handleOpenDialogEntrega} disabled={!hasPedidos}>
+                              <IconTruckDelivery />
+                            </Button>
+                            {/* abre o componenete dialog Entrega */}
+                            <DialogEntrega
+                              dialogOpen={openEntregaDialog}
+                              handleCloseDialog={handleCloseDialogEntrega}
+                              dialogData={{
+                                idPedido,
+                                numeroPedido,
+                                codigoRastreio
+                              }}
+                            />
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
 
 
-                    <TableRow>
-                      {/* colSpan deve ter o mesmo número que o número de cabeçalhos da tabela, no caso 16 */}
-                      <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={16}>
-                        <Collapse in={openRow[row.id]} timeout="auto" unmountOnExit>
-                          <Box margin={1}>
-                            <Table size="small" aria-label="detalhes">
-                              <TableBody>
-                               <TableRow>
-                                  <TableCell sx={{ border: 'none' }} colSpan={16}>
-                                    <strong>Lista de Produtos</strong>
-                                    <TableHead>
-                                      <TableRow>
-                                        <TableCell></TableCell>
-                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                          quantidade:
-                                        </TableCell>
-                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                          Preço:
-                                        </TableCell>
-                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                          Tamanho:
-                                        </TableCell>
-                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                          Peso:
-                                        </TableCell>
-                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                          Prazo:
-                                        </TableCell>
-                                      </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                      {listaProdutos.length > 0 ? (
-                                        listaProdutos.map((produto:Produto, index: number) => (
-                                        <TableRow key={produto.id || index}>
-                                            <TableCell sx={{ fontWeight: 'bold', padding: '8px' }} colSpan={1}>
-                                              {produto.nome}
-                                            </TableCell>
-                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                              {produto.quantidade}
-                                            </TableCell>
-                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                              {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                            </TableCell>
-                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                              {produto.altura} x {produto.largura} x {produto.comprimento} cm
-                                            </TableCell>
-                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                              {produto.peso} kg
-                                            </TableCell>
-                                            <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                              {produto.prazo} dias
-                                            </TableCell>
-                                          </TableRow>
+                      <TableRow>
+                        {/* colSpan deve ter o mesmo número que o número de cabeçalhos da tabela, no caso 16 */}
+                        <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={16}>
+                          <Collapse in={openRow[row.id]} timeout="auto" unmountOnExit>
+                            <Box margin={1}>
+                              <Table size="small" aria-label="detalhes">
+                                <TableBody>
+                                  <TableRow>
+                                    <TableCell sx={{ border: 'none' }} colSpan={16}>
+                                      <strong>Lista de Produtos</strong>
+                                      <TableHead>
+                                        <TableRow>
+                                          <TableCell></TableCell>
+                                          <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                            quantidade:
+                                          </TableCell>
+                                          <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                            Preço:
+                                          </TableCell>
+                                          <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                            Tamanho:
+                                          </TableCell>
+                                          <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                            Peso:
+                                          </TableCell>
+                                          <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                            Prazo:
+                                          </TableCell>
+                                        </TableRow>
+                                      </TableHead>
+                                      <TableBody>
+                                        {listaProdutos.length > 0 ? (
+                                          listaProdutos.map((produto: Produto, index: number) => (
+                                            <TableRow key={produto.id || index}>
+                                              <TableCell sx={{ fontWeight: 'bold', padding: '8px' }} colSpan={1}>
+                                                {produto.nome}
+                                              </TableCell>
+                                              <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                                {produto.quantidade}
+                                              </TableCell>
+                                              <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                                {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                              </TableCell>
+                                              <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                                {produto.altura} x {produto.largura} x {produto.comprimento} cm
+                                              </TableCell>
+                                              <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                                {produto.peso} kg
+                                              </TableCell>
+                                              <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                                {produto.prazo} dias
+                                              </TableCell>
+                                            </TableRow>
                                           ))
                                         ) : (
-                                        <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
-                                      )}
-                                    </TableBody>
-                                  </TableCell>
-                                </TableRow>
+                                          <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
+                                        )}
+                                      </TableBody>
+                                    </TableCell>
+                                  </TableRow>
 
-                                {/* Texto do Orçamento */}
-                                <TableRow>
-                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                    Cliente:
-                                  </TableCell>
-                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.nome_cliente}</TableCell>
-                                </TableRow>
-
-                                {brinde !== null && (
-                                  <TableRow>
-                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                    Brinde:
-                                  </TableCell>
-                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{brinde}</TableCell>
-                                </TableRow>
-                                )}
-
-                                {entrega !== null && (
-                                  <TableRow>
-                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                    Entrega:
-                                  </TableCell>
-                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{entrega}</TableCell>
-                                </TableRow>
-                                )}
-                                {prazo !== null && (
-                                  <TableRow>
-                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                    Prazo:
-                                  </TableCell>
-                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{prazo}</TableCell>
-                                </TableRow>
-                                )}
-
-                                {frete !== null && (
-                                  <TableRow>
-                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                    Frete:
-                                  </TableCell>
-                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{frete}</TableCell>
-                                </TableRow>
-                                )}
-
-                                {/* Endereço CEP */}
-                                <TableRow>
-                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                    Endereço CEP:
-                                  </TableCell>
-                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.endereco_cep}</TableCell>
-                                </TableRow>
-
-                                {/* Endereço */}
-                                <TableRow>
-                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                    Endereço:
-                                  </TableCell>
-                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.endereco}</TableCell>
-                                </TableRow>
-
-                                {/* Opção de Entrega */}
-                                <TableRow>
-                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                    Opção de Entrega:
-                                  </TableCell>
-                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.opcao_entrega}</TableCell>
-                                </TableRow>
-
-                                {/* Prazo da Opção de Entrega */}
-                                <TableRow>
-                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                    Prazo da Opção de Entrega:
-                                  </TableCell>
-                                  <TableCell sx={{ border: 'none' }} colSpan={1}>{row.prazo_opcao_entrega} dias</TableCell>
-                                </TableRow>
-
-                                {/* Preço da Opção de Entrega */}
-                                <TableRow>
-                                  <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                    Preço da Opção de Entrega:
-                                  </TableCell>
-                                  <TableCell sx={{ border: 'none' }} colSpan={1}>
-                                    {row.preco_opcao_entrega?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                  </TableCell>
-                                </TableRow>
-
-                                {/* Brinde */}
-                                {row.brinde !== null && (
+                                  {/* Texto do Orçamento */}
                                   <TableRow>
                                     <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                      Brinde:
+                                      Cliente:
                                     </TableCell>
-                                    <TableCell sx={{ border: 'none' }} colSpan={1}>{row.brinde === 1 ? 'Com Brinde' : 'Sem Brinde'}</TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>{row.nome_cliente}</TableCell>
                                   </TableRow>
-                                )}
 
-                                {/* Desconto */}
-                                {row.valor_desconto !== null && (
-                                  <>
+                                  {brinde !== null && (
                                     <TableRow>
                                       <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                        Desconto:
+                                        Brinde:
                                       </TableCell>
-                                      <TableCell sx={{ border: 'none' }} colSpan={1}>Com Desconto</TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>{brinde}</TableCell>
                                     </TableRow>
+                                  )}
 
+                                  {entrega !== null && (
                                     <TableRow>
                                       <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                        Tipo Descontado:
+                                        Entrega:
                                       </TableCell>
-                                      <TableCell sx={{ border: 'none' }} colSpan={1}>{row.tipo_desconto ?? 'Nenhum'}</TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>{entrega}</TableCell>
                                     </TableRow>
-
+                                  )}
+                                  {prazo !== null && (
                                     <TableRow>
                                       <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                        Valor Descontado:
+                                        Prazo:
                                       </TableCell>
-                                      <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {row.valor_desconto ?? 'Sem Desconto'}</TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>{prazo}</TableCell>
                                     </TableRow>
-                                  </>
-                                )}
+                                  )}
 
-                                {/* Data Antecipação */}
-                                {row.data_antecipa !== null && (
+                                  {frete !== null && (
+                                    <TableRow>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                        Frete:
+                                      </TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>{frete}</TableCell>
+                                    </TableRow>
+                                  )}
+
+                                  {/* Endereço CEP */}
                                   <TableRow>
                                     <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                      Data Antecipação:
+                                      Endereço CEP:
                                     </TableCell>
-                                    <TableCell sx={{ border: 'none' }} colSpan={1}>{row.data_antecipa ?? 'Sem Antecipação'}</TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>{row.endereco_cep}</TableCell>
                                   </TableRow>
-                                )}
 
-                                {/* Taxa Antecipação */}
-                                {row.taxa_antecipa !== null && (
+                                  {/* Endereço */}
                                   <TableRow>
                                     <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                      Taxa Antecipação:
+                                      Endereço:
                                     </TableCell>
-                                    <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {row.taxa_antecipa ?? 'Sem Taxa de Antecipação'}</TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>{row.endereco}</TableCell>
                                   </TableRow>
-                                )}
 
-                                {/* Total Orçamento */}
-                                {row.total_orcamento !== null && (
+                                  {/* Opção de Entrega */}
                                   <TableRow>
                                     <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                      Total Orçamento:
+                                      Opção de Entrega:
                                     </TableCell>
-                                    <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {row.total_orcamento ?? 'Sem total Definido'}</TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>{row.opcao_entrega}</TableCell>
                                   </TableRow>
-                                )}
-                              </TableBody>
-                            </Table>
-                          </Box>
-                        </Collapse>
-                      </TableCell>
-                    </TableRow>
-                  </React.Fragment>
-                )})}
+
+                                  {/* Prazo da Opção de Entrega */}
+                                  <TableRow>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                      Prazo da Opção de Entrega:
+                                    </TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>{row.prazo_opcao_entrega} dias</TableCell>
+                                  </TableRow>
+
+                                  {/* Preço da Opção de Entrega */}
+                                  <TableRow>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                      Preço da Opção de Entrega:
+                                    </TableCell>
+                                    <TableCell sx={{ border: 'none' }} colSpan={1}>
+                                      {row.preco_opcao_entrega?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                    </TableCell>
+                                  </TableRow>
+
+                                  {/* Brinde */}
+                                  {row.brinde !== null && (
+                                    <TableRow>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                        Brinde:
+                                      </TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>{row.brinde === 1 ? 'Com Brinde' : 'Sem Brinde'}</TableCell>
+                                    </TableRow>
+                                  )}
+
+                                  {/* Desconto */}
+                                  {row.valor_desconto !== null && (
+                                    <>
+                                      <TableRow>
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                          Desconto:
+                                        </TableCell>
+                                        <TableCell sx={{ border: 'none' }} colSpan={1}>Com Desconto</TableCell>
+                                      </TableRow>
+
+                                      <TableRow>
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                          Tipo Descontado:
+                                        </TableCell>
+                                        <TableCell sx={{ border: 'none' }} colSpan={1}>{row.tipo_desconto ?? 'Nenhum'}</TableCell>
+                                      </TableRow>
+
+                                      <TableRow>
+                                        <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                          Valor Descontado:
+                                        </TableCell>
+                                        <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {row.valor_desconto ?? 'Sem Desconto'}</TableCell>
+                                      </TableRow>
+                                    </>
+                                  )}
+
+                                  {/* Data Antecipação */}
+                                  {row.data_antecipa !== null && (
+                                    <TableRow>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                        Data Antecipação:
+                                      </TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>{row.data_antecipa ?? 'Sem Antecipação'}</TableCell>
+                                    </TableRow>
+                                  )}
+
+                                  {/* Taxa Antecipação */}
+                                  {row.taxa_antecipa !== null && (
+                                    <TableRow>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                        Taxa Antecipação:
+                                      </TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {row.taxa_antecipa ?? 'Sem Taxa de Antecipação'}</TableCell>
+                                    </TableRow>
+                                  )}
+
+                                  {/* Total Orçamento */}
+                                  {row.total_orcamento !== null && (
+                                    <TableRow>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                                        Total Orçamento:
+                                      </TableCell>
+                                      <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {row.total_orcamento ?? 'Sem total Definido'}</TableCell>
+                                    </TableRow>
+                                  )}
+                                </TableBody>
+                              </Table>
+                            </Box>
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    </React.Fragment>
+                  )
+                })}
               </TableBody>
             </Table>
           </TableContainer>
