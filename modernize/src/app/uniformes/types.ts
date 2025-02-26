@@ -8,6 +8,7 @@ export interface Column {
 export interface TableRow {
   id: number;
   data: string[];
+  confirmed: boolean;
 }
 
 export interface TableData {
