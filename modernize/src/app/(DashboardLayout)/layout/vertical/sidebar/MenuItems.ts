@@ -25,6 +25,7 @@ import {
   IconProgressCheck,
   IconCircleCheck,
   IconShirt,
+  IconShoppingBagEdit,
   IconBusinessplan,
   IconReportAnalytics,
 } from "@tabler/icons-react";
@@ -85,13 +86,19 @@ const getMenuItems = (): MenuitemsType[] => {
           id: uniqueId(),
           title: "Pacotes de Uniformes",
           icon: IconShirt,
-          href: "#"
+          href: "/apps/produtos/pacotes-uniformes"
         },
         {
           id: uniqueId(),
           title: "Bandeiras Oficiais",
           icon: IconFlag,
-          href: "#"
+          href: "/apps/produtos/bandeiras-oficiais"
+        },
+        {
+          id: uniqueId(),
+          title: "Produos Personalizados",
+          icon: IconShoppingBagEdit,
+          href: "/apps/produtos/produtos-personalizados"
         },
       ]
     },
