@@ -1,17 +1,18 @@
-import { FormControl, IconButton, MenuItem, TableCell, TableRow } from "@mui/material";
+import { FormControl, IconButton, MenuItem, TableCell, TableRow, Checkbox } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { StyledSelect, StyledTextField } from "./StyledComponents";
 import { Column } from "./types";
 
 interface UniformTableRowProps {
   letter: string;
-  row: { id: number; data: string[] };
+  row: { id: number; data: string[]; confirmed: boolean };
   columns: Column[];
   editingCell: { letter: string; rowId: number; colIndex: number } | null;
   editValue: string;
   onCellClick: (letter: string, rowId: number, colIndex: number, value: string) => void;
   onCellEdit: (letter: string, rowId: number, colIndex: number, value: string) => void;
   onDeleteRow: (letter: string, rowId: number) => void;
+  onToggleConfirm: (letter: string, rowId: number) => void;
   setEditValue: (value: string) => void;
   setEditingCell: (value: { letter: string; rowId: number; colIndex: number } | null) => void;
 }
@@ -25,6 +26,7 @@ export function UniformTableRow({
   onCellClick,
   onCellEdit,
   onDeleteRow,
+  onToggleConfirm,
   setEditValue,
   setEditingCell
 }: UniformTableRowProps) {
@@ -111,7 +113,12 @@ export function UniformTableRow({
           {renderCell(cell, index)}
         </TableCell>
       ))}
-      <TableCell>
+      <TableCell sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+        <Checkbox
+          checked={row.confirmed}
+          onChange={() => onToggleConfirm(letter, row.id)}
+          size="small"
+        />
         <IconButton
           onClick={() => onDeleteRow(letter, row.id)}
           color="error"
