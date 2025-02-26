@@ -28,6 +28,7 @@ interface UniformTableProps {
   onCellClick: (letter: string, rowId: number, colIndex: number, value: string) => void;
   onCellEdit: (letter: string, rowId: number, colIndex: number, value: string) => void;
   onDeleteRow: (letter: string, rowId: number) => void;
+  onToggleConfirm: (letter: string, rowId: number) => void;
   setEditValue: (value: string) => void;
   setEditingCell: (value: { letter: string; rowId: number; colIndex: number } | null) => void;
 }
@@ -42,10 +43,12 @@ export function UniformTable({
   onCellClick,
   onCellEdit,
   onDeleteRow,
+  onToggleConfirm,
   setEditValue,
   setEditingCell
 }: UniformTableProps) {
   const letterData = tableData[letter] || [];
+  const confirmedCount = letterData.filter(row => row.confirmed).length;
 
   return (
     <Accordion>
@@ -57,7 +60,7 @@ export function UniformTable({
         <Typography>
           Esboço {letter}{" "}
           <Typography component="span" color="text.secondary" sx={{ ml: 1 }}>
-            {letterData.length} jogador{letterData.length !== 1 ? 'es(as)' : '(a)'}
+            {letterData.length} jogador{letterData.length !== 1 ? 'es(as)' : '(a)'} - {confirmedCount} confirmado{confirmedCount !== 1 ? 's' : ''}
           </Typography>
         </Typography>
       </AccordionSummary>
@@ -108,6 +111,7 @@ export function UniformTable({
                     onCellClick={onCellClick}
                     onCellEdit={onCellEdit}
                     onDeleteRow={onDeleteRow}
+                    onToggleConfirm={onToggleConfirm}
                     setEditValue={setEditValue}
                     setEditingCell={setEditingCell}
                   />
