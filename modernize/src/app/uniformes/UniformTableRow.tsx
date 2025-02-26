@@ -3,6 +3,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { StyledSelect, StyledTextField } from "./StyledComponents";
 import { Column } from "./types";
 
+const ADULT_SIZES_M = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG', 'XXXG'];
+const ADULT_SIZES_F = ['P', 'M', 'G', 'GG', 'XG', 'XXG', 'XXXG'];
+const KIDS_SIZES = ['2', '4', '6', '8', '10', '12', '14', '16'];
+
 interface UniformTableRowProps {
   letter: string;
   row: { id: number; data: string[]; confirmed: boolean };
@@ -38,10 +42,20 @@ export function UniformTableRow({
 
     if (isEditing) {
       if (column.type === 'select') {
+        let options;
+        if (colIndex === 3 || colIndex === 4) {
+          const gender = row.data[0];
+          options = gender === 'I' ? KIDS_SIZES 
+                 : gender === 'F' ? ADULT_SIZES_F 
+                 : ADULT_SIZES_M;
+        } else {
+          options = column.options;
+        }
+
         return (
           <FormControl fullWidth size="small">
             <StyledSelect
-              value={cell || ''}
+              value={editValue}
               onChange={(e) => {
                 const value = e.target.value as string;
                 onCellEdit(letter, row.id, colIndex, value);
@@ -49,7 +63,7 @@ export function UniformTableRow({
               onBlur={() => setEditingCell(null)}
               autoFocus
             >
-              {column.options?.map((option: string) => (
+              {options?.map((option: string) => (
                 <MenuItem key={option} value={option}>
                   {option}
                 </MenuItem>

@@ -8,7 +8,9 @@ import { PageHeader } from "./PageHeader";
 import { UniformTable } from "./UniformTable";
 import { LoadingState } from "./LoadingState";
 
-const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG'];
+const ADULT_SIZES_M = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG', 'XXXG'];
+const ADULT_SIZES_F = ['P', 'M', 'G', 'GG', 'XG', 'XXG', 'XXXG'];
+const KIDS_SIZES = ['2', '4', '6', '8', '10', '12', '14', '16'];
 const LETTERS = Array.from({ length: 4 }, (_, i) => String.fromCharCode(65 + i));
 
 export default function UniformBackofficeScreen() {
@@ -23,8 +25,8 @@ export default function UniformBackofficeScreen() {
     { id: 1, name: "Gênero", type: "select", options: ['M', 'F', 'I'] },
     { id: 2, name: "Nome do jogador(a)", type: "text" },
     { id: 3, name: "Número", type: "number" },
-    { id: 4, name: "Tamanho da camisa", type: "select", options: SIZES },
-    { id: 5, name: "Tamanho do shorts", type: "select", options: SIZES },
+    { id: 4, name: "Tamanho da camisa", type: "select", options: ADULT_SIZES_M },
+    { id: 5, name: "Tamanho do shorts", type: "select", options: ADULT_SIZES_M },
   ]);
 
   const [tableData, setTableData] = useState<TableData>(
@@ -90,6 +92,31 @@ export default function UniformBackofficeScreen() {
         if (row.id === rowId) {
           const newData = [...row.data];
           newData[colIndex] = newValue;
+
+          if (colIndex === 0) {
+            let sizeOptions;
+            if (newValue === 'I') {
+              sizeOptions = KIDS_SIZES;
+            } else if (newValue === 'F') {
+              sizeOptions = ADULT_SIZES_F;
+            } else {
+              sizeOptions = ADULT_SIZES_M;
+            }
+            if (!sizeOptions.includes(newData[3])) newData[3] = '';
+            if (!sizeOptions.includes(newData[4])) newData[4] = '';
+          }
+
+          if (colIndex === 3 || colIndex === 4) {
+            const gender = newData[0];
+            const sizeOptions = gender === 'I' ? KIDS_SIZES 
+                            : gender === 'F' ? ADULT_SIZES_F 
+                            : ADULT_SIZES_M;
+            
+            if (!sizeOptions.includes(newValue)) {
+              newData[colIndex] = '';
+            }
+          }
+
           return { ...row, data: newData };
         }
         return row;
