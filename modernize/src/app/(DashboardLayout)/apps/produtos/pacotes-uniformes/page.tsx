@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { Typography, Card, CardContent, List, ListItem, ListItemText, Grid, Stack, Button } from "@mui/material";
 
-const ProdutosBuscarScreen = () => {
+const ProdutosPacotesUniformesScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   
   const { data: pacotesUniforme, isLoading: isLoadingPacotesUniforme } = useQuery({
@@ -69,4 +69,4 @@ const ProdutosBuscarScreen = () => {
   );
 };
 
-export default ProdutosBuscarScreen;
+export default ProdutosPacotesUniformesScreen;
