@@ -23,6 +23,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogActions from '@mui/material/DialogActions';
+import { IconTruckDelivery } from '@tabler/icons-react';
+import DialogEntrega from '@/app/components/dialogs/dialogDelivery';
 
 interface Pedidos {
   id: number;
@@ -95,6 +97,14 @@ const OrcamentoBackofficeScreen = () => {
   const [linkUniform, setLinkUniform] = useState<string>('');
   const [openUniformDialog, setOpenUniformDialog] = useState<boolean>(false);
 
+  const [openEntregaDialog, setOpenEntregaDialog] = useState(false);
+  // const [entregaDialogData, setEntregaDialogData] = useState<{
+  //   statusKey: string;
+  //   rowId: number;
+  //   status: string;
+  //   approvedValue: string;
+  // } | null>(null);
+
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
   const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
   const regexEntrega = /Previsão de Entrega:\s*([\d]{1,2} de [a-zA-Z]+ de \d{4})\s?\(([^)]+)\)/;
@@ -117,13 +127,21 @@ const OrcamentoBackofficeScreen = () => {
       }).then((res) => res.json()),
   });
 
-  useEffect(() => {
-    console.log(dataOrcamentos)
-  },[dataOrcamentos])
+  // useEffect(() => {
+  //   console.log(dataOrcamentos)
+  // },[dataOrcamentos])
 
+  const handleOpenDialogEntrega = () => {
+    setOpenEntregaDialog(true);
+  };
+
+  const handleCloseDialogEntrega = () => {
+    setOpenEntregaDialog(false);
+  };
+  
+
+  
   // Precisamos validar os botões pro caso de ja terem sido feitos clientes e pedidos.
-
-
   const handleMakePedido = async (orcamento: Orcamento) => {
 
     const orcamentoFormated = {
@@ -382,12 +400,19 @@ const OrcamentoBackofficeScreen = () => {
                           </Dialog>
 
                           {/* botão da chamada da api */}
-                          {}
                           <Button variant="contained" color="primary" onClick={() => handleMakePedido(row)} disabled={hasPedidos}> 
-
                             <IconCheck />
                           </Button>
-
+                          
+                          {/* botão para abrir o dialog de pegar o codigo de rastreio */}
+                          <Button color="primary" variant="contained" onClick={handleOpenDialogEntrega}>
+                              <IconTruckDelivery/>
+                          </Button>
+                          {/* pega o dialog como um componente */}
+                          <DialogEntrega
+                            dialogOpen={openEntregaDialog}
+                            handleCloseDialog={handleCloseDialogEntrega}
+                          />        
                         </Stack>
                       </TableCell>
                     </TableRow>
