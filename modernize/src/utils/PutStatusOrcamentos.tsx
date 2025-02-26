@@ -1,5 +1,5 @@
 
-const useStatusChangeAprovado = async (status: string, id: number) => {
+const useStatusChangeAprovado = async (status: string, id: string) => {
     const accessToken = typeof window !== "undefined" ? localStorage.getItem('accessToken') : null;
     
     if (!accessToken) {

@@ -7,11 +7,17 @@ import { useStatusChangeAprovado, useStatusChangeDesaprovado } from '@/utils/Put
 import { IconSearch } from "@tabler/icons-react";
 import CustomTextField from "../forms/theme-elements/CustomTextField";
 import useEtapa from "@/utils/useLastStatus";
-import { string } from "yup/lib/locale";
 // import StatusArray from "./statusArray";
+// vamos fazer tudo de um endpoint só e refazer toda a logica dessa bagaça.
 
-interface Orcamento {
-  id: number;
+
+
+
+
+interface Etapa {
+  id: string;
+  etapa: string;
+  orcamento_id: string;
   user_id: number;
   cliente_octa_number: string;
   nome_cliente: string | null;
@@ -43,12 +49,6 @@ interface Orcamento {
   status_producao_arte_final: string;
   status_aprovacao_esboco: string;
   status_aprovacao_arte_final: string;
-}
-
-interface Etapa {
-  etapa: string;
-  orcamento_id: string;
-  id: string;
 }
 
 interface Column {
@@ -147,20 +147,18 @@ const KanbanBoard: React.FC = () => {
   // const handleDragEnd = () => {
   //   setIsDragging(false);
   // };
-  const { data, isLoading, isError, refetch} = useFetchOrcamentos(searchQuery, page);
+  // const { data, isLoading, isError, refetch} = useFetchOrcamentos(searchQuery, page);
 
-  const dataEtapa = useEtapa()
+  const { etapas, loading, error} = useEtapa()
   
   // tem que mudar toda a logica desse campo aqui e pegar da rota do backend de outro arquivo. 
   // Mapeia os orçamentos para as colunas
   useEffect(() => {
-    console.log('dados: ', data)
-    if (Array.isArray(data)) {
-      // const newColumns = { ...initialColumns };
+    // console.log('dados: ', etapas)
+    if (etapas && Array.isArray(etapas)) {
       const newColumns: Columns = JSON.parse(JSON.stringify(initialColumns));
-
       // valida para os ultimos campos adicionados como aprovados.
-      data.forEach((etapa) => {
+      etapas.forEach((etapa) => {
         if(etapa.etapa == ""){
           newColumns.etapa1.items.push(etapa);
         }
@@ -219,7 +217,7 @@ const KanbanBoard: React.FC = () => {
 
       setColumns(newColumns);
     }
-  }, [data]);
+  }, [etapas]);
 
 
   // Atualiza quando `columns` mudar
@@ -264,7 +262,6 @@ const KanbanBoard: React.FC = () => {
   const handleSearch = () => {
     setSearchQuery(query); // Atualiza a busca
     setPage(1); // Reseta para a primeira página ao realizar uma nova busca
-    refetch()
   };
 
   const handleSearchKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -273,10 +270,10 @@ const KanbanBoard: React.FC = () => {
     }
   };
   
-  const handleAprovar = async (campo: string, rowId: number) =>{
+  const handleAprovar = async (campo: string, rowId: string) =>{
     try{
       await useStatusChangeAprovado(campo, rowId);
-      refetch();    
+      // refetch();    
     }
     catch(err){
       console.log(err)
@@ -293,7 +290,7 @@ const KanbanBoard: React.FC = () => {
   const handleDesaprovar = async (campo: string, rowId: number) =>{
     try{
       await useStatusChangeDesaprovado(campo, rowId);
-      refetch();
+      // refetch();
     }catch(err){
       console.log(err)
     }
@@ -324,7 +321,7 @@ const KanbanBoard: React.FC = () => {
 
 
 // arrumar os campos
-  const handleChangeStatus = async (orcamento: Orcamento, newColumnId: string) => {
+  const handleChangeStatus = async (orcamento: Etapa, newColumnId: string) => {
     const statusMap: Record<string, { campo: string; valor: string }> = {
       etapa1: { campo: "status", valor: "nao_aprovado" },
       etapa3: { campo: "status_faturamento", valor: "faturado" },
@@ -347,28 +344,49 @@ const KanbanBoard: React.FC = () => {
     try {
 
       console.log(statusInfo)
-      // Chama a API para atualizar o status no backend
-      handleAprovar(statusInfo.campo, orcamento.id);
   
       // Atualiza o estado da tela com o novo status
       setColumns((prevColumns) => {
         const newColumns = JSON.parse(JSON.stringify(prevColumns));
   
         // Remove o item da coluna atual
-        Object.keys(newColumns).forEach((colId) => {
-          newColumns[colId].items = newColumns[colId].items.filter((item: { id: number; }) => item.id !== orcamento.id);
-        });
-  
+        // Object.keys(newColumns).forEach((colId) => {
+        //   newColumns[colId].items = newColumns[colId].items.filter((item: { id: string; }) => item.id !== orcamento.orcamento_id);
+        // });
+        
         // Adiciona na nova coluna
-        newColumns[newColumnId].items.push({
-          ...orcamento,
-          [statusInfo.campo]: statusInfo.valor, // Atualiza o status no item
+        // newColumns[newColumnId].items.push({
+        //   ...orcamento,
+        //   [statusInfo.campo]: statusInfo.valor, // Atualiza o status no item
+        // });
+
+        // Encontrar e remover de todas as colunas
+        let itemRemovido: Etapa | null = null;
+        Object.keys(newColumns).forEach(colId => {
+          const index = newColumns[colId].items.findIndex(
+            (item: Etapa) => item.orcamento_id === orcamento.orcamento_id // Corrigir para usar id correto
+          );
+          if (index > -1) {
+            [itemRemovido] = newColumns[colId].items.splice(index, 1);
+          }
         });
+
+        // Atualizar e adicionar na nova coluna
+        if (itemRemovido) {
+          newColumns[newColumnId].items.push({
+            ...(itemRemovido as Etapa), // Type assertion aqui
+            [statusInfo.campo]: statusInfo.valor,
+            updated_at: new Date().toISOString()
+          });
+        }
   
         return newColumns;
       });
+
+      // Chama a API para atualizar o status no backend
+      handleAprovar(statusInfo.campo, orcamento.orcamento_id);
   
-      refetch(); // Recarrega os dados do backend
+      // refetch(); // Recarrega os dados do backend
     } catch (err) {
       console.log("Erro ao mudar status:", err);
     }
@@ -415,10 +433,10 @@ const KanbanBoard: React.FC = () => {
           // paginação
           // const handlePageChange = (_: React.ChangeEvent<unknown> | null, newPage: number) => {
           //   setCurrentPage((prev) => ({ ...prev, [columnId]: newPage }));
-          //   refetch(); // Atualiza os dados sempre que a página mudar
+            // refetch(); // Atualiza os dados sempre que a página mudar
           // };
 
-          console.log("Itens da coluna", columnId, paginatedItems, column);
+          // console.log("Itens da coluna", columnId, paginatedItems, column);  
           return (
             <Box  key={columnId} sx={{overflowY: 'initial'}}>
             <Droppable key={columnId} droppableId={columnId} isDropDisabled={false}>
@@ -440,7 +458,7 @@ const KanbanBoard: React.FC = () => {
                     gap: 1,
                   }}
                 >
-                  <Typography variant="h6" sx={{ textAlign: "start", paddingRight: 2, mb: 0.1, color: theme.palette.text.primary, overflow: "hidden", textOverflow: "ellipsis", paddingBottom: '8%'}}>
+                  <Typography variant="h6" sx={{ textAlign: "start", paddingRight: 2, mb: 0.1, color: theme.palette.text.primary, overflow: "hidden", overflowWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', hyphens: 'auto', paddingBottom: '8%'}}>
                     {column.name}
                   </Typography>
                   {/* box dos itens */}
@@ -458,67 +476,48 @@ const KanbanBoard: React.FC = () => {
                   >
 
                   {paginatedItems.map((item, index) => {
-                    const itemId = item.id.toString();
+                    const itemId = item.orcamento_id.toString();
+                    const total = item.total_orcamento;
+                    let statusEtapa = '';
 
-                    let statusAprovado = item.status || "Não Aprovado";
-                    let statusKey = "Status";
-
-                    if(item.status_aprovacao_arte_arena == "aprovado"){
-                      statusAprovado = item.status_aprovacao_arte_arena;
-                      statusKey = 'status_aprovacao_arte_arena';
+                    if(item.etapa == 'status_aprovacao_amostra_arte_arena'){
+                      statusEtapa = item.status_aprovacao_amostra_arte_arena
                     }
-                    
-                    if(item.status_faturamento == "faturado"){
-                      statusAprovado = item.status_faturamento;
-                      statusKey = 'status_faturamento';
+                    if(item.etapa == 'status_aprovacao_amostra_cliente'){
+                      statusEtapa = item.status_aprovacao_amostra_cliente
                     }
-                    if(item.status_pagamento == "pago"){
-                      statusAprovado = item.status_pagamento;
-                      statusKey = 'status_pagamento';
+                    if(item.etapa == 'status_aprovacao_arte_arena'){
+                      statusEtapa = item.status_aprovacao_arte_arena
                     }
-
-                    if(item.status_producao_arte_final == "aguardando_melhoria"){
-                      statusAprovado = item.status_producao_arte_final;
-                      statusKey = 'status_producao_arte_final';
+                    if(item.etapa == 'status_aprovacao_arte_final'){
+                      statusEtapa = item.status_aprovacao_arte_final
                     }
-                    if(item.status_aprovacao_arte_final == "aprovada"){
-                      statusAprovado = item.status_aprovacao_arte_final;
-                      statusKey = 'status_aprovacao_arte_final';
+                    if(item.etapa == 'status_aprovacao_cliente'){
+                      statusEtapa = item.status_aprovacao_cliente
                     }
-
-                    if(item.status_aprovacao_amostra_arte_arena == "aprovada"){
-                      statusAprovado = item.status_aprovacao_amostra_arte_arena;
-                      statusKey = 'status_aprovacao_amostra_arte_arena';
+                    if(item.etapa == 'status_aprovacao_esboco'){
+                      statusEtapa = item.status_aprovacao_esboco
                     }
-                    if(item.status_envio_amostra == "enviada"){
-                      statusAprovado = item.status_envio_amostra;
-                      statusKey = 'status_envio_amostra';
+                    if(item.etapa == 'status_envio_amostra'){
+                      statusEtapa = item.status_envio_amostra
                     }
-                    if(item.status_aprovacao_amostra_cliente == "aprovada"){
-                      statusAprovado = item.status_aprovacao_arte_arena;
-                      statusKey = 'status_aprovacao_arte_arena';
+                    if(item.etapa == 'status_envio_pedido'){
+                      statusEtapa = item.status_envio_pedido
                     }
-
-                    if(item.status_aprovacao_cliente == "aprovado"){
-                      statusAprovado = item.status_aprovacao_cliente;
-                      statusKey = 'status_aprovacao_arte_arena';
+                    if(item.etapa == 'status_faturamento'){
+                      statusEtapa = item.status_faturamento
                     }
-
-                    if(item.status_producao_esboco == "aguardando_melhoria"){
-                      statusAprovado = item.status_producao_esboco;
-                      statusKey = 'status_producao_esboco';
+                    if(item.etapa == 'status_pagamento'){
+                      statusEtapa = item.status_pagamento
                     }
-                    if(item.status_aprovacao_esboco == "aprovado"){
-                      statusAprovado = item.status_aprovacao_esboco;
-                      statusKey = 'status_aprovacao_esboco';
+                    if(item.etapa == 'status_producao_arte_final'){
+                      statusEtapa = item.status_producao_arte_final
                     }
-
-                    if(item.status_envio_pedido == "enviado"){
-                      statusAprovado = item.status_envio_pedido;
-                      statusKey = 'status_aprovacao_arte_arena';
+                    if(item.etapa == 'status_producao_esboco'){
+                      statusEtapa = item.status_producao_esboco
                     }
-
-                    const clienteNome = item.nome_cliente;
+              
+                    console.log("item: ",item)
 
                     return (
                       <Draggable key={itemId} draggableId={itemId} index={index} isDragDisabled={false}>
@@ -530,17 +529,16 @@ const KanbanBoard: React.FC = () => {
                             {...provided.dragHandleProps}
                             sx={{ marginBottom: 1, background: theme.palette.background.default, padding: 0, width: '100%', minHeight: '35%'}}
                           >
-                          {/* VAI SER AQUI QUE VAI TER A LOGICA DE PASSAR PRA UM STATUS OU OUTRO */}
                           {/* <button style={{backgroundColor: 'transparent', border: '0', cursor: 'pointer'}} onClick={() => handleOpenDialog(statusKey, item.id, statusAprovado)}> */}
-                            <CardContent sx={{textAlign: 'start', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
+                            <CardContent sx={{textAlign: 'start', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', }}>
                               <Typography variant="body1" sx={{ color: theme.palette.text.primary}}>
                                 #{itemId}
                               </Typography>
-                              <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 1 }}>
-                                {clienteNome}
+                              <Typography variant="body1" sx={{ color: theme.palette.text.primary, marginY: '5px'}}>
+                                R${total}
                               </Typography>
-                              <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 1,}}>
-                                Status {column.name}: <br/> <b>{statusAprovado = statusAprovado === "aguardando_melhoria" ? "aguardando melhoria" : statusAprovado}</b>
+                              <Typography variant="body1" sx={{ color: theme.palette.text.primary, overflowWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', hyphens: 'auto'}}>
+                                <b>{item.etapa.replace(/status/g, '').replace(/_/g, ' ')}</b> <br></br>{statusEtapa}
                               </Typography>
                             </CardContent>
                             {/* </button> */}

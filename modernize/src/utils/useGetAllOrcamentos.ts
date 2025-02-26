@@ -59,7 +59,7 @@ const useFetchOrcamentos = (searchQuery: string, page: number) => {
   
         const json = await res.json();
   
-        console.log(json);
+        // console.log(json);
   
         return Array.isArray(json.data) ? json.data : json; // Assume que a API retorna um objeto com "data"
       },
