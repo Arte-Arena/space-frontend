@@ -1,7 +1,8 @@
-import { FormControl, IconButton, MenuItem, TableCell, TableRow, Checkbox } from "@mui/material";
+import { FormControl, IconButton, MenuItem, TableCell, TableRow, Checkbox, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { StyledSelect, StyledTextField } from "./StyledComponents";
 import { Column } from "./types";
+import { useState } from "react";
 
 const ADULT_SIZES_M = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG', 'XXXG'];
 const ADULT_SIZES_F = ['P', 'M', 'G', 'GG', 'XG', 'XXG', 'XXXG'];
@@ -33,6 +34,21 @@ export function UniformTableRow({
   onToggleConfirm,
   setEditValue,
 }: UniformTableRowProps) {
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+
+  const handleDeleteClick = () => {
+    setOpenDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDeleteRow(letter, row.id);
+    setOpenDeleteDialog(false);
+  };
+
+  const handleCancelDelete = () => {
+    setOpenDeleteDialog(false);
+  };
+
   const renderCell = (cell: string, colIndex: number) => {
     const column = columns[colIndex];
     const isEditing = editingCell?.letter === letter &&
@@ -133,13 +149,35 @@ export function UniformTableRow({
           size="small"
         />
         <IconButton
-          onClick={() => onDeleteRow(letter, row.id)}
+          onClick={handleDeleteClick}
           color="error"
           size="small"
         >
           <DeleteIcon />
         </IconButton>
       </TableCell>
+
+      <Dialog
+        open={openDeleteDialog}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          Confirmar exclusão
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Tem certeza que deseja excluir este jogador?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>Cancelar</Button>
+          <Button onClick={handleConfirmDelete} color="error" autoFocus>
+            Excluir
+          </Button>
+        </DialogActions>
+      </Dialog>
     </TableRow>
   );
 }
