@@ -21,6 +21,7 @@ export default function UniformBackofficeScreen() {
   const [isError, setIsError] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [showValidationError, setShowValidationError] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [columns] = useState<Column[]>([
     { id: 1, name: "Gênero", type: "select", options: ['M', 'F', 'I'] },
     { id: 2, name: "Nome do jogador(a)", type: "text" },
@@ -108,10 +109,10 @@ export default function UniformBackofficeScreen() {
 
           if (colIndex === 3 || colIndex === 4) {
             const gender = newData[0];
-            const sizeOptions = gender === 'I' ? KIDS_SIZES 
-                            : gender === 'F' ? ADULT_SIZES_F 
-                            : ADULT_SIZES_M;
-            
+            const sizeOptions = gender === 'I' ? KIDS_SIZES
+              : gender === 'F' ? ADULT_SIZES_F
+                : ADULT_SIZES_M;
+
             if (!sizeOptions.includes(newValue)) {
               newData[colIndex] = '';
             }
@@ -126,12 +127,38 @@ export default function UniformBackofficeScreen() {
     setEditValue('');
   };
 
+  const validateData = () => {
+    const errors: string[] = [];
+
+    Object.entries(tableData).forEach(([letter, rows]) => {
+      rows.forEach((row, index) => {
+        row.data.forEach((value, colIndex) => {
+          if (!value || value.trim() === '') {
+            const fieldName = columns[colIndex].name;
+            const playerNumber = index + 1;
+            errors.push(`Esboço ${letter}: Jogador ${playerNumber} - Campo "${fieldName}" está vazio`);
+          }
+        });
+      });
+    });
+
+    return errors;
+  };
+
   const handleConfirm = async () => {
+    const validationErrors = validateData();
+    setValidationErrors(validationErrors);
+
     const allConfirmed = Object.values(tableData).every(rows =>
       rows.length === 0 || rows.every(row => row.confirmed)
     );
 
     if (!allConfirmed) {
+      setShowValidationError(true);
+      return;
+    }
+
+    if (validationErrors.length > 0) {
       setShowValidationError(true);
       return;
     }
@@ -164,9 +191,22 @@ export default function UniformBackofficeScreen() {
       </Alert>
 
       {showValidationError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Por favor, confirme todos os tamanhos marcando as caixas de seleção para cada jogador antes de prosseguir.
-        </Alert>
+        <>
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {validationErrors.length > 0 ? (
+              <>
+                <div>Por favor, corrija os seguintes erros:</div>
+                <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+                  {validationErrors.map((error, index) => (
+                    <li key={index}>{error}</li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              'Por favor, confirme todos os tamanhos marcando as caixas de seleção para cada jogador antes de prosseguir.'
+            )}
+          </Alert>
+        </>
       )}
 
       <PageHeader
