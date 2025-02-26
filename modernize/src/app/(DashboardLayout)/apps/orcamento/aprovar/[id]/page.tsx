@@ -28,7 +28,7 @@ const NumericFormatCustom = React.forwardRef<HTMLElement, NumericFormatProps>((p
 ));
 NumericFormatCustom.displayName = 'NumericFormatCustom';
 
-const OrcamentoBuscarScreen = ({ params }: { params: { id: string } }) => {
+const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }) => {
   const orcamentoId = params.id || null;
   // id para puxar os dados do orçamento.
   const id = parseFloat(params.id);
@@ -302,4 +302,4 @@ const OrcamentoBuscarScreen = ({ params }: { params: { id: string } }) => {
   );
 };
 
-export default OrcamentoBuscarScreen;
+export default OrcamentoAprovarEspecificoScreen;

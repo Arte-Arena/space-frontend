@@ -23,9 +23,10 @@ import {
   IconTool,
   IconBrandTrello,
   IconProgressCheck,
+  IconCircleCheck,
+  IconShirt,
   IconBusinessplan,
   IconReportAnalytics,
-  IconCircleCheckFilled
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -73,6 +74,26 @@ const getMenuItems = (): MenuitemsType[] => {
       title: "Produtos",
       icon: IconBrandProducthunt,
       href: "/apps/produtos/buscar",
+      children: [
+        {
+          id: uniqueId(),
+          title: "Buscar Produto",
+          icon: IconBrandProducthunt,
+          href: "/apps/produtos/buscar"
+        },
+        {
+          id: uniqueId(),
+          title: "Pacotes de Uniformes",
+          icon: IconShirt,
+          href: "#"
+        },
+        {
+          id: uniqueId(),
+          title: "Bandeiras Oficiais",
+          icon: IconFlag,
+          href: "#"
+        },
+      ]
     },
     {
       id: uniqueId(),
@@ -115,7 +136,7 @@ const getMenuItems = (): MenuitemsType[] => {
         {
           id: uniqueId(),
           title: "Aprovar Orçamento",
-          icon: IconCircleCheckFilled,
+          icon: IconCircleCheck,
           href: "/apps/orcamento/aprovar",
         },
         {
