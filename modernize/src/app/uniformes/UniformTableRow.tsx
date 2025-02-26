@@ -32,7 +32,6 @@ export function UniformTableRow({
   onDeleteRow,
   onToggleConfirm,
   setEditValue,
-  setEditingCell
 }: UniformTableRowProps) {
   const renderCell = (cell: string, colIndex: number) => {
     const column = columns[colIndex];
@@ -55,12 +54,12 @@ export function UniformTableRow({
         return (
           <FormControl fullWidth size="small">
             <StyledSelect
-              value={editValue}
+              value={cell || ''}
               onChange={(e) => {
                 const value = e.target.value as string;
+                setEditValue(value);
                 onCellEdit(letter, row.id, colIndex, value);
               }}
-              onBlur={() => setEditingCell(null)}
               autoFocus
             >
               {options?.map((option: string) => (
