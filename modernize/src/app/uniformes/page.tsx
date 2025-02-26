@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from "react";
-import { Box } from "@mui/material";
+import { Box, Alert } from "@mui/material";
 import { useSearchParams } from 'next/navigation';
 import { Column, TableData } from "./types";
 import { PageHeader } from "./PageHeader";
@@ -9,7 +9,7 @@ import { UniformTable } from "./UniformTable";
 import { LoadingState } from "./LoadingState";
 
 const SIZES = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG'];
-const LETTERS = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
+const LETTERS = Array.from({ length: 4 }, (_, i) => String.fromCharCode(65 + i));
 
 export default function UniformBackofficeScreen() {
   const searchParams = useSearchParams();
@@ -18,6 +18,7 @@ export default function UniformBackofficeScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [showValidationError, setShowValidationError] = useState(false);
   const [columns] = useState<Column[]>([
     { id: 1, name: "Gênero", type: "select", options: ['M', 'F', 'I'] },
     { id: 2, name: "Nome do jogador(a)", type: "text" },
@@ -30,7 +31,7 @@ export default function UniformBackofficeScreen() {
     LETTERS.reduce((acc, letter) => ({
       ...acc,
       [letter]: [
-        { id: 1, data: ["M", "John Smith", "10", "G", "M"] },
+        { id: 1, data: ["M", "John Smith", "10", "G", "M"], confirmed: false },
       ],
     }), {} as TableData)
   );
@@ -43,6 +44,7 @@ export default function UniformBackofficeScreen() {
     const newRow = {
       id: letterRows.length + 1,
       data: columns.map(() => ""),
+      confirmed: false,
     };
     setTableData({
       ...tableData,
@@ -54,6 +56,19 @@ export default function UniformBackofficeScreen() {
     setTableData((prevData) => ({
       ...prevData,
       [letter]: prevData[letter].filter((row) => row.id !== rowId),
+    }));
+  };
+
+  const handleToggleConfirm = (letter: string, rowId: number) => {
+    setShowValidationError(false);
+    setTableData((prevData) => ({
+      ...prevData,
+      [letter]: prevData[letter].map((row) => {
+        if (row.id === rowId) {
+          return { ...row, confirmed: !row.confirmed };
+        }
+        return row;
+      }),
     }));
   };
 
@@ -85,6 +100,16 @@ export default function UniformBackofficeScreen() {
   };
 
   const handleConfirm = async () => {
+    const allConfirmed = Object.values(tableData).every(rows =>
+      rows.length === 0 || rows.every(row => row.confirmed)
+    );
+
+    if (!allConfirmed) {
+      setShowValidationError(true);
+      return;
+    }
+
+    setShowValidationError(false);
     setIsLoading(true);
     setIsError(false);
     try {
@@ -107,10 +132,20 @@ export default function UniformBackofficeScreen() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <PageHeader 
-        orderId={orderId} 
-        onConfirm={handleConfirm} 
-        isSuccess={isSuccess} 
+      <Alert severity="warning" sx={{ mb: 3 }}>
+        Importante: Para cada jogador, você deve confirmar os tamanhos escolhidos marcando a caixa de seleção correspondente. Todos os jogadores devem ter seus tamanhos confirmados antes de prosseguir.
+      </Alert>
+
+      {showValidationError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Por favor, confirme todos os tamanhos marcando as caixas de seleção para cada jogador antes de prosseguir.
+        </Alert>
+      )}
+
+      <PageHeader
+        orderId={orderId}
+        onConfirm={handleConfirm}
+        isSuccess={isSuccess}
         isLoading={isLoading}
         isError={isError}
       />
@@ -130,6 +165,7 @@ export default function UniformBackofficeScreen() {
             onCellClick={handleCellClick}
             onCellEdit={handleCellEdit}
             onDeleteRow={handleDeleteRow}
+            onToggleConfirm={handleToggleConfirm}
             setEditValue={setEditValue}
             setEditingCell={setEditingCell}
           />
