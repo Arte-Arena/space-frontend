@@ -3,7 +3,6 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
-  Button,
   Paper,
   Table,
   TableBody,
@@ -13,7 +12,6 @@ import {
   TableRow,
   Typography
 } from "@mui/material";
-import AddIcon from '@mui/icons-material/Add';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Column, TableData } from "./types";
 import { UniformTableRow } from "./UniformTableRow";
@@ -24,10 +22,8 @@ interface UniformTableProps {
   tableData: TableData;
   editingCell: { letter: string; rowId: number; colIndex: number } | null;
   editValue: string;
-  onAddRow: (letter: string) => void;
   onCellClick: (letter: string, rowId: number, colIndex: number, value: string) => void;
   onCellEdit: (letter: string, rowId: number, colIndex: number, value: string) => void;
-  onDeleteRow: (letter: string, rowId: number) => void;
   onToggleConfirm: (letter: string, rowId: number) => void;
   setEditValue: (value: string) => void;
   setEditingCell: (value: { letter: string; rowId: number; colIndex: number } | null) => void;
@@ -39,10 +35,8 @@ export function UniformTable({
   tableData,
   editingCell,
   editValue,
-  onAddRow,
   onCellClick,
   onCellEdit,
-  onDeleteRow,
   onToggleConfirm,
   setEditValue,
   setEditingCell
@@ -65,17 +59,6 @@ export function UniformTable({
         </Typography>
       </AccordionSummary>
       <AccordionDetails>
-        <Box sx={{ mb: 2 }}>
-          <Button
-            variant="contained"
-            color="secondary"
-            startIcon={<AddIcon />}
-            onClick={() => onAddRow(letter)}
-          >
-            Adicionar nova linha
-          </Button>
-        </Box>
-
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -94,7 +77,7 @@ export function UniformTable({
                   <TableCell colSpan={columns.length + 1}>
                     <Box sx={{ py: 3, textAlign: 'center' }}>
                       <Typography variant="body1" color="text.secondary">
-                        Nenhum jogador adicionado. Clique no botão "Adicionar nova linha" para começar.
+                        Nenhum jogador cadastrado neste esboço.
                       </Typography>
                     </Box>
                   </TableCell>
@@ -110,7 +93,6 @@ export function UniformTable({
                     editValue={editValue}
                     onCellClick={onCellClick}
                     onCellEdit={onCellEdit}
-                    onDeleteRow={onDeleteRow}
                     onToggleConfirm={onToggleConfirm}
                     setEditValue={setEditValue}
                     setEditingCell={setEditingCell}

@@ -1,8 +1,6 @@
-import { FormControl, IconButton, MenuItem, TableCell, TableRow, Checkbox, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from "@mui/material";
-import DeleteIcon from '@mui/icons-material/Delete';
+import { FormControl, MenuItem, TableCell, TableRow, Checkbox } from "@mui/material";
 import { StyledSelect, StyledTextField } from "./StyledComponents";
 import { Column } from "./types";
-import { useState } from "react";
 
 const ADULT_SIZES_M = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG', 'XXXG'];
 const ADULT_SIZES_F = ['P', 'M', 'G', 'GG', 'XG', 'XXG', 'XXXG'];
@@ -16,7 +14,6 @@ interface UniformTableRowProps {
   editValue: string;
   onCellClick: (letter: string, rowId: number, colIndex: number, value: string) => void;
   onCellEdit: (letter: string, rowId: number, colIndex: number, value: string) => void;
-  onDeleteRow: (letter: string, rowId: number) => void;
   onToggleConfirm: (letter: string, rowId: number) => void;
   setEditValue: (value: string) => void;
   setEditingCell: (value: { letter: string; rowId: number; colIndex: number } | null) => void;
@@ -30,25 +27,9 @@ export function UniformTableRow({
   editValue,
   onCellClick,
   onCellEdit,
-  onDeleteRow,
   onToggleConfirm,
   setEditValue,
 }: UniformTableRowProps) {
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-
-  const handleDeleteClick = () => {
-    setOpenDeleteDialog(true);
-  };
-
-  const handleConfirmDelete = () => {
-    onDeleteRow(letter, row.id);
-    setOpenDeleteDialog(false);
-  };
-
-  const handleCancelDelete = () => {
-    setOpenDeleteDialog(false);
-  };
-
   const renderCell = (cell: string, colIndex: number) => {
     const column = columns[colIndex];
     const isEditing = editingCell?.letter === letter &&
@@ -142,42 +123,13 @@ export function UniformTableRow({
           {renderCell(cell, index)}
         </TableCell>
       ))}
-      <TableCell sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+      <TableCell>
         <Checkbox
           checked={row.confirmed}
           onChange={() => onToggleConfirm(letter, row.id)}
           size="small"
         />
-        <IconButton
-          onClick={handleDeleteClick}
-          color="error"
-          size="small"
-        >
-          <DeleteIcon />
-        </IconButton>
       </TableCell>
-
-      <Dialog
-        open={openDeleteDialog}
-        onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Confirmar exclusão
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Tem certeza que deseja excluir este jogador?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete}>Cancelar</Button>
-          <Button onClick={handleConfirmDelete} color="error" autoFocus>
-            Excluir
-          </Button>
-        </DialogActions>
-      </Dialog>
     </TableRow>
   );
 }
