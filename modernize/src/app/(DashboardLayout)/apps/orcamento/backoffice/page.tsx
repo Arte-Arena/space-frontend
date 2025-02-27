@@ -11,7 +11,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
-import { Pagination, Stack, Button, Box, Typography, Collapse } from '@mui/material';
+import { Pagination, Stack, Button, Box, Typography, Collapse, FormControlLabel, Checkbox, TextField, useTheme } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { IconSearch, IconLink, IconShirtSport, IconCheck } from '@tabler/icons-react';
@@ -24,7 +24,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogActions from '@mui/material/DialogActions';
 import { IconTruckDelivery } from '@tabler/icons-react';
-import DialogEntrega from '@/app/components/dialogs/dialogDelivery';
+
 
 interface Pedidos {
   id: number;
@@ -98,6 +98,11 @@ const OrcamentoBackofficeScreen = () => {
   const [linkUniform, setLinkUniform] = useState<string>('');
   const [openUniformDialog, setOpenUniformDialog] = useState<boolean>(false);
   const [openEntregaDialog, setOpenEntregaDialog] = useState(false);
+  const [selectedPedido, setSelectedPedido] = useState<Pedidos | null>(null);
+  const [showInput, setShowInput] = useState(false);
+  const [inputValueEntrega, setInputValueEntrega] = useState(selectedPedido?.codigo_rastreamento || '');
+  const [hasEntrega, setHasEntrega] = useState(false);
+  const theme = useTheme(); 
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
   const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
@@ -108,6 +113,22 @@ const OrcamentoBackofficeScreen = () => {
   if (!accessToken) {
     throw new Error('Access token is missing');
   }
+
+  const handleFetchPedido = async (id: number) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedidos/get-pedido-orcamento/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const data = await response.json();
+      setSelectedPedido(data);
+    } catch (error) {
+      console.error('Error fetching pedido:', error);
+    }
+  };
 
   const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos, refetch } = useQuery({
     queryKey: ['budgetData', searchQuery, page],
@@ -121,11 +142,12 @@ const OrcamentoBackofficeScreen = () => {
       }).then((res) => res.json()),
   });
 
-  // useEffect(() => {
-  //   console.log(dataOrcamentos)
-  // },[dataOrcamentos])
-
-  const handleOpenDialogEntrega = () => {
+  const handleOpenDialogEntrega = (id: number) => {
+    console.log('id passado no handle open : ', id)
+    handleFetchPedido(id);
+    if(selectedPedido?.codigo_rastreamento !== null && selectedPedido?.codigo_rastreamento !== undefined){
+      setHasEntrega(true);
+    }
     setOpenEntregaDialog(true);
   };
 
@@ -133,7 +155,38 @@ const OrcamentoBackofficeScreen = () => {
     setOpenEntregaDialog(false);
   };
 
-
+  const handleSubmmitEntrega = (inputValueEntrega: string) => {
+    fetch(
+      `${process.env.NEXT_PUBLIC_API}/api/pedidos/pedido-codigo-rastreamento/`, // Corrigi a URL, parecia estar errada
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          pedido_id: selectedPedido?.id,
+          codigo_rastreamento: inputValueEntrega,
+        }),
+      }
+    )
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Erro ao enviar código de rastreamento'); // Corrigi erro de digitação na mensagem
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log('Código de rastreamento enviado com sucesso:', data);
+        handleFetchPedido(selectedPedido?.orcamento_id || 0);
+        setHasEntrega(true);
+      })
+      .catch((error) => {
+        console.error(error.message);
+        alert(error.message);
+      });
+  };
+  
 
   // Precisamos validar os botões pro caso de ja terem sido feitos clientes e pedidos.
   const handleMakePedido = async (orcamento: Orcamento) => {
@@ -302,20 +355,19 @@ const OrcamentoBackofficeScreen = () => {
               <TableBody>
                 {dataOrcamentos?.data.map((row: Orcamento) => {
                   const listaProdutos = row.lista_produtos
-                    ? (typeof row.lista_produtos === 'string' ? JSON.parse(row.lista_produtos) : row.lista_produtos)
-                    : [];
+                  ? typeof row.lista_produtos === 'string'
+                    ? JSON.parse(row.lista_produtos)
+                    : row.lista_produtos
+                  : [];
 
                   const texto = row.texto_orcamento;
                   const frete = texto?.match(regexFrete);
                   const prazo = texto?.match(regexPrazo);
-                  console.log(prazo)
                   const entrega = texto?.match(regexEntrega);
                   const brinde = texto?.match(regexBrinde);
 
                   const hasPedidos = row.pedidos && row.pedidos.length > 0;
-                  const idPedido = hasPedidos ? row.pedidos[0]?.id : null;
-                  const numeroPedido = hasPedidos ? row.pedidos[0]?.numero_pedido : null;
-                  const codigoRastreio = hasPedidos ? row.pedidos[0]?.codigo_rastreamento : null;
+
 
                   return (
                     <React.Fragment key={row.id}>
@@ -402,19 +454,60 @@ const OrcamentoBackofficeScreen = () => {
                             </Button>
 
                             {/* botão para abrir o dialog de pegar o codigo de rastreio */}
-                            <Button color="primary" variant="contained" onClick={handleOpenDialogEntrega} disabled={!hasPedidos}>
+                            <Button color="primary" variant="contained" onClick={() => handleOpenDialogEntrega(row.id)} disabled={!hasPedidos}>
+                              {/* abre o componenete dialog Entrega */}
                               <IconTruckDelivery />
+                              <Dialog open={openEntregaDialog} onClose={handleCloseDialogEntrega}>
+                                <DialogTitle>
+                                 Pedido N°{selectedPedido?.numero_pedido}
+                                </DialogTitle>
+                                <DialogContent>
+                                  <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
+                                    <DialogContentText>Página do rastreio</DialogContentText>
+                                    <Button variant="contained" color="success" disabled={!hasEntrega}>
+                                      <IconTruckDelivery />
+                                    </Button>
+                                    <Button variant="contained" color="success" disabled={!hasEntrega} sx={{color: theme.palette.text.primary}}>
+                                      Link do rastreio
+                                    </Button>
+                                  </Stack>
+                                  <FormControlLabel
+                                    control={
+                                      <Checkbox
+                                        checked={showInput}
+                                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                          setShowInput(event.target.checked);
+                                        }}
+                                      />
+                                    }
+                                    label="Adicionar Código de rastreio"
+                                  />
+                                  {showInput && (
+                                    <Stack spacing={2} sx={{ mt: 2 }}>
+                                      <TextField
+                                        label="Código de Rastreamento"
+                                        value={inputValueEntrega}
+                                        onChange={(event) => setInputValueEntrega(event.target.value)}
+                                      />
+                                      <Button
+                                        variant="contained"
+                                        color="primary"
+                                        disabled={hasEntrega}
+                                        onClick={() => handleSubmmitEntrega(inputValueEntrega)}
+                                      >
+                                        Enviar
+                                      </Button>
+                                    </Stack>
+                                  )}
+                                </DialogContent>
+                                <DialogActions>
+                                  <Button onClick={handleCloseDialogEntrega} color="primary">
+                                    Fechar
+                                  </Button>
+                                </DialogActions>
+                              </Dialog>
                             </Button>
-                            {/* abre o componenete dialog Entrega */}
-                            <DialogEntrega
-                              dialogOpen={openEntregaDialog}
-                              handleCloseDialog={handleCloseDialogEntrega}
-                              dialogData={{
-                                idPedido,
-                                numeroPedido,
-                                codigoRastreio
-                              }}
-                            />
+
                           </Stack>
                         </TableCell>
                       </TableRow>
@@ -652,7 +745,6 @@ const OrcamentoBackofficeScreen = () => {
               onChange={handlePageChange}
             />
           </Stack>
-
         </>
       </ParentCard>
     </PageContainer>
