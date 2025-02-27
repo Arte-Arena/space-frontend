@@ -120,10 +120,10 @@ const ProdutosPacotesUniformesScreen = () => {
               <CircularProgress />
             </Stack>
           ) : (
-            <Grid container spacing={2}>
+            <Grid container spacing={2} style={{ display: 'flex' }}>
               {pacotesUniforme?.map((pacote) => (
-                <Grid item xs={12} sm={6} md={4} key={pacote.id}>
-                  <Card>
+                <Grid item xs={12} sm={6} md={4} key={pacote.id} style={{ display: 'flex' }}>
+                  <Card style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <CardContent>
                       <Typography gutterBottom variant="h5" component="div">
                         {pacote.nome}

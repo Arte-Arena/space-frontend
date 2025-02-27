@@ -60,7 +60,7 @@ interface Orcamento {
   total_orcamento: number;
 }
 
-const OrcamentoBuscarScreen = () => {
+const OrcamentoEditarScreen = () => {
   const router = useRouter();
 
   const [query, setQuery] = useState<string>('');
@@ -493,5 +493,5 @@ const OrcamentoBuscarScreen = () => {
 }
 
 
-export default OrcamentoBuscarScreen;
+export default OrcamentoEditarScreen;
 
