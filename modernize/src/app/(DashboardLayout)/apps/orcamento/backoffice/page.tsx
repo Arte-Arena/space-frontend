@@ -412,6 +412,7 @@ const OrcamentoBackofficeScreen = () => {
                                     inputProps={{ maxLength: 1 }}
                                     error={!!error}
                                     helperText={error}
+                                    disabled={isLinkGenerated}
                                   />
                                   <CustomTextField
                                     label="Quantidade"
@@ -419,6 +420,7 @@ const OrcamentoBackofficeScreen = () => {
                                     value={currentQuantity}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentQuantity(parseInt(e.target.value) || 1)}
                                     inputProps={{ min: 1 }}
+                                    disabled={isLinkGenerated}
                                   />
                                   <Button
                                     variant="contained"
@@ -436,6 +438,7 @@ const OrcamentoBackofficeScreen = () => {
                                       setCurrentQuantity(1);
                                       setError('');
                                     }}
+                                    disabled={isLinkGenerated}
                                   >
                                     Adicionar
                                   </Button>
@@ -462,6 +465,7 @@ const OrcamentoBackofficeScreen = () => {
                                                 onClick={() => {
                                                   setSketches(sketches.filter(s => s.letter !== sketch.letter));
                                                 }}
+                                                disabled={isLinkGenerated}
                                               >
                                                 <IconTrash size={18} />
                                               </IconButton>
