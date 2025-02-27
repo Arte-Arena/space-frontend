@@ -14,7 +14,7 @@ import IconButton from '@mui/material/IconButton';
 import { Pagination, Stack, Button, Box, Typography, Collapse } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import { IconSearch, IconLink, IconShirtSport, IconCheck } from '@tabler/icons-react';
+import { IconSearch, IconLink, IconShirtSport, IconCheck, IconTrash } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -85,6 +85,11 @@ interface Orcamento {
   pedidos: Pedidos[];
 }
 
+interface Sketch {
+  letter: string;
+  quantity: number;
+}
+
 const OrcamentoBackofficeScreen = () => {
   const [query, setQuery] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -94,6 +99,10 @@ const OrcamentoBackofficeScreen = () => {
   const [openLinkDialog, setOpenLinkDialog] = useState<boolean>(false);
   const [linkUniform, setLinkUniform] = useState<string>('');
   const [openUniformDialog, setOpenUniformDialog] = useState<boolean>(false);
+  const [sketches, setSketches] = useState<Sketch[]>([]);
+  const [currentQuantity, setCurrentQuantity] = useState<number>(1);
+  const [currentLetter, setCurrentLetter] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
   const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
@@ -363,17 +372,93 @@ const OrcamentoBackofficeScreen = () => {
                             open={openUniformDialog}
                             onClose={() => setOpenUniformDialog(false)}
                           >
-                            <DialogTitle>Link do Uniforme</DialogTitle>
+                            <DialogTitle>Configuração de esboços de uniforme</DialogTitle>
                             <DialogContent>
-                              <DialogContentText>
-                                {linkUniform}
-                              </DialogContentText>
+                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 2 }}>
+                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                  <CustomTextField
+                                    label="Letra do Esboço (A-Z)"
+                                    value={currentLetter}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                      const value = e.target.value.toUpperCase();
+                                      if (value === '' || /^[A-Z]$/.test(value)) {
+                                        setCurrentLetter(value);
+                                        setError('');
+                                      }
+                                    }}
+                                    inputProps={{ maxLength: 1 }}
+                                    error={!!error}
+                                    helperText={error}
+                                  />
+                                  <CustomTextField
+                                    label="Quantidade"
+                                    type="number"
+                                    value={currentQuantity}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentQuantity(parseInt(e.target.value) || 1)}
+                                    inputProps={{ min: 1 }}
+                                  />
+                                  <Button
+                                    variant="contained"
+                                    onClick={() => {
+                                      if (!currentLetter) {
+                                        setError('Selecione uma letra');
+                                        return;
+                                      }
+                                      if (sketches.some(s => s.letter === currentLetter)) {
+                                        setError('Esta letra já foi utilizada');
+                                        return;
+                                      }
+                                      setSketches([...sketches, { letter: currentLetter, quantity: currentQuantity }]);
+                                      setCurrentLetter('');
+                                      setCurrentQuantity(1);
+                                      setError('');
+                                    }}
+                                  >
+                                    Adicionar
+                                  </Button>
+                                </Box>
+
+                                {sketches.length > 0 && (
+                                  <TableContainer>
+                                    <Table size="small">
+                                      <TableHead>
+                                        <TableRow>
+                                          <TableCell>Esboço</TableCell>
+                                          <TableCell>Quantidade</TableCell>
+                                          <TableCell>Ações</TableCell>
+                                        </TableRow>
+                                      </TableHead>
+                                      <TableBody>
+                                        {sketches.map((sketch) => (
+                                          <TableRow key={sketch.letter}>
+                                            <TableCell>Esboço {sketch.letter}</TableCell>
+                                            <TableCell>{sketch.quantity}</TableCell>
+                                            <TableCell>
+                                              <IconButton
+                                                size="small"
+                                                onClick={() => {
+                                                  setSketches(sketches.filter(s => s.letter !== sketch.letter));
+                                                }}
+                                              >
+                                                <IconTrash size={18} />
+                                              </IconButton>
+                                            </TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  </TableContainer>
+                                )}
+                              </Box>
                             </DialogContent>
                             <DialogActions>
                               <Button
                                 onClick={() => {
                                   navigator.clipboard.writeText(linkUniform);
                                   setOpenUniformDialog(false);
+                                  setSketches([]);
+                                  setCurrentLetter('');
+                                  setCurrentQuantity(1);
                                 }}
                               >
                                 Copiar Link
