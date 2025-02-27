@@ -197,6 +197,7 @@ const getMenuItems = (): MenuitemsType[] => {
                   id: uniqueId(),
                   title: "Copiar Link",
                   icon: IconDeviceFloppy,
+                  href: "#",
                   onClick: () => {
                     navigator.clipboard.writeText(
                       "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Arte%20Arena%20(2025).pdf"
@@ -220,6 +221,7 @@ const getMenuItems = (): MenuitemsType[] => {
                   id: uniqueId(),
                   title: "Copiar Link",
                   icon: IconDeviceFloppy,
+                  href: "#",
                   onClick: () => {
                     navigator.clipboard.writeText(
                       "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Atl%C3%A9tica%20%20interclasse.pdf"
@@ -242,6 +244,7 @@ const getMenuItems = (): MenuitemsType[] => {
                   id: uniqueId(),
                   title: "Copiar Link",
                   icon: IconDeviceFloppy,
+                  href: "#",
                   onClick: () => {
                     navigator.clipboard.writeText(
                       "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Politica.pdf"
@@ -264,6 +267,7 @@ const getMenuItems = (): MenuitemsType[] => {
                   id: uniqueId(),
                   title: "Copiar Link",
                   icon: IconDeviceFloppy,
+                  href: "#",
                   onClick: () => {
                     navigator.clipboard.writeText(
                       "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20TIMES.pdf"
