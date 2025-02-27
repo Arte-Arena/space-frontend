@@ -102,7 +102,8 @@ const OrcamentoBackofficeScreen = () => {
   const [showInput, setShowInput] = useState(false);
   const [inputValueEntrega, setInputValueEntrega] = useState(selectedPedido?.codigo_rastreamento || '');
   const [hasEntrega, setHasEntrega] = useState(false);
-  const theme = useTheme(); 
+  const [loadingPedido, setLoadingPedido] = useState(false);
+  const theme = useTheme();
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
   const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
@@ -116,6 +117,7 @@ const OrcamentoBackofficeScreen = () => {
 
   const handleFetchPedido = async (id: number) => {
     try {
+      setLoadingPedido(true);
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedidos/get-pedido-orcamento/${id}`, {
         method: 'GET',
         headers: {
@@ -125,10 +127,21 @@ const OrcamentoBackofficeScreen = () => {
       });
       const data = await response.json();
       setSelectedPedido(data);
+      setLoadingPedido(false);
     } catch (error) {
       console.error('Error fetching pedido:', error);
+    } finally {
+      setLoadingPedido(false); // Finaliza o loading
     }
   };
+
+  useEffect(() => {
+    if (selectedPedido && selectedPedido.codigo_rastreamento) {
+      setHasEntrega(true);
+    } else {
+      setHasEntrega(false);
+    }
+  }, [selectedPedido]);
 
   const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos, refetch } = useQuery({
     queryKey: ['budgetData', searchQuery, page],
@@ -145,9 +158,6 @@ const OrcamentoBackofficeScreen = () => {
   const handleOpenDialogEntrega = (id: number) => {
     console.log('id passado no handle open : ', id)
     handleFetchPedido(id);
-    if(selectedPedido?.codigo_rastreamento !== null && selectedPedido?.codigo_rastreamento !== undefined){
-      setHasEntrega(true);
-    }
     setOpenEntregaDialog(true);
   };
 
@@ -186,7 +196,7 @@ const OrcamentoBackofficeScreen = () => {
         alert(error.message);
       });
   };
-  
+
 
   // Precisamos validar os botões pro caso de ja terem sido feitos clientes e pedidos.
   const handleMakePedido = async (orcamento: Orcamento) => {
@@ -355,10 +365,10 @@ const OrcamentoBackofficeScreen = () => {
               <TableBody>
                 {dataOrcamentos?.data.map((row: Orcamento) => {
                   const listaProdutos = row.lista_produtos
-                  ? typeof row.lista_produtos === 'string'
-                    ? JSON.parse(row.lista_produtos)
-                    : row.lista_produtos
-                  : [];
+                    ? typeof row.lista_produtos === 'string'
+                      ? JSON.parse(row.lista_produtos)
+                      : row.lista_produtos
+                    : [];
 
                   const texto = row.texto_orcamento;
                   const frete = texto?.match(regexFrete);
@@ -458,54 +468,64 @@ const OrcamentoBackofficeScreen = () => {
                               {/* abre o componenete dialog Entrega */}
                               <IconTruckDelivery />
                               <Dialog open={openEntregaDialog} onClose={handleCloseDialogEntrega}>
-                                <DialogTitle>
-                                 Pedido N°{selectedPedido?.numero_pedido}
-                                </DialogTitle>
-                                <DialogContent>
-                                  <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
-                                    <DialogContentText>Página do rastreio</DialogContentText>
-                                    <Button variant="contained" color="success" disabled={!hasEntrega}>
-                                      <IconTruckDelivery />
-                                    </Button>
-                                    <Button variant="contained" color="success" disabled={!hasEntrega} sx={{color: theme.palette.text.primary}}>
-                                      Link do rastreio
-                                    </Button>
-                                  </Stack>
-                                  <FormControlLabel
-                                    control={
-                                      <Checkbox
-                                        checked={showInput}
-                                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                          setShowInput(event.target.checked);
-                                        }}
+                                {loadingPedido ? (
+                                  <DialogContent>
+                                    <CircularProgress /> {/* Indicador de loading */}
+                                  </DialogContent>
+                                ) : (
+                                  <>
+                                    <DialogTitle>Pedido N° {selectedPedido?.numero_pedido}</DialogTitle>
+                                    <DialogContent>
+                                      <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
+                                        <DialogContentText>Página do rastreio</DialogContentText>
+                                        <Button variant="contained" color="success" disabled={!hasEntrega}>
+                                          <IconTruckDelivery />
+                                        </Button>
+                                        <Button
+                                          variant="contained"
+                                          color="success"
+                                          disabled={!hasEntrega}
+                                          sx={{ color: theme.palette.text.primary }}
+                                        >
+                                          Link do rastreio
+                                        </Button>
+                                      </Stack>
+                                      <FormControlLabel
+                                        control={
+                                          <Checkbox
+                                            checked={showInput}
+                                            onChange={(event) => setShowInput(event.target.checked)}
+                                          />
+                                        }
+                                        label="Adicionar Código de rastreio"
                                       />
-                                    }
-                                    label="Adicionar Código de rastreio"
-                                  />
-                                  {showInput && (
-                                    <Stack spacing={2} sx={{ mt: 2 }}>
-                                      <TextField
-                                        label="Código de Rastreamento"
-                                        value={inputValueEntrega}
-                                        onChange={(event) => setInputValueEntrega(event.target.value)}
-                                      />
-                                      <Button
-                                        variant="contained"
-                                        color="primary"
-                                        disabled={hasEntrega}
-                                        onClick={() => handleSubmmitEntrega(inputValueEntrega)}
-                                      >
-                                        Enviar
+                                      {showInput && (
+                                        <Stack spacing={2} sx={{ mt: 2 }}>
+                                          <TextField
+                                            label="Código de Rastreamento"
+                                            value={inputValueEntrega}
+                                            onChange={(event) => setInputValueEntrega(event.target.value)}
+                                          />
+                                          <Button
+                                            variant="contained"
+                                            color="primary"
+                                            disabled={hasEntrega}
+                                            onClick={() => handleSubmmitEntrega(inputValueEntrega)}
+                                          >
+                                            Enviar
+                                          </Button>
+                                        </Stack>
+                                      )}
+                                    </DialogContent>
+                                    <DialogActions>
+                                      <Button onClick={handleCloseDialogEntrega} color="primary">
+                                        Fechar
                                       </Button>
-                                    </Stack>
-                                  )}
-                                </DialogContent>
-                                <DialogActions>
-                                  <Button onClick={handleCloseDialogEntrega} color="primary">
-                                    Fechar
-                                  </Button>
-                                </DialogActions>
+                                    </DialogActions>
+                                  </>
+                                )}
                               </Dialog>
+
                             </Button>
 
                           </Stack>
