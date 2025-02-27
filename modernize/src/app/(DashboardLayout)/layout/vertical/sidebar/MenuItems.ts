@@ -23,8 +23,11 @@ import {
   IconTool,
   IconBrandTrello,
   IconProgressCheck,
-  // IconBusinessplan,
-  // IconReportAnalytics
+  IconCircleCheck,
+  IconShirt,
+  IconShoppingBagEdit,
+  IconBusinessplan,
+  IconReportAnalytics,
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -72,6 +75,32 @@ const getMenuItems = (): MenuitemsType[] => {
       title: "Produtos",
       icon: IconBrandProducthunt,
       href: "/apps/produtos/buscar",
+      children: [
+        {
+          id: uniqueId(),
+          title: "Buscar Produto",
+          icon: IconBrandProducthunt,
+          href: "/apps/produtos/buscar"
+        },
+        {
+          id: uniqueId(),
+          title: "Pacotes de Uniformes",
+          icon: IconShirt,
+          href: "/apps/produtos/pacotes-uniformes"
+        },
+        {
+          id: uniqueId(),
+          title: "Bandeiras Oficiais",
+          icon: IconFlag,
+          href: "/apps/produtos/bandeiras-oficiais"
+        },
+        {
+          id: uniqueId(),
+          title: "Produos Personalizados",
+          icon: IconShoppingBagEdit,
+          href: "/apps/produtos/produtos-personalizados"
+        },
+      ]
     },
     {
       id: uniqueId(),
@@ -88,13 +117,13 @@ const getMenuItems = (): MenuitemsType[] => {
         {
           id: uniqueId(),
           title: "Buscar Conta",
-          icon: IconBrandCashapp,
+          icon: IconZoomMoney,
           href: "/apps/contas-pagar-receber/buscar",
         },
         {
           id: uniqueId(),
           title: "Relatórios de Contas",
-          icon: IconBrandCashapp,
+          icon: IconChartBar,
           href: "/apps/contas-pagar-receber/relatorios",
         },
       ],
@@ -110,6 +139,12 @@ const getMenuItems = (): MenuitemsType[] => {
           title: "Gerar Orçamento",
           icon: IconReportMoney,
           href: "/apps/orcamento/gerar",
+        },
+        {
+          id: uniqueId(),
+          title: "Aprovar Orçamento",
+          icon: IconCircleCheck,
+          href: "/apps/orcamento/aprovar",
         },
         {
           id: uniqueId(),
