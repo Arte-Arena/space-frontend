@@ -41,9 +41,9 @@ export function UniformTableRow({
         let options;
         if (colIndex === 3 || colIndex === 4) {
           const gender = row.data[0];
-          options = gender === 'I' ? KIDS_SIZES 
-                 : gender === 'F' ? ADULT_SIZES_F 
-                 : ADULT_SIZES_M;
+          options = gender === 'I' ? KIDS_SIZES
+            : gender === 'F' ? ADULT_SIZES_F
+              : ADULT_SIZES_M;
         } else {
           options = column.options;
         }
