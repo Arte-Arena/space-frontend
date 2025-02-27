@@ -132,14 +132,22 @@ const ProdutosPacotesUniformesScreen = () => {
                       <List dense={true}>
                         <ListItem>
                           <ListItemText
-                            primary="Tecido"
-                            secondary={`Camisa: ${pacote.tipo_de_tecido_camisa} | Calção: ${pacote.tipo_de_tecido_calcao}`}
+                            primary="Tecido da Camisa"
+                            secondary={pacote.tipo_de_tecido_camisa}
+                          />
+                          <ListItemText
+                            primary="Tecido do Calção"
+                            secondary={pacote.tipo_de_tecido_calcao}
                           />
                         </ListItem>
                         <ListItem>
                           <ListItemText
                             primary="Tipo de Gola"
                             secondary={Array.isArray(pacote.tipo_gola) ? pacote.tipo_gola.join(", ") : pacote.tipo_gola}
+                          />
+                          <ListItemText
+                            primary="Tipo de Escudo na Camisa"
+                            secondary={pacote.tipo_de_escudo_na_camisa}
                           />
                         </ListItem>
                         <ListItem>
