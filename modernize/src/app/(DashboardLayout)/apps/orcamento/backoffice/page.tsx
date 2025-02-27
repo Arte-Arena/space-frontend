@@ -103,6 +103,8 @@ const OrcamentoBackofficeScreen = () => {
   const [currentQuantity, setCurrentQuantity] = useState<number>(1);
   const [currentLetter, setCurrentLetter] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [isGeneratingLink, setIsGeneratingLink] = useState<boolean>(false);
+  const [isLinkGenerated, setIsLinkGenerated] = useState<boolean>(false);
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
   const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
@@ -252,6 +254,27 @@ const OrcamentoBackofficeScreen = () => {
     setLinkUniform(`${window.location.origin}/u${data.caminho}`);
     setOpenUniformDialog(true);
   }
+
+  const handleGenerateAndCopyLink = async () => {
+    try {
+      setIsGeneratingLink(true);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await navigator.clipboard.writeText(linkUniform);
+      setIsLinkGenerated(true);
+    } catch (error) {
+      console.error('Erro ao copiar o link:', error);
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
+
+  const handleDialogClose = () => {
+    setOpenUniformDialog(false);
+    setSketches([]);
+    setCurrentLetter('');
+    setCurrentQuantity(1);
+    setIsLinkGenerated(false);
+  };
 
   return (
     <PageContainer title="Orçamento / Backoffice" description="Gerenciar Pedidos da Arte Arena">
@@ -452,16 +475,28 @@ const OrcamentoBackofficeScreen = () => {
                               </Box>
                             </DialogContent>
                             <DialogActions>
-                              <Button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(linkUniform);
-                                  setOpenUniformDialog(false);
-                                  setSketches([]);
-                                  setCurrentLetter('');
-                                  setCurrentQuantity(1);
-                                }}
-                              >
-                                Copiar Link
+                              {!isLinkGenerated ? (
+                                <Button
+                                  onClick={handleGenerateAndCopyLink}
+                                  disabled={isGeneratingLink || sketches.length === 0}
+                                  startIcon={isGeneratingLink && <CircularProgress size={16} />}
+                                >
+                                  {isGeneratingLink ? 'Gerando...' : sketches.length === 0 ? 'Adicione um esboço' : 'Gerar Link'}
+                                </Button>
+                              ) : (
+                                <>
+                                  <Typography variant="body2" color="success.main" sx={{ mr: 2 }}>
+                                    Link gerado e copiado!
+                                  </Typography>
+                                  <Button
+                                    onClick={() => navigator.clipboard.writeText(linkUniform)}
+                                  >
+                                    Copiar novamente
+                                  </Button>
+                                </>
+                              )}
+                              <Button onClick={handleDialogClose}>
+                                Fechar
                               </Button>
                             </DialogActions>
                           </Dialog>
