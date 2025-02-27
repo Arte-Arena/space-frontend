@@ -30,40 +30,37 @@ export default function UniformBackofficeScreen() {
     { id: 5, name: "Tamanho do shorts", type: "select", options: ADULT_SIZES_M },
   ]);
 
-  const [tableData, setTableData] = useState<TableData>(
-    LETTERS.reduce((acc, letter) => ({
-      ...acc,
-      [letter]: [
-        { id: 1, data: ["M", "John Smith", "10", "G", "M"], confirmed: false },
-      ],
-    }), {} as TableData)
-  );
+  const [tableData, setTableData] = useState<TableData>({
+    'A': [
+      { id: 1, data: ["M", "João Silva", "10", "G", "G"], confirmed: false },
+      { id: 2, data: ["M", "Pedro Santos", "7", "M", "M"], confirmed: false },
+      { id: 3, data: ["F", "Maria Oliveira", "11", "M", "M"], confirmed: false },
+      { id: 4, data: ["M", "Carlos Souza", "4", "GG", "G"], confirmed: false },
+      { id: 5, data: ["F", "Ana Costa", "8", "P", "P"], confirmed: false }
+    ],
+    'B': [
+      { id: 1, data: ["M", "Roberto Lima", "9", "G", "G"], confirmed: false },
+      { id: 2, data: ["M", "Lucas Ferreira", "5", "M", "M"], confirmed: false },
+      { id: 3, data: ["F", "Paula Ribeiro", "3", "M", "M"], confirmed: false }
+    ],
+    'C': [
+      { id: 1, data: ["M", "André Santos", "15", "XG", "XG"], confirmed: false },
+      { id: 2, data: ["F", "Beatriz Lima", "6", "P", "P"], confirmed: false },
+      { id: 3, data: ["M", "Marcos Silva", "12", "G", "G"], confirmed: false },
+      { id: 4, data: ["F", "Clara Oliveira", "14", "M", "M"], confirmed: false }
+    ],
+    'D': [
+      { id: 1, data: ["M", "Felipe Costa", "2", "G", "G"], confirmed: false },
+      { id: 2, data: ["F", "Julia Santos", "1", "M", "M"], confirmed: false },
+      { id: 3, data: ["M", "Ricardo Pereira", "13", "GG", "GG"], confirmed: false }
+    ]
+  });
 
   const [editingCell, setEditingCell] = useState<{ letter: string; rowId: number; colIndex: number } | null>(null);
   const [editValue, setEditValue] = useState("");
 
   const [openEmptyTeamsDialog, setOpenEmptyTeamsDialog] = useState(false);
   const [emptyTeams, setEmptyTeams] = useState<string[]>([]);
-
-  const handleAddRow = (letter: string) => {
-    const letterRows = tableData[letter] || [];
-    const newRow = {
-      id: letterRows.length + 1,
-      data: columns.map(() => ""),
-      confirmed: false,
-    };
-    setTableData({
-      ...tableData,
-      [letter]: [...letterRows, newRow],
-    });
-  };
-
-  const handleDeleteRow = (letter: string, rowId: number) => {
-    setTableData((prevData) => ({
-      ...prevData,
-      [letter]: prevData[letter].filter((row) => row.id !== rowId),
-    }));
-  };
 
   const handleToggleConfirm = (letter: string, rowId: number) => {
     setShowValidationError(false);
@@ -244,10 +241,8 @@ export default function UniformBackofficeScreen() {
             tableData={tableData}
             editingCell={editingCell}
             editValue={editValue}
-            onAddRow={handleAddRow}
             onCellClick={handleCellClick}
             onCellEdit={handleCellEdit}
-            onDeleteRow={handleDeleteRow}
             onToggleConfirm={handleToggleConfirm}
             setEditValue={setEditValue}
             setEditingCell={setEditingCell}
