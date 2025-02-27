@@ -470,6 +470,7 @@ const OrcamentoBackofficeScreen = () => {
                               <Dialog open={openEntregaDialog} onClose={handleCloseDialogEntrega}>
                                 {loadingPedido ? (
                                   <DialogContent>
+                                    
                                     <CircularProgress /> {/* Indicador de loading */}
                                   </DialogContent>
                                 ) : (
