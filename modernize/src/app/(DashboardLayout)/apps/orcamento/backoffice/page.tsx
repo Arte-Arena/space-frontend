@@ -103,6 +103,7 @@ const OrcamentoBackofficeScreen = () => {
   const [inputValueEntrega, setInputValueEntrega] = useState(selectedPedido?.codigo_rastreamento || '');
   const [hasEntrega, setHasEntrega] = useState(false);
   const [loadingPedido, setLoadingPedido] = useState(false);
+  const [copiedRastreio, setCopiedRastreio] = useState(false);
   const theme = useTheme();
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
@@ -319,6 +320,25 @@ const OrcamentoBackofficeScreen = () => {
     setOpenUniformDialog(true);
   }
 
+  const handleOpenRastreamentoInterno = (id: string | number | undefined) => {
+    window.location.href = '/apps/orcamento/rastreamento-interno'
+    //  + id;
+  }
+  const handleOpenRastreamentoCliente = (id: string | number | undefined) => {
+    window.location.href = '/apps/orcamento/rastreamentoCliente/' + id;
+
+    const textToCopy = window.location.origin + "/apps/orcamento/rastreamentoCliente/" + id;
+    
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => {
+        setCopiedRastreio(true);
+        setTimeout(() => setCopiedRastreio(false), 2000); // Reseta a mensagem após 2 segundos
+      })
+      .catch((err) => console.error("Erro ao copiar texto:", err));
+  }
+
+
+
   return (
     <PageContainer title="Orçamento / Backoffice" description="Gerenciar Pedidos da Arte Arena">
       <Breadcrumb title="Orçamento / Backoffice" subtitle="Gerenciar Pedidos da Arte Arena / Backoffice" />
@@ -470,7 +490,7 @@ const OrcamentoBackofficeScreen = () => {
                               <Dialog open={openEntregaDialog} onClose={handleCloseDialogEntrega}>
                                 {loadingPedido ? (
                                   <DialogContent>
-                                    
+
                                     <CircularProgress /> {/* Indicador de loading */}
                                   </DialogContent>
                                 ) : (
@@ -479,14 +499,19 @@ const OrcamentoBackofficeScreen = () => {
                                     <DialogContent>
                                       <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
                                         <DialogContentText>Página do rastreio</DialogContentText>
-                                        <Button variant="contained" color="success" disabled={!hasEntrega}>
+                                        {/* http://localhost:3000/apps/orcamento/backoffice/rastreamentoInterno/${selectedPedido.orcamento_id}*/}
+                                        <Button variant="contained" color="success" disabled={!hasEntrega} 
+                                          onClick={() => handleOpenRastreamentoInterno(selectedPedido?.orcamento_id)}
+                                        >
                                           <IconTruckDelivery />
                                         </Button>
+                                        {/* http://localhost:3000/apps/orcamento/backoffice/rastreamentoInterno/${selectedPedido.orcamento_id}*/}
                                         <Button
                                           variant="contained"
                                           color="success"
                                           disabled={!hasEntrega}
                                           sx={{ color: theme.palette.text.primary }}
+                                          onClick={() => handleOpenRastreamentoCliente(selectedPedido?.orcamento_id)}
                                         >
                                           Link do rastreio
                                         </Button>
