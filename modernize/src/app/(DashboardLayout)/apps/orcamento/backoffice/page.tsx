@@ -105,6 +105,8 @@ const OrcamentoBackofficeScreen = () => {
   const [error, setError] = useState<string>('');
   const [isGeneratingLink, setIsGeneratingLink] = useState<boolean>(false);
   const [isLinkGenerated, setIsLinkGenerated] = useState<boolean>(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [currentOrcamentoId, setCurrentOrcamentoId] = useState<number | null>(null);
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
   const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
@@ -238,6 +240,7 @@ const OrcamentoBackofficeScreen = () => {
   };
 
   async function handleShortlinkUniform(uniformId: number) {
+    setCurrentOrcamentoId(uniformId);
     const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/url/${uniformId}`, {
       method: 'GET',
       headers: {
@@ -258,11 +261,51 @@ const OrcamentoBackofficeScreen = () => {
   const handleGenerateAndCopyLink = async () => {
     try {
       setIsGeneratingLink(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setApiError(null);
+      
+      const placeholderConfigs = Array.from({ length: currentQuantity }, (_, i) => ({
+        genero: 'M',
+        nome_jogador: `Jogador ${i + 1}`, 
+        numero: `${i + 1}`,
+        tamanho_camisa: 'M',
+        tamanho_shorts: 'M' 
+      }));
+
+      for (const sketch of sketches) {
+        const uniformData = {
+          orcamento_id: currentOrcamentoId,
+          esboco: sketch.letter,
+          quantidade_jogadores: sketch.quantity,
+          configuracoes: placeholderConfigs.slice(0, sketch.quantity)
+        };
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(uniformData),
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          if (response.status === 422 && data.errors) {
+            setApiError(`Erro: Já existe um esboço ${sketch.letter} para este orçamento.`);
+          } else {
+            setApiError(`Erro ao salvar o esboço ${sketch.letter}: ${data.message || 'Erro desconhecido'}`);
+          }
+          setIsGeneratingLink(false);
+          return;
+        }
+      }
+      
       await navigator.clipboard.writeText(linkUniform);
       setIsLinkGenerated(true);
     } catch (error) {
-      console.error('Erro ao copiar o link:', error);
+      console.error('Erro ao processar os esboços:', error);
+      setApiError('Ocorreu um erro ao processar os esboços. Tente novamente.');
     } finally {
       setIsGeneratingLink(false);
     }
@@ -274,6 +317,8 @@ const OrcamentoBackofficeScreen = () => {
     setCurrentLetter('');
     setCurrentQuantity(1);
     setIsLinkGenerated(false);
+    setApiError(null);
+    setCurrentOrcamentoId(null);
   };
 
   return (
@@ -475,6 +520,14 @@ const OrcamentoBackofficeScreen = () => {
                                         </TableBody>
                                       </Table>
                                     </TableContainer>
+                                  )}
+
+                                  {apiError && (
+                                    <Box sx={{ mt: 2, p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
+                                      <Typography color="error" variant="body2">
+                                        {apiError}
+                                      </Typography>
+                                    </Box>
                                   )}
                                 </Box>
                               </DialogContent>
