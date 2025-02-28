@@ -26,6 +26,12 @@ import {
   IconCircleCheck,
   IconShirt,
   IconShoppingBagEdit,
+  IconListLetters,
+  IconSchool,
+  IconBuildingBank,
+  IconSoccerField,
+  IconEye,
+  IconDeviceFloppy,
   IconBusinessplan,
   IconReportAnalytics,
 } from "@tabler/icons-react";
@@ -42,6 +48,7 @@ interface MenuitemsType {
   chipColor?: string;
   variant?: string;
   external?: boolean;
+  onClick?: (e: React.MouseEvent<HTMLElement>) => void;
 }
 
 // Função para verificar se o usuário é superUser
@@ -59,6 +66,18 @@ const custoBandeiraItem: MenuitemsType = {
   title: "Custo de Bandeira",
   icon: IconFlag,
   href: "/apps/orcamento/custo-bandeira",
+};
+
+const createCopyLinkHandler = (url: string) => (e: React.MouseEvent<HTMLElement>) => {
+  e.preventDefault();
+  navigator.clipboard.writeText(url)
+    .then(() => {
+      alert("Link copiado para a área de transferência!");
+    })
+    .catch((err) => {
+      console.error("Falha ao copiar:", err);
+      alert("Erro ao copiar o link.");
+    });
 };
 
 // Função que gera o menu atualizado dinamicamente
@@ -172,9 +191,90 @@ const getMenuItems = (): MenuitemsType[] => {
         },
         {
           id: uniqueId(),
-          title: "Catálogo 2025",
-          icon: IconTool,
-          href: "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Arte%20Arena%20(2025).pdf",
+          title: "Catálogos",
+          icon: IconListLetters,
+          children: [
+            {
+              id: uniqueId(),
+              title: "Geral",
+              icon: IconListLetters,
+              children: [
+                {
+                  id: uniqueId(),
+                  title: "Visualizar",
+                  icon: IconEye,
+                  href: "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Arte%20Arena%20(2025).pdf",
+                },
+                {
+                  id: uniqueId(),
+                  title: "Copiar Link",
+                  icon: IconDeviceFloppy,
+                  href: "#",
+                  onClick: createCopyLinkHandler("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Arte%20Arena%20(2025).pdf")
+                },
+              ]
+            },
+            {
+              id: uniqueId(),
+              title: "Atléticas",
+              icon: IconSchool,
+              children: [
+                {
+                  id: uniqueId(),
+                  title: "Visualizar",
+                  icon: IconEye,
+                  href: "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Atl%C3%A9tica%20%20interclasse.pdf",
+                },
+                {
+                  id: uniqueId(),
+                  title: "Copiar Link",
+                  icon: IconDeviceFloppy,
+                  href: "#",
+                  onClick: createCopyLinkHandler("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Atl%C3%A9tica%20%20interclasse.pdf")
+                },
+              ]
+            },
+            {
+              id: uniqueId(),
+              title: "Política",
+              icon: IconBuildingBank,
+              children: [
+                {
+                  id: uniqueId(),
+                  title: "Visualizar",
+                  icon: IconEye,
+                  href: "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Politica.pdf",
+                },
+                {
+                  id: uniqueId(),
+                  title: "Copiar Link",
+                  icon: IconDeviceFloppy,
+                  href: "#",
+                  onClick: createCopyLinkHandler("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Politica.pdf")
+                },
+              ]
+            },
+            {
+              id: uniqueId(),
+              title: "Times",
+              icon: IconSoccerField,
+              children: [
+                {
+                  id: uniqueId(),
+                  title: "Visualizar",
+                  icon: IconEye,
+                  href: "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20TIMES.pdf",
+                },
+                {
+                  id: uniqueId(),
+                  title: "Copiar Link",
+                  icon: IconDeviceFloppy,
+                  href: "#",
+                  onClick: createCopyLinkHandler("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20TIMES.pdf")
+                },
+              ]
+            },
+          ]
         },
         {
           id: uniqueId(),
