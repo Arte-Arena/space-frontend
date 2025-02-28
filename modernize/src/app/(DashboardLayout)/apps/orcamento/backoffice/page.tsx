@@ -24,6 +24,8 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogActions from '@mui/material/DialogActions';
 import { IconTruckDelivery } from '@tabler/icons-react';
+import { useStatusChangeAprovado } from '@/utils/PutStatusOrcamentos';
+import useAprovarPedidoStatus from './components/useAprovarPedidoStatus';
 
 
 interface Pedidos {
@@ -100,8 +102,11 @@ const OrcamentoBackofficeScreen = () => {
   const [openEntregaDialog, setOpenEntregaDialog] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState<Pedidos | null>(null);
   const [showInput, setShowInput] = useState(false);
+  const [showInputPeidosStatus, setShowInputPedidosStatus] = useState(false);
   const [inputValueEntrega, setInputValueEntrega] = useState(selectedPedido?.codigo_rastreamento || '');
   const [hasEntrega, setHasEntrega] = useState(false);
+  const [hasEnvio, setHasEnvio] = useState(false);
+  const [HasRecebimento, setHasRecebimento] = useState(false);
   const [loadingPedido, setLoadingPedido] = useState(false);
   const [copiedRastreio, setCopiedRastreio] = useState(false);
   const theme = useTheme();
@@ -128,6 +133,7 @@ const OrcamentoBackofficeScreen = () => {
       });
       const data = await response.json();
       setSelectedPedido(data);
+      setInputValueEntrega(data.codigo_rastreamento)
       setLoadingPedido(false);
     } catch (error) {
       console.error('Error fetching pedido:', error);
@@ -321,20 +327,35 @@ const OrcamentoBackofficeScreen = () => {
   }
 
   const handleOpenRastreamentoInterno = (id: string | number | undefined) => {
-    window.location.href = '/apps/orcamento/rastreamento-interno'
-    //  + id;
+    const link = window.location.origin + '/apps/orcamento/backoffice/rastreamento-interno/' + id;
+    window.open(link, "_blank");
   }
   const handleOpenRastreamentoCliente = (id: string | number | undefined) => {
-    window.location.href = '/apps/orcamento/rastreamentoCliente/' + id;
+    // window.location.href = '/apps/orcamento/rastreamento-cliente/' + id;
 
-    const textToCopy = window.location.origin + "/apps/orcamento/rastreamentoCliente/" + id;
-    
+    const textToCopy = window.location.origin + "/apps/orcamento/backoffice/rastreamento-cliente/" + id;
+
     navigator.clipboard.writeText(textToCopy)
       .then(() => {
         setCopiedRastreio(true);
         setTimeout(() => setCopiedRastreio(false), 2000); // Reseta a mensagem após 2 segundos
       })
+      .then(() => {
+        alert('Link copiado com sucesso');
+      })
       .catch((err) => console.error("Erro ao copiar texto:", err));
+  }
+
+  const handleAprovaEnvio = (id: string | number | undefined) => {
+    const status = "envio";
+    useAprovarPedidoStatus(status, id);
+    setHasEnvio(true);
+  }
+
+  const handleAprovaRecebimento = (id: string | number | undefined) => {
+    const status = "recebimento";
+    useAprovarPedidoStatus(status, id);
+    setHasRecebimento(true);
   }
 
 
@@ -500,7 +521,7 @@ const OrcamentoBackofficeScreen = () => {
                                       <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
                                         <DialogContentText>Página do rastreio</DialogContentText>
                                         {/* http://localhost:3000/apps/orcamento/backoffice/rastreamentoInterno/${selectedPedido.orcamento_id}*/}
-                                        <Button variant="contained" color="success" disabled={!hasEntrega} 
+                                        <Button variant="contained" color="success" disabled={!hasEntrega}
                                           onClick={() => handleOpenRastreamentoInterno(selectedPedido?.orcamento_id)}
                                         >
                                           <IconTruckDelivery />
@@ -539,6 +560,36 @@ const OrcamentoBackofficeScreen = () => {
                                             onClick={() => handleSubmmitEntrega(inputValueEntrega)}
                                           >
                                             Enviar
+                                          </Button>
+                                        </Stack>
+                                      )}
+
+                                      <FormControlLabel
+                                        control={
+                                          <Checkbox
+                                            checked={showInputPeidosStatus}
+                                            onChange={(event) => setShowInputPedidosStatus(event.target.checked)}
+                                          />
+                                        }
+                                        label="Aprovar envio ou recebimento do pedido"
+                                      />
+                                      {showInputPeidosStatus && (
+                                        <Stack spacing={2} sx={{ mt: 2 }}>
+                                          <Button
+                                            variant="contained"
+                                            color="primary"
+                                            disabled={hasEnvio || selectedPedido?.pedido_status_id == 14 || selectedPedido?.pedido_status_id == 15}
+                                            onClick={() => handleAprovaEnvio(selectedPedido?.id)}
+                                          >
+                                            Aprovar envio do pedido à transportadora
+                                          </Button>
+                                          <Button
+                                            variant="contained"
+                                            color="primary"
+                                            disabled={HasRecebimento || selectedPedido?.pedido_status_id == 15}
+                                            onClick={() => handleAprovaRecebimento(selectedPedido?.id)}
+                                          >
+                                            Aprovar recebimento do pedido pelo cliente
                                           </Button>
                                         </Stack>
                                       )}

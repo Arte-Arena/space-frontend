@@ -6,8 +6,8 @@ import { Container, Typography, Stepper, Step, StepLabel, Box, Paper, TableRow, 
 import { IconCoinFilled, IconHomeCheck, IconShoppingCart, IconTruckDelivery, IconTruckLoading } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import useFetchPedidoOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/rastreamentoCliente/useGetPedidoOrcamento";
-import useFetchOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/rastreamentoCliente/useGetOrcamento";
+import useFetchPedidoOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetPedidoOrcamento";
+import useFetchOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetOrcamento";
 import { addDays, format, isAfter, isEqual, isWeekend } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -73,7 +73,7 @@ interface Orcamento {
   total_orcamento: number;
 }
 
-const RastreamentoClienteScreen = () => {
+const RastreamentoInternoScreen = () => {
   // aqui vai ficar a logica das datas de cada coisa, podemos repetir as datas até o separação e transportadora usar o da api de frete.
 
   const [activeStep, setActiveStep] = useState(1); // Define até qual etapa foi concluída
@@ -159,7 +159,7 @@ const RastreamentoClienteScreen = () => {
     { label: "Pedido realizado", icon: <IconShoppingCart />, date: dateCreatedOrcamento },
     { label: "Pagamento confirmado", icon: <IconCoinFilled />, date: dateCreatedPedido },
     // { label: "Pedido em separação", icon: <IconTruckLoading />, date: dateCreatedPedido },
-    { label: "Pedido em separação", icon: <IconTruckLoading />, date: dataFormatada },
+    { label: "Pedido em Produção até", icon: <IconTruckLoading />, date: dataFormatada },
     // proxima data tem que ser na api da transportadora
     { label: "Pedido na transportadora", icon: <IconTruckDelivery />, date: "22/02/2024" },
     { label: "Pedido entregue", icon: <IconHomeCheck />, date: "" },
@@ -453,4 +453,4 @@ const RastreamentoClienteScreen = () => {
   );
 };
 
-export default RastreamentoClienteScreen;
+export default RastreamentoInternoScreen;
