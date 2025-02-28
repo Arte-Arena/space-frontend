@@ -11,10 +11,10 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
-import { Pagination, Stack, Button, Box, Typography, Collapse, FormControlLabel, Checkbox, TextField, useTheme } from '@mui/material';
+import { Pagination, Stack, Button, Box, Typography, Collapse } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import { IconSearch, IconLink, IconShirtSport, IconCheck } from '@tabler/icons-react';
+import { IconSearch, IconLink, IconShirtSport, IconCheck, IconTrash } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -23,8 +23,6 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogActions from '@mui/material/DialogActions';
-import { IconTruckDelivery } from '@tabler/icons-react';
-
 
 interface Pedidos {
   id: number;
@@ -46,7 +44,6 @@ interface Pedidos {
   url_trello: string | null;
   created_at: string;
   updated_at: string;
-  codigo_rastreamento: string | null;
 }
 
 interface Produto {
@@ -88,6 +85,11 @@ interface Orcamento {
   pedidos: Pedidos[];
 }
 
+interface Sketch {
+  letter: string;
+  quantity: number;
+}
+
 const OrcamentoBackofficeScreen = () => {
   const [query, setQuery] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -97,14 +99,12 @@ const OrcamentoBackofficeScreen = () => {
   const [openLinkDialog, setOpenLinkDialog] = useState<boolean>(false);
   const [linkUniform, setLinkUniform] = useState<string>('');
   const [openUniformDialog, setOpenUniformDialog] = useState<boolean>(false);
-  const [openEntregaDialog, setOpenEntregaDialog] = useState(false);
-  const [selectedPedido, setSelectedPedido] = useState<Pedidos | null>(null);
-  const [showInput, setShowInput] = useState(false);
-  const [inputValueEntrega, setInputValueEntrega] = useState(selectedPedido?.codigo_rastreamento || '');
-  const [hasEntrega, setHasEntrega] = useState(false);
-  const [loadingPedido, setLoadingPedido] = useState(false);
-  const [copiedRastreio, setCopiedRastreio] = useState(false);
-  const theme = useTheme();
+  const [sketches, setSketches] = useState<Sketch[]>([]);
+  const [currentQuantity, setCurrentQuantity] = useState<number>(1);
+  const [currentLetter, setCurrentLetter] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [isGeneratingLink, setIsGeneratingLink] = useState<boolean>(false);
+  const [isLinkGenerated, setIsLinkGenerated] = useState<boolean>(false);
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
   const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
@@ -115,34 +115,6 @@ const OrcamentoBackofficeScreen = () => {
   if (!accessToken) {
     throw new Error('Access token is missing');
   }
-
-  const handleFetchPedido = async (id: number) => {
-    try {
-      setLoadingPedido(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedidos/get-pedido-orcamento/${id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const data = await response.json();
-      setSelectedPedido(data);
-      setLoadingPedido(false);
-    } catch (error) {
-      console.error('Error fetching pedido:', error);
-    } finally {
-      setLoadingPedido(false); // Finaliza o loading
-    }
-  };
-
-  useEffect(() => {
-    if (selectedPedido && selectedPedido.codigo_rastreamento) {
-      setHasEntrega(true);
-    } else {
-      setHasEntrega(false);
-    }
-  }, [selectedPedido]);
 
   const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos, refetch } = useQuery({
     queryKey: ['budgetData', searchQuery, page],
@@ -156,50 +128,13 @@ const OrcamentoBackofficeScreen = () => {
       }).then((res) => res.json()),
   });
 
-  const handleOpenDialogEntrega = (id: number) => {
-    console.log('id passado no handle open : ', id)
-    handleFetchPedido(id);
-    setOpenEntregaDialog(true);
-  };
-
-  const handleCloseDialogEntrega = () => {
-    setOpenEntregaDialog(false);
-  };
-
-  const handleSubmmitEntrega = (inputValueEntrega: string) => {
-    fetch(
-      `${process.env.NEXT_PUBLIC_API}/api/pedidos/pedido-codigo-rastreamento/`, // Corrigi a URL, parecia estar errada
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          pedido_id: selectedPedido?.id,
-          codigo_rastreamento: inputValueEntrega,
-        }),
-      }
-    )
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error('Erro ao enviar código de rastreamento'); // Corrigi erro de digitação na mensagem
-        }
-        return res.json();
-      })
-      .then((data) => {
-        console.log('Código de rastreamento enviado com sucesso:', data);
-        handleFetchPedido(selectedPedido?.orcamento_id || 0);
-        setHasEntrega(true);
-      })
-      .catch((error) => {
-        console.error(error.message);
-        alert(error.message);
-      });
-  };
-
+  useEffect(() => {
+    console.log(dataOrcamentos)
+  }, [dataOrcamentos])
 
   // Precisamos validar os botões pro caso de ja terem sido feitos clientes e pedidos.
+
+
   const handleMakePedido = async (orcamento: Orcamento) => {
 
     const orcamentoFormated = {
@@ -320,24 +255,26 @@ const OrcamentoBackofficeScreen = () => {
     setOpenUniformDialog(true);
   }
 
-  const handleOpenRastreamentoInterno = (id: string | number | undefined) => {
-    window.location.href = '/apps/orcamento/rastreamento-interno'
-    //  + id;
-  }
-  const handleOpenRastreamentoCliente = (id: string | number | undefined) => {
-    window.location.href = '/apps/orcamento/rastreamentoCliente/' + id;
+  const handleGenerateAndCopyLink = async () => {
+    try {
+      setIsGeneratingLink(true);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await navigator.clipboard.writeText(linkUniform);
+      setIsLinkGenerated(true);
+    } catch (error) {
+      console.error('Erro ao copiar o link:', error);
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
 
-    const textToCopy = window.location.origin + "/apps/orcamento/rastreamentoCliente/" + id;
-    
-    navigator.clipboard.writeText(textToCopy)
-      .then(() => {
-        setCopiedRastreio(true);
-        setTimeout(() => setCopiedRastreio(false), 2000); // Reseta a mensagem após 2 segundos
-      })
-      .catch((err) => console.error("Erro ao copiar texto:", err));
-  }
-
-
+  const handleDialogClose = () => {
+    setOpenUniformDialog(false);
+    setSketches([]);
+    setCurrentLetter('');
+    setCurrentQuantity(1);
+    setIsLinkGenerated(false);
+  };
 
   return (
     <PageContainer title="Orçamento / Backoffice" description="Gerenciar Pedidos da Arte Arena">
@@ -385,19 +322,17 @@ const OrcamentoBackofficeScreen = () => {
               <TableBody>
                 {dataOrcamentos?.data.map((row: Orcamento) => {
                   const listaProdutos = row.lista_produtos
-                    ? typeof row.lista_produtos === 'string'
-                      ? JSON.parse(row.lista_produtos)
-                      : row.lista_produtos
+                    ? (typeof row.lista_produtos === 'string' ? JSON.parse(row.lista_produtos) : row.lista_produtos)
                     : [];
 
                   const texto = row.texto_orcamento;
                   const frete = texto?.match(regexFrete);
                   const prazo = texto?.match(regexPrazo);
+                  console.log(prazo)
                   const entrega = texto?.match(regexEntrega);
                   const brinde = texto?.match(regexBrinde);
 
                   const hasPedidos = row.pedidos && row.pedidos.length > 0;
-
 
                   return (
                     <React.Fragment key={row.id}>
@@ -460,98 +395,121 @@ const OrcamentoBackofficeScreen = () => {
                               open={openUniformDialog}
                               onClose={() => setOpenUniformDialog(false)}
                             >
-                              <DialogTitle>Link do Uniforme</DialogTitle>
+                              <DialogTitle>Configuração de esboços de uniforme</DialogTitle>
                               <DialogContent>
-                                <DialogContentText>
-                                  {linkUniform}
-                                </DialogContentText>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 2 }}>
+                                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                    <CustomTextField
+                                      label="Letra do Esboço (A-Z)"
+                                      value={currentLetter}
+                                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                        const value = e.target.value.toUpperCase();
+                                        if (value === '' || /^[A-Z]$/.test(value)) {
+                                          setCurrentLetter(value);
+                                          setError('');
+                                        }
+                                      }}
+                                      inputProps={{ maxLength: 1 }}
+                                      error={!!error}
+                                      helperText={error}
+                                      disabled={isLinkGenerated}
+                                    />
+                                    <CustomTextField
+                                      label="Quantidade"
+                                      type="number"
+                                      value={currentQuantity}
+                                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentQuantity(parseInt(e.target.value) || 1)}
+                                      inputProps={{ min: 1 }}
+                                      disabled={isLinkGenerated}
+                                    />
+                                    <Button
+                                      variant="contained"
+                                      onClick={() => {
+                                        if (!currentLetter) {
+                                          setError('Selecione uma letra');
+                                          return;
+                                        }
+                                        if (sketches.some(s => s.letter === currentLetter)) {
+                                          setError('Esta letra já foi utilizada');
+                                          return;
+                                        }
+                                        setSketches([...sketches, { letter: currentLetter, quantity: currentQuantity }]);
+                                        setCurrentLetter('');
+                                        setCurrentQuantity(1);
+                                        setError('');
+                                      }}
+                                      disabled={isLinkGenerated}
+                                    >
+                                      Adicionar
+                                    </Button>
+                                  </Box>
+
+                                  {sketches.length > 0 && (
+                                    <TableContainer>
+                                      <Table size="small">
+                                        <TableHead>
+                                          <TableRow>
+                                            <TableCell>Esboço</TableCell>
+                                            <TableCell>Quantidade</TableCell>
+                                            <TableCell>Ações</TableCell>
+                                          </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                          {sketches.map((sketch) => (
+                                            <TableRow key={sketch.letter}>
+                                              <TableCell>Esboço {sketch.letter}</TableCell>
+                                              <TableCell>{sketch.quantity}</TableCell>
+                                              <TableCell>
+                                                <IconButton
+                                                  size="small"
+                                                  onClick={() => {
+                                                    setSketches(sketches.filter(s => s.letter !== sketch.letter));
+                                                  }}
+                                                  disabled={isLinkGenerated}
+                                                >
+                                                  <IconTrash size={18} />
+                                                </IconButton>
+                                              </TableCell>
+                                            </TableRow>
+                                          ))}
+                                        </TableBody>
+                                      </Table>
+                                    </TableContainer>
+                                  )}
+                                </Box>
                               </DialogContent>
                               <DialogActions>
-                                <Button
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(linkUniform);
-                                    setOpenUniformDialog(false);
-                                  }}
-                                >
-                                  Copiar Link
+                                {!isLinkGenerated ? (
+                                  <Button
+                                    onClick={handleGenerateAndCopyLink}
+                                    disabled={isGeneratingLink || sketches.length === 0}
+                                    startIcon={isGeneratingLink && <CircularProgress size={16} />}
+                                  >
+                                    {isGeneratingLink ? 'Gerando...' : sketches.length === 0 ? 'Adicione um esboço' : 'Gerar Link'}
+                                  </Button>
+                                ) : (
+                                  <>
+                                    <Typography variant="body2" color="success.main" sx={{ mr: 2 }}>
+                                      Link gerado e copiado!
+                                    </Typography>
+                                    <Button
+                                      onClick={() => navigator.clipboard.writeText(linkUniform)}
+                                    >
+                                      Copiar novamente
+                                    </Button>
+                                  </>
+                                )}
+                                <Button onClick={handleDialogClose}>
+                                  Fechar
                                 </Button>
                               </DialogActions>
                             </Dialog>
 
                             {/* botão da chamada da api */}
+                            { }
                             <Button variant="contained" color="primary" onClick={() => handleMakePedido(row)} disabled={hasPedidos}>
+
                               <IconCheck />
-                            </Button>
-
-                            {/* botão para abrir o dialog de pegar o codigo de rastreio */}
-                            <Button color="primary" variant="contained" onClick={() => handleOpenDialogEntrega(row.id)} disabled={!hasPedidos}>
-                              {/* abre o componenete dialog Entrega */}
-                              <IconTruckDelivery />
-                              <Dialog open={openEntregaDialog} onClose={handleCloseDialogEntrega}>
-                                {loadingPedido ? (
-                                  <DialogContent>
-
-                                    <CircularProgress /> {/* Indicador de loading */}
-                                  </DialogContent>
-                                ) : (
-                                  <>
-                                    <DialogTitle>Pedido N° {selectedPedido?.numero_pedido}</DialogTitle>
-                                    <DialogContent>
-                                      <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
-                                        <DialogContentText>Página do rastreio</DialogContentText>
-                                        {/* http://localhost:3000/apps/orcamento/backoffice/rastreamentoInterno/${selectedPedido.orcamento_id}*/}
-                                        <Button variant="contained" color="success" disabled={!hasEntrega} 
-                                          onClick={() => handleOpenRastreamentoInterno(selectedPedido?.orcamento_id)}
-                                        >
-                                          <IconTruckDelivery />
-                                        </Button>
-                                        {/* http://localhost:3000/apps/orcamento/backoffice/rastreamentoInterno/${selectedPedido.orcamento_id}*/}
-                                        <Button
-                                          variant="contained"
-                                          color="success"
-                                          disabled={!hasEntrega}
-                                          sx={{ color: theme.palette.text.primary }}
-                                          onClick={() => handleOpenRastreamentoCliente(selectedPedido?.orcamento_id)}
-                                        >
-                                          Link do rastreio
-                                        </Button>
-                                      </Stack>
-                                      <FormControlLabel
-                                        control={
-                                          <Checkbox
-                                            checked={showInput}
-                                            onChange={(event) => setShowInput(event.target.checked)}
-                                          />
-                                        }
-                                        label="Adicionar Código de rastreio"
-                                      />
-                                      {showInput && (
-                                        <Stack spacing={2} sx={{ mt: 2 }}>
-                                          <TextField
-                                            label="Código de Rastreamento"
-                                            value={inputValueEntrega}
-                                            onChange={(event) => setInputValueEntrega(event.target.value)}
-                                          />
-                                          <Button
-                                            variant="contained"
-                                            color="primary"
-                                            disabled={hasEntrega}
-                                            onClick={() => handleSubmmitEntrega(inputValueEntrega)}
-                                          >
-                                            Enviar
-                                          </Button>
-                                        </Stack>
-                                      )}
-                                    </DialogContent>
-                                    <DialogActions>
-                                      <Button onClick={handleCloseDialogEntrega} color="primary">
-                                        Fechar
-                                      </Button>
-                                    </DialogActions>
-                                  </>
-                                )}
-                              </Dialog>
-
                             </Button>
 
                           </Stack>
@@ -791,6 +749,7 @@ const OrcamentoBackofficeScreen = () => {
               onChange={handlePageChange}
             />
           </Stack>
+
         </>
       </ParentCard>
     </PageContainer>
