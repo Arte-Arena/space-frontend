@@ -48,7 +48,7 @@ interface MenuitemsType {
   chipColor?: string;
   variant?: string;
   external?: boolean;
-  onClick?: () => void; // Adicionado o manipulador onClick
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 // Função para verificar se o usuário é superUser
@@ -198,10 +198,16 @@ const getMenuItems = (): MenuitemsType[] => {
                   title: "Copiar Link",
                   icon: IconDeviceFloppy,
                   href: "#",
-                  onClick: () => {
-                    navigator.clipboard.writeText(
-                      "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Arte%20Arena%20(2025).pdf"
-                    );
+                  onClick: (e) => {
+                    e.preventDefault(); // Previne a navegação ou recarregamento
+                    navigator.clipboard.writeText("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Arte%20Arena%20(2025).pdf")
+                      .then(() => {
+                        alert("Link copiado para a área de transferência!");
+                      })
+                      .catch((err) => {
+                        console.error("Falha ao copiar:", err);
+                        alert("Erro ao copiar o link.");
+                      });
                   }
                 },
               ]
@@ -222,11 +228,18 @@ const getMenuItems = (): MenuitemsType[] => {
                   title: "Copiar Link",
                   icon: IconDeviceFloppy,
                   href: "#",
-                  onClick: () => {
-                    navigator.clipboard.writeText(
-                      "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Atl%C3%A9tica%20%20interclasse.pdf"
-                    );
-                  }                },
+                  onClick: (e) => {
+                    e.preventDefault(); // Previne a navegação ou recarregamento
+                    navigator.clipboard.writeText("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Atl%C3%A9tica%20%20interclasse.pdf")
+                      .then(() => {
+                        alert("Link copiado para a área de transferência!");
+                      })
+                      .catch((err) => {
+                        console.error("Falha ao copiar:", err);
+                        alert("Erro ao copiar o link.");
+                      });
+                  }
+                },
               ]
             },
             {
@@ -245,11 +258,18 @@ const getMenuItems = (): MenuitemsType[] => {
                   title: "Copiar Link",
                   icon: IconDeviceFloppy,
                   href: "#",
-                  onClick: () => {
-                    navigator.clipboard.writeText(
-                      "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Politica.pdf"
-                    );
-                  }                },
+                  onClick: (e) => {
+                    e.preventDefault(); // Previne a navegação ou recarregamento
+                    navigator.clipboard.writeText("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Politica.pdf")
+                      .then(() => {
+                        alert("Link copiado para a área de transferência!");
+                      })
+                      .catch((err) => {
+                        console.error("Falha ao copiar:", err);
+                        alert("Erro ao copiar o link.");
+                      });
+                  }
+                },
               ]
             },
             {
@@ -268,11 +288,18 @@ const getMenuItems = (): MenuitemsType[] => {
                   title: "Copiar Link",
                   icon: IconDeviceFloppy,
                   href: "#",
-                  onClick: () => {
-                    navigator.clipboard.writeText(
-                      "https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20TIMES.pdf"
-                    );
-                  }                },
+                  onClick: (e) => {
+                    e.preventDefault(); // Previne a navegação ou recarregamento
+                    navigator.clipboard.writeText("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20TIMES.pdf")
+                      .then(() => {
+                        alert("Link copiado para a área de transferência!");
+                      })
+                      .catch((err) => {
+                        console.error("Falha ao copiar:", err);
+                        alert("Erro ao copiar o link.");
+                      });
+                  }
+                },
               ]
             },
           ]
