@@ -48,7 +48,7 @@ interface MenuitemsType {
   chipColor?: string;
   variant?: string;
   external?: boolean;
-  onClick?: (e: React.MouseEvent) => void;
+  onClick?: (e: React.MouseEvent<HTMLElement>) => void;
 }
 
 // Função para verificar se o usuário é superUser
@@ -66,6 +66,18 @@ const custoBandeiraItem: MenuitemsType = {
   title: "Custo de Bandeira",
   icon: IconFlag,
   href: "/apps/orcamento/custo-bandeira",
+};
+
+const createCopyLinkHandler = (url: string) => (e: React.MouseEvent<HTMLElement>) => {
+  e.preventDefault();
+  navigator.clipboard.writeText(url)
+    .then(() => {
+      alert("Link copiado para a área de transferência!");
+    })
+    .catch((err) => {
+      console.error("Falha ao copiar:", err);
+      alert("Erro ao copiar o link.");
+    });
 };
 
 // Função que gera o menu atualizado dinamicamente
@@ -198,17 +210,7 @@ const getMenuItems = (): MenuitemsType[] => {
                   title: "Copiar Link",
                   icon: IconDeviceFloppy,
                   href: "#",
-                  onClick: (e) => {
-                    e.preventDefault(); // Previne a navegação ou recarregamento
-                    navigator.clipboard.writeText("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Arte%20Arena%20(2025).pdf")
-                      .then(() => {
-                        alert("Link copiado para a área de transferência!");
-                      })
-                      .catch((err) => {
-                        console.error("Falha ao copiar:", err);
-                        alert("Erro ao copiar o link.");
-                      });
-                  }
+                  onClick: createCopyLinkHandler("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Arte%20Arena%20(2025).pdf")
                 },
               ]
             },
@@ -228,17 +230,7 @@ const getMenuItems = (): MenuitemsType[] => {
                   title: "Copiar Link",
                   icon: IconDeviceFloppy,
                   href: "#",
-                  onClick: (e) => {
-                    e.preventDefault(); // Previne a navegação ou recarregamento
-                    navigator.clipboard.writeText("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Atl%C3%A9tica%20%20interclasse.pdf")
-                      .then(() => {
-                        alert("Link copiado para a área de transferência!");
-                      })
-                      .catch((err) => {
-                        console.error("Falha ao copiar:", err);
-                        alert("Erro ao copiar o link.");
-                      });
-                  }
+                  onClick: createCopyLinkHandler("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Atl%C3%A9tica%20%20interclasse.pdf")
                 },
               ]
             },
@@ -258,17 +250,7 @@ const getMenuItems = (): MenuitemsType[] => {
                   title: "Copiar Link",
                   icon: IconDeviceFloppy,
                   href: "#",
-                  onClick: (e) => {
-                    e.preventDefault(); // Previne a navegação ou recarregamento
-                    navigator.clipboard.writeText("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Politica.pdf")
-                      .then(() => {
-                        alert("Link copiado para a área de transferência!");
-                      })
-                      .catch((err) => {
-                        console.error("Falha ao copiar:", err);
-                        alert("Erro ao copiar o link.");
-                      });
-                  }
+                  onClick: createCopyLinkHandler("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20Politica.pdf")
                 },
               ]
             },
@@ -288,17 +270,7 @@ const getMenuItems = (): MenuitemsType[] => {
                   title: "Copiar Link",
                   icon: IconDeviceFloppy,
                   href: "#",
-                  onClick: (e) => {
-                    e.preventDefault(); // Previne a navegação ou recarregamento
-                    navigator.clipboard.writeText("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20TIMES.pdf")
-                      .then(() => {
-                        alert("Link copiado para a área de transferência!");
-                      })
-                      .catch((err) => {
-                        console.error("Falha ao copiar:", err);
-                        alert("Erro ao copiar o link.");
-                      });
-                  }
+                  onClick: createCopyLinkHandler("https://eu2.contabostorage.com/266f14ebe17c4c958a0fa24cd49f7719:mkt/Cat%C3%A1logo%20-%20TIMES.pdf")
                 },
               ]
             },
