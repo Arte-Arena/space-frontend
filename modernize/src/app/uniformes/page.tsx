@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from "react";
-import { Box, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from "@mui/material";
+import { useState, useEffect } from "react";
+import { Box, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, CircularProgress } from "@mui/material";
 import { useSearchParams } from 'next/navigation';
-import { Column, TableData } from "./types";
+import { useFetch, HttpMethod } from "@/utils/useFetch";
+import { Column, TableData, UniformData } from "./types";
 import { PageHeader } from "./PageHeader";
 import { UniformTable } from "./UniformTable";
 import { LoadingState } from "./LoadingState";
+import { NoDataFound } from "./NoDataFound";
 
 const ADULT_SIZES_M = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG', 'XXXG'];
 const ADULT_SIZES_F = ['P', 'M', 'G', 'GG', 'XG', 'XXG', 'XXXG'];
@@ -16,6 +18,8 @@ const LETTERS = Array.from({ length: 4 }, (_, i) => String.fromCharCode(65 + i))
 export default function UniformBackofficeScreen() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('id');
+  const { data: uniformData, loading: isLoadingData, error: fetchError, fetchData } = useFetch<UniformData[]>();
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -195,84 +199,143 @@ export default function UniformBackofficeScreen() {
     setIsLoading(false);
   };
 
+  useEffect(() => {
+    if (orderId) {
+      const apiUrl = `${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${orderId}`;
+      fetchData(apiUrl).finally(() => {
+        setInitialLoading(false);
+      });
+    }
+  }, [orderId]);
+
+  if (initialLoading) {
+    return (
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh' 
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ p: 3 }}>
-      {!isLoading && !isSuccess && !isError && (
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          Importante: Para cada jogador, você deve confirmar os tamanhos escolhidos marcando a caixa de seleção correspondente. Todos os jogadores devem ter seus tamanhos confirmados antes de prosseguir.
-        </Alert>
+      {fetchError && (
+        <NoDataFound
+          type="error"
+          message={`Erro ao carregar dados dos uniformes: ${fetchError.message}`}
+        />
       )}
 
-      {showValidationError && (
+      {!fetchError && (
         <>
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {validationErrors.length > 0 ? (
-              <>
-                <div>Por favor, corrija os seguintes erros:</div>
-                <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
-                  {validationErrors.map((error, index) => (
-                    <li key={index}>{error}</li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              'Por favor, confirme todos os tamanhos marcando as caixas de seleção para cada jogador antes de prosseguir.'
-            )}
-          </Alert>
+          {isLoadingData ? (
+            <LoadingState isLoading={true} isSuccess={false} onRetry={() => { }} />
+          ) : (
+            <>
+              {uniformData && uniformData.length === 0 ? (
+                <NoDataFound
+                  type="info"
+                  title="Nenhum uniforme encontrado"
+                  message="Não existem uniformes cadastrados para este pedido."
+                />
+              ) : (
+                <>
+                  {uniformData && (
+                    <Alert severity="info" sx={{ mb: 3 }}>
+                      Total de esboços: {uniformData.length}
+                      <br />
+                      Total de jogadores: {uniformData.reduce((acc, curr) => acc + curr.quantidade_jogadores, 0)}
+                    </Alert>
+                  )}
+
+                  {!isLoading && !isSuccess && !isError && (
+                    <Alert severity="warning" sx={{ mb: 3 }}>
+                      Importante: Para cada jogador, você deve confirmar os tamanhos escolhidos marcando a caixa de seleção correspondente. Todos os jogadores devem ter seus tamanhos confirmados antes de prosseguir.
+                    </Alert>
+                  )}
+
+                  {showValidationError && (
+                    <>
+                      <Alert severity="error" sx={{ mb: 3 }}>
+                        {validationErrors.length > 0 ? (
+                          <>
+                            <div>Por favor, corrija os seguintes erros:</div>
+                            <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+                              {validationErrors.map((error, index) => (
+                                <li key={index}>{error}</li>
+                              ))}
+                            </ul>
+                          </>
+                        ) : (
+                          'Por favor, confirme todos os tamanhos marcando as caixas de seleção para cada jogador antes de prosseguir.'
+                        )}
+                      </Alert>
+                    </>
+                  )}
+
+                  <PageHeader
+                    orderId={orderId}
+                    onConfirm={handleConfirm}
+                    isSuccess={isSuccess}
+                    isLoading={isLoading}
+                    isError={isError}
+                  />
+
+                  {isLoading || isSuccess || isError ? (
+                    <LoadingState isSuccess={isSuccess} isLoading={isLoading} onRetry={handleRetry} />
+                  ) : (
+                    LETTERS.map((letter) => (
+                      <UniformTable
+                        key={letter}
+                        letter={letter}
+                        columns={columns}
+                        tableData={tableData}
+                        editingCell={editingCell}
+                        editValue={editValue}
+                        onCellClick={handleCellClick}
+                        onCellEdit={handleCellEdit}
+                        onToggleConfirm={handleToggleConfirm}
+                        setEditValue={setEditValue}
+                        setEditingCell={setEditingCell}
+                      />
+                    ))
+                  )}
+
+                  <Dialog
+                    open={openEmptyTeamsDialog}
+                    onClose={() => setOpenEmptyTeamsDialog(false)}
+                  >
+                    <DialogTitle>Confirmar envio</DialogTitle>
+                    <DialogContent>
+                      <DialogContentText>
+                        Os seguintes esboços não possuem jogadores cadastrados:
+                        {emptyTeams.map(team => ` ${team}`).join(', ')}
+                        <br /><br />
+                        Deseja continuar mesmo assim?
+                      </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                      <Button onClick={() => setOpenEmptyTeamsDialog(false)}>Cancelar</Button>
+                      <Button onClick={() => {
+                        setOpenEmptyTeamsDialog(false);
+                        submitData();
+                      }} color="primary" autoFocus>
+                        Confirmar
+                      </Button>
+                    </DialogActions>
+                  </Dialog>
+                </>
+              )}
+            </>
+          )}
         </>
       )}
-
-      <PageHeader
-        orderId={orderId}
-        onConfirm={handleConfirm}
-        isSuccess={isSuccess}
-        isLoading={isLoading}
-        isError={isError}
-      />
-
-      {isLoading || isSuccess || isError ? (
-        <LoadingState isSuccess={isSuccess} isLoading={isLoading} onRetry={handleRetry} />
-      ) : (
-        LETTERS.map((letter) => (
-          <UniformTable
-            key={letter}
-            letter={letter}
-            columns={columns}
-            tableData={tableData}
-            editingCell={editingCell}
-            editValue={editValue}
-            onCellClick={handleCellClick}
-            onCellEdit={handleCellEdit}
-            onToggleConfirm={handleToggleConfirm}
-            setEditValue={setEditValue}
-            setEditingCell={setEditingCell}
-          />
-        ))
-      )}
-
-      <Dialog
-        open={openEmptyTeamsDialog}
-        onClose={() => setOpenEmptyTeamsDialog(false)}
-      >
-        <DialogTitle>Confirmar envio</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Os seguintes esboços não possuem jogadores cadastrados:
-            {emptyTeams.map(team => ` ${team}`).join(', ')}
-            <br /><br />
-            Deseja continuar mesmo assim?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenEmptyTeamsDialog(false)}>Cancelar</Button>
-          <Button onClick={() => {
-            setOpenEmptyTeamsDialog(false);
-            submitData();
-          }} color="primary" autoFocus>
-            Confirmar
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }
