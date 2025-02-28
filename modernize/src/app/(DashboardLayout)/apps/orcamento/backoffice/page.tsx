@@ -107,6 +107,9 @@ const OrcamentoBackofficeScreen = () => {
   const [isLinkGenerated, setIsLinkGenerated] = useState<boolean>(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [currentOrcamentoId, setCurrentOrcamentoId] = useState<number | null>(null);
+  const [existingUniforms, setExistingUniforms] = useState<boolean>(false);
+  const [linkCopied, setLinkCopied] = useState<boolean>(false);
+  const [isCheckingUniforms, setIsCheckingUniforms] = useState<boolean>(false);
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
   const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
@@ -241,6 +244,32 @@ const OrcamentoBackofficeScreen = () => {
 
   async function handleShortlinkUniform(uniformId: number) {
     setCurrentOrcamentoId(uniformId);
+    setApiError(null);
+    setIsLinkGenerated(false);
+    setIsCheckingUniforms(true);
+    
+    try {
+      const uniformResponse = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${uniformId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      
+      const uniformData = await uniformResponse.json();
+      
+      if (uniformData && uniformData.length > 0) {
+        setExistingUniforms(true);
+      } else {
+        setExistingUniforms(false);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar uniformes existentes:', error);
+    } finally {
+      setIsCheckingUniforms(false);
+    }
+    
     const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/url/${uniformId}`, {
       method: 'GET',
       headers: {
@@ -311,6 +340,8 @@ const OrcamentoBackofficeScreen = () => {
     setIsLinkGenerated(false);
     setApiError(null);
     setCurrentOrcamentoId(null);
+    setExistingUniforms(false);
+    setLinkCopied(false);
   };
 
   return (
@@ -434,114 +465,157 @@ const OrcamentoBackofficeScreen = () => {
                             >
                               <DialogTitle>Configuração de esboços de uniforme</DialogTitle>
                               <DialogContent>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 2 }}>
-                                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                                    <CustomTextField
-                                      label="Letra do Esboço (A-Z)"
-                                      value={currentLetter}
-                                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                        const value = e.target.value.toUpperCase();
-                                        if (value === '' || /^[A-Z]$/.test(value)) {
-                                          setCurrentLetter(value);
-                                          setError('');
-                                        }
-                                      }}
-                                      inputProps={{ maxLength: 1 }}
-                                      error={!!error}
-                                      helperText={error}
-                                      disabled={isLinkGenerated}
-                                    />
-                                    <CustomTextField
-                                      label="Quantidade"
-                                      type="number"
-                                      value={currentQuantity}
-                                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentQuantity(parseInt(e.target.value) || 1)}
-                                      inputProps={{ min: 1 }}
-                                      disabled={isLinkGenerated}
-                                    />
-                                    <Button
-                                      variant="contained"
-                                      onClick={() => {
-                                        if (!currentLetter) {
-                                          setError('Selecione uma letra');
-                                          return;
-                                        }
-                                        if (sketches.some(s => s.letter === currentLetter)) {
-                                          setError('Esta letra já foi utilizada');
-                                          return;
-                                        }
-                                        setSketches([...sketches, { letter: currentLetter, quantity: currentQuantity }]);
-                                        setCurrentLetter('');
-                                        setCurrentQuantity(1);
-                                        setError('');
-                                      }}
-                                      disabled={isLinkGenerated}
-                                    >
-                                      Adicionar
-                                    </Button>
+                                {isCheckingUniforms ? (
+                                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 3 }}>
+                                    <CircularProgress size={24} />
+                                    <Typography sx={{ ml: 2 }}>Verificando uniformes existentes...</Typography>
                                   </Box>
-
-                                  {sketches.length > 0 && (
-                                    <TableContainer>
-                                      <Table size="small">
-                                        <TableHead>
-                                          <TableRow>
-                                            <TableCell>Esboço</TableCell>
-                                            <TableCell>Quantidade</TableCell>
-                                            <TableCell>Ações</TableCell>
-                                          </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                          {sketches.map((sketch) => (
-                                            <TableRow key={sketch.letter}>
-                                              <TableCell>Esboço {sketch.letter}</TableCell>
-                                              <TableCell>{sketch.quantity}</TableCell>
-                                              <TableCell>
-                                                <IconButton
-                                                  size="small"
-                                                  onClick={() => {
-                                                    setSketches(sketches.filter(s => s.letter !== sketch.letter));
-                                                  }}
-                                                  disabled={isLinkGenerated}
-                                                >
-                                                  <IconTrash size={18} />
-                                                </IconButton>
-                                              </TableCell>
-                                            </TableRow>
-                                          ))}
-                                        </TableBody>
-                                      </Table>
-                                    </TableContainer>
-                                  )}
-
-                                  {apiError && (
-                                    <Box sx={{ mt: 2, p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
-                                      <Typography color="error" variant="body2">
-                                        {apiError}
-                                      </Typography>
+                                ) : existingUniforms ? (
+                                  <Box sx={{ mt: 2, p: 1, bgcolor: 'warning.light', borderRadius: 1 }}>
+                                    <Typography variant="body1" color="warning.dark">
+                                      Já existem uniformes cadastrados para este orçamento. Não é possível adicionar ou editar esboços.
+                                    </Typography>
+                                  </Box>
+                                ) : (
+                                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 2 }}>
+                                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                      <CustomTextField
+                                        label="Letra do Esboço (A-Z)"
+                                        value={currentLetter}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                          const value = e.target.value.toUpperCase();
+                                          if (value === '' || /^[A-Z]$/.test(value)) {
+                                            setCurrentLetter(value);
+                                            setError('');
+                                          }
+                                        }}
+                                        inputProps={{ maxLength: 1 }}
+                                        error={!!error}
+                                        helperText={error}
+                                        disabled={isLinkGenerated}
+                                      />
+                                      <CustomTextField
+                                        label="Quantidade"
+                                        type="number"
+                                        value={currentQuantity}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentQuantity(parseInt(e.target.value) || 1)}
+                                        inputProps={{ min: 1 }}
+                                        disabled={isLinkGenerated}
+                                      />
+                                      <Button
+                                        variant="contained"
+                                        onClick={() => {
+                                          if (!currentLetter) {
+                                            setError('Selecione uma letra');
+                                            return;
+                                          }
+                                          if (sketches.some(s => s.letter === currentLetter)) {
+                                            setError('Esta letra já foi utilizada');
+                                            return;
+                                          }
+                                          setSketches([...sketches, { letter: currentLetter, quantity: currentQuantity }]);
+                                          setCurrentLetter('');
+                                          setCurrentQuantity(1);
+                                          setError('');
+                                        }}
+                                        disabled={isLinkGenerated}
+                                      >
+                                        Adicionar
+                                      </Button>
                                     </Box>
-                                  )}
-                                </Box>
+
+                                    {sketches.length > 0 && (
+                                      <TableContainer>
+                                        <Table size="small">
+                                          <TableHead>
+                                            <TableRow>
+                                              <TableCell>Esboço</TableCell>
+                                              <TableCell>Quantidade</TableCell>
+                                              <TableCell>Ações</TableCell>
+                                            </TableRow>
+                                          </TableHead>
+                                          <TableBody>
+                                            {sketches.map((sketch) => (
+                                              <TableRow key={sketch.letter}>
+                                                <TableCell>Esboço {sketch.letter}</TableCell>
+                                                <TableCell>{sketch.quantity}</TableCell>
+                                                <TableCell>
+                                                  <IconButton
+                                                    size="small"
+                                                    onClick={() => {
+                                                      setSketches(sketches.filter(s => s.letter !== sketch.letter));
+                                                    }}
+                                                    disabled={isLinkGenerated}
+                                                  >
+                                                    <IconTrash size={18} />
+                                                  </IconButton>
+                                                </TableCell>
+                                              </TableRow>
+                                            ))}
+                                          </TableBody>
+                                        </Table>
+                                      </TableContainer>
+                                    )}
+
+                                    {apiError && (
+                                      <Box sx={{ mt: 2, p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
+                                        <Typography color="error" variant="body2">
+                                          {apiError}
+                                        </Typography>
+                                      </Box>
+                                    )}
+                                  </Box>
+                                )}
                               </DialogContent>
                               <DialogActions>
-                                {!isLinkGenerated ? (
-                                  <Button
-                                    onClick={handleGenerateAndCopyLink}
-                                    disabled={isGeneratingLink || sketches.length === 0}
-                                    startIcon={isGeneratingLink && <CircularProgress size={16} />}
-                                  >
-                                    {isGeneratingLink ? 'Gerando...' : sketches.length === 0 ? 'Adicione um esboço' : 'Gerar Link'}
-                                  </Button>
+                                {!existingUniforms ? (
+                                  !isLinkGenerated ? (
+                                    <Button
+                                      onClick={handleGenerateAndCopyLink}
+                                      disabled={isGeneratingLink || sketches.length === 0}
+                                      startIcon={isGeneratingLink && <CircularProgress size={16} />}
+                                    >
+                                      {isGeneratingLink ? 'Gerando...' : sketches.length === 0 ? 'Adicione um esboço' : 'Gerar Link'}
+                                    </Button>
+                                  ) : (
+                                    <>
+                                      <Typography variant="body2" color="success.main" sx={{ mr: 2 }}>
+                                        Link gerado e copiado!
+                                      </Typography>
+                                      <Button
+                                        onClick={() => navigator.clipboard.writeText(linkUniform)}
+                                      >
+                                        Copiar novamente
+                                      </Button>
+                                    </>
+                                  )
                                 ) : (
                                   <>
-                                    <Typography variant="body2" color="success.main" sx={{ mr: 2 }}>
-                                      Link gerado e copiado!
-                                    </Typography>
-                                    <Button
-                                      onClick={() => navigator.clipboard.writeText(linkUniform)}
-                                    >
-                                      Copiar novamente
-                                    </Button>
+                                    {linkCopied ? (
+                                      <>
+                                        <Typography variant="body2" color="success.main" sx={{ mr: 2 }}>
+                                          Link copiado!
+                                        </Typography>
+                                        <Button
+                                          onClick={() => {
+                                            navigator.clipboard.writeText(linkUniform);
+                                            setLinkCopied(true);
+                                          }}
+                                        >
+                                          Copiar novamente
+                                        </Button>
+                                      </>
+                                    ) : (
+                                      <Button
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(linkUniform);
+                                          setLinkCopied(true);
+                                        }}
+                                        variant="outlined"
+                                      >
+                                        Copiar link existente
+                                      </Button>
+                                    )}
                                   </>
                                 )}
                                 <Button onClick={handleDialogClose}>
