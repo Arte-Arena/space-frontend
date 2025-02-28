@@ -412,7 +412,7 @@ const OrcamentoBackofficeScreen = () => {
                                       inputProps={{ maxLength: 1 }}
                                       error={!!error}
                                       helperText={error}
-                                      disabled={isLinkGenerated}
+                                      disabled={isGeneratingLink || isLinkGenerated}
                                     />
                                     <CustomTextField
                                       label="Quantidade"
@@ -420,7 +420,7 @@ const OrcamentoBackofficeScreen = () => {
                                       value={currentQuantity}
                                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentQuantity(parseInt(e.target.value) || 1)}
                                       inputProps={{ min: 1 }}
-                                      disabled={isLinkGenerated}
+                                      disabled={isGeneratingLink || isLinkGenerated}
                                     />
                                     <Button
                                       variant="contained"
@@ -438,7 +438,7 @@ const OrcamentoBackofficeScreen = () => {
                                         setCurrentQuantity(1);
                                         setError('');
                                       }}
-                                      disabled={isLinkGenerated}
+                                      disabled={isGeneratingLink || isLinkGenerated}
                                     >
                                       Adicionar
                                     </Button>
@@ -462,10 +462,8 @@ const OrcamentoBackofficeScreen = () => {
                                               <TableCell>
                                                 <IconButton
                                                   size="small"
-                                                  onClick={() => {
-                                                    setSketches(sketches.filter(s => s.letter !== sketch.letter));
-                                                  }}
-                                                  disabled={isLinkGenerated}
+                                                  onClick={() => setSketches(sketches.filter(s => s.letter !== sketch.letter))}
+                                                  disabled={isGeneratingLink || isLinkGenerated}
                                                 >
                                                   <IconTrash size={18} />
                                                 </IconButton>
