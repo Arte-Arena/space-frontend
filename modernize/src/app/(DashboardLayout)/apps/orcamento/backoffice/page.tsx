@@ -207,7 +207,7 @@ const OrcamentoBackofficeScreen = () => {
 
   // Precisamos validar os botões pro caso de ja terem sido feitos clientes e pedidos.
   const handleMakePedido = async (orcamento: Orcamento) => {
-
+console.log(orcamento);
     const orcamentoFormated = {
       id: orcamento.id,
       id_vendedor: orcamento.user_id,
@@ -521,20 +521,20 @@ const OrcamentoBackofficeScreen = () => {
                                       <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
                                         <DialogContentText>Página do rastreio</DialogContentText>
                                         {/* http://localhost:3000/apps/orcamento/backoffice/rastreamentoInterno/${selectedPedido.orcamento_id}*/}
-                                        <Button variant="contained" color="success" disabled={!hasEntrega}
+                                        <Button variant="contained" color="info" disabled={!hasEntrega}
                                           onClick={() => handleOpenRastreamentoInterno(selectedPedido?.orcamento_id)}
                                         >
-                                          <IconTruckDelivery />
+                                          Página do rastreio <IconTruckDelivery style={{ marginLeft: '5px' }} />
                                         </Button>
                                         {/* http://localhost:3000/apps/orcamento/backoffice/rastreamentoInterno/${selectedPedido.orcamento_id}*/}
                                         <Button
                                           variant="contained"
-                                          color="success"
+                                          color="primary"
                                           disabled={!hasEntrega}
                                           sx={{ color: theme.palette.text.primary }}
                                           onClick={() => handleOpenRastreamentoCliente(selectedPedido?.orcamento_id)}
                                         >
-                                          Link do rastreio
+                                          Link do rastreio <IconLink style={{ marginLeft: '5px' }} />
                                         </Button>
                                       </Stack>
                                       <FormControlLabel

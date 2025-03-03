@@ -101,7 +101,7 @@ const RastreamentoClienteScreen = () => {
   const texto = orcamento?.texto_orcamento;
   console.log(texto);
 
-  const brinde = texto?.match(regexBrinde)?.[1]?.trim() || "Não encontrado";
+  const brinde = texto?.match(regexBrinde)?.[1]?.trim() || null;
   const frete = texto?.match(regexFrete)?.[1]?.trim() || "Não encontrado";
   const freteValor = frete?.match(regexFreteValor)?.[1]?.trim() || "Não encontrado";
   const prazo = texto?.match(regexPrazo)?.[1]?.trim() || "Não encontrado";
@@ -112,6 +112,10 @@ const RastreamentoClienteScreen = () => {
 
   const listaProdutos = orcamento?.lista_produtos
     ? (typeof orcamento?.lista_produtos === 'string' ? JSON.parse(orcamento?.lista_produtos) : orcamento?.lista_produtos)
+    : [];
+
+  const listaBrindes = orcamento?.produtos_brinde
+    ? (typeof orcamento?.lista_produtos === 'string' ? JSON.parse(orcamento?.produtos_brinde) : orcamento?.produtos_brinde)
     : [];
 
   const createdAtOrcamento = orcamento?.created_at ? new Date(orcamento.created_at) : null;
@@ -138,31 +142,49 @@ const RastreamentoClienteScreen = () => {
   const newDate = addBusinessDays(createdPedido, prazoDias);
   const dataFormatada = newDate ? format(newDate, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
 
+  const newDateTransportadora = addBusinessDays(createdPedido, prazoDias + 1);
+  const dataFormatadaTransportadora = newDateTransportadora ? format(newDateTransportadora, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
+
   const hoje = new Date();
-  const dataHojeFormatada = format(hoje, 'dd/MM/yyyy', { locale: ptBR });
+  // const dataHojeFormatada = format(hoje, 'dd/MM/yyyy', { locale: ptBR });
 
 
   // colocar o resto da logica de negocio.
   if (createdAtOrcamento && createdPedido) {
     const orcamentoEhMaiorOuIgual = isAfter(hoje, createdAtOrcamento) || isEqual(hoje, createdAtOrcamento);
     const pedidoEhMaiorOuIgual = isAfter(hoje, createdPedido) || isEqual(hoje, createdPedido);
-    
+
     if (orcamentoEhMaiorOuIgual && !pedidoEhMaiorOuIgual) {
       setActiveStep(1);
     }
-    if(pedidoEhMaiorOuIgual && !orcamentoEhMaiorOuIgual){
-        setActiveStep(2);
+    if (pedidoEhMaiorOuIgual && !orcamentoEhMaiorOuIgual) {
+      setActiveStep(2);
     }
   }
 
+  console.log(orcamento?.lista_produtos);
+  console.log(orcamento?.produtos_brinde);
+
   const steps = [
-    { label: "Pedido realizado", icon: <IconShoppingCart />, date: dateCreatedOrcamento },
-    { label: "Pagamento confirmado", icon: <IconCoinFilled />, date: dateCreatedPedido },
-    { label: "Pedido em Produção até", icon: <IconTruckLoading />, date: dataFormatada },
+    { label: "Pedido realizado", icon: IconShoppingCart, date: dateCreatedOrcamento },
+    { label: "Pagamento confirmado", icon: IconCoinFilled, date: dateCreatedPedido },
+    { label: "Pedido em Produção até", icon: IconTruckLoading, date: dataFormatada },
     // proxima data tem que ser na api da transportadora
-    { label: "Pedido na transportadora", icon: <IconTruckDelivery />, date: "22/02/2024" },
-    { label: "Pedido entregue", icon: <IconHomeCheck />, date: "" },
+    { label: "Pedido na transportadora", icon: IconTruckDelivery, date: dataFormatadaTransportadora },
+    { label: "Pedido entregue", icon: IconHomeCheck, date: "" },
   ];
+
+  const CustomStepIcon = ({ active = false, completed = false, icon }: { active?: boolean; completed?: boolean; icon: React.ElementType }) => {
+    const IconComponent = icon;
+    return (
+      <IconComponent
+        style={{
+          color: completed ? "#2ECC71" : active ? "#2ECC71" : "gray",
+          fontSize: 24,
+        }}
+      />
+    );
+  };
 
   return (
     <PageContainer title="Rastreamento / Backoffice" description="Rastreamento de pedido">
@@ -182,7 +204,7 @@ const RastreamentoClienteScreen = () => {
             <Stepper activeStep={activeStep} alternativeLabel>
               {steps.map((step, index) => (
                 <Step key={index}>
-                  <StepLabel StepIconComponent={() => step.icon}>
+                  <StepLabel StepIconComponent={(props) => <CustomStepIcon active={props.active !== undefined ? props.active : false} completed={props.completed !== undefined ? props.completed : false} icon={step.icon} />}>
                     <Typography variant="caption">{step.label}</Typography>
                     <Typography variant="caption" sx={{ display: "block", fontSize: "0.75rem" }}>
                       {step.date}
@@ -279,15 +301,65 @@ const RastreamentoClienteScreen = () => {
                             </TableBody>
                           </TableCell>
                         </TableRow>
+                        <hr />
+                        <Box sx={{ mt: 4, textAlign: "left", paddingX: 2 }}>
 
-                        {brinde !== null && (
-                          <TableRow>
-                            <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                              Brinde:
-                            </TableCell>
-                            <TableCell sx={{ border: 'none' }} colSpan={1}>{brinde}</TableCell>
-                          </TableRow>
-                        )}
+                          <Typography variant="h6" fontWeight="bold" color="error">
+                            BRINDE
+                          </Typography>
+                          {orcamento?.produtos_brinde !== null && (
+                            <TableRow>
+                              <TableCell sx={{ border: 'none' }} colSpan={16}>
+                                <TableHead>
+                                  <TableRow>
+                                    <TableCell></TableCell>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                      quantidade:
+                                    </TableCell>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                      Preço:
+                                    </TableCell>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                      Tamanho:
+                                    </TableCell>
+                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                      Peso:
+                                    </TableCell>
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {listaBrindes.length > 0 ? (
+                                    listaBrindes.map((produto: Produto, index: number) => (
+                                      <TableRow key={produto.id || index}>
+                                        <TableCell sx={{ fontWeight: 'bold', padding: '8px' }} colSpan={1}>
+                                          {produto.nome}
+                                        </TableCell>
+                                        <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                          {produto.quantidade}
+                                        </TableCell>
+                                        <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                          {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                        </TableCell>
+                                        <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                          {produto.altura} x {produto.largura} x {produto.comprimento} cm
+                                        </TableCell>
+                                        <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                          {produto.peso} kg
+                                        </TableCell>
+                                        <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                          {produto.prazo} dias
+                                        </TableCell>
+                                      </TableRow>
+                                    ))
+                                  ) : (
+                                    <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
+                                  )}
+                                </TableBody>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </Box>
+
                       </TableBody>
                     </Table>
                   </Box>
@@ -324,15 +396,6 @@ const RastreamentoClienteScreen = () => {
                     </TableRow>
                   )} */}
 
-                  {frete !== null && (
-                    <TableRow>
-                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                        Frete:
-                      </TableCell>
-                      <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {freteValor}</TableCell>
-                    </TableRow>
-                  )}
-
                   {/* Endereço CEP */}
                   {/* <TableRow>
                     <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
@@ -342,12 +405,12 @@ const RastreamentoClienteScreen = () => {
                   </TableRow> */}
 
                   {/* Endereço */}
-                  <TableRow>
+                  {/* <TableRow>
                     <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
                       Endereço:
                     </TableCell>
                     <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.endereco}</TableCell>
-                  </TableRow>
+                  </TableRow> */}
 
                   {/* Opção de Entrega */}
                   <TableRow>
@@ -356,6 +419,15 @@ const RastreamentoClienteScreen = () => {
                     </TableCell>
                     <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.opcao_entrega}</TableCell>
                   </TableRow>
+
+                  {frete !== null && (
+                    <TableRow>
+                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                        Frete:
+                      </TableCell>
+                      <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {freteValor}</TableCell>
+                    </TableRow>
+                  )}
 
                   {/* Prazo da Opção de Entrega
                   <TableRow>
@@ -376,14 +448,14 @@ const RastreamentoClienteScreen = () => {
                   </TableRow> */}
 
                   {/* Brinde */}
-                  {orcamento?.brinde !== null && (
+                  {/* {orcamento?.brinde !== null && (
                     <TableRow>
                       <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
                         Brinde:
                       </TableCell>
                       <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.brinde === 1 ? 'Com Brinde' : 'Sem Brinde'}</TableCell>
                     </TableRow>
-                  )}
+                  )} */}
 
                   {/* Desconto */}
                   {orcamento?.valor_desconto !== null && (
