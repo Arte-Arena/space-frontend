@@ -8,9 +8,7 @@ import {
   hoverSidebar,
   toggleMobileSidebar,
 } from "@/store/customizer/CustomizerSlice";
-import Scrollbar from "@/app/components/custom-scroll/Scrollbar";
 import { AppState } from "@/store/store";
-import Typography from "@mui/material/Typography";
 import Logo from "@/app/(ClientLayout)/layout/shared/logo/Logo";
 
 const Sidebar = () => {
@@ -62,6 +60,10 @@ const Sidebar = () => {
                 }),
                 width: toggleWidth,
                 boxSizing: "border-box",
+                background: theme.palette.background.paper,
+                boxShadow: theme.shadows[2],
+                borderRight: `1px solid ${theme.palette.divider}`,
+                overflowY: "visible",
               },
             }}
           >
@@ -71,6 +73,9 @@ const Sidebar = () => {
             <Box
               sx={{
                 height: "100%",
+                background: theme.palette.background.paper,
+                boxShadow: theme.shadows[2],
+                borderRight: `1px solid ${theme.palette.divider}`,
               }}
             >
               {/* ------------------------------------------- */}
@@ -78,16 +83,13 @@ const Sidebar = () => {
               {/* ------------------------------------------- */}
               <Box px={3} pt={3} pb={1}>
                 <Logo />
-                <Box mt={1} textAlign="center" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
-                  Área do Cliente
-                </Box>
               </Box>
-              <Scrollbar sx={{ height: "calc(100% - 100px)" }}>
+              <Box sx={{ height: "calc(100% - 80px)", overflowY: "visible" }}>
                 {/* ------------------------------------------- */}
                 {/* Sidebar Items */}
                 {/* ------------------------------------------- */}
                 <SidebarItems />
-              </Scrollbar>
+              </Box>
             </Box>
           </Drawer>
         </Box>
@@ -102,6 +104,9 @@ const Sidebar = () => {
               width: customizer.SidebarWidth,
               border: "0 !important",
               boxShadow: (theme) => theme.shadows[8],
+              background: (theme) => theme.palette.background.paper,
+              borderRadius: "0 16px 16px 0",
+              overflowY: "visible",
             },
           }}
         >
@@ -110,14 +115,13 @@ const Sidebar = () => {
           {/* ------------------------------------------- */}
           <Box px={2} pt={2}>
             <Logo />
-            <Box mt={1} textAlign="center" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
-              Área do Cliente
-            </Box>
           </Box>
           {/* ------------------------------------------- */}
           {/* Sidebar For Mobile */}
           {/* ------------------------------------------- */}
-          <SidebarItems />
+          <Box sx={{ overflowY: "visible" }}>
+            <SidebarItems />
+          </Box>
         </Drawer>
       )}
     </>
