@@ -7,7 +7,6 @@ import {
   Stack,
   IconButton,
   Badge,
-  Button,
   Typography,
 } from '@mui/material';
 import PropTypes from 'prop-types';
@@ -57,19 +56,16 @@ const Header = () => {
 
         <Box flexGrow={1} />
         <Stack spacing={1} direction="row" alignItems="center">
-          <Typography variant="h6" color="primary" sx={{ display: { xs: 'none', sm: 'block' } }}>
-            Área do Cliente
-          </Typography>
-          <Button
-            variant="contained"
-            disableElevation
-            color="primary"
-            target="_blank"
-            href="/"
-            sx={{ display: { xs: 'none', sm: 'block' } }}
+          <Typography 
+            variant="h6" 
+            color="primary" 
+            sx={{ 
+              display: { xs: 'none', sm: 'block' },
+              fontWeight: 'medium',
+            }}
           >
-            Voltar ao Site
-          </Button>
+            Área do cliente
+          </Typography>
           <IconButton
             size="large"
             aria-label="show 11 new notifications"
