@@ -4,7 +4,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { Container, Typography, Stepper, Step, StepLabel, Box, Paper, TableRow, TableCell, Collapse, Table, TableBody, TableHead } from "@mui/material";
 import { IconCoinFilled, IconHomeCheck, IconShoppingCart, IconTruckDelivery, IconTruckLoading } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import useFetchPedidoOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetPedidoOrcamento";
 import useFetchOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetOrcamento";
@@ -114,8 +114,10 @@ const RastreamentoClienteScreen = () => {
     ? (typeof orcamento?.lista_produtos === 'string' ? JSON.parse(orcamento?.lista_produtos) : orcamento?.lista_produtos)
     : [];
 
-  const listaBrindes = orcamento?.produtos_brinde
-    ? (typeof orcamento?.lista_produtos === 'string' ? JSON.parse(orcamento?.produtos_brinde) : orcamento?.produtos_brinde)
+    const listaBrindes = orcamento?.produtos_brinde
+    ? (typeof orcamento.produtos_brinde === 'string' 
+      ? JSON.parse(orcamento.produtos_brinde)
+      : orcamento.produtos_brinde)
     : [];
 
   const createdAtOrcamento = orcamento?.created_at ? new Date(orcamento.created_at) : null;
@@ -125,7 +127,9 @@ const RastreamentoClienteScreen = () => {
   const dateCreatedOrcamento = createdAtOrcamento ? format(createdAtOrcamento, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
   const dateCreatedPedido = createdPedido ? format(createdPedido, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
 
-  const addBusinessDays = (date: Date | null, daysToAdd: number) => {
+  const addBusinessDays = (date: Date | null, daysToAdd: number): Date | null => {
+    if (!date) return null; // Se a data for nula, retorne null imediatamente
+
     let count = 0;
     let newDate = date;
 
@@ -138,6 +142,7 @@ const RastreamentoClienteScreen = () => {
 
     return newDate;
   };
+
 
   const newDate = addBusinessDays(createdPedido, prazoDias);
   const dataFormatada = newDate ? format(newDate, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
@@ -381,12 +386,12 @@ const RastreamentoClienteScreen = () => {
 
                 <TableRow>
                   {/* Texto do Orçamento */}
-                  <TableRow>
+                  {/* <TableRow>
                     <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
                       Cliente:
                     </TableCell>
                     <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.nome_cliente}</TableCell>
-                  </TableRow>
+                  </TableRow> */}
 
                   {/* {prazo !== null && (
                     <TableRow>
