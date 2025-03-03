@@ -5,7 +5,7 @@ import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLab
 import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 
-import { Box, Button, FormControlLabel, FormControl, InputLabel, OutlinedInput, MenuItem, ListItemText } from '@mui/material';
+import { Box, Button, FormControlLabel, FormControl, InputLabel, OutlinedInput, MenuItem, ListItemText, SelectChangeEvent } from '@mui/material';
 
 interface ProdutoPacoteUniformeFormProps {
   initialData?: ProdutoPacoteUniforme;
@@ -44,12 +44,13 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
   const tiposTecidoCalcaoDisponiveis = ["Dryfit Liso", "Dryfit Sport Star Liso", "DryFit Camb Pro"];
   const tiposGolaDisponiveis = ["Polo", "Careca", "V", "Bayard"];
   const tiposEscudoCamisaDisponiveis = ["Sublimado", "Patch 3D"];
+  const tiposEscudoCalcaoDisponiveis = ["Sublimado", "Patch 3D"];
   const tamanhosDisponiveis = ["PP", "P", "M", "G", "GG", "XG", "XXG", "XXXG"];
   const tiposTecidoMeiaoDisponiveis = ["Helanca Profissional", "Helanca Profissional Premium"];
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData((prev) => ({ ...prev, ...initialData }));
     }
   }, [initialData]);
 
@@ -59,27 +60,23 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleTipoGolaChange(tipo: string) {
+  const handleMultiSelectChange = (field: string, value: string) => {
     if (readOnly) return;
-    const tipoGolaAtual = formData.tipo_gola;
-    const indice = tipoGolaAtual.indexOf(tipo);
-    if (indice > -1) {
-      setFormData((prev) => ({ ...prev, tipo_gola: tipoGolaAtual.filter((t) => t !== tipo) }));
-    } else {
-      setFormData((prev) => ({ ...prev, tipo_gola: [...tipoGolaAtual, tipo] }));
-    }
-  }
+    setFormData((prev) => {
+      const updatedArray = Array.isArray(prev[field as keyof ProdutoPacoteUniforme]) ? prev[field as keyof ProdutoPacoteUniforme] as string[] : [];
+      return {
+        ...prev,
+        [field]: updatedArray.includes(value)
+          ? updatedArray.filter((item) => item !== value)
+          : [...updatedArray, value],
+      };
+    });
+  };
 
-  function handleTamanhosPermitidosChange(tamanhos: string) {
+  const handleSelectChange = (e: SelectChangeEvent<string>, field: string) => {
     if (readOnly) return;
-    const tamanhosPermitidosAtual = formData.tamanhos_permitidos;
-    const indice = tamanhosPermitidosAtual.indexOf(tamanhos);
-    if (indice > -1) {
-      setFormData((prev) => ({ ...prev, tamanhos_permitidos: tamanhosPermitidosAtual.filter((t) => t !== tamanhos) }));
-    } else {
-      setFormData((prev) => ({ ...prev, tamanhos_permitidos: [...tamanhosPermitidosAtual, tamanhos] }));
-    }
-  }
+    setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+  };
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -107,9 +104,9 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
         <InputLabel id="tipo_de_tecido_camisa">Tipo de Tecido da Camisa</InputLabel>
         <CustomSelect
           labelId="tipo_tecido_camisa"
-          id="tipo_de_tecido_camisa"
+          id="tipo_de_tecido_camisa_select"
           value={formData.tipo_de_tecido_camisa}
-          onChange={readOnly ? undefined : (e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, tipo_de_tecido_camisa: e.target.value }))}
+          onChange={(e: SelectChangeEvent<string>) => handleSelectChange(e, "tipo_de_tecido_camisa")}
           input={<OutlinedInput label="Tipo de Tecido da Camisa" />}
           renderValue={(selected: string) => selected}
         >
@@ -125,9 +122,9 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
         <InputLabel id="tipo_de_tecido_camisa">Tipo de Tecido do Calção</InputLabel>
         <CustomSelect
           labelId="tipo_tecido_calcao"
-          id="tipo_de_tecido_calcao"
+          id="tipo_de_tecido_calcao_select"
           value={formData.tipo_de_tecido_calcao}
-          onChange={readOnly ? undefined : (e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, tipo_de_tecido_calcao: e.target.value }))}
+          onChange={(e: SelectChangeEvent<string>) => handleSelectChange(e, "tipo_de_tecido_calcao")}
           input={<OutlinedInput label="Tipo de Tecido do Calção" />}
           renderValue={(selected: string) => selected}
         >
@@ -165,8 +162,8 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
           {tiposGolaDisponiveis.map((tipo) => (
             <MenuItem key={tipo} value={tipo}>
               <CustomCheckbox
-                checked={formData.tipo_gola.indexOf(tipo) > -1}
-                onChange={() => handleTipoGolaChange(tipo)}
+                checked={formData.tipo_gola.includes(tipo)}
+                onChange={() => handleMultiSelectChange("tipo_gola", tipo)}
                 disabled={readOnly}
               />
               <ListItemText primary={tipo} />
@@ -207,7 +204,7 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
           labelId="tipo-escudo-camisa"
           id="tipo-escudo-camisa"
           value={formData.tipo_de_escudo_na_camisa}
-          onChange={readOnly ? undefined : (e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, tipo_de_escudo_na_camisa: [e.target.value] }))}
+          onChange={(e: SelectChangeEvent<string[]>) => handleMultiSelectChange("tipo_de_escudo_na_camisa", e.target.value as string)}
           input={<OutlinedInput label="Tipo de Escudo da Camisa" />}
           renderValue={(selected: string[]) => selected.join(', ')}
         >
@@ -224,12 +221,12 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
         <CustomSelect
           labelId="tipo-escudo-calcao"
           id="tipo_de_escudo_no_calcao"
-          value={formData.tipo_de_escudo_na_camisa}
-          onChange={readOnly ? undefined : (e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, tipo_de_escudo_no_calcao: [e.target.value] }))}
+          value={formData.tipo_de_escudo_no_calcao}
+          onChange={(e: SelectChangeEvent<string[]>) => handleMultiSelectChange("tipo_de_escudo_no_calcao", e.target.value as string)}
           input={<OutlinedInput label="Tipo de Escudo do Calção" />}
           renderValue={(selected: string[]) => selected.join(', ')}
         >
-          {tiposEscudoCamisaDisponiveis.map((tipo) => (
+          {tiposEscudoCalcaoDisponiveis.map((tipo) => (
             <MenuItem key={tipo} value={tipo} disabled={readOnly}>
               {tipo}
             </MenuItem>
@@ -265,7 +262,7 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
         <InputLabel id="tamanhos_permitidos">Tamanhos</InputLabel>
         <CustomSelect
           labelId="tamanhos_permitidos_label"
-          id="tamanhos_permitidos-gola"
+          id="tamanhos_permitidos_id"
           multiple
           value={formData.tamanhos_permitidos}
           input={<OutlinedInput label="Tipo de Gola" />}
@@ -274,8 +271,8 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
           {tamanhosDisponiveis.map((tamanhos) => (
             <MenuItem key={tamanhos} value={tamanhos} disabled={readOnly}>
               <CustomCheckbox
-                checked={formData.tamanhos_permitidos.indexOf(tamanhos) > -1}
-                onChange={() => handleTamanhosPermitidosChange(tamanhos)}
+                checked={formData.tamanhos_permitidos.includes(tamanhos)}
+                onChange={() => handleMultiSelectChange("tamanhos_permitidos", tamanhos)}
                 disabled={readOnly}
               />
               <ListItemText primary={tamanhos} />
@@ -307,14 +304,14 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
         sx={{
           mt: 5,
         }}
-        htmlFor="numero_fator_protecao_uv_camisa"
+        htmlFor="numero_fator_protecao_uv_calcao"
       >
         Fator Proteção UV Calção
       </CustomFormLabel>
       <CustomTextField
         label="Fator Proteção UV Calção"
-        name="numero_fator_protecao_uv_camisa"
-        value={formData.numero_fator_protecao_uv_camisa}
+        name="numero_fator_protecao_uv_calcao"
+        value={formData.numero_fator_protecao_uv_calcao}
         onChange={handleChange}
         placeholder="Fator Proteção UV Calção"
         variant="outlined"
