@@ -302,64 +302,65 @@ const RastreamentoClienteScreen = () => {
                           </TableCell>
                         </TableRow>
                         <hr />
-                        <Box sx={{ mt: 4, textAlign: "left", paddingX: 2 }}>
 
-                          <Typography variant="h6" fontWeight="bold" color="error">
-                            BRINDE
-                          </Typography>
-                          {orcamento?.produtos_brinde !== null && (
-                            <TableRow>
-                              <TableCell sx={{ border: 'none' }} colSpan={16}>
-                                <TableHead>
-                                  <TableRow>
-                                    <TableCell></TableCell>
-                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                      quantidade:
-                                    </TableCell>
-                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                      Preço:
-                                    </TableCell>
-                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                      Tamanho:
-                                    </TableCell>
-                                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                      Peso:
-                                    </TableCell>
-                                  </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                  {listaBrindes.length > 0 ? (
-                                    listaBrindes.map((produto: Produto, index: number) => (
-                                      <TableRow key={produto.id || index}>
-                                        <TableCell sx={{ fontWeight: 'bold', padding: '8px' }} colSpan={1}>
-                                          {produto.nome}
-                                        </TableCell>
-                                        <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                          {produto.quantidade}
-                                        </TableCell>
-                                        <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                          {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                        </TableCell>
-                                        <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                          {produto.altura} x {produto.largura} x {produto.comprimento} cm
-                                        </TableCell>
-                                        <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                          {produto.peso} kg
-                                        </TableCell>
-                                        <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                          {produto.prazo} dias
-                                        </TableCell>
-                                      </TableRow>
-                                    ))
-                                  ) : (
-                                    <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
-                                  )}
-                                </TableBody>
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </Box>
-
+                        {orcamento?.produtos_brinde !== null || orcamento?.produtos_brinde !== undefined && (
+                          <Box sx={{ mt: 4, textAlign: "left", paddingX: 2 }}>
+                            <Typography variant="h6" fontWeight="bold" color="error">
+                              BRINDE
+                            </Typography>
+                            {orcamento?.produtos_brinde !== null && (
+                              <TableRow>
+                                <TableCell sx={{ border: 'none' }} colSpan={16}>
+                                  <TableHead>
+                                    <TableRow>
+                                      <TableCell></TableCell>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                        quantidade:
+                                      </TableCell>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                        Preço:
+                                      </TableCell>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                        Tamanho:
+                                      </TableCell>
+                                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                        Peso:
+                                      </TableCell>
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    {listaBrindes.length > 0 ? (
+                                      listaBrindes.map((produto: Produto, index: number) => (
+                                        <TableRow key={produto.id || index}>
+                                          <TableCell sx={{ fontWeight: 'bold', padding: '8px' }} colSpan={1}>
+                                            {produto.nome}
+                                          </TableCell>
+                                          <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                            {produto.quantidade}
+                                          </TableCell>
+                                          <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                            {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                          </TableCell>
+                                          <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                            {produto.altura} x {produto.largura} x {produto.comprimento} cm
+                                          </TableCell>
+                                          <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                            {produto.peso} kg
+                                          </TableCell>
+                                          <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                            {produto.prazo} dias
+                                          </TableCell>
+                                        </TableRow>
+                                      ))
+                                    ) : (
+                                      <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
+                                    )}
+                                  </TableBody>
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </Box>
+                        )}
                       </TableBody>
                     </Table>
                   </Box>
