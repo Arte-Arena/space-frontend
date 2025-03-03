@@ -12,6 +12,7 @@ const MainWrapper = styled("div")(() => ({
   display: "flex",
   minHeight: "100vh",
   width: "100%",
+  overflow: "hidden",
 }));
 
 const PageWrapper = styled("div")(() => ({
@@ -22,6 +23,7 @@ const PageWrapper = styled("div")(() => ({
   zIndex: 1,
   width: "100%",
   backgroundColor: "transparent",
+  overflow: "hidden",
 }));
 
 interface Props {
@@ -67,13 +69,14 @@ export default function ClientLayout({
           sx={{
             pt: '30px',
             maxWidth: customizer.isLayout === "boxed" ? "lg" : "100%!important",
+            overflow: "hidden",
           }}
         >
           {/* ------------------------------------------- */}
           {/* PageContent */}
           {/* ------------------------------------------- */}
 
-          <Box sx={{ minHeight: "calc(100vh - 170px)" }}>
+          <Box sx={{ minHeight: "calc(100vh - 170px)", overflow: "hidden" }}>
             {children}
           </Box>
 
