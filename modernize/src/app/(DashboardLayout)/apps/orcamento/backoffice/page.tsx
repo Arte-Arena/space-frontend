@@ -362,7 +362,7 @@ const OrcamentoBackofficeScreen = () => {
           orcamento_id: currentOrcamentoId,
           esboco: sketch.letter,
           quantidade_jogadores: sketch.quantity,
-          configuracoes: [placeholderConfigs.slice(0, sketch.quantity)]
+          configuracoes: placeholderConfigs.slice(0, sketch.quantity)
         };
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes`, {
