@@ -14,7 +14,7 @@ import IconButton from '@mui/material/IconButton';
 import { Pagination, Stack, Button, Box, Typography, Collapse, FormControlLabel, Checkbox, TextField, useTheme } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import { IconSearch, IconLink, IconShirtSport, IconCheck, IconTrash } from '@tabler/icons-react';
+import { IconSearch, IconLink, IconShirtSport, IconCheck } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -26,6 +26,7 @@ import DialogActions from '@mui/material/DialogActions';
 import { IconTruckDelivery } from '@tabler/icons-react';
 import { useStatusChangeAprovado } from '@/utils/PutStatusOrcamentos';
 import useAprovarPedidoStatus from './components/useAprovarPedidoStatus';
+
 
 interface Pedidos {
   id: number;
@@ -44,10 +45,10 @@ interface Pedidos {
   situacao: string | null;
   designer_id: number | null;
   observacoes: string | null;
-  codigo_rastreamento: string | null;
   url_trello: string | null;
   created_at: string;
   updated_at: string;
+  codigo_rastreamento: string | null;
 }
 
 interface Produto {
@@ -89,11 +90,6 @@ interface Orcamento {
   pedidos: Pedidos[];
 }
 
-interface Sketch {
-  letter: string;
-  quantity: number;
-}
-
 const OrcamentoBackofficeScreen = () => {
   const [query, setQuery] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -103,14 +99,6 @@ const OrcamentoBackofficeScreen = () => {
   const [openLinkDialog, setOpenLinkDialog] = useState<boolean>(false);
   const [linkUniform, setLinkUniform] = useState<string>('');
   const [openUniformDialog, setOpenUniformDialog] = useState<boolean>(false);
-  const [sketches, setSketches] = useState<Sketch[]>([]);
-  const [currentQuantity, setCurrentQuantity] = useState<number>(1);
-  const [currentLetter, setCurrentLetter] = useState<string>('');
-  const [error, setError] = useState<string>('');
-  const [isGeneratingLink, setIsGeneratingLink] = useState<boolean>(false);
-  const [isLinkGenerated, setIsLinkGenerated] = useState<boolean>(false);
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [currentOrcamentoId, setCurrentOrcamentoId] = useState<number | null>(null);
   const [openEntregaDialog, setOpenEntregaDialog] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState<Pedidos | null>(null);
   const [showInput, setShowInput] = useState(false);
@@ -121,7 +109,7 @@ const OrcamentoBackofficeScreen = () => {
   const [HasRecebimento, setHasRecebimento] = useState(false);
   const [loadingPedido, setLoadingPedido] = useState(false);
   const [copiedRastreio, setCopiedRastreio] = useState(false);
-  const theme = useTheme()
+  const theme = useTheme();
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
   const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
@@ -162,7 +150,6 @@ const OrcamentoBackofficeScreen = () => {
     }
   }, [selectedPedido]);
 
-
   const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos, refetch } = useQuery({
     queryKey: ['budgetData', searchQuery, page],
     queryFn: () =>
@@ -175,11 +162,6 @@ const OrcamentoBackofficeScreen = () => {
       }).then((res) => res.json()),
   });
 
-  useEffect(() => {
-    console.log(dataOrcamentos)
-  }, [dataOrcamentos])
-
-
   const handleOpenDialogEntrega = (id: number) => {
     console.log('id passado no handle open : ', id)
     handleFetchPedido(id);
@@ -189,7 +171,6 @@ const OrcamentoBackofficeScreen = () => {
   const handleCloseDialogEntrega = () => {
     setOpenEntregaDialog(false);
   };
-
 
   const handleSubmmitEntrega = (inputValueEntrega: string) => {
     fetch(
@@ -223,8 +204,10 @@ const OrcamentoBackofficeScreen = () => {
       });
   };
 
-  const handleMakePedido = async (orcamento: Orcamento) => {
 
+  // Precisamos validar os botões pro caso de ja terem sido feitos clientes e pedidos.
+  const handleMakePedido = async (orcamento: Orcamento) => {
+console.log(orcamento);
     const orcamentoFormated = {
       id: orcamento.id,
       id_vendedor: orcamento.user_id,
@@ -277,7 +260,7 @@ const OrcamentoBackofficeScreen = () => {
         console.log(errorData.message)
         alert(`Erro ao salvar: ${errorData.message}`);
       }
-      refetch()
+
     }
 
   }
@@ -326,7 +309,6 @@ const OrcamentoBackofficeScreen = () => {
   };
 
   async function handleShortlinkUniform(uniformId: number) {
-    setCurrentOrcamentoId(uniformId);
     const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/url/${uniformId}`, {
       method: 'GET',
       headers: {
@@ -343,62 +325,6 @@ const OrcamentoBackofficeScreen = () => {
     setLinkUniform(`${window.location.origin}/u${data.caminho}`);
     setOpenUniformDialog(true);
   }
-
-  const handleGenerateAndCopyLink = async () => {
-    try {
-      setIsGeneratingLink(true);
-      setApiError(null);
-
-      for (const sketch of sketches) {
-        const uniformData = {
-          orcamento_id: currentOrcamentoId,
-          esboco: sketch.letter,
-          quantidade_jogadores: sketch.quantity,
-          configuracoes: []
-        };
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify(uniformData),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          if (response.status === 422 && data.errors) {
-            setApiError(`Erro: Já existe um esboço ${sketch.letter} para este orçamento.`);
-          } else {
-            setApiError(`Erro ao salvar o esboço ${sketch.letter}: ${data.message || 'Erro desconhecido'}`);
-          }
-          setIsGeneratingLink(false);
-          return;
-        }
-      }
-
-      await navigator.clipboard.writeText(linkUniform);
-      setIsLinkGenerated(true);
-    } catch (error) {
-      console.error('Erro ao processar os esboços:', error);
-      setApiError('Ocorreu um erro ao processar os esboços. Tente novamente.');
-    } finally {
-      setIsGeneratingLink(false);
-    }
-  };
-
-  const handleDialogClose = () => {
-    setOpenUniformDialog(false);
-    setSketches([]);
-    setCurrentLetter('');
-    setCurrentQuantity(1);
-    setIsLinkGenerated(false);
-    setApiError(null);
-    setCurrentOrcamentoId(null);
-  };
-
 
   const handleOpenRastreamentoInterno = (id: string | number | undefined) => {
     const link = window.location.origin + '/apps/orcamento/backoffice/rastreamento-interno/' + id;
@@ -431,6 +357,7 @@ const OrcamentoBackofficeScreen = () => {
     useAprovarPedidoStatus(status, id);
     setHasRecebimento(true);
   }
+
 
 
   return (
@@ -479,17 +406,19 @@ const OrcamentoBackofficeScreen = () => {
               <TableBody>
                 {dataOrcamentos?.data.map((row: Orcamento) => {
                   const listaProdutos = row.lista_produtos
-                    ? (typeof row.lista_produtos === 'string' ? JSON.parse(row.lista_produtos) : row.lista_produtos)
+                    ? typeof row.lista_produtos === 'string'
+                      ? JSON.parse(row.lista_produtos)
+                      : row.lista_produtos
                     : [];
 
                   const texto = row.texto_orcamento;
                   const frete = texto?.match(regexFrete);
                   const prazo = texto?.match(regexPrazo);
-                  console.log(prazo)
                   const entrega = texto?.match(regexEntrega);
                   const brinde = texto?.match(regexBrinde);
 
                   const hasPedidos = row.pedidos && row.pedidos.length > 0;
+
 
                   return (
                     <React.Fragment key={row.id}>
@@ -552,118 +481,20 @@ const OrcamentoBackofficeScreen = () => {
                               open={openUniformDialog}
                               onClose={() => setOpenUniformDialog(false)}
                             >
-                              <DialogTitle>Configuração de esboços de uniforme</DialogTitle>
+                              <DialogTitle>Link do Uniforme</DialogTitle>
                               <DialogContent>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 2 }}>
-                                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                                    <CustomTextField
-                                      label="Letra do Esboço (A-Z)"
-                                      value={currentLetter}
-                                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                        const value = e.target.value.toUpperCase();
-                                        if (value === '' || /^[A-Z]$/.test(value)) {
-                                          setCurrentLetter(value);
-                                          setError('');
-                                        }
-                                      }}
-                                      inputProps={{ maxLength: 1 }}
-                                      error={!!error}
-                                      helperText={error}
-                                      disabled={isGeneratingLink || isLinkGenerated}
-                                    />
-                                    <CustomTextField
-                                      label="Quantidade"
-                                      type="number"
-                                      value={currentQuantity}
-                                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentQuantity(parseInt(e.target.value) || 1)}
-                                      inputProps={{ min: 1 }}
-                                      disabled={isGeneratingLink || isLinkGenerated}
-                                    />
-                                    <Button
-                                      variant="contained"
-                                      onClick={() => {
-                                        if (!currentLetter) {
-                                          setError('Selecione uma letra');
-                                          return;
-                                        }
-                                        if (sketches.some(s => s.letter === currentLetter)) {
-                                          setError('Esta letra já foi utilizada');
-                                          return;
-                                        }
-                                        setSketches([...sketches, { letter: currentLetter, quantity: currentQuantity }]);
-                                        setCurrentLetter('');
-                                        setCurrentQuantity(1);
-                                        setError('');
-                                      }}
-                                      disabled={isGeneratingLink || isLinkGenerated}
-                                    >
-                                      Adicionar
-                                    </Button>
-                                  </Box>
-
-                                  {sketches.length > 0 && (
-                                    <TableContainer>
-                                      <Table size="small">
-                                        <TableHead>
-                                          <TableRow>
-                                            <TableCell>Esboço</TableCell>
-                                            <TableCell>Quantidade</TableCell>
-                                            <TableCell>Ações</TableCell>
-                                          </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                          {sketches.map((sketch) => (
-                                            <TableRow key={sketch.letter}>
-                                              <TableCell>Esboço {sketch.letter}</TableCell>
-                                              <TableCell>{sketch.quantity}</TableCell>
-                                              <TableCell>
-                                                <IconButton
-                                                  size="small"
-                                                  onClick={() => setSketches(sketches.filter(s => s.letter !== sketch.letter))}
-                                                  disabled={isGeneratingLink || isLinkGenerated}
-                                                >
-                                                  <IconTrash size={18} />
-                                                </IconButton>
-                                              </TableCell>
-                                            </TableRow>
-                                          ))}
-                                        </TableBody>
-                                      </Table>
-                                    </TableContainer>
-                                  )}
-
-                                  {apiError && (
-                                    <Box sx={{ mt: 2, p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
-                                      <Typography color="error" variant="body2">
-                                        {apiError}
-                                      </Typography>
-                                    </Box>
-                                  )}
-                                </Box>
+                                <DialogContentText>
+                                  {linkUniform}
+                                </DialogContentText>
                               </DialogContent>
                               <DialogActions>
-                                {!isLinkGenerated ? (
-                                  <Button
-                                    onClick={handleGenerateAndCopyLink}
-                                    disabled={isGeneratingLink || sketches.length === 0}
-                                    startIcon={isGeneratingLink && <CircularProgress size={16} />}
-                                  >
-                                    {isGeneratingLink ? 'Gerando...' : sketches.length === 0 ? 'Adicione um esboço' : 'Gerar Link'}
-                                  </Button>
-                                ) : (
-                                  <>
-                                    <Typography variant="body2" color="success.main" sx={{ mr: 2 }}>
-                                      Link gerado e copiado!
-                                    </Typography>
-                                    <Button
-                                      onClick={() => navigator.clipboard.writeText(linkUniform)}
-                                    >
-                                      Copiar novamente
-                                    </Button>
-                                  </>
-                                )}
-                                <Button onClick={handleDialogClose}>
-                                  Fechar
+                                <Button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(linkUniform);
+                                    setOpenUniformDialog(false);
+                                  }}
+                                >
+                                  Copiar Link
                                 </Button>
                               </DialogActions>
                             </Dialog>
@@ -771,6 +602,7 @@ const OrcamentoBackofficeScreen = () => {
                                   </>
                                 )}
                               </Dialog>
+
                             </Button>
 
                           </Stack>
@@ -1010,7 +842,6 @@ const OrcamentoBackofficeScreen = () => {
               onChange={handlePageChange}
             />
           </Stack>
-
         </>
       </ParentCard>
     </PageContainer>
