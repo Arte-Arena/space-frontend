@@ -40,7 +40,12 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
     updated_at: "",
   });
 
+  const tiposTecidoCamisaDisponiveis = ["Dryfit Liso", "Dryfit Sport Star Liso", "DryFit Camb Pro"];
+  const tiposTecidoCalcaoDisponiveis = ["Dryfit Liso", "Dryfit Sport Star Liso", "DryFit Camb Pro"];
   const tiposGolaDisponiveis = ["Polo", "Careca", "V", "Bayard"];
+  const tiposEscudoCamisaDisponiveis = ["Sublimado", "Patch 3D"];
+  const tamanhosDisponiveis = ["PP", "P", "M", "G", "GG", "XG", "XXG", "XXXG"];
+  const tiposTecidoMeiaoDisponiveis = ["Helanca Profissional", "Helanca Profissional Premium"];
 
   useEffect(() => {
     if (initialData) {
@@ -65,6 +70,17 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
     }
   }
 
+  function handleTamanhosPermitidosChange(tamanhos: string) {
+    if (readOnly) return;
+    const tamanhosPermitidosAtual = formData.tamanhos_permitidos;
+    const indice = tamanhosPermitidosAtual.indexOf(tamanhos);
+    if (indice > -1) {
+      setFormData((prev) => ({ ...prev, tamanhos_permitidos: tamanhosPermitidosAtual.filter((t) => t !== tamanhos) }));
+    } else {
+      setFormData((prev) => ({ ...prev, tamanhos_permitidos: [...tamanhosPermitidosAtual, tamanhos] }));
+    }
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (onSubmit) onSubmit(formData);
@@ -73,63 +89,55 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4 border rounded-lg shadow-md">
-      <CustomFormLabel
-        sx={{
-          mt: 5,
-        }}
-        htmlFor="nome"
-      >
-        Nome do Pacote de Uniformes
-      </CustomFormLabel>
-      <CustomTextField
-        label="Nome do produto"
-        name="nome"
-        value={formData.nome}
-        onChange={handleChange}
-        placeholder="Nome do produto"
-        variant="outlined"
-        fullWidth
-        readOnly={readOnly}
-      />
-      <CustomFormLabel
-        sx={{
-          mt: 5,
-        }}
-        htmlFor="tipo_de_tecido_camisa"
-      >
-        Tipo de Tecido da Camisa
-      </CustomFormLabel>
-      <CustomTextField
-        label="Tecido da camisa"
-        name="tipo_de_tecido_camisa"
-        value={formData.tipo_de_tecido_camisa}
-        onChange={handleChange}
-        placeholder="Tecido da camisa"
-        variant="outlined"
-        fullWidth
-        readOnly={readOnly}
-      />
 
+      <Box sx={{ mt: 5 }}>
+        <CustomTextField
+          label="Nome do produto"
+          name="nome"
+          value={formData.nome}
+          onChange={handleChange}
+          placeholder="Nome do produto"
+          variant="outlined"
+          fullWidth
+          readOnly={readOnly}
+        />
+      </Box>
 
-      <CustomFormLabel
-        sx={{
-          mt: 5,
-        }}
-        htmlFor="tipo_de_tecido_calcao"
-      >
-        Tipo de Tecido da Calção
-      </CustomFormLabel>
-      <CustomTextField
-        label="Tecido da calção"
-        name="tipo_de_tecido_calcao"
-        value={formData.tipo_de_tecido_calcao}
-        onChange={handleChange}
-        placeholder="Tecido da calção"
-        variant="outlined"
-        fullWidth
-        rows={4}
-        readOnly={readOnly}
-      />
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <InputLabel id="tipo_de_tecido_camisa">Tipo de Tecido da Camisa</InputLabel>
+        <CustomSelect
+          labelId="tipo_tecido_camisa"
+          id="tipo_de_tecido_camisa"
+          value={formData.tipo_de_tecido_camisa}
+          onChange={readOnly ? undefined : (e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, tipo_de_tecido_camisa: e.target.value }))}
+          input={<OutlinedInput label="Tipo de Tecido da Camisa" />}
+          renderValue={(selected: string) => selected}
+        >
+          {tiposTecidoCamisaDisponiveis.map((tipo) => (
+            <MenuItem key={tipo} value={tipo} disabled={readOnly}>
+              {tipo}
+            </MenuItem>
+          ))}
+        </CustomSelect>
+      </FormControl>
+
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <InputLabel id="tipo_de_tecido_camisa">Tipo de Tecido do Calção</InputLabel>
+        <CustomSelect
+          labelId="tipo_tecido_calcao"
+          id="tipo_de_tecido_calcao"
+          value={formData.tipo_de_tecido_calcao}
+          onChange={readOnly ? undefined : (e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, tipo_de_tecido_calcao: e.target.value }))}
+          input={<OutlinedInput label="Tipo de Tecido do Calção" />}
+          renderValue={(selected: string) => selected}
+        >
+          {tiposTecidoCalcaoDisponiveis.map((tipo) => (
+            <MenuItem key={tipo} value={tipo} disabled={readOnly}>
+              {tipo}
+            </MenuItem>
+          ))}
+        </CustomSelect>
+      </FormControl>
 
       <FormControl sx={{ mt: 5 }}>
         <FormControlLabel
@@ -140,7 +148,7 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
               disabled={readOnly}
             />
           }
-          label="Permite Gola Customizada"
+          label="Gola Customizada"
         />
       </FormControl>
 
@@ -158,13 +166,243 @@ export default function ProdutoPacoteUniformeForm({ initialData, onSubmit, readO
             <MenuItem key={tipo} value={tipo}>
               <CustomCheckbox
                 checked={formData.tipo_gola.indexOf(tipo) > -1}
-                onChange={(e) => handleTipoGolaChange(tipo)}
+                onChange={() => handleTipoGolaChange(tipo)}
                 disabled={readOnly}
               />
               <ListItemText primary={tipo} />
             </MenuItem>
           ))}
         </CustomSelect>
+      </FormControl>
+
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <FormControlLabel
+          control={
+            <CustomCheckbox
+              checked={formData.permite_nome_de_jogador}
+              onChange={readOnly ? undefined : (e) => setFormData(prev => ({ ...prev, permite_nome_de_jogador: e.target.checked }))}
+              disabled={readOnly}
+            />
+          }
+          label="Nome de Jogador"
+        />
+      </FormControl>
+
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <FormControlLabel
+          control={
+            <CustomCheckbox
+              checked={formData.permite_escudo}
+              onChange={readOnly ? undefined : (e) => setFormData(prev => ({ ...prev, permite_escudo: e.target.checked }))}
+              disabled={readOnly}
+            />
+          }
+          label="Escudo"
+        />
+      </FormControl>
+
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <InputLabel id="tipo-escudo-camisa">Tipo de Escudo da Camisa</InputLabel>
+        <CustomSelect
+          labelId="tipo-escudo-camisa"
+          id="tipo-escudo-camisa"
+          value={formData.tipo_de_escudo_na_camisa}
+          onChange={readOnly ? undefined : (e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, tipo_de_escudo_na_camisa: [e.target.value] }))}
+          input={<OutlinedInput label="Tipo de Escudo da Camisa" />}
+          renderValue={(selected: string[]) => selected.join(', ')}
+        >
+          {tiposEscudoCamisaDisponiveis.map((tipo) => (
+            <MenuItem key={tipo} value={tipo} disabled={readOnly}>
+              {tipo}
+            </MenuItem>
+          ))}
+        </CustomSelect>
+      </FormControl>
+
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <InputLabel id="tipo_de_escudo_no_calcao">Tipo de Escudo do Calção</InputLabel>
+        <CustomSelect
+          labelId="tipo-escudo-calcao"
+          id="tipo_de_escudo_no_calcao"
+          value={formData.tipo_de_escudo_na_camisa}
+          onChange={readOnly ? undefined : (e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, tipo_de_escudo_no_calcao: [e.target.value] }))}
+          input={<OutlinedInput label="Tipo de Escudo do Calção" />}
+          renderValue={(selected: string[]) => selected.join(', ')}
+        >
+          {tiposEscudoCamisaDisponiveis.map((tipo) => (
+            <MenuItem key={tipo} value={tipo} disabled={readOnly}>
+              {tipo}
+            </MenuItem>
+          ))}
+        </CustomSelect>
+      </FormControl>
+
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <FormControlLabel
+          control={
+            <CustomCheckbox
+              checked={formData.patrocinio_ilimitado}
+              onChange={readOnly ? undefined : (e) => setFormData(prev => ({ ...prev, patrocinio_ilimitado: e.target.checked }))}
+              disabled={readOnly}
+            />
+          }
+          label="Patrocínios Ilimitados"
+        />
+      </FormControl>
+
+      <CustomTextField
+        label="Número Máximo de Patrocínios"
+        name="patrocinio_numero_maximo"
+        value={formData.patrocinio_numero_maximo}
+        onChange={handleChange}
+        placeholder="Número Máximo de Patrocínios"
+        variant="outlined"
+        fullWidth
+        readOnly={readOnly}
+      />
+
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <InputLabel id="tamanhos_permitidos">Tamanhos</InputLabel>
+        <CustomSelect
+          labelId="tamanhos_permitidos_label"
+          id="tamanhos_permitidos-gola"
+          multiple
+          value={formData.tamanhos_permitidos}
+          input={<OutlinedInput label="Tipo de Gola" />}
+          renderValue={(selected: string[]) => selected.join(', ')}
+        >
+          {tamanhosDisponiveis.map((tamanhos) => (
+            <MenuItem key={tamanhos} value={tamanhos} disabled={readOnly}>
+              <CustomCheckbox
+                checked={formData.tamanhos_permitidos.indexOf(tamanhos) > -1}
+                onChange={() => handleTamanhosPermitidosChange(tamanhos)}
+                disabled={readOnly}
+              />
+              <ListItemText primary={tamanhos} />
+            </MenuItem>
+          ))}
+        </CustomSelect>
+      </FormControl>
+
+      <CustomFormLabel
+        sx={{
+          mt: 5,
+        }}
+        htmlFor="numero_fator_protecao_uv_camisa"
+      >
+        Fator Proteção UV Camisa
+      </CustomFormLabel>
+      <CustomTextField
+        label="Fator Proteção UV Camisa"
+        name="numero_fator_protecao_uv_camisa"
+        value={formData.numero_fator_protecao_uv_camisa}
+        onChange={handleChange}
+        placeholder="Fator Proteção UV Camisa"
+        variant="outlined"
+        fullWidth
+        readOnly={readOnly}
+      />
+
+      <CustomFormLabel
+        sx={{
+          mt: 5,
+        }}
+        htmlFor="numero_fator_protecao_uv_camisa"
+      >
+        Fator Proteção UV Calção
+      </CustomFormLabel>
+      <CustomTextField
+        label="Fator Proteção UV Calção"
+        name="numero_fator_protecao_uv_camisa"
+        value={formData.numero_fator_protecao_uv_camisa}
+        onChange={handleChange}
+        placeholder="Fator Proteção UV Calção"
+        variant="outlined"
+        fullWidth
+        readOnly={readOnly}
+      />
+
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <InputLabel id="tipo_de_tecido_meiao">Tipo de Tecido do Meião</InputLabel>
+        <CustomSelect
+          labelId="tipo_de_tecido_meiao-label"
+          id="tipo_de_tecido_meiao"
+          value={formData.tipo_de_tecido_meiao}
+          onChange={readOnly ? undefined : (e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, tipo_de_tecido_meiao: e.target.value }))}
+          input={<OutlinedInput label="Tipo de Escudo do Calção" />}
+          renderValue={(selected: string) => selected}
+        >
+          {tiposTecidoMeiaoDisponiveis.map((tipo) => (
+            <MenuItem key={tipo} value={tipo} disabled={readOnly}>
+              {tipo}
+            </MenuItem>
+          ))}
+        </CustomSelect>
+      </FormControl>
+
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <FormControlLabel
+          control={
+            <CustomCheckbox
+              checked={formData.punho_personalizado}
+              onChange={readOnly ? undefined : (e) => setFormData(prev => ({ ...prev, punho_personalizado: e.target.checked }))}
+              disabled={readOnly}
+            />
+          }
+          label="Punho Personalizado"
+        />
+      </FormControl>
+
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <FormControlLabel
+          control={
+            <CustomCheckbox
+              checked={formData.etiqueta_de_produto_autentico}
+              onChange={readOnly ? undefined : (e) => setFormData(prev => ({ ...prev, etiqueta_de_produto_autentico: e.target.checked }))}
+              disabled={readOnly}
+            />
+          }
+          label="Etiqueta de Produto Autêntico"
+        />
+      </FormControl>
+
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <FormControlLabel
+          control={
+            <CustomCheckbox
+              checked={formData.logo_totem_em_patch_3d}
+              onChange={readOnly ? undefined : (e) => setFormData(prev => ({ ...prev, logo_totem_em_patch_3d: e.target.checked }))}
+              disabled={readOnly}
+            />
+          }
+          label="Logo Totem em Patch 3D"
+        />
+      </FormControl>
+
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <FormControlLabel
+          control={
+            <CustomCheckbox
+              checked={formData.selo_de_produto_oficial}
+              onChange={readOnly ? undefined : (e) => setFormData(prev => ({ ...prev, selo_de_produto_oficial: e.target.checked }))}
+              disabled={readOnly}
+            />
+          }
+          label="Selo de Produto Oficial"
+        />
+      </FormControl>
+
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <FormControlLabel
+          control={
+            <CustomCheckbox
+              checked={formData.selo_de_protecao_uv}
+              onChange={readOnly ? undefined : (e) => setFormData(prev => ({ ...prev, selo_de_protecao_uv: e.target.checked }))}
+              disabled={readOnly}
+            />
+          }
+          label="Selo de Proteção UV"
+        />
       </FormControl>
 
       {!readOnly && (
