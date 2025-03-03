@@ -127,28 +127,29 @@ const RastreamentoClienteScreen = () => {
   const dateCreatedOrcamento = createdAtOrcamento ? format(createdAtOrcamento, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
   const dateCreatedPedido = createdPedido ? format(createdPedido, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
 
-  const addBusinessDays = (date: Date | null, daysToAdd: number): Date | null => {
-    if (!date) return null; // Se a data for nula, retorne null imediatamente
+  // const addBusinessDays = (date: Date | null, daysToAdd: number): Date | null => {
+  //   if (!date) return null; // Se a data for nula, retorne null imediatamente
 
-    let count = 0;
-    let newDate = date;
+  //   let count = 0;
+  //   let newDate = date;
 
-    while (count < daysToAdd) {
-      newDate = addDays(newDate, 1);
-      if (!isWeekend(newDate)) {
-        count++;
-      }
-    }
+  //   // while (count < daysToAdd) {
+  //   //   newDate = addDays(newDate, 1);
+  //   //   if (!isWeekend(newDate)) {
+  //   //     count++;
+  //   //   }
+  //   // }
 
-    return newDate;
-  };
+  //   return newDate;
+  // };
 
 
-  const newDate = addBusinessDays(createdPedido, prazoDias);
+  // const newDate = addBusinessDays(createdPedido, prazoDias);
+  const newDate = new Date()
   const dataFormatada = newDate ? format(newDate, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
 
-  const newDateTransportadora = addBusinessDays(createdPedido, prazoDias + 1);
-  const dataFormatadaTransportadora = newDateTransportadora ? format(newDateTransportadora, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
+  // const newDateTransportadora = addBusinessDays(createdPedido, prazoDias + 1);
+  // const dataFormatadaTransportadora = newDateTransportadora ? format(newDateTransportadora, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
 
   const hoje = new Date();
   // const dataHojeFormatada = format(hoje, 'dd/MM/yyyy', { locale: ptBR });
@@ -175,7 +176,7 @@ const RastreamentoClienteScreen = () => {
     { label: "Pagamento confirmado", icon: IconCoinFilled, date: dateCreatedPedido },
     { label: "Pedido em Produção até", icon: IconTruckLoading, date: dataFormatada },
     // proxima data tem que ser na api da transportadora
-    { label: "Pedido na transportadora", icon: IconTruckDelivery, date: dataFormatadaTransportadora },
+    { label: "Pedido na transportadora", icon: IconTruckDelivery, date: "hoje" }, //dataFormatadaTransportadora
     { label: "Pedido entregue", icon: IconHomeCheck, date: "" },
   ];
 
