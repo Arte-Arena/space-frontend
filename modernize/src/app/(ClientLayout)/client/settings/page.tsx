@@ -21,7 +21,8 @@ import {
   MenuItem, 
   Select,
   Tab,
-  Tabs
+  Tabs,
+  Checkbox
 } from "@mui/material";
 
 interface TabPanelProps {
@@ -53,6 +54,7 @@ function TabPanel(props: TabPanelProps) {
 const SettingsPage = () => {
   const [tabValue, setTabValue] = useState(0);
   const [personType, setPersonType] = useState('fisica');
+  const [differentBillingAddress, setDifferentBillingAddress] = useState(false);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -60,6 +62,10 @@ const SettingsPage = () => {
 
   const handlePersonTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPersonType(event.target.value);
+  };
+
+  const handleBillingAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDifferentBillingAddress(event.target.checked);
   };
 
   return (
@@ -275,6 +281,115 @@ const SettingsPage = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
+              <Grid item xs={12} sx={{ mt: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox 
+                      checked={differentBillingAddress}
+                      onChange={handleBillingAddressChange}
+                    />
+                  }
+                  label="Usar endereço de cobrança diferente"
+                />
+              </Grid>
+
+              {differentBillingAddress && (
+                <>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+                      Endereço de Cobrança
+                    </Typography>
+                  </Grid>
+                  
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label="CEP"
+                      variant="outlined"
+                      required
+                      placeholder="00000-000"
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={8}>
+                    <TextField
+                      fullWidth
+                      label="Endereço"
+                      variant="outlined"
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label="Número"
+                      variant="outlined"
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label="Complemento"
+                      variant="outlined"
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label="Bairro"
+                      variant="outlined"
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="Cidade"
+                      variant="outlined"
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth variant="outlined" required>
+                      <InputLabel id="estado-cobranca-label">Estado</InputLabel>
+                      <Select
+                        labelId="estado-cobranca-label"
+                        label="Estado"
+                        defaultValue=""
+                      >
+                        <MenuItem value="AC">Acre</MenuItem>
+                        <MenuItem value="AL">Alagoas</MenuItem>
+                        <MenuItem value="AP">Amapá</MenuItem>
+                        <MenuItem value="AM">Amazonas</MenuItem>
+                        <MenuItem value="BA">Bahia</MenuItem>
+                        <MenuItem value="CE">Ceará</MenuItem>
+                        <MenuItem value="DF">Distrito Federal</MenuItem>
+                        <MenuItem value="ES">Espírito Santo</MenuItem>
+                        <MenuItem value="GO">Goiás</MenuItem>
+                        <MenuItem value="MA">Maranhão</MenuItem>
+                        <MenuItem value="MT">Mato Grosso</MenuItem>
+                        <MenuItem value="MS">Mato Grosso do Sul</MenuItem>
+                        <MenuItem value="MG">Minas Gerais</MenuItem>
+                        <MenuItem value="PA">Pará</MenuItem>
+                        <MenuItem value="PB">Paraíba</MenuItem>
+                        <MenuItem value="PR">Paraná</MenuItem>
+                        <MenuItem value="PE">Pernambuco</MenuItem>
+                        <MenuItem value="PI">Piauí</MenuItem>
+                        <MenuItem value="RJ">Rio de Janeiro</MenuItem>
+                        <MenuItem value="RN">Rio Grande do Norte</MenuItem>
+                        <MenuItem value="RS">Rio Grande do Sul</MenuItem>
+                        <MenuItem value="RO">Rondônia</MenuItem>
+                        <MenuItem value="RR">Roraima</MenuItem>
+                        <MenuItem value="SC">Santa Catarina</MenuItem>
+                        <MenuItem value="SP">São Paulo</MenuItem>
+                        <MenuItem value="SE">Sergipe</MenuItem>
+                        <MenuItem value="TO">Tocantins</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </>
+              )}
               
               <Grid item xs={12} sx={{ mt: 2 }}>
                 <Button 
