@@ -188,8 +188,8 @@ export default function UniformBackofficeScreen() {
 
       uniformData.forEach(uniform => {
         const letter = uniform.esboco;
-        transformedData[letter] = uniform.configuracoes
-          ? uniform.configuracoes.map((config, index) => ({
+        if (uniform.configuracoes && uniform.configuracoes.length > 0) {
+          transformedData[letter] = uniform.configuracoes.map((config, index) => ({
             id: index + 1,
             data: [
               config.genero || '',
@@ -199,12 +199,14 @@ export default function UniformBackofficeScreen() {
               config.tamanho_shorts || ''
             ],
             confirmed: false
-          }))
-          : Array(uniform.quantidade_jogadores).fill(null).map((_, index) => ({
+          }));
+        } else {
+          transformedData[letter] = Array(uniform.quantidade_jogadores).fill(null).map((_, index) => ({
             id: index + 1,
             data: ['', '', '', '', ''],
             confirmed: false
           }));
+        }
       });
 
       setTableData(transformedData);

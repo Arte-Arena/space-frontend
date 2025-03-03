@@ -262,21 +262,13 @@ const OrcamentoBackofficeScreen = () => {
     try {
       setIsGeneratingLink(true);
       setApiError(null);
-      
-      const placeholderConfigs = Array.from({ length: currentQuantity }, (_, i) => ({
-        genero: 'M',
-        nome_jogador: `Jogador ${i + 1}`, 
-        numero: `${i + 1}`,
-        tamanho_camisa: 'M',
-        tamanho_shorts: 'M' 
-      }));
 
       for (const sketch of sketches) {
         const uniformData = {
           orcamento_id: currentOrcamentoId,
           esboco: sketch.letter,
           quantidade_jogadores: sketch.quantity,
-          configuracoes: placeholderConfigs.slice(0, sketch.quantity)
+          configuracoes: []
         };
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes`, {
