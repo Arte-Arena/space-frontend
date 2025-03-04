@@ -9,10 +9,9 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  Typography,
 } from '@mui/material';
 
-import { IconListCheck, IconMail, IconUser, IconLogout } from '@tabler/icons-react';
+import { IconListCheck, IconMail, IconUser } from '@tabler/icons-react';
 
 const Profile = () => {
   const [anchorEl2, setAnchorEl2] = useState(null);
