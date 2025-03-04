@@ -63,7 +63,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
   const [orcamentoState, setOrcamentoState] = useState<Orcamento | null>(null);
   const [formaPagamento, setFormaPagamento] = useState('');
   const [tipoFaturamento, setTipoFaturamento] = useState('');
-  const [qtdParcelas, setQtdParcelas] = useState('1'); // Default para "1" no tipo faturado
+  const [qtdParcelas, setQtdParcelas] = useState(1); // Default para "1" no tipo faturado
   const [dataFatura1, setDataFatura1] = useState<Date | null>(new Date());
   const [valorFatura1, setValorFatura1] = useState<string | number | null | undefined>(0);
   const [dataFatura2, setDataFatura2] = useState<Date | null>(null);
@@ -131,39 +131,66 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
 
   const aprovaOrcamento = () => {
     if (orcamentoId !== null) {
-
-      // valida o campo data
+      // Valida o campo data de entrega
       if (!dataEntrega) {
         alert('A Data de Entrega é obrigatória.');
-        return
-      }
-      // valida os campos Data de faturamento
-      if (qtdParcelas === '1' && !dataFatura1) {
-        alert('A Data da Fatura #1 é obrigatória quando a quantidade de parcelas é 1.');
-        return;
-      }
-      if (qtdParcelas === '2' && !dataFatura2 || !dataFatura1) {
-        alert('A Data da Fatura #2 é obrigatória quando a quantidade de parcelas é 2.');
-        return;
-      }
-      if (qtdParcelas === '3' && !dataFatura3 || !dataFatura2) {
-        alert('A Data da Fatura #3 é obrigatória quando a quantidade de parcelas é 3.');
         return;
       }
 
-      // valida os campos de faturamento
-      if (qtdParcelas === '1' && !valorFatura1) {
-        alert('A Fatura #1 é obrigatória quando a quantidade de parcelas é 1.');
-        return;
+      // Valida os campos de data de faturamento e valores de faturamento
+      if (qtdParcelas === 1) {
+        if (!dataFatura1) {
+          alert('A Data da Fatura #1 é obrigatória.');
+          return;
+        }
+        if (!valorFatura1) {
+          alert('O Valor da Fatura #1 é obrigatório.');
+          return;
+        }
+      } else if (qtdParcelas === 2) {
+        if (!dataFatura1) {
+          alert('A Data da Fatura #1 é obrigatória.');
+          return;
+        }
+        if (!valorFatura1) {
+          alert('O Valor da Fatura #1 é obrigatório.');
+          return;
+        }
+        if (!dataFatura2) {
+          alert('A Data da Fatura #2 é obrigatória.');
+          return;
+        }
+        if (!valorFatura2) {
+          alert('O Valor da Fatura #2 é obrigatório.');
+          return;
+        }
+      } else if (qtdParcelas === 3) {
+        if (!dataFatura1) {
+          alert('A Data da Fatura #1 é obrigatória.');
+          return;
+        }
+        if (!valorFatura1) {
+          alert('O Valor da Fatura #1 é obrigatório.');
+          return;
+        }
+        if (!dataFatura2) {
+          alert('A Data da Fatura #2 é obrigatória.');
+          return;
+        }
+        if (!valorFatura2) {
+          alert('O Valor da Fatura #2 é obrigatório.');
+          return;
+        }
+        if (!dataFatura3) {
+          alert('A Data da Fatura #3 é obrigatória.');
+          return;
+        }
+        if (!valorFatura3) {
+          alert('O Valor da Fatura #3 é obrigatório.');
+          return;
+        }
       }
-      if (qtdParcelas === '2' && !valorFatura2 || !valorFatura1) {
-        alert('A Fatura #2 é obrigatória quando a quantidade de parcelas é 2.');
-        return;
-      }
-      if (qtdParcelas === '3' && !dataFatura3 || !dataFatura2 || !dataFatura1) {
-        alert('A Fatura #3 é obrigatória quando a quantidade de parcelas é 3.');
-        return;
-      }
+
 
       setIsLoadingOrcamentoState(true);
       fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/status/aprova/${orcamentoId}`, {
@@ -278,9 +305,9 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
 
               // Lógica para tipos específicos
               if (value === 'faturado') {
-                setQtdParcelas('1'); // Default para "faturado"
+                setQtdParcelas(1); // Default para "faturado"
               } else if (value === 'parcelado') {
-                setQtdParcelas('2'); // Sempre 2 parcelas no tipo "parcelado"
+                setQtdParcelas(2); // Sempre 2 parcelas no tipo "parcelado"
               }
 
               // logica pra fazer metade metade e etc..
@@ -290,6 +317,8 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
 
                 if (value === 'a_vista') {
                   setValorFatura1(total);
+                  setValorFatura2(0);
+                  setValorFatura3(0);
                 }
 
                 if (value === 'parcelado') {
@@ -316,32 +345,35 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
               name="qtd_parcelas"
               value={qtdParcelas}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                const value = event.target.value;
+                const value = parseInt(event.target.value, 10)
                 setQtdParcelas(value);
 
                 const total = orcamentoState?.total_orcamento;
                 if (orcamentoState !== null || orcamentoState !== undefined) {
-                  if (value === '3') {
+                  if (value === 3) {
                     setValorFatura1(total ? total / 3 : 0);
                     setValorFatura2(total ? total / 3 : 0);
                     setValorFatura3(total ? total / 3 : 0);
                   }
-                  if (value === '2') {
+                  if (value === 2) {
                     setValorFatura1(total ? total / 2 : 0);
                     setValorFatura2(total ? total / 2 : 0);
-                  }
-                  if (value === '1') {
-                    setValorFatura1(total);
+                    setValorFatura3(0);
 
+                  }
+                  if (value === 1) {
+                    setValorFatura1(total);
+                    setValorFatura2(0);
+                    setValorFatura3(0);
                   }
                 }
 
               }}
               sx={{ flexGrow: 1, ml: 2 }}
             >
-              <MenuItem value="1">1</MenuItem>
-              <MenuItem value="2">2</MenuItem>
-              <MenuItem value="3">3</MenuItem>
+              <MenuItem value={1}>1</MenuItem>
+              <MenuItem value={2}>2</MenuItem>
+              <MenuItem value={3}>3</MenuItem>
             </CustomSelect>
           </Box>
         )}
@@ -380,7 +412,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
           </Box>
 
           {/* Fatura 2 (parcelado ou mais de 1 parcela no faturado) */}
-          {(tipoFaturamento === 'parcelado' || qtdParcelas === '2' || qtdParcelas === '3') && (
+          {(tipoFaturamento === 'parcelado' || qtdParcelas === 2 || qtdParcelas === 3) && (
             <Box display="flex" gap={2} mt={2}>
               <Box flex={1}>
                 <CustomFormLabel htmlFor="data_fatura2">Data da Fatura #2</CustomFormLabel>
@@ -410,7 +442,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
           )}
 
           {/* Fatura 3 (se 3 parcelas no faturado) */}
-          {qtdParcelas === '3' && (
+          {qtdParcelas === 3 && (
             <Box display="flex" gap={2} mt={2}>
               <Box flex={1}>
                 <CustomFormLabel htmlFor="data_fatura3">Data da Fatura #3</CustomFormLabel>
