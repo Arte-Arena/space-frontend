@@ -271,6 +271,8 @@ const OrcamentoGerarScreen = () => {
   const [prazoMiniEnvios, setPrazoMiniEnvios] = useState<number | null>(null);
   const [precoLalamove, setPrecoLalamove] = useState<number | null>(null);
   const [prazoLalamove, setPrazoLalamove] = useState<number | null>(null);
+  const [precoFrete, setPrecoFrete] = useState<number | null>(null);
+  const [prazoFrete, setPrazoFrete] = useState<number | null>(null);
   const [shippingOption, setShippingOption] = useState('');
   const [isUrgentDeliverySelected, setIsUrgentDeliverySelected] = useState(false);
   const [isAnticipation, setIsAnticipation] = useState(false);
@@ -278,8 +280,6 @@ const OrcamentoGerarScreen = () => {
   const [dataDesejadaEntregaInput, setDataDesejadaEntregaInput] = useState<DateTime | null>(null);
   const [dataDesejadaEntrega, setDataDesejadaEntrega] = useState<DateTime | null>(null);
   const [diffHojeDataDesejadaEntrega, setDiffHojeDataDesejadaEntrega] = useState<number | null>(null);
-  const [precoFrete, setPrecoFrete] = useState<number | null>(null);
-  const [prazoFrete, setPrazoFrete] = useState<number | null>(null);
   const [prazoProducao, setPrazoProducao] = useState<number | null>(null);
   const [loadingPrevisao, setLoadingPrevisao] = useState(false);
   const [previsaoEntrega, setPrevisaoEntrega] = useState<DateTime | null>(null)
@@ -1354,11 +1354,12 @@ Orçamento válido somente hoje.
       endereco_cep: cep,
       endereco: address,
       opcao_entrega: shippingOption,
-      prazo_opcao_entrega: 1,
-      preco_opcao_entrega: 50.66,
+      prazo_opcao_entrega: prazoFrete,
+      preco_opcao_entrega: precoFrete,
       antecipado: isAnticipation,
       data_antecipa: dataDesejadaEntrega,
       taxa_antecipa: taxaAntecipa,
+      prazo_producao: prazoProducao,
       descontado: checkedDesconto || false,
       tipo_desconto: tipoDesconto || null,
       valor_desconto: checkedDesconto && tipoDesconto
