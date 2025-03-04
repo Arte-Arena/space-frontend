@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
@@ -24,8 +24,13 @@ import { useRouter } from 'next/navigation';
 const ProdutosPacotesUniformesScreen = () => {
   const router = useRouter();
   const accessToken = localStorage.getItem('accessToken');
+  const [isAdding, setIsAdding] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDetailing, setIsDetailing] = useState(false);
 
-  const { data: pacotesUniforme, isLoading: isLoadingPacotesUniforme } = useQuery<ProdutoPacoteUniforme[]>({
+  const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
+
+  const { data: pacotesUniforme, isLoading: isLoadingPacotesUniforme, isError: isErrorPacotesUniforme } = useQuery<ProdutoPacoteUniforme[]>({
     queryKey: ['pacotes-uniforme'],
     queryFn: () =>
       fetch(`${process.env.NEXT_PUBLIC_API}/api/produto/pacote/uniforme/`, {
@@ -37,33 +42,75 @@ const ProdutosPacotesUniformesScreen = () => {
       }).then((res) => res.json()),
   });
 
+  const handleAddNovoPacote = () => {
+    setIsAdding(true);
+    router.push('/apps/produtos/pacotes-uniformes/add/');
+  };
+
   const handleDetails = (pacote: ProdutoPacoteUniforme) => {
+    const pacoteId = String(pacote.id);
+
+    setLoadingStates((prev) => ({
+      ...prev,
+      [pacoteId]: { ...(prev[pacoteId] ?? { editing: false, detailing: false }), detailing: true },
+    }));
+
     router.push(`/apps/produtos/pacotes-uniformes/${pacote.id}/`);
   };
 
+
   const handleEdit = (pacote: ProdutoPacoteUniforme) => {
+    const pacoteId = String(pacote.id);
+
+    setLoadingStates((prev) => ({
+      ...prev,
+      [pacoteId]: { ...(prev[pacoteId] ?? { editing: false, detailing: false }), editing: true },
+    }));
+
     router.push(`/apps/produtos/pacotes-uniformes/edit/${pacote.id}/`);
   };
 
+  const BCrumb = [
+    {
+      to: "/",
+      title: "Home",
+    },
+    {
+      to: "/apps/produtos/",
+      title: "Produtos",
+    },
+    {
+      to: "/apps/produtos/pacotes-uniformes",
+      title: "Pacotes de Uniformes",
+    },
+  ];
+
   return (
     <PageContainer title="Produtos / Pacotes de Uniformes" description="Pacotes de Uniformes da Arte Arena">
-      <Breadcrumb title="Produtos / Pacotes de Uniformes" subtitle="Gerencie Produtos da Arte Arena / Pacotes de Uniformes" />
+      <Breadcrumb title="Produtos / Pacotes de Uniformes" items={BCrumb} />
       <ParentCard title="Pacotes de Uniformes">
         <>
+
           <Stack direction="row" spacing={1} sx={{ marginBottom: '1em', height: '3em', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
-              startIcon={<IconPlus />}
+              startIcon={isAdding ? <CircularProgress size={20} /> : <IconPlus />}
               sx={{ height: '100%' }}
-              onClick={() => router.push('/apps/produtos/pacotes-uniformes/add/')}
+              onClick={handleAddNovoPacote}
+              disabled={isAdding}
             >
-              Adicionar Novo Pacote
+              {isAdding ? 'Adicionando...' : 'Adicionar Novo Pacote'}
             </Button>
           </Stack>
 
-          {isLoadingPacotesUniforme ? (
+          {isErrorPacotesUniforme ? (
+            <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
+              <Typography variant="body1" color="error">Erro ao carregar pacotes de uniformes.</Typography>
+            </Stack>
+          ) : isLoadingPacotesUniforme ? (
             <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
               <CircularProgress />
+              <Typography variant="body1" sx={{ mt: 1 }}>Carregando pacotes de uniformes...</Typography>
             </Stack>
           ) : (
             <Grid container spacing={2} style={{ display: 'flex' }}>
@@ -71,6 +118,7 @@ const ProdutosPacotesUniformesScreen = () => {
                 <Grid item xs={12} sm={6} md={4} key={pacote.id} style={{ display: 'flex' }}>
                   <Card style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <CardContent>
+
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Typography
                           gutterBottom
@@ -81,10 +129,17 @@ const ProdutosPacotesUniformesScreen = () => {
                         >
                           {pacote.nome}
                         </Typography>
-                        <Button onClick={() => handleEdit(pacote)}>
-                          <IconEdit />
-                        </Button>
+
+                        {loadingStates[String(pacote.id)]?.editing ? (
+                          <CircularProgress size={24} sx={{ mt: 2 }} />
+                        ) : (
+                          <Button onClick={() => handleEdit(pacote)}>
+                            <IconEdit />
+                          </Button>
+                        )}
+
                       </Box>
+
                       <List dense={true}>
                         <ListItem>
                           <ListItemText
@@ -113,15 +168,18 @@ const ProdutosPacotesUniformesScreen = () => {
                           />
                         </ListItem>
                       </List>
-
-                      <Button
-                        variant="outlined"
-                        fullWidth
-                        onClick={() => handleDetails(pacote)}
-                        sx={{ mt: 2 }}
-                      >
-                        Ver detalhes completos
-                      </Button>
+                      {loadingStates[String(pacote.id)]?.detailing ? (
+                        <CircularProgress size={24} sx={{ mt: 2}} />
+                      ) : (
+                        <Button
+                          variant="outlined"
+                          fullWidth
+                          onClick={() => handleDetails(pacote)}
+                          sx={{ mt: 2 }}
+                        >
+                          Ver detalhes completos
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
                 </Grid>
