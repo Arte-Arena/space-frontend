@@ -1,6 +1,5 @@
 'use client';
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Stack, Button, Typography, Box } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
@@ -13,7 +12,31 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import InputAdornment from '@mui/material/InputAdornment';
 import { NumericFormat, NumericFormatProps } from 'react-number-format';
 import { useRouter } from 'next/navigation';
-import useAprovarOrcamentos from '@/utils/SelectAprovarOrcamento';
+
+interface Orcamento {
+  id: number;
+  user_id: number;
+  cliente_octa_number: string;
+  nome_cliente: string | null;
+  lista_produtos: string | null;
+  produtos_brinde: string | null;
+  texto_orcamento: string | null;
+  endereco_cep: string;
+  endereco: string;
+  opcao_entrega: string;
+  prazo_opcao_entrega: number;
+  preco_opcao_entrega: number | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  brinde: number;
+  tipo_desconto: string;
+  valor_desconto: number;
+  data_antecipa: string;
+  taxa_antecipa: string;
+  total_orcamento: number;
+  prazo_producao: number;
+}
 
 // Wrapper para o NumericFormat com forwardRef
 const NumericFormatCustom = React.forwardRef<HTMLElement, NumericFormatProps>((props, ref) => (
@@ -35,44 +58,138 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
 
   const router = useRouter();
 
+  const [isLoadingOrcamentoState, setIsLoadingOrcamentoState] = useState(true);
+  const [errorOrcamentoState, setErrorOrcamentoState] = useState<Error | null>(null);
+  const [orcamentoState, setOrcamentoState] = useState<Orcamento | null>(null);
   const [formaPagamento, setFormaPagamento] = useState('');
   const [tipoFaturamento, setTipoFaturamento] = useState('');
   const [qtdParcelas, setQtdParcelas] = useState('1'); // Default para "1" no tipo faturado
   const [dataFatura1, setDataFatura1] = useState<Date | null>(new Date());
-  const [valorFatura1, setValorFatura1] = useState('');
+  const [valorFatura1, setValorFatura1] = useState<string | number | null | undefined>(0);
   const [dataFatura2, setDataFatura2] = useState<Date | null>(null);
-  const [valorFatura2, setValorFatura2] = useState('');
+  const [valorFatura2, setValorFatura2] = useState<string | number | null | undefined>(0);
   const [dataFatura3, setDataFatura3] = useState<Date | null>(null);
-  const [valorFatura3, setValorFatura3] = useState('');
+  const [valorFatura3, setValorFatura3] = useState<string | number | null | undefined>(0);
   const [dataEntrega, setDataEntrega] = useState<Date | null>(null);
   const [linkTrello, setLinkTrello] = useState('');
   const [comentarios, setComentarios] = useState('');
-  const { data: orcamento, error: orcamentoError, isLoading: orcamentoLoading } = useAprovarOrcamentos(id); 
+  const accessToken = localStorage.getItem('accessToken');
+  if (!accessToken) {
+    throw new Error('Access token is missing');
+  }
 
-  console.log(orcamento?.[0])
+  useEffect(() => {
+    const fetchOrcamento = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API}/api/orcamento/get-orcamento/${id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        const data = await response.json();
+        console.log(data)
+        setOrcamentoState(data);
+        setIsLoadingOrcamentoState(false);
+      } catch (error) {
+        setErrorOrcamentoState(error as Error);
+        setIsLoadingOrcamentoState(false);
+      }
+    };
+    fetchOrcamento();
+  }, [id]);
+
+  const orcamento = orcamentoState;
+  const errorOrcamento = errorOrcamentoState;
+  const isLoadingOrcamento = isLoadingOrcamentoState;
+  if (isLoadingOrcamento) return <p>Carregando...</p>;
+  if (errorOrcamento) return <p>{`Erro ao carregar orcamento. ${errorOrcamento?.message || ' '}`}</p>;
+
+  console.log(orcamento)
 
   const formatarData = (dataString?: string) => {
     if (!dataString) return "Data não disponível";
     return format(parseISO(dataString), "dd/MM/yyyy");
   };
 
-  const accessToken = localStorage.getItem('accessToken');
-  if (!accessToken) {
-    throw new Error('Access token is missing');
-  }
+
 
   const aprovaOrcamento = () => {
     if (orcamentoId !== null) {
+
+      // valida o campo data
+      if (!dataEntrega) {
+        alert('A Data de Entrega é obrigatória.');
+        return 
+      }
+      // valida os campos Data de faturamento
+      if (qtdParcelas === '1' && !dataFatura1) {
+        alert('A Data da Fatura #1 é obrigatória quando a quantidade de parcelas é 1.');
+        return;
+      }
+      if (qtdParcelas === '2' && !dataFatura2 || !dataFatura1) {
+        alert('A Data da Fatura #2 é obrigatória quando a quantidade de parcelas é 2.');
+        return;
+      }
+      if (qtdParcelas === '3' && !dataFatura3 || !dataFatura2) {
+        alert('A Data da Fatura #3 é obrigatória quando a quantidade de parcelas é 3.');
+        return;
+      }
+
+      // valida os campos de faturamento
+      if (qtdParcelas === '1' && !valorFatura1) {
+        alert('A Fatura #1 é obrigatória quando a quantidade de parcelas é 1.');
+        return;
+      }
+      if (qtdParcelas === '2' && !valorFatura2 || !valorFatura1) {
+        alert('A Fatura #2 é obrigatória quando a quantidade de parcelas é 2.');
+        return;
+      }
+      if (qtdParcelas === '3' && !dataFatura3 || !dataFatura2 || !dataFatura1) {
+        alert('A Fatura #3 é obrigatória quando a quantidade de parcelas é 3.');
+        return;
+      }
+
+      setIsLoadingOrcamentoState(true);
       fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/status/aprova/${orcamentoId}`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-      }).then(() => {
-        console.log('Orçamento aprovado com sucesso');
-        router.push(`/apps/orcamento/buscar`);
-      });
+        body: JSON.stringify({
+          forma_pagamento: formaPagamento,
+          tipo_faturamento: tipoFaturamento,
+          qtd_parcelas: qtdParcelas,
+          data_faturamento: dataFatura1,
+          valor_faturamento: valorFatura1,
+          data_faturamento_2: dataFatura2,
+          valor_faturamento_2: valorFatura2,
+          data_faturamento_3: dataFatura3,
+          valor_faturamento_3: valorFatura3,
+          link_trello: linkTrello,
+          comentarios: comentarios,
+          data_entrega: dataEntrega,
+        }),
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Erro ao aprovar orçamento');
+          }
+          return response.json();
+        })
+        .then(() => {
+          console.log('Orçamento aprovado com sucesso');
+          setIsLoadingOrcamentoState(false);
+          router.push(`/apps/orcamento/buscar`);
+        })
+        .catch(error => {
+          console.error('Erro:', error);
+        });
     }
   };
 
@@ -82,27 +199,38 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
         Aprovar Orçamento #{orcamentoId}
       </Typography>
 
-      <Box sx={{marginBottom: '30px', display: 'flex', gap: '2rem'}}>
-        {orcamento?.[0]?.total_orcamento !== null &&(
-          <Typography style={{fontWeight: '600'}}>
-            Total Orçamento: R$ {orcamento?.[0]?.total_orcamento}
+      <Box sx={{ marginBottom: '30px', display: 'flex', gap: '2rem' }}>
+        {orcamento?.total_orcamento !== null && (
+          <Typography style={{ fontWeight: '600' }}>
+            Total Orçamento: R$ {orcamento?.total_orcamento}
           </Typography>
         )}
 
-        {orcamento?.[0]?.data_antecipa !== null &&(
-          <Typography style={{fontWeight: '600'}}>
-            Data de antecipação {formatarData(orcamento?.[0]?.data_antecipa)}
+        {orcamento?.data_antecipa !== null && (
+          <Typography style={{ fontWeight: '600' }}>
+            Data de antecipação {formatarData(orcamento?.data_antecipa)}
           </Typography>
         )}
 
-        {orcamento?.[0]?.created_at !== null &&(
-          <Typography style={{fontWeight: '600'}}>
-            Data de Criação: {formatarData(orcamento?.[0]?.created_at )}
+        {orcamento?.created_at !== null && (
+          <Typography style={{ fontWeight: '600' }}>
+            Data de Criação: {formatarData(orcamento?.created_at)}
+          </Typography>
+        )}
+
+        {orcamento?.prazo_opcao_entrega !== null && (
+          <Typography style={{ fontWeight: '600' }}>
+            Prazo de Entrega: {orcamento?.prazo_opcao_entrega} Dias úteis.
+          </Typography>
+        )}
+
+        {orcamento?.prazo_producao !== null && (
+          <Typography style={{ fontWeight: '600' }}>
+            Prazo de Produção: {orcamento?.prazo_producao} Dias úteis.
           </Typography>
         )}
 
       </Box>
-
 
       <Stack spacing={2}>
         {/* Forma de Pagamento */}
@@ -137,6 +265,23 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
               } else if (value === 'parcelado') {
                 setQtdParcelas('2'); // Sempre 2 parcelas no tipo "parcelado"
               }
+
+              // logica pra fazer metade metade e etc..
+
+              if (orcamentoState !== null || orcamentoState !== undefined) {
+                const total = orcamentoState?.total_orcamento;
+
+                if (value === 'a_vista') {
+                  setValorFatura1(total);
+                }
+
+                if (value === 'parcelado') {
+                  if (orcamentoState?.total_orcamento !== undefined && orcamentoState?.total_orcamento !== null) {
+                    setValorFatura1(total ? total / 2 : 0);
+                    setValorFatura2(total ? total / 2 : 0);
+                  }
+                }
+              }
             }}
             sx={{ flexGrow: 1, ml: 2 }}
           >
@@ -153,7 +298,28 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
             <CustomSelect
               name="qtd_parcelas"
               value={qtdParcelas}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setQtdParcelas(event.target.value)}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                const value = event.target.value;
+                setQtdParcelas(value);
+
+                const total = orcamentoState?.total_orcamento;
+                if (orcamentoState !== null || orcamentoState !== undefined) {
+                  if (value === '3') {
+                    setValorFatura1(total ? total / 3 : 0);
+                    setValorFatura2(total ? total / 3 : 0);
+                    setValorFatura3(total ? total / 3 : 0);
+                  }
+                  if (value === '2') {
+                    setValorFatura1(total ? total / 2 : 0);
+                    setValorFatura2(total ? total / 2 : 0);
+                  }
+                  if (value === '1') {
+                    setValorFatura1(total);
+
+                  }
+                }
+
+              }}
               sx={{ flexGrow: 1, ml: 2 }}
             >
               <MenuItem value="1">1</MenuItem>
@@ -179,6 +345,9 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
               </LocalizationProvider>
             </Box>
             <Box flex={1}>
+              <Typography variant='body2' sx={{ margin: 0, padding: 0 }}>
+                Os valores podem ser alterados como quiser!
+              </Typography>
               <CustomFormLabel htmlFor="valor_fatura1">Valor Fatura #1</CustomFormLabel>
               <CustomTextField
                 name="valor_fatura1"
