@@ -4,7 +4,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { Container, Typography, Stepper, Step, StepLabel, Box, Paper, TableRow, TableCell, Collapse, Table, TableBody, TableHead } from "@mui/material";
 import { IconCoinFilled, IconHomeCheck, IconShoppingCart, IconTruckDelivery, IconTruckLoading } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import useFetchPedidoOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetPedidoOrcamento";
 import useFetchOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetOrcamento";
@@ -71,6 +71,7 @@ interface Orcamento {
   data_antecipa: string;
   taxa_antecipa: string;
   total_orcamento: number;
+  prazo_producao: number;
 }
 
 const RastreamentoClienteScreen = () => {
@@ -91,23 +92,12 @@ const RastreamentoClienteScreen = () => {
   console.dir("Orcamento: " + orcamento);
   console.dir("Pedido: " + pedido);
 
-  const regexBrinde = /Brinde:\s*(.*)/;
-  const regexFrete = /Frete:\s*(.*)/;
-  const regexFreteValor = /R?\$?\s?(\d{1,3}(?:,\d{2})?)/;
-  const regexPrazo = /Prazo de Produção:\s*(.*)/;
   const regexEntrega = /Previsão de Entrega:\s*(.*)/;
-  const regexDiasPrazo = /\d+/;
 
   const texto = orcamento?.texto_orcamento;
   console.log(texto);
 
-  const brinde = texto?.match(regexBrinde)?.[1]?.trim() || null;
-  const frete = texto?.match(regexFrete)?.[1]?.trim() || "Não encontrado";
-  const freteValor = frete?.match(regexFreteValor)?.[1]?.trim() || "Não encontrado";
-  const prazo = texto?.match(regexPrazo)?.[1]?.trim() || "Não encontrado";
   const entrega = texto?.match(regexEntrega)?.[1]?.trim() || "Não encontrado";
-  const prazoMatch = prazo.match(regexDiasPrazo);
-  const prazoDias = prazoMatch ? parseInt(prazoMatch[0], 10) : 0;
 
 
   const listaProdutos = orcamento?.lista_produtos
@@ -115,7 +105,9 @@ const RastreamentoClienteScreen = () => {
     : [];
 
   const listaBrindes = orcamento?.produtos_brinde
-    ? (typeof orcamento?.lista_produtos === 'string' ? JSON.parse(orcamento?.produtos_brinde) : orcamento?.produtos_brinde)
+    ? (typeof orcamento.produtos_brinde === 'string'
+      ? JSON.parse(orcamento.produtos_brinde)
+      : orcamento.produtos_brinde)
     : [];
 
   const createdAtOrcamento = orcamento?.created_at ? new Date(orcamento.created_at) : null;
@@ -125,25 +117,29 @@ const RastreamentoClienteScreen = () => {
   const dateCreatedOrcamento = createdAtOrcamento ? format(createdAtOrcamento, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
   const dateCreatedPedido = createdPedido ? format(createdPedido, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
 
-  const addBusinessDays = (date: Date | null, daysToAdd: number) => {
-    let count = 0;
-    let newDate = date;
+  // const addBusinessDays = (date: Date | null, daysToAdd: number): Date | null => {
+  //   if (!date) return null; // Se a data for nula, retorne null imediatamente
 
-    while (count < daysToAdd) {
-      newDate = addDays(newDate, 1);
-      if (!isWeekend(newDate)) {
-        count++;
-      }
-    }
+  //   let count = 0;
+  //   let newDate = date;
 
-    return newDate;
-  };
+  //   // while (count < daysToAdd) {
+  //   //   newDate = addDays(newDate, 1);
+  //   //   if (!isWeekend(newDate)) {
+  //   //     count++;
+  //   //   }
+  //   // }
 
-  const newDate = addBusinessDays(createdPedido, prazoDias);
+  //   return newDate;
+  // };
+
+
+  // const newDate = addBusinessDays(createdPedido, prazoDias);
+  const newDate = new Date()
   const dataFormatada = newDate ? format(newDate, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
 
-  const newDateTransportadora = addBusinessDays(createdPedido, prazoDias + 1);
-  const dataFormatadaTransportadora = newDateTransportadora ? format(newDateTransportadora, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
+  // const newDateTransportadora = addBusinessDays(createdPedido, prazoDias + 1);
+  // const dataFormatadaTransportadora = newDateTransportadora ? format(newDateTransportadora, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
 
   const hoje = new Date();
   // const dataHojeFormatada = format(hoje, 'dd/MM/yyyy', { locale: ptBR });
@@ -170,7 +166,7 @@ const RastreamentoClienteScreen = () => {
     { label: "Pagamento confirmado", icon: IconCoinFilled, date: dateCreatedPedido },
     { label: "Pedido em Produção até", icon: IconTruckLoading, date: dataFormatada },
     // proxima data tem que ser na api da transportadora
-    { label: "Pedido na transportadora", icon: IconTruckDelivery, date: dataFormatadaTransportadora },
+    { label: "Pedido na transportadora", icon: IconTruckDelivery, date: "hoje" }, //dataFormatadaTransportadora
     { label: "Pedido entregue", icon: IconHomeCheck, date: "" },
   ];
 
@@ -220,17 +216,30 @@ const RastreamentoClienteScreen = () => {
                 ENDEREÇO DE ENTREGA
               </Typography>
               <Paper elevation={1} sx={{ p: 2, mt: 1, boxShadow: 'none' }}>
-                {/* Localização */}
-                <Typography variant="body2">
+
+                <Typography variant="body2" sx={{fontWeight: 'bold'}}>
+                  Endereço de entrega
+                </Typography>
+                <Typography variant="body2" sx={{ marginBottom: 2 }}>
                   {orcamento?.endereco}
                 </Typography>
-                <Typography variant="body1"><b>codigo de rastreamento:</b> {pedido?.codigo_rastreamento}</Typography>
+
                 {/* tem que ver como formatar pra ficar assim */}
                 {entrega !== null && (
-                  <Typography component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                    Entrega via: {transportadora}
+                  <Typography variant="body2" sx={{ marginY: 1 }}>
+                    <b>Entrega via:</b> {transportadora}
                   </Typography>
                 )}
+
+                {/* Prazo da Opção de Entrega */}
+                <Typography variant="body2" sx={{ marginY: 1 }}>
+                  <b>Prazo da Opção de Entrega:</b> {orcamento?.prazo_opcao_entrega}
+                </Typography>
+
+                <Typography variant="body2" sx={{ marginY: 1 }}>
+                  <b>Codigo de rastreamento:</b> {pedido?.codigo_rastreamento}
+                </Typography>
+
               </Paper>
             </Box>
           </Paper>
@@ -380,38 +389,14 @@ const RastreamentoClienteScreen = () => {
               <Table size="small">
 
                 <TableRow>
-                  {/* Texto do Orçamento */}
-                  {/* <TableRow>
-                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                      Cliente:
-                    </TableCell>
-                    <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.nome_cliente}</TableCell>
-                  </TableRow> */}
-
-                  {/* {prazo !== null && (
+                  {orcamento?.prazo_producao !== null && (
                     <TableRow>
                       <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
                         Prazo:
                       </TableCell>
-                      <TableCell sx={{ border: 'none' }} colSpan={1}>{prazo}</TableCell>
+                      <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.prazo_producao} dias de produção</TableCell>
                     </TableRow>
-                  )} */}
-
-                  {/* Endereço CEP */}
-                  {/* <TableRow>
-                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                      Endereço CEP:
-                    </TableCell>
-                    <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.endereco_cep}</TableCell>
-                  </TableRow> */}
-
-                  {/* Endereço */}
-                  {/* <TableRow>
-                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                      Endereço:
-                    </TableCell>
-                    <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.endereco}</TableCell>
-                  </TableRow> */}
+                  )}
 
                   {/* Opção de Entrega */}
                   <TableRow>
@@ -421,42 +406,14 @@ const RastreamentoClienteScreen = () => {
                     <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.opcao_entrega}</TableCell>
                   </TableRow>
 
-                  {frete !== null && (
+                  {orcamento?.preco_opcao_entrega !== undefined && (
                     <TableRow>
                       <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
                         Frete:
                       </TableCell>
-                      <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {freteValor}</TableCell>
+                      <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {orcamento?.preco_opcao_entrega}</TableCell>
                     </TableRow>
                   )}
-
-                  {/* Prazo da Opção de Entrega
-                  <TableRow>
-                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                      Prazo da Opção de Entrega:
-                    </TableCell>
-                    <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.prazo_opcao_entrega} dias</TableCell>
-                  </TableRow>
-
-                  {/* Preço da Opção de Entrega 
-                  <TableRow>
-                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                      Preço da Opção de Entrega:
-                    </TableCell>
-                    <TableCell sx={{ border: 'none' }} colSpan={1}>
-                      {orcamento?.preco_opcao_entrega?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </TableCell>
-                  </TableRow> */}
-
-                  {/* Brinde */}
-                  {/* {orcamento?.brinde !== null && (
-                    <TableRow>
-                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                        Brinde:
-                      </TableCell>
-                      <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.brinde === 1 ? 'Com Brinde' : 'Sem Brinde'}</TableCell>
-                    </TableRow>
-                  )} */}
 
                   {/* Desconto */}
                   {orcamento?.valor_desconto !== null && (
