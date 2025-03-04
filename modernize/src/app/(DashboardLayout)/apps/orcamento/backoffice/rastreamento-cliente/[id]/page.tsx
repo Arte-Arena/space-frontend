@@ -77,7 +77,7 @@ interface Orcamento {
 const RastreamentoClienteScreen = () => {
   // aqui vai ficar a logica das datas de cada coisa, podemos repetir as datas até o separação e transportadora usar o da api de frete.
 
-  const [activeStep, setActiveStep] = useState(2); // Define até qual etapa foi concluída
+  const [activeStep, setActiveStep] = useState(1); // Define até qual etapa foi concluída
   const params = useParams();
   const id = params.id;
   const parsedId = Array.isArray(id) ? id[0] : id;
@@ -94,8 +94,6 @@ const RastreamentoClienteScreen = () => {
 
   const texto = orcamento?.texto_orcamento;
   console.log(texto);
-
-  // const entrega = texto?.match(regexEntrega)?.[1]?.trim() || "Não encontrado";
 
   const listaProdutos = orcamento?.lista_produtos
     ? (typeof orcamento?.lista_produtos === 'string' ? JSON.parse(orcamento?.lista_produtos) : orcamento?.lista_produtos)
@@ -114,29 +112,32 @@ const RastreamentoClienteScreen = () => {
   const dateCreatedOrcamento = createdAtOrcamento ? format(createdAtOrcamento, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
   const dateCreatedPedido = createdPedido ? format(createdPedido, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
 
-  // const addBusinessDays = (date: Date | null, daysToAdd: number): Date | null => {
-  //   if (!date) return null; // Se a data for nula, retorne null imediatamente
+  const addBusinessDays = (date: Date | number | null, daysToAdd: number | undefined): Date | number | null => {
+    if (!date) return null; // Se a data for nula, retorne null imediatamente
 
-  //   let count = 0;
-  //   let newDate = date;
+    let count = 0;
+    let newDate = date;
 
-  //   // while (count < daysToAdd) {
-  //   //   newDate = addDays(newDate, 1);
-  //   //   if (!isWeekend(newDate)) {
-  //   //     count++;
-  //   //   }
-  //   // }
+    if (daysToAdd === undefined) return null;
 
-  //   return newDate;
-  // };
+    while (count < daysToAdd) {
+      newDate = addDays(newDate, 1);
+      if (!isWeekend(newDate)) {
+        count++;
+      }
+    }
 
+    return newDate;
+  };
 
-  // const newDate = addBusinessDays(createdPedido, prazoDias);
-  const newDate = new Date()
+  const prazoDias = orcamento?.prazo_producao;
+  // const newDate = new Date()
+
+  const newDate = addBusinessDays(createdPedido, prazoDias);
   const dataFormatada = newDate ? format(newDate, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
 
-  // const newDateTransportadora = addBusinessDays(createdPedido, prazoDias + 1);
-  // const dataFormatadaTransportadora = newDateTransportadora ? format(newDateTransportadora, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
+  const newDateTransportadora = prazoDias !== undefined ? addBusinessDays(createdPedido, prazoDias + 1) : null;
+  const dataFormatadaTransportadora = newDateTransportadora ? format(newDateTransportadora, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
 
   const hoje = new Date();
   // const dataHojeFormatada = format(hoje, 'dd/MM/yyyy', { locale: ptBR });
@@ -165,7 +166,7 @@ const RastreamentoClienteScreen = () => {
     { label: "Pagamento confirmado", icon: IconCoinFilled, date: dateCreatedPedido },
     { label: "Pedido em Produção", icon: IconTruckLoading, date: dataFormatada },
     // proxima data tem que ser na api da transportadora
-    { label: "Pedido na transportadora", icon: IconTruckDelivery, date: "hoje" }, //dataFormatadaTransportadora
+    { label: "Pedido na transportadora", icon: IconTruckDelivery, date: dataFormatadaTransportadora }, //dataFormatadaTransportadora
     { label: "Pedido entregue", icon: IconHomeCheck, date: "" },
   ];
 
@@ -173,8 +174,7 @@ const RastreamentoClienteScreen = () => {
     { label: "Pedido realizado", icon: IconShoppingCart, date: dateCreatedOrcamento },
     { label: "Pagamento confirmado", icon: IconCoinFilled, date: dateCreatedPedido },
     { label: "Pedido em Produção", icon: IconTruckLoading, date: dataFormatada },
-    // proxima data tem que ser na api da transportadora
-    { label: "Pedido esperando retirada", icon: IconHome, date: "" }, //dataFormatadaTransportadora
+    { label: "Pedido esperando retirada", icon: IconHome, date: dataFormatadaTransportadora }, //dataFormatadaTransportadora
     { label: "Pedido entregue", icon: IconHomeCheck, date: "" },
   ];
 
@@ -233,7 +233,7 @@ const RastreamentoClienteScreen = () => {
                   </Step>
                 ))}
               </Stepper>
-              )}
+            )}
 
             {/* Endereço de Entrega */}
             <Box sx={{ mt: 4, textAlign: "left", paddingX: 2 }}>
