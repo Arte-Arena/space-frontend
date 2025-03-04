@@ -912,11 +912,11 @@ const OrcamentoBackofficeScreen = () => {
             />
           </Stack>
 
-          <Dialog open={openEntregaDialog} onClose={handleCloseDialogEntrega} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-descr">
+          <Dialog open={openEntregaDialog} onClose={handleCloseDialogEntrega}>
             {loadingPedido ? (
               <DialogContent>
-
-                <CircularProgress /> {/* Indicador de loading */}
+                {/* Indicador de loading */}
+                <CircularProgress />
               </DialogContent>
             ) : (
               <>
@@ -924,7 +924,10 @@ const OrcamentoBackofficeScreen = () => {
                 <DialogContent>
                   <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
                     <DialogContentText>Página do rastreio</DialogContentText>
-                    <Button variant="contained" color="info" disabled={!hasEntrega}
+                    <Button
+                      variant="contained"
+                      color="info"
+                      // disabled={!hasEntrega}
                       onClick={() => handleOpenRastreamentoInterno(selectedPedido?.orcamento_id)}
                     >
                       Página do rastreio <IconTruckDelivery style={{ marginLeft: '5px' }} />
@@ -932,7 +935,7 @@ const OrcamentoBackofficeScreen = () => {
                     <Button
                       variant="contained"
                       color="primary"
-                      disabled={!hasEntrega}
+                      // disabled={!hasEntrega}
                       sx={{ color: theme.palette.text.primary }}
                       onClick={() => handleOpenRastreamentoCliente(selectedPedido?.orcamento_id)}
                     >
