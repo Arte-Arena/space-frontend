@@ -22,6 +22,7 @@ interface Orcamento {
   data_antecipa: string;
   taxa_antecipa: string;
   total_orcamento: number;
+  prazo_producao: number;
 }
 
 
