@@ -25,9 +25,6 @@ const ProdutosPacotesUniformesScreen = () => {
   const router = useRouter();
   const accessToken = localStorage.getItem('accessToken');
   const [isAdding, setIsAdding] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isDetailing, setIsDetailing] = useState(false);
-
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
 
   const { data: pacotesUniforme, isLoading: isLoadingPacotesUniforme, isError: isErrorPacotesUniforme } = useQuery<ProdutoPacoteUniforme[]>({
