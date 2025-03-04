@@ -3,12 +3,12 @@ import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcr
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { Container, Typography, Stepper, Step, StepLabel, Box, Paper, TableRow, TableCell, Collapse, Table, TableBody, TableHead } from "@mui/material";
-import { IconCoinFilled, IconHomeCheck, IconShoppingCart, IconTruckDelivery, IconTruckLoading } from "@tabler/icons-react";
+import { IconCoinFilled, IconHome, IconHomeCheck, IconShoppingCart, IconTruckDelivery, IconTruckLoading } from "@tabler/icons-react";
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import useFetchPedidoOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetPedidoOrcamento";
 import useFetchOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetOrcamento";
-import { addDays, format, isAfter, isEqual, isWeekend } from "date-fns";
+import { addDays, format, isAfter, isEqual, isWeekend, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 
@@ -77,7 +77,7 @@ interface Orcamento {
 const RastreamentoClienteScreen = () => {
   // aqui vai ficar a logica das datas de cada coisa, podemos repetir as datas até o separação e transportadora usar o da api de frete.
 
-  const [activeStep, setActiveStep] = useState(1); // Define até qual etapa foi concluída
+  const [activeStep, setActiveStep] = useState(2); // Define até qual etapa foi concluída
   const params = useParams();
   const id = params.id;
   const parsedId = Array.isArray(id) ? id[0] : id;
@@ -92,13 +92,10 @@ const RastreamentoClienteScreen = () => {
   console.dir("Orcamento: " + orcamento);
   console.dir("Pedido: " + pedido);
 
-  const regexEntrega = /Previsão de Entrega:\s*(.*)/;
-
   const texto = orcamento?.texto_orcamento;
   console.log(texto);
 
-  const entrega = texto?.match(regexEntrega)?.[1]?.trim() || "Não encontrado";
-
+  // const entrega = texto?.match(regexEntrega)?.[1]?.trim() || "Não encontrado";
 
   const listaProdutos = orcamento?.lista_produtos
     ? (typeof orcamento?.lista_produtos === 'string' ? JSON.parse(orcamento?.lista_produtos) : orcamento?.lista_produtos)
@@ -151,22 +148,33 @@ const RastreamentoClienteScreen = () => {
     const pedidoEhMaiorOuIgual = isAfter(hoje, createdPedido) || isEqual(hoje, createdPedido);
 
     if (orcamentoEhMaiorOuIgual && !pedidoEhMaiorOuIgual) {
-      setActiveStep(1);
+      // setActiveStep(1);
+      setActiveStep(2);
     }
     if (pedidoEhMaiorOuIgual && !orcamentoEhMaiorOuIgual) {
-      setActiveStep(2);
+      // setActiveStep(2);
+      setActiveStep(3);
     }
   }
 
   console.log(orcamento?.lista_produtos);
   console.log(orcamento?.produtos_brinde);
 
-  const steps = [
+  const stepsTransportadora = [
     { label: "Pedido realizado", icon: IconShoppingCart, date: dateCreatedOrcamento },
     { label: "Pagamento confirmado", icon: IconCoinFilled, date: dateCreatedPedido },
-    { label: "Pedido em Produção até", icon: IconTruckLoading, date: dataFormatada },
+    { label: "Pedido em Produção", icon: IconTruckLoading, date: dataFormatada },
     // proxima data tem que ser na api da transportadora
     { label: "Pedido na transportadora", icon: IconTruckDelivery, date: "hoje" }, //dataFormatadaTransportadora
+    { label: "Pedido entregue", icon: IconHomeCheck, date: "" },
+  ];
+
+  const stepsRetirada = [
+    { label: "Pedido realizado", icon: IconShoppingCart, date: dateCreatedOrcamento },
+    { label: "Pagamento confirmado", icon: IconCoinFilled, date: dateCreatedPedido },
+    { label: "Pedido em Produção", icon: IconTruckLoading, date: dataFormatada },
+    // proxima data tem que ser na api da transportadora
+    { label: "Pedido esperando retirada", icon: IconHome, date: "" }, //dataFormatadaTransportadora
     { label: "Pedido entregue", icon: IconHomeCheck, date: "" },
   ];
 
@@ -197,18 +205,35 @@ const RastreamentoClienteScreen = () => {
             </Typography>
 
             {/* Barra de progresso com as etapas */}
-            <Stepper activeStep={activeStep} alternativeLabel>
-              {steps.map((step, index) => (
-                <Step key={index}>
-                  <StepLabel StepIconComponent={(props) => <CustomStepIcon active={props.active !== undefined ? props.active : false} completed={props.completed !== undefined ? props.completed : false} icon={step.icon} />}>
-                    <Typography variant="caption">{step.label}</Typography>
-                    <Typography variant="caption" sx={{ display: "block", fontSize: "0.75rem" }}>
-                      {step.date}
-                    </Typography>
-                  </StepLabel>
-                </Step>
-              ))}
-            </Stepper>
+            {transportadora !== "RETIRADA" && (
+              <Stepper activeStep={activeStep} alternativeLabel>
+                {stepsTransportadora.map((step, index) => (
+                  <Step key={index}>
+                    <StepLabel StepIconComponent={(props) => <CustomStepIcon active={props.active !== undefined ? props.active : false} completed={props.completed !== undefined ? props.completed : false} icon={step.icon} />}>
+                      <Typography variant="caption">{step.label}</Typography>
+                      <Typography variant="caption" sx={{ display: "block", fontSize: "0.75rem" }}>
+                        {step.date}
+                      </Typography>
+                    </StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+            )}
+
+            {transportadora === "RETIRADA" && (
+              <Stepper activeStep={activeStep} alternativeLabel>
+                {stepsRetirada.map((step, index) => (
+                  <Step key={index}>
+                    <StepLabel StepIconComponent={(props) => <CustomStepIcon active={props.active !== undefined ? props.active : false} completed={props.completed !== undefined ? props.completed : false} icon={step.icon} />}>
+                      <Typography variant="caption">{step.label}</Typography>
+                      <Typography variant="caption" sx={{ display: "block", fontSize: "0.75rem" }}>
+                        {step.date}
+                      </Typography>
+                    </StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+              )}
 
             {/* Endereço de Entrega */}
             <Box sx={{ mt: 4, textAlign: "left", paddingX: 2 }}>
@@ -217,7 +242,7 @@ const RastreamentoClienteScreen = () => {
               </Typography>
               <Paper elevation={1} sx={{ p: 2, mt: 1, boxShadow: 'none' }}>
 
-                <Typography variant="body2" sx={{fontWeight: 'bold'}}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                   Endereço de entrega
                 </Typography>
                 <Typography variant="body2" sx={{ marginBottom: 2 }}>
@@ -225,7 +250,7 @@ const RastreamentoClienteScreen = () => {
                 </Typography>
 
                 {/* tem que ver como formatar pra ficar assim */}
-                {entrega !== null && (
+                {orcamento?.opcao_entrega !== null && (
                   <Typography variant="body2" sx={{ marginY: 1 }}>
                     <b>Entrega via:</b> {transportadora}
                   </Typography>
@@ -236,9 +261,11 @@ const RastreamentoClienteScreen = () => {
                   <b>Prazo da Opção de Entrega:</b> {orcamento?.prazo_opcao_entrega}
                 </Typography>
 
-                <Typography variant="body2" sx={{ marginY: 1 }}>
-                  <b>Codigo de rastreamento:</b> {pedido?.codigo_rastreamento}
-                </Typography>
+                {!pedido?.codigo_rastreamento || pedido?.codigo_rastreamento === null && (
+                  <Typography variant="body2" sx={{ marginY: 1 }}>
+                    <b>Codigo de rastreamento:</b> {pedido?.codigo_rastreamento}
+                  </Typography>
+                )}
 
               </Paper>
             </Box>
@@ -441,25 +468,27 @@ const RastreamentoClienteScreen = () => {
                     </>
                   )}
 
-                  {/* Data Antecipação */}
-                  {orcamento?.data_antecipa !== null && (
-                    <TableRow>
-                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                        Data Antecipação:
-                      </TableCell>
-                      <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.data_antecipa ?? 'Sem Antecipação'}</TableCell>
-                    </TableRow>
-                  )}
-
                   {/* Taxa Antecipação */}
                   {orcamento?.taxa_antecipa !== null && (
                     <TableRow>
                       <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                        Taxa Antecipação:
+                        Taxa de Antecipação:
                       </TableCell>
-                      <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {orcamento?.taxa_antecipa ?? 'Sem Taxa de Antecipação'}</TableCell>
+                      <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {orcamento?.taxa_antecipa ?? 'Sem Desconto'}</TableCell>
                     </TableRow>
                   )}
+
+                  {/* {orcamento?.data_antecipa !== null && (
+                    <TableRow>
+                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                        Data Antecipação:
+                      </TableCell>
+                      <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.data_antecipa
+                        ? format(parseISO(orcamento.data_antecipa), 'dd/MM/yyyy')
+                        : 'Sem Antecipação'}
+                      </TableCell>
+                    </TableRow>
+                  )} */}
 
                   {/* Total Orçamento */}
                   {orcamento?.total_orcamento !== null && (

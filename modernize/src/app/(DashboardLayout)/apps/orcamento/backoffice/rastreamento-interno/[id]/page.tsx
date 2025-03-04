@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import useFetchPedidoOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetPedidoOrcamento";
 import useFetchOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetOrcamento";
-import { addDays, format, isAfter, isEqual, isWeekend } from "date-fns";
+import { addDays, format, isAfter, isEqual, isWeekend, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 
@@ -77,7 +77,7 @@ interface Orcamento {
 const RastreamentoClienteScreen = () => {
   // aqui vai ficar a logica das datas de cada coisa, podemos repetir as datas até o separação e transportadora usar o da api de frete.
 
-  const [activeStep, setActiveStep] = useState(1); // Define até qual etapa foi concluída
+  const [activeStep, setActiveStep] = useState(2); // Define até qual etapa foi concluída
   const params = useParams();
   const id = params.id;
   const parsedId = Array.isArray(id) ? id[0] : id;
@@ -92,13 +92,8 @@ const RastreamentoClienteScreen = () => {
   console.dir("Orcamento: " + orcamento);
   console.dir("Pedido: " + pedido);
 
-  const regexEntrega = /Previsão de Entrega:\s*(.*)/;
-
   const texto = orcamento?.texto_orcamento;
   console.log(texto);
-
-  const entrega = texto?.match(regexEntrega)?.[1]?.trim() || "Não encontrado";
-
 
   const listaProdutos = orcamento?.lista_produtos
     ? (typeof orcamento?.lista_produtos === 'string' ? JSON.parse(orcamento?.lista_produtos) : orcamento?.lista_produtos)
@@ -164,9 +159,9 @@ const RastreamentoClienteScreen = () => {
   const steps = [
     { label: "Pedido realizado", icon: IconShoppingCart, date: dateCreatedOrcamento },
     { label: "Pagamento confirmado", icon: IconCoinFilled, date: dateCreatedPedido },
-    { label: "Pedido em Produção até", icon: IconTruckLoading, date: dataFormatada },
+    { label: "Pedido em Produção", icon: IconTruckLoading, date: dataFormatada },
     // proxima data tem que ser na api da transportadora
-    { label: "Pedido na transportadora", icon: IconTruckDelivery, date: "hoje" }, //dataFormatadaTransportadora
+    { label: "Pedido na transportadora", icon: IconTruckDelivery, date: dataFormatada }, //dataFormatadaTransportadora
     { label: "Pedido entregue", icon: IconHomeCheck, date: "" },
   ];
 
@@ -217,7 +212,7 @@ const RastreamentoClienteScreen = () => {
               </Typography>
               <Paper elevation={1} sx={{ p: 2, mt: 1, boxShadow: 'none' }}>
 
-                <Typography variant="body2" sx={{fontWeight: 'bold'}}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                   Endereço de entrega
                 </Typography>
                 <Typography variant="body2" sx={{ marginBottom: 2 }}>
@@ -225,7 +220,7 @@ const RastreamentoClienteScreen = () => {
                 </Typography>
 
                 {/* tem que ver como formatar pra ficar assim */}
-                {entrega !== null && (
+                {orcamento?.opcao_entrega !== null && (
                   <Typography variant="body2" sx={{ marginY: 1 }}>
                     <b>Entrega via:</b> {transportadora}
                   </Typography>
@@ -235,10 +230,11 @@ const RastreamentoClienteScreen = () => {
                 <Typography variant="body2" sx={{ marginY: 1 }}>
                   <b>Prazo da Opção de Entrega:</b> {orcamento?.prazo_opcao_entrega}
                 </Typography>
-
-                <Typography variant="body2" sx={{ marginY: 1 }}>
-                  <b>Codigo de rastreamento:</b> {pedido?.codigo_rastreamento}
-                </Typography>
+                {!pedido?.codigo_rastreamento || pedido?.codigo_rastreamento === null && (
+                  <Typography variant="body2" sx={{ marginY: 1 }}>
+                    <b>Codigo de rastreamento:</b> {pedido?.codigo_rastreamento}
+                  </Typography>
+                )}
 
               </Paper>
             </Box>
@@ -440,7 +436,10 @@ const RastreamentoClienteScreen = () => {
                       <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
                         Data Antecipação:
                       </TableCell>
-                      <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.data_antecipa ?? 'Sem Antecipação'}</TableCell>
+                      <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.data_antecipa
+                        ? format(parseISO(orcamento.data_antecipa), 'dd/MM/yyyy')
+                        : 'Sem Antecipação'}
+                      </TableCell>
                     </TableRow>
                   )}
 
