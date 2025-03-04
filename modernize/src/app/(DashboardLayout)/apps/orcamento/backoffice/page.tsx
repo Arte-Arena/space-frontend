@@ -11,18 +11,13 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
-import { Pagination, Stack, Button, Box, Typography, Collapse, FormControlLabel, Checkbox, TextField, useTheme } from '@mui/material';
+import { Pagination, Stack, Button, Box, Typography, Collapse, FormControlLabel, Checkbox, TextField, useTheme, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { IconSearch, IconLink, IconShirtSport, IconCheck, IconTrash } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogActions from '@mui/material/DialogActions';
 import { IconTruckDelivery } from '@tabler/icons-react';
 import { useStatusChangeAprovado } from '@/utils/PutStatusOrcamentos';
 import useAprovarPedidoStatus from './components/useAprovarPedidoStatus';
@@ -259,7 +254,7 @@ const OrcamentoBackofficeScreen = () => {
 
     const data = await response.json()
 
-    if (data.retorno.status === "Erro") {
+    if (data.status === "Erro") {
       const registros = data.retorno.registros;
       const ultimoRegistro = registros[registros.length - 1];
       if (ultimoRegistro && ultimoRegistro.registro && ultimoRegistro.registro.erros && ultimoRegistro.registro.erros.length > 0) {
@@ -675,103 +670,9 @@ const OrcamentoBackofficeScreen = () => {
 
                             {/* botão para abrir o dialog de pegar o codigo de rastreio */}
                             <Button color="primary" variant="contained" onClick={() => handleOpenDialogEntrega(row.id)} disabled={!hasPedidos}>
-                              {/* abre o componenete dialog Entrega */}
                               <IconTruckDelivery />
-                              <Dialog open={openEntregaDialog} onClose={handleCloseDialogEntrega}>
-                                {loadingPedido ? (
-                                  <DialogContent>
-
-                                    <CircularProgress /> {/* Indicador de loading */}
-                                  </DialogContent>
-                                ) : (
-                                  <>
-                                    <DialogTitle>Pedido N° {selectedPedido?.numero_pedido}</DialogTitle>
-                                    <DialogContent>
-                                      <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
-                                        <DialogContentText>Página do rastreio</DialogContentText>
-                                        {/* http://localhost:3000/apps/orcamento/backoffice/rastreamentoInterno/${selectedPedido.orcamento_id}*/}
-                                        <Button variant="contained" color="info" disabled={!hasEntrega}
-                                          onClick={() => handleOpenRastreamentoInterno(selectedPedido?.orcamento_id)}
-                                        >
-                                          Página do rastreio <IconTruckDelivery style={{ marginLeft: '5px' }} />
-                                        </Button>
-                                        {/* http://localhost:3000/apps/orcamento/backoffice/rastreamentoInterno/${selectedPedido.orcamento_id}*/}
-                                        <Button
-                                          variant="contained"
-                                          color="primary"
-                                          disabled={!hasEntrega}
-                                          sx={{ color: theme.palette.text.primary }}
-                                          onClick={() => handleOpenRastreamentoCliente(selectedPedido?.orcamento_id)}
-                                        >
-                                          Link do rastreio <IconLink style={{ marginLeft: '5px' }} />
-                                        </Button>
-                                      </Stack>
-                                      <FormControlLabel
-                                        control={
-                                          <Checkbox
-                                            checked={showInput}
-                                            onChange={(event) => setShowInput(event.target.checked)}
-                                          />
-                                        }
-                                        label="Adicionar Código de rastreio"
-                                      />
-                                      {showInput && (
-                                        <Stack spacing={2} sx={{ mt: 2 }}>
-                                          <TextField
-                                            label="Código de Rastreamento"
-                                            value={inputValueEntrega}
-                                            onChange={(event) => setInputValueEntrega(event.target.value)}
-                                          />
-                                          <Button
-                                            variant="contained"
-                                            color="primary"
-                                            disabled={hasEntrega}
-                                            onClick={() => handleSubmmitEntrega(inputValueEntrega)}
-                                          >
-                                            Enviar
-                                          </Button>
-                                        </Stack>
-                                      )}
-
-                                      <FormControlLabel
-                                        control={
-                                          <Checkbox
-                                            checked={showInputPeidosStatus}
-                                            onChange={(event) => setShowInputPedidosStatus(event.target.checked)}
-                                          />
-                                        }
-                                        label="Aprovar envio ou recebimento do pedido"
-                                      />
-                                      {showInputPeidosStatus && (
-                                        <Stack spacing={2} sx={{ mt: 2 }}>
-                                          <Button
-                                            variant="contained"
-                                            color="primary"
-                                            disabled={hasEnvio || selectedPedido?.pedido_status_id == 14 || selectedPedido?.pedido_status_id == 15}
-                                            onClick={() => handleAprovaEnvio(selectedPedido?.id)}
-                                          >
-                                            Aprovar envio do pedido à transportadora
-                                          </Button>
-                                          <Button
-                                            variant="contained"
-                                            color="primary"
-                                            disabled={HasRecebimento || selectedPedido?.pedido_status_id == 15}
-                                            onClick={() => handleAprovaRecebimento(selectedPedido?.id)}
-                                          >
-                                            Aprovar recebimento do pedido pelo cliente
-                                          </Button>
-                                        </Stack>
-                                      )}
-                                    </DialogContent>
-                                    <DialogActions>
-                                      <Button onClick={handleCloseDialogEntrega} color="primary">
-                                        Fechar
-                                      </Button>
-                                    </DialogActions>
-                                  </>
-                                )}
-                              </Dialog>
                             </Button>
+
 
                           </Stack>
                         </TableCell>
@@ -1010,6 +911,99 @@ const OrcamentoBackofficeScreen = () => {
               onChange={handlePageChange}
             />
           </Stack>
+
+          <Dialog open={openEntregaDialog} onClose={handleCloseDialogEntrega} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-descr">
+            {loadingPedido ? (
+              <DialogContent>
+
+                <CircularProgress /> {/* Indicador de loading */}
+              </DialogContent>
+            ) : (
+              <>
+                <DialogTitle>Pedido N° {selectedPedido?.numero_pedido}</DialogTitle>
+                <DialogContent>
+                  <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
+                    <DialogContentText>Página do rastreio</DialogContentText>
+                    <Button variant="contained" color="info" disabled={!hasEntrega}
+                      onClick={() => handleOpenRastreamentoInterno(selectedPedido?.orcamento_id)}
+                    >
+                      Página do rastreio <IconTruckDelivery style={{ marginLeft: '5px' }} />
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      disabled={!hasEntrega}
+                      sx={{ color: theme.palette.text.primary }}
+                      onClick={() => handleOpenRastreamentoCliente(selectedPedido?.orcamento_id)}
+                    >
+                      Link do rastreio <IconLink style={{ marginLeft: '5px' }} />
+                    </Button>
+                  </Stack>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={showInput}
+                        onChange={(event) => setShowInput(event.target.checked)}
+                      />
+                    }
+                    label="Adicionar Código de rastreio"
+                  />
+                  {showInput && (
+                    <Stack spacing={2} sx={{ mt: 2 }}>
+                      <TextField
+                        label="Código de Rastreamento"
+                        value={inputValueEntrega}
+                        onChange={(event) => setInputValueEntrega(event.target.value)}
+                      />
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        disabled={hasEntrega}
+                        onClick={() => handleSubmmitEntrega(inputValueEntrega)}
+                      >
+                        Enviar
+                      </Button>
+                    </Stack>
+                  )}
+
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={showInputPeidosStatus}
+                        onChange={(event) => setShowInputPedidosStatus(event.target.checked)}
+                      />
+                    }
+                    label="Aprovar envio ou recebimento do pedido"
+                  />
+                  {showInputPeidosStatus && (
+                    <Stack spacing={2} sx={{ mt: 2 }}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        disabled={hasEnvio || selectedPedido?.pedido_status_id == 14 || selectedPedido?.pedido_status_id == 15}
+                        onClick={() => handleAprovaEnvio(selectedPedido?.id)}
+                      >
+                        Aprovar envio do pedido à transportadora
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        disabled={HasRecebimento || selectedPedido?.pedido_status_id == 15}
+                        onClick={() => handleAprovaRecebimento(selectedPedido?.id)}
+                      >
+                        Aprovar recebimento do pedido pelo cliente
+                      </Button>
+                    </Stack>
+                  )}
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={handleCloseDialogEntrega} color="primary">
+                    Fechar
+                  </Button>
+                </DialogActions>
+              </>
+            )}
+          </Dialog>
 
         </>
       </ParentCard>

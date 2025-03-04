@@ -71,6 +71,7 @@ interface Orcamento {
   data_antecipa: string;
   taxa_antecipa: string;
   total_orcamento: number;
+  prazo_producao: number;
 }
 
 const RastreamentoClienteScreen = () => {
@@ -436,7 +437,7 @@ const RastreamentoClienteScreen = () => {
                     </TableRow>
                   )}
 
-                  {/* Prazo da Opção de Entrega
+                  {/* Prazo da Opção de Entrega */}
                   <TableRow>
                     <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
                       Prazo da Opção de Entrega:
@@ -444,7 +445,7 @@ const RastreamentoClienteScreen = () => {
                     <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.prazo_opcao_entrega} dias</TableCell>
                   </TableRow>
 
-                  {/* Preço da Opção de Entrega 
+                  {/* Preço da Opção de Entrega */}
                   <TableRow>
                     <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
                       Preço da Opção de Entrega:
@@ -452,7 +453,7 @@ const RastreamentoClienteScreen = () => {
                     <TableCell sx={{ border: 'none' }} colSpan={1}>
                       {orcamento?.preco_opcao_entrega?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </TableCell>
-                  </TableRow> */}
+                  </TableRow> 
 
                   {/* Brinde */}
                   {/* {orcamento?.brinde !== null && (
