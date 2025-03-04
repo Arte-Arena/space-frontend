@@ -1359,6 +1359,7 @@ Orçamento válido somente hoje.
       antecipado: isAnticipation,
       data_antecipa: dataDesejadaEntrega,
       taxa_antecipa: taxaAntecipa,
+      prazo_producao: prazoProducao,
       descontado: checkedDesconto || false,
       tipo_desconto: tipoDesconto || null,
       valor_desconto: checkedDesconto && tipoDesconto
