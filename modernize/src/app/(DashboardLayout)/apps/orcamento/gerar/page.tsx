@@ -984,6 +984,14 @@ const OrcamentoGerarScreen = () => {
           }
           setPrecoFrete(precoSedex12);
           break;
+        case 'LALAMOVE':
+          if (prazoLalamove !== null) {
+            setPrazoFrete(prazoLalamove + 1);
+          } else {
+            console.error('prazoSedex12 is null');
+          }
+          setPrecoFrete(precoLalamove);
+          break;
         default:
           console.error('Invalid shipping option:', shippingOption);
           setPrazoFrete(0);
@@ -995,6 +1003,8 @@ const OrcamentoGerarScreen = () => {
       console.log('0010');
       calcPrevisao();
     }
+
+    console.log("shippingOption: ", shippingOption);
 
   }, [shippingOption]);
 
@@ -2128,7 +2138,7 @@ Orçamento válido somente hoje.
                 name="controlled-radio-buttons-group"
                 value={shippingOption}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  console.log('event', event);
+                  console.log("event: ", event.target.value);
                   setShippingOption(event.target.value)
                 }}
               >
