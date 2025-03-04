@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Stack, Button, Typography, Box } from '@mui/material';
+import { Stack, Button, Typography, Box, Alert } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import MenuItem from '@mui/material/MenuItem';
@@ -73,6 +73,8 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
   const [dataEntrega, setDataEntrega] = useState<Date | null>(null);
   const [linkTrello, setLinkTrello] = useState('');
   const [comentarios, setComentarios] = useState('');
+  const [isDiaIgual, setIsDiaIgual] = useState(false);
+
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
     throw new Error('Access token is missing');
@@ -94,6 +96,15 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
         const data = await response.json();
         console.log(data)
         setOrcamentoState(data);
+
+        const hoje = new Date();
+        const dataCriacao = new Date(data.created_at);
+        const hojeFormatado = hoje.toISOString().split('T')[0];
+        const dataCriacaoFormatada = dataCriacao.toISOString().split('T')[0];
+        if (hojeFormatado === dataCriacaoFormatada) {
+          setIsDiaIgual(true);
+        }
+
         setIsLoadingOrcamentoState(false);
       } catch (error) {
         setErrorOrcamentoState(error as Error);
@@ -124,7 +135,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
       // valida o campo data
       if (!dataEntrega) {
         alert('A Data de Entrega é obrigatória.');
-        return 
+        return
       }
       // valida os campos Data de faturamento
       if (qtdParcelas === '1' && !dataFatura1) {
@@ -195,6 +206,12 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
 
   return (
     <>
+      {!isLoadingOrcamento && !isDiaIgual && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          Atenção a a data de criação do orçamento não é a data atual!.
+        </Alert>
+      )}
+
       <Typography variant="h4" sx={{ mb: 4, mt: 4 }}>
         Aprovar Orçamento #{orcamentoId}
       </Typography>
@@ -466,6 +483,9 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
             Aprovar Orçamento
           </Button>
         </Box>
+
+        {/* alerta */}
+
       </Stack>
     </>
   );
