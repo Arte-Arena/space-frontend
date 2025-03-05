@@ -29,7 +29,7 @@ import Alert from '@mui/material/Alert';
 import { DateTime } from 'luxon';
 import formatarPDF from '@/utils/formatarPDF';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf } from '@tabler/icons-react';
+import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf, IconCreditCard, IconAlertCircle } from '@tabler/icons-react';
 import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
 import InputAdornment from '@mui/material/InputAdornment';
 import ptBR from 'date-fns/locale/pt-BR';
@@ -286,6 +286,7 @@ const OrcamentoGerarScreen = () => {
   const [checkedOcultaPrevisao, setCheckedOcultaPrevisao] = useState<boolean>(false);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
   const [openSnackbarCopiarOrcamento, setOpenSnackbarCopiarOrcamento] = useState(false);
+  const [openSnackbarCopiarLinkPagamento, setOpenSnackbarCopiarLinkPagamento] = useState(false);
   const [taxaAntecipaInput, setTaxaAntecipaInput] = useState<number | null>(null);
   const [taxaAntecipa, setTaxaAntecipa] = useState<number | null>(null);
   const [prazoProducaoAntecipado, setPrazoProducaoAntecipado] = useState<number | null>(null);
@@ -297,6 +298,8 @@ const OrcamentoGerarScreen = () => {
   const [percentualDesconto, setPercentualDesconto] = useState<number | null>(null);
   const [valorDesconto, setValorDesconto] = useState<number | null>(null);
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [checkoutLink, setCheckoutLink] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const accessToken = localStorage.getItem('accessToken');
 
@@ -1211,12 +1214,19 @@ const OrcamentoGerarScreen = () => {
   }, [cepError]);
 
   const handleSubmit = async () => {
-    const isValidCEP = await processCEP(cep);
-    if (isValidCEP) {
-      gerarOrcamento();
-    } else {
-      setCepError(true);
-      gerarOrcamento();
+    setIsSubmitting(true);
+    try {
+      const isValidCEP = await processCEP(cep);
+      if (isValidCEP) {
+        gerarOrcamento();
+      } else {
+        setCepError(true);
+        gerarOrcamento();
+      }
+    } finally {
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 1000);
     }
   };
 
@@ -1403,6 +1413,9 @@ Orçamento válido somente hoje.
         throw new Error('Erro ao salvar orçamento');
       }
 
+      const responseData = await response.json();
+      setCheckoutLink(responseData.checkout_link);
+
       // console.log('Orçamento salvo com sucesso');
     } catch (error) {
       console.error('Erro:', error);
@@ -1417,6 +1430,10 @@ Orçamento válido somente hoje.
 
   const handleCloseSnackbarCopiarOrcamento = () => {
     setOpenSnackbarCopiarOrcamento(false);
+  }
+
+  const handleCloseSnackbarCopiarLinkPagamento = () => {
+    setOpenSnackbarCopiarLinkPagamento(false);
   }
 
   // Definindo a data mínima para amanhã
@@ -2622,10 +2639,19 @@ Orçamento válido somente hoje.
               color="primary"
               variant="contained"
               onClick={handleSubmit}
-              disabled={!isUrgentDeliverySelected || !shippingOption || !clientId || productsList.length === 0 || loadingPrevisao}
+              disabled={!isUrgentDeliverySelected || !shippingOption || !clientId || productsList.length === 0 || loadingPrevisao || isSubmitting}
             >
-              <IconDeviceFloppy style={{ marginRight: '8px' }} />
-              Gerar Orçamento
+              {isSubmitting ? (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                  Gerando...
+                </Box>
+              ) : (
+                <>
+                  <IconDeviceFloppy style={{ marginRight: '8px' }} />
+                  Gerar Orçamento
+                </>
+              )}
             </Button>
           </div>
 
@@ -2646,6 +2672,53 @@ Orçamento válido somente hoje.
               </DialogContentText>
             </DialogContent>
             <DialogActions>
+            {checkoutLink ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                <IconButton onClick={() => { 
+                  navigator.clipboard.writeText(checkoutLink); 
+                  setOpenSnackbarCopiarLinkPagamento(false);
+                  setTimeout(() => setOpenSnackbarCopiarLinkPagamento(true), 10);
+                }}>
+                  <IconCreditCard />
+                  <Typography variant="body2">Copiar link de pagamento</Typography>
+                </IconButton>
+                {openSnackbarCopiarLinkPagamento && (
+                  <Box 
+                    sx={{ 
+                      position: 'absolute', 
+                      right: '100%', 
+                      backgroundColor: 'success.main', 
+                      color: 'white', 
+                      py: 0.5, 
+                      px: 1.5, 
+                      borderRadius: 1, 
+                      marginRight: '10px',
+                      whiteSpace: 'nowrap',
+                      fontSize: '0.8rem',
+                      boxShadow: 2,
+                      animation: 'fadeIn 0.3s, fadeOut 0.5s 1.5s forwards',
+                      '@keyframes fadeIn': {
+                        '0%': { opacity: 0 },
+                        '100%': { opacity: 1 },
+                      },
+                      '@keyframes fadeOut': {
+                        '0%': { opacity: 1 },
+                        '100%': { opacity: 0 },
+                      }
+                    }}
+                  >
+                    Link copiado!
+                  </Box>
+                )}
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <CircularProgress size={20} sx={{ mr: 1 }} />
+                <Typography variant="body2" sx={{ ml: 1 }}>
+                  Gerando link de pagamento...
+                </Typography>
+              </Box>
+            )}
 
               <IconButton onClick={() => { navigator.clipboard.writeText(orçamentoTexto); setOpenSnackbarCopiarOrcamento(true); }}>
                 <IconCopy />
