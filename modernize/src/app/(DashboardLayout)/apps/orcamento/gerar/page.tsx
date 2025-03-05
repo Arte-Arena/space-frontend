@@ -29,7 +29,7 @@ import Alert from '@mui/material/Alert';
 import { DateTime } from 'luxon';
 import formatarPDF from '@/utils/formatarPDF';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf, IconCreditCard } from '@tabler/icons-react';
+import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf, IconCreditCard, IconAlertCircle } from '@tabler/icons-react';
 import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
 import InputAdornment from '@mui/material/InputAdornment';
 import ptBR from 'date-fns/locale/pt-BR';
@@ -298,6 +298,7 @@ const OrcamentoGerarScreen = () => {
   const [percentualDesconto, setPercentualDesconto] = useState<number | null>(null);
   const [valorDesconto, setValorDesconto] = useState<number | null>(null);
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [checkoutLink, setCheckoutLink] = useState<string | null>(null);
 
   const accessToken = localStorage.getItem('accessToken');
 
@@ -1403,6 +1404,9 @@ Orçamento válido somente hoje.
       if (!response.ok) {
         throw new Error('Erro ao salvar orçamento');
       }
+
+      const responseData = await response.json();
+      setCheckoutLink(responseData.checkout_link);
 
       // console.log('Orçamento salvo com sucesso');
     } catch (error) {
@@ -2651,10 +2655,10 @@ Orçamento válido somente hoje.
               </DialogContentText>
             </DialogContent>
             <DialogActions>
-            <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+            {checkoutLink ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
                 <IconButton onClick={() => { 
-                  const paymentLink = `${process.env.NEXT_PUBLIC_PAYMENT_URL || 'https://artearena.com.br/pagamento'}/${clientId}`;
-                  navigator.clipboard.writeText(paymentLink); 
+                  navigator.clipboard.writeText(checkoutLink); 
                   setOpenSnackbarCopiarLinkPagamento(false);
                   setTimeout(() => setOpenSnackbarCopiarLinkPagamento(true), 10);
                 }}>
@@ -2690,6 +2694,14 @@ Orçamento válido somente hoje.
                   </Box>
                 )}
               </Box>
+            ) : (
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <IconAlertCircle color="error" />
+                <Typography variant="body2" color="error" sx={{ ml: 1 }}>
+                  Link de pagamento não disponível
+                </Typography>
+              </Box>
+            )}
 
               <IconButton onClick={() => { navigator.clipboard.writeText(orçamentoTexto); setOpenSnackbarCopiarOrcamento(true); }}>
                 <IconCopy />
