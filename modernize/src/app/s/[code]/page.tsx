@@ -10,11 +10,6 @@ interface PageProps {
 
 export default function S({ params }: PageProps) {
 
-  const accessToken = localStorage.getItem('accessToken');
-  if (!accessToken) {
-    throw new Error('Access token is missing');
-  }
-
   const { code } = params; // Acessa o valor dinâmico `code`
   const router = useRouter();
 
@@ -26,7 +21,6 @@ export default function S({ params }: PageProps) {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
       },
     });
 
