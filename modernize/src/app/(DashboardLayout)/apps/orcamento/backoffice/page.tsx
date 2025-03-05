@@ -119,7 +119,7 @@ const OrcamentoBackofficeScreen = () => {
   const [HasRecebimento, setHasRecebimento] = useState(false);
   const [loadingPedido, setLoadingPedido] = useState(false);
   const [copiedRastreio, setCopiedRastreio] = useState(false);
-  const [handleMakePedidoLoading, sethandleMakePedidoLoading] = useState(false);
+  const [handleMakePedidoLoading, setIsLoadingMakePeido] = useState(false);
   const theme = useTheme()
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
@@ -257,7 +257,7 @@ const OrcamentoBackofficeScreen = () => {
       });
   
       const data = await response.json();
-      sethandleMakePedidoLoading(false);
+      setIsLoadingMakePeido(false);
 
       // Verifique o status dentro de data.retorno
       if (data.retorno && data.retorno.status === "Erro") {
@@ -282,7 +282,7 @@ const OrcamentoBackofficeScreen = () => {
     } catch (error) {
       console.error("Erro na requisição:", error);
       alert("Ocorreu um erro ao processar o pedido. Produto Pai Invalido.");
-      sethandleMakePedidoLoading(false);
+      setIsLoadingMakePeido(false);
       refetch();
     }
   };
