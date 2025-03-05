@@ -584,6 +584,7 @@ const OrcamentoBackofficeScreen = () => {
                                   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 3 }}>
                                     <CircularProgress size={24} />
                                     <Typography sx={{ ml: 2 }}>Verificando uniformes existentes...</Typography>
+                                  </Box>
                                 ) : existingUniforms ? (
                                   <Box sx={{ mt: 2, p: 1, bgcolor: 'warning.light', borderRadius: 1 }}>
                                     <Typography variant="body1" color="warning.dark">
@@ -638,7 +639,6 @@ const OrcamentoBackofficeScreen = () => {
                                       </Button>
                                     </Box>
 
-
                                     {sketches.length > 0 && (
                                       <TableContainer>
                                         <Table size="small">
@@ -647,22 +647,6 @@ const OrcamentoBackofficeScreen = () => {
                                               <TableCell>Esboço</TableCell>
                                               <TableCell>Quantidade</TableCell>
                                               <TableCell>Ações</TableCell>
-                                          </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                          {sketches.map((sketch) => (
-                                            <TableRow key={sketch.letter}>
-                                              <TableCell>Esboço {sketch.letter}</TableCell>
-                                              <TableCell>{sketch.quantity}</TableCell>
-                                              <TableCell>
-                                                <IconButton
-                                                  size="small"
-                                                  onClick={() => setSketches(sketches.filter(s => s.letter !== sketch.letter))}
-                                                  disabled={isGeneratingLink || isLinkGenerated}
-                                                >
-                                                  <IconTrash size={18} />
-                                                </IconButton>
-                                              </TableCell>
                                             </TableRow>
                                           </TableHead>
                                           <TableBody>
@@ -673,10 +657,8 @@ const OrcamentoBackofficeScreen = () => {
                                                 <TableCell>
                                                   <IconButton
                                                     size="small"
-                                                    onClick={() => {
-                                                      setSketches(sketches.filter(s => s.letter !== sketch.letter));
-                                                    }}
-                                                    disabled={isLinkGenerated}
+                                                    onClick={() => setSketches(sketches.filter(s => s.letter !== sketch.letter))}
+                                                    disabled={isGeneratingLink || isLinkGenerated}
                                                   >
                                                     <IconTrash size={18} />
                                                   </IconButton>
