@@ -29,7 +29,7 @@ import Alert from '@mui/material/Alert';
 import { DateTime } from 'luxon';
 import formatarPDF from '@/utils/formatarPDF';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf } from '@tabler/icons-react';
+import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf, IconCreditCard } from '@tabler/icons-react';
 import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
 import InputAdornment from '@mui/material/InputAdornment';
 import ptBR from 'date-fns/locale/pt-BR';
@@ -286,6 +286,7 @@ const OrcamentoGerarScreen = () => {
   const [checkedOcultaPrevisao, setCheckedOcultaPrevisao] = useState<boolean>(false);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
   const [openSnackbarCopiarOrcamento, setOpenSnackbarCopiarOrcamento] = useState(false);
+  const [openSnackbarCopiarLinkPagamento, setOpenSnackbarCopiarLinkPagamento] = useState(false);
   const [taxaAntecipaInput, setTaxaAntecipaInput] = useState<number | null>(null);
   const [taxaAntecipa, setTaxaAntecipa] = useState<number | null>(null);
   const [prazoProducaoAntecipado, setPrazoProducaoAntecipado] = useState<number | null>(null);
@@ -1417,6 +1418,10 @@ Orçamento válido somente hoje.
 
   const handleCloseSnackbarCopiarOrcamento = () => {
     setOpenSnackbarCopiarOrcamento(false);
+  }
+
+  const handleCloseSnackbarCopiarLinkPagamento = () => {
+    setOpenSnackbarCopiarLinkPagamento(false);
   }
 
   // Definindo a data mínima para amanhã
@@ -2646,6 +2651,45 @@ Orçamento válido somente hoje.
               </DialogContentText>
             </DialogContent>
             <DialogActions>
+            <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                <IconButton onClick={() => { 
+                  const paymentLink = `${process.env.NEXT_PUBLIC_PAYMENT_URL || 'https://artearena.com.br/pagamento'}/${clientId}`;
+                  navigator.clipboard.writeText(paymentLink); 
+                  setOpenSnackbarCopiarLinkPagamento(false);
+                  setTimeout(() => setOpenSnackbarCopiarLinkPagamento(true), 10);
+                }}>
+                  <IconCreditCard />
+                  <Typography variant="body2">Copiar link de pagamento</Typography>
+                </IconButton>
+                {openSnackbarCopiarLinkPagamento && (
+                  <Box 
+                    sx={{ 
+                      position: 'absolute', 
+                      right: '100%', 
+                      backgroundColor: 'success.main', 
+                      color: 'white', 
+                      py: 0.5, 
+                      px: 1.5, 
+                      borderRadius: 1, 
+                      marginRight: '10px',
+                      whiteSpace: 'nowrap',
+                      fontSize: '0.8rem',
+                      boxShadow: 2,
+                      animation: 'fadeIn 0.3s, fadeOut 0.5s 1.5s forwards',
+                      '@keyframes fadeIn': {
+                        '0%': { opacity: 0 },
+                        '100%': { opacity: 1 },
+                      },
+                      '@keyframes fadeOut': {
+                        '0%': { opacity: 1 },
+                        '100%': { opacity: 0 },
+                      }
+                    }}
+                  >
+                    Link copiado!
+                  </Box>
+                )}
+              </Box>
 
               <IconButton onClick={() => { navigator.clipboard.writeText(orçamentoTexto); setOpenSnackbarCopiarOrcamento(true); }}>
                 <IconCopy />
