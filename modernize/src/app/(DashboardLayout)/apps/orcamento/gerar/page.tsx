@@ -1387,6 +1387,7 @@ Orçamento válido somente hoje.
           : (totalProductsValue ?? 0) + (shippingOption !== 'RETIRADA' ? precoFrete ?? 0 : 0),
       brinde: checkedBrinde,
       produtos_brinde: JSON.stringify(productsBrindeList),
+      previsaoEntrega,
     };
 
     try {
