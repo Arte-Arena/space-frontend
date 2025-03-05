@@ -76,10 +76,10 @@ const OrcamentoBackofficeScreen: React.FC = () => {
 
   const [isTipoPessoaSelected, setIsTipoPessoaSelected] = useState(false);
 
-  const accessToken = localStorage.getItem('accessToken');
-  if (!accessToken) {
-    throw new Error('Access token is missing');
-  }
+  // const accessToken = localStorage.getItem('accessToken');
+  // if (!accessToken) {
+  //   throw new Error('Access token is missing');
+  // }
 
   // const { isFetching, error } = useQuery({
   //   queryKey: ['clientData'],
