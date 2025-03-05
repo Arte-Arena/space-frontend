@@ -11,18 +11,16 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
-import { Pagination, Stack, Button, Box, Typography, Collapse } from '@mui/material';
+import { Pagination, Stack, Button, Box, Typography, Collapse, FormControlLabel, Checkbox, TextField, useTheme, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { IconSearch, IconLink, IconShirtSport, IconCheck, IconTrash } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogActions from '@mui/material/DialogActions';
+import { IconTruckDelivery } from '@tabler/icons-react';
+import { useStatusChangeAprovado } from '@/utils/PutStatusOrcamentos';
+import useAprovarPedidoStatus from './components/useAprovarPedidoStatus';
 
 interface Pedidos {
   id: number;
@@ -41,6 +39,7 @@ interface Pedidos {
   situacao: string | null;
   designer_id: number | null;
   observacoes: string | null;
+  codigo_rastreamento: string | null;
   url_trello: string | null;
   created_at: string;
   updated_at: string;
@@ -110,6 +109,17 @@ const OrcamentoBackofficeScreen = () => {
   const [existingUniforms, setExistingUniforms] = useState<boolean>(false);
   const [linkCopied, setLinkCopied] = useState<boolean>(false);
   const [isCheckingUniforms, setIsCheckingUniforms] = useState<boolean>(false);
+  const [openEntregaDialog, setOpenEntregaDialog] = useState(false);
+  const [selectedPedido, setSelectedPedido] = useState<Pedidos | null>(null);
+  const [showInput, setShowInput] = useState(false);
+  const [showInputPeidosStatus, setShowInputPedidosStatus] = useState(false);
+  const [inputValueEntrega, setInputValueEntrega] = useState(selectedPedido?.codigo_rastreamento || '');
+  const [hasEntrega, setHasEntrega] = useState(false);
+  const [hasEnvio, setHasEnvio] = useState(false);
+  const [HasRecebimento, setHasRecebimento] = useState(false);
+  const [loadingPedido, setLoadingPedido] = useState(false);
+  const [copiedRastreio, setCopiedRastreio] = useState(false);
+  const theme = useTheme()
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
   const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
@@ -120,6 +130,36 @@ const OrcamentoBackofficeScreen = () => {
   if (!accessToken) {
     throw new Error('Access token is missing');
   }
+
+  const handleFetchPedido = async (id: number) => {
+    try {
+      setLoadingPedido(true);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedidos/get-pedido-orcamento/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const data = await response.json();
+      setSelectedPedido(data);
+      setInputValueEntrega(data.codigo_rastreamento)
+      setLoadingPedido(false);
+    } catch (error) {
+      console.error('Error fetching pedido:', error);
+    } finally {
+      setLoadingPedido(false); // Finaliza o loading
+    }
+  };
+
+  useEffect(() => {
+    if (selectedPedido && selectedPedido.codigo_rastreamento) {
+      setHasEntrega(true);
+    } else {
+      setHasEntrega(false);
+    }
+  }, [selectedPedido]);
+
 
   const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos, refetch } = useQuery({
     queryKey: ['budgetData', searchQuery, page],
@@ -137,8 +177,49 @@ const OrcamentoBackofficeScreen = () => {
     console.log(dataOrcamentos)
   }, [dataOrcamentos])
 
-  // Precisamos validar os botões pro caso de ja terem sido feitos clientes e pedidos.
 
+  const handleOpenDialogEntrega = (id: number) => {
+    console.log('id passado no handle open : ', id)
+    handleFetchPedido(id);
+    setOpenEntregaDialog(true);
+  };
+
+  const handleCloseDialogEntrega = () => {
+    setOpenEntregaDialog(false);
+  };
+
+
+  const handleSubmmitEntrega = (inputValueEntrega: string) => {
+    fetch(
+      `${process.env.NEXT_PUBLIC_API}/api/pedidos/pedido-codigo-rastreamento/`, // Corrigi a URL, parecia estar errada
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          pedido_id: selectedPedido?.id,
+          codigo_rastreamento: inputValueEntrega,
+        }),
+      }
+    )
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Erro ao enviar código de rastreamento'); // Corrigi erro de digitação na mensagem
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log('Código de rastreamento enviado com sucesso:', data);
+        handleFetchPedido(selectedPedido?.orcamento_id || 0);
+        setHasEntrega(true);
+      })
+      .catch((error) => {
+        console.error(error.message);
+        alert(error.message);
+      });
+  };
 
   const handleMakePedido = async (orcamento: Orcamento) => {
 
@@ -176,7 +257,7 @@ const OrcamentoBackofficeScreen = () => {
 
     const data = await response.json()
 
-    if (data.retorno.status === "Erro") {
+    if (data.status === "Erro") {
       const registros = data.retorno.registros;
       const ultimoRegistro = registros[registros.length - 1];
       if (ultimoRegistro && ultimoRegistro.registro && ultimoRegistro.registro.erros && ultimoRegistro.registro.erros.length > 0) {
@@ -194,7 +275,7 @@ const OrcamentoBackofficeScreen = () => {
         console.log(errorData.message)
         alert(`Erro ao salvar: ${errorData.message}`);
       }
-
+      refetch()
     }
 
   }
@@ -310,7 +391,7 @@ const OrcamentoBackofficeScreen = () => {
         });
 
         const data = await response.json();
-        
+
         if (!response.ok) {
           if (response.status === 422 && data.errors) {
             setApiError(`Erro: Já existe um esboço ${sketch.letter} para este orçamento.`);
@@ -321,7 +402,7 @@ const OrcamentoBackofficeScreen = () => {
           return;
         }
       }
-      
+
       await navigator.clipboard.writeText(linkUniform);
       setIsLinkGenerated(true);
     } catch (error) {
@@ -343,6 +424,40 @@ const OrcamentoBackofficeScreen = () => {
     setExistingUniforms(false);
     setLinkCopied(false);
   };
+
+
+  const handleOpenRastreamentoInterno = (id: string | number | undefined) => {
+    const link = window.location.origin + '/apps/orcamento/backoffice/rastreamento-interno/' + id;
+    window.open(link, "_blank");
+  }
+  const handleOpenRastreamentoCliente = (id: string | number | undefined) => {
+    // window.location.href = '/apps/orcamento/rastreamento-cliente/' + id;
+
+    const textToCopy = window.location.origin + "/apps/orcamento/backoffice/rastreamento-cliente/" + id;
+
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => {
+        setCopiedRastreio(true);
+        setTimeout(() => setCopiedRastreio(false), 2000); // Reseta a mensagem após 2 segundos
+      })
+      .then(() => {
+        alert('Link copiado com sucesso');
+      })
+      .catch((err) => console.error("Erro ao copiar texto:", err));
+  }
+
+  const handleAprovaEnvio = (id: string | number | undefined) => {
+    const status = "envio";
+    useAprovarPedidoStatus(status, id);
+    setHasEnvio(true);
+  }
+
+  const handleAprovaRecebimento = (id: string | number | undefined) => {
+    const status = "recebimento";
+    useAprovarPedidoStatus(status, id);
+    setHasRecebimento(true);
+  }
+
 
   return (
     <PageContainer title="Orçamento / Backoffice" description="Gerenciar Pedidos da Arte Arena">
@@ -469,7 +584,6 @@ const OrcamentoBackofficeScreen = () => {
                                   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 3 }}>
                                     <CircularProgress size={24} />
                                     <Typography sx={{ ml: 2 }}>Verificando uniformes existentes...</Typography>
-                                  </Box>
                                 ) : existingUniforms ? (
                                   <Box sx={{ mt: 2, p: 1, bgcolor: 'warning.light', borderRadius: 1 }}>
                                     <Typography variant="body1" color="warning.dark">
@@ -524,6 +638,7 @@ const OrcamentoBackofficeScreen = () => {
                                       </Button>
                                     </Box>
 
+
                                     {sketches.length > 0 && (
                                       <TableContainer>
                                         <Table size="small">
@@ -532,6 +647,22 @@ const OrcamentoBackofficeScreen = () => {
                                               <TableCell>Esboço</TableCell>
                                               <TableCell>Quantidade</TableCell>
                                               <TableCell>Ações</TableCell>
+                                          </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                          {sketches.map((sketch) => (
+                                            <TableRow key={sketch.letter}>
+                                              <TableCell>Esboço {sketch.letter}</TableCell>
+                                              <TableCell>{sketch.quantity}</TableCell>
+                                              <TableCell>
+                                                <IconButton
+                                                  size="small"
+                                                  onClick={() => setSketches(sketches.filter(s => s.letter !== sketch.letter))}
+                                                  disabled={isGeneratingLink || isLinkGenerated}
+                                                >
+                                                  <IconTrash size={18} />
+                                                </IconButton>
+                                              </TableCell>
                                             </TableRow>
                                           </TableHead>
                                           <TableBody>
@@ -625,11 +756,15 @@ const OrcamentoBackofficeScreen = () => {
                             </Dialog>
 
                             {/* botão da chamada da api */}
-                            { }
                             <Button variant="contained" color="primary" onClick={() => handleMakePedido(row)} disabled={hasPedidos}>
-
                               <IconCheck />
                             </Button>
+
+                            {/* botão para abrir o dialog de pegar o codigo de rastreio */}
+                            <Button color="primary" variant="contained" onClick={() => handleOpenDialogEntrega(row.id)} disabled={!hasPedidos}>
+                              <IconTruckDelivery />
+                            </Button>
+
 
                           </Stack>
                         </TableCell>
@@ -869,6 +1004,102 @@ const OrcamentoBackofficeScreen = () => {
             />
           </Stack>
 
+          <Dialog open={openEntregaDialog} onClose={handleCloseDialogEntrega}>
+            {loadingPedido ? (
+              <DialogContent>
+                {/* Indicador de loading */}
+                <CircularProgress />
+              </DialogContent>
+            ) : (
+              <>
+                <DialogTitle>Pedido N° {selectedPedido?.numero_pedido}</DialogTitle>
+                <DialogContent>
+                  <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
+                    <DialogContentText>Página do rastreio</DialogContentText>
+                    <Button 
+                    variant="contained" 
+                    color="info" 
+                    // disabled={!hasEntrega}
+                      onClick={() => handleOpenRastreamentoInterno(selectedPedido?.orcamento_id)}
+                    >
+                      Página do rastreio <IconTruckDelivery style={{ marginLeft: '5px' }} />
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      // disabled={!hasEntrega}
+                      sx={{ color: theme.palette.text.primary }}
+                      onClick={() => handleOpenRastreamentoCliente(selectedPedido?.orcamento_id)}
+                    >
+                      Link do rastreio <IconLink style={{ marginLeft: '5px' }} />
+                    </Button>
+                  </Stack>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={showInput}
+                        onChange={(event) => setShowInput(event.target.checked)}
+                      />
+                    }
+                    label="Adicionar Código de rastreio"
+                  />
+                  {showInput && (
+                    <Stack spacing={2} sx={{ mt: 2 }}>
+                      <TextField
+                        label="Código de Rastreamento"
+                        value={inputValueEntrega}
+                        onChange={(event) => setInputValueEntrega(event.target.value)}
+                      />
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        disabled={hasEntrega}
+                        onClick={() => handleSubmmitEntrega(inputValueEntrega)}
+                      >
+                        Enviar
+                      </Button>
+                    </Stack>
+                  )}
+
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={showInputPeidosStatus}
+                        onChange={(event) => setShowInputPedidosStatus(event.target.checked)}
+                      />
+                    }
+                    label="Aprovar envio ou recebimento do pedido"
+                  />
+                  {showInputPeidosStatus && (
+                    <Stack spacing={2} sx={{ mt: 2 }}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        disabled={hasEnvio || selectedPedido?.pedido_status_id == 14 || selectedPedido?.pedido_status_id == 15}
+                        onClick={() => handleAprovaEnvio(selectedPedido?.id)}
+                      >
+                        Aprovar envio do pedido à transportadora
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        disabled={HasRecebimento || selectedPedido?.pedido_status_id == 15}
+                        onClick={() => handleAprovaRecebimento(selectedPedido?.id)}
+                      >
+                        Aprovar recebimento do pedido pelo cliente
+                      </Button>
+                    </Stack>
+                  )}
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={handleCloseDialogEntrega} color="primary">
+                    Fechar
+                  </Button>
+                </DialogActions>
+              </>
+            )}
+          </Dialog>
+
         </>
       </ParentCard>
     </PageContainer>
@@ -877,4 +1108,3 @@ const OrcamentoBackofficeScreen = () => {
 
 
 export default OrcamentoBackofficeScreen;
-
