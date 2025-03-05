@@ -131,7 +131,7 @@ const OrcamentoBackofficeScreen = () => {
     throw new Error('Access token is missing');
   }
 
-  const handleFetchPedido = async (id: number) => {
+  const handleFetchPedido = async (id: number | undefined) => {
     try {
       setLoadingPedido(true);
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedidos/get-pedido-orcamento/${id}`, {
@@ -446,16 +446,18 @@ const OrcamentoBackofficeScreen = () => {
       .catch((err) => console.error("Erro ao copiar texto:", err));
   }
 
-  const handleAprovaEnvio = (id: string | number | undefined) => {
+  const handleAprovaEnvio = (id: string | number | undefined, id_orcamento: number | undefined) => {
     const status = "envio";
     useAprovarPedidoStatus(status, id);
-    setHasEnvio(true);
+    handleFetchPedido(id_orcamento);
+    // setHasEnvio(true);
   }
 
-  const handleAprovaRecebimento = (id: string | number | undefined) => {
+  const handleAprovaRecebimento = (id: string | number | undefined, id_orcamento: number | undefined) => {
     const status = "recebimento";
     useAprovarPedidoStatus(status, id);
-    setHasRecebimento(true);
+    handleFetchPedido(id_orcamento);
+    // setHasRecebimento(true);
   }
 
 
@@ -1057,16 +1059,16 @@ const OrcamentoBackofficeScreen = () => {
                       <Button
                         variant="contained"
                         color="primary"
-                        disabled={hasEnvio || selectedPedido?.pedido_status_id == 14 || selectedPedido?.pedido_status_id == 15}
-                        onClick={() => handleAprovaEnvio(selectedPedido?.id)}
+                        disabled={selectedPedido?.pedido_status_id == 14 || selectedPedido?.pedido_status_id == 15}
+                        onClick={() => handleAprovaEnvio(selectedPedido?.id, selectedPedido?.orcamento_id)}
                       >
                         Aprovar envio do pedido à transportadora
                       </Button>
                       <Button
                         variant="contained"
                         color="primary"
-                        disabled={HasRecebimento || selectedPedido?.pedido_status_id == 15}
-                        onClick={() => handleAprovaRecebimento(selectedPedido?.id)}
+                        disabled={selectedPedido?.pedido_status_id == 15}
+                        onClick={() => handleAprovaRecebimento(selectedPedido?.id, selectedPedido?.orcamento_id)}
                       >
                         Aprovar recebimento do pedido pelo cliente
                       </Button>
