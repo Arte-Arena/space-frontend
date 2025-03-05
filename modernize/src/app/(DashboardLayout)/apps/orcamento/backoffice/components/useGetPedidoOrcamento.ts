@@ -27,6 +27,8 @@ const useFetchPedidoOrcamento = (id: number | string) => {
   const [pedido, setPedido] = useState<Pedido | null>(null);
   const [isLoadingPedido, setIsLoading] = useState(true);
   const [errorPedido, setError] = useState<Error | null>(null);
+  const [activeStep, setActiveStep] = useState<number | undefined>(1);
+
 
   useEffect(() => {
     if (!id) return;
@@ -55,6 +57,12 @@ const useFetchPedidoOrcamento = (id: number | string) => {
         const json = await res.json();
         console.log(json);
         setPedido(json);
+        if(json.pedido_status_id === 14){
+          setActiveStep(3);
+        }
+        if(json.pedido_status_id === 15){
+          setActiveStep(4);
+        }
       } catch (err) {
         setError(err as Error);
       } finally {
@@ -66,7 +74,7 @@ const useFetchPedidoOrcamento = (id: number | string) => {
   }, [id]);
 
   // Retorna um objeto memorizado para otimizar performance
-  return useMemo(() => ({ pedido, isLoadingPedido, errorPedido }), [pedido, isLoadingPedido, errorPedido]);
+  return useMemo(() => ({ pedido, isLoadingPedido, errorPedido, activeStep }), [pedido, isLoadingPedido, errorPedido, activeStep]);
 };
 
 export default useFetchPedidoOrcamento;
