@@ -36,6 +36,7 @@ interface Orcamento {
   taxa_antecipa: string;
   total_orcamento: number;
   prazo_producao: number;
+  prev_entrega: string;
 }
 
 // Wrapper para o NumericFormat com forwardRef
@@ -127,7 +128,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
     return format(parseISO(dataString), "dd/MM/yyyy");
   };
 
-
+// temos que fazer os campos de data serem padrão brasil e colocar a data prev_entrega no campo de data de entrega
 
   const aprovaOrcamento = () => {
     if (orcamentoId !== null) {

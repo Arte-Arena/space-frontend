@@ -223,7 +223,7 @@ const OrcamentoBackofficeScreen = () => {
   };
 
   const handleMakePedido = async (orcamento: Orcamento) => {
-    sethandleMakePedidoLoading(true);
+    setIsLoadingMakePeido(true);
 
     const orcamentoFormated = {
       id: orcamento.id,
