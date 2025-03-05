@@ -223,7 +223,6 @@ const OrcamentoBackofficeScreen = () => {
   };
 
   const handleMakePedido = async (orcamento: Orcamento) => {
-
     sethandleMakePedidoLoading(true);
 
     const orcamentoFormated = {
@@ -246,44 +245,48 @@ const OrcamentoBackofficeScreen = () => {
       taxa_antecipa: orcamento.taxa_antecipa,
       total_orcamento: orcamento.total_orcamento,
     };
-
-    // console.log(orcamentoFormated)
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/pedido-cadastro`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(orcamentoFormated),
-    });
-
-    const data = await response.json()
-
-    if (data.status === "Erro") {
-      const registros = data.retorno.registros;
-      const ultimoRegistro = registros[registros.length - 1];
-      if (ultimoRegistro && ultimoRegistro.registro && ultimoRegistro.registro.erros && ultimoRegistro.registro.erros.length > 0) {
-        const ultimoErro = ultimoRegistro.registro.erros[ultimoRegistro.registro.erros.length - 1];
-        const mensagemErro = ultimoErro.erro;
-        alert('Pedido não salvo! ' + mensagemErro);
-        return
-      }
-    }
-
-    if (response.ok) {
-      refetch()
-      alert('Pedido N°' + orcamento.id + ' salvo com sucesso!');
+  
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/pedido-cadastro`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(orcamentoFormated),
+      });
+  
+      const data = await response.json();
       sethandleMakePedidoLoading(false);
-    } else {
-      const errorData = await response.json();
-      console.log(errorData.message)
-      alert(`Erro ao salvar: ${errorData.message}`);
+
+      // Verifique o status dentro de data.retorno
+      if (data.retorno && data.retorno.status === "Erro") {
+        const registro = data.retorno.registros.registro; // considerando que é um objeto
+        if (registro && registro.erros && registro.erros.length > 0) {
+          const ultimoErro = registro.erros[registro.erros.length - 1];
+          const mensagemErro = ultimoErro.erro;
+          alert('Pedido não salvo! ' + mensagemErro);
+          return;
+        }
+      }
+  
+      if (response.ok) {
+        alert('Pedido N°' + orcamento.id + ' salvo com sucesso!');
+      } else {
+        // Já temos os dados em "data", então não precisamos chamar response.json() novamente.
+        console.log(data.message);
+        alert(`Erro ao salvar: ${data.message}`);
+      }
+  
+      refetch();
+    } catch (error) {
+      console.error("Erro na requisição:", error);
+      alert("Ocorreu um erro ao processar o pedido. Produto Pai Invalido.");
+      sethandleMakePedidoLoading(false);
+      refetch();
     }
-    refetch()
-
-
-  }
+  };
+  
   const handleSearch = () => {
     setSearchQuery(query); // Atualiza a busca
     setPage(1); // Reseta para a primeira página ao realizar uma nova busca
