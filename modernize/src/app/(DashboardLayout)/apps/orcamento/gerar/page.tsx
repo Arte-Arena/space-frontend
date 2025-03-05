@@ -299,6 +299,7 @@ const OrcamentoGerarScreen = () => {
   const [valorDesconto, setValorDesconto] = useState<number | null>(null);
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [checkoutLink, setCheckoutLink] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const accessToken = localStorage.getItem('accessToken');
 
@@ -1213,12 +1214,19 @@ const OrcamentoGerarScreen = () => {
   }, [cepError]);
 
   const handleSubmit = async () => {
-    const isValidCEP = await processCEP(cep);
-    if (isValidCEP) {
-      gerarOrcamento();
-    } else {
-      setCepError(true);
-      gerarOrcamento();
+    setIsSubmitting(true);
+    try {
+      const isValidCEP = await processCEP(cep);
+      if (isValidCEP) {
+        gerarOrcamento();
+      } else {
+        setCepError(true);
+        gerarOrcamento();
+      }
+    } finally {
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 1000);
     }
   };
 
@@ -2631,10 +2639,19 @@ Orçamento válido somente hoje.
               color="primary"
               variant="contained"
               onClick={handleSubmit}
-              disabled={!isUrgentDeliverySelected || !shippingOption || !clientId || productsList.length === 0 || loadingPrevisao}
+              disabled={!isUrgentDeliverySelected || !shippingOption || !clientId || productsList.length === 0 || loadingPrevisao || isSubmitting}
             >
-              <IconDeviceFloppy style={{ marginRight: '8px' }} />
-              Gerar Orçamento
+              {isSubmitting ? (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                  Gerando...
+                </Box>
+              ) : (
+                <>
+                  <IconDeviceFloppy style={{ marginRight: '8px' }} />
+                  Gerar Orçamento
+                </>
+              )}
             </Button>
           </div>
 
