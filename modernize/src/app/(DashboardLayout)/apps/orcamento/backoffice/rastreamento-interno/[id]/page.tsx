@@ -4,7 +4,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { Container, Typography, Stepper, Step, StepLabel, Box, Paper, TableRow, TableCell, Collapse, Table, TableBody, TableHead } from "@mui/material";
 import { IconCoinFilled, IconHome, IconHomeCheck, IconShoppingCart, IconTruckDelivery, IconTruckLoading } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import useFetchPedidoOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetPedidoOrcamento";
 import useFetchOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetOrcamento";
@@ -74,15 +74,15 @@ interface Orcamento {
   prazo_producao: number;
 }
 
-const RastreamentoClienteScreen = () => {
+const RastreamentoInternoScreen = () => {
   // aqui vai ficar a logica das datas de cada coisa, podemos repetir as datas até o separação e transportadora usar o da api de frete.
 
-  const [activeStep, setActiveStep] = useState(1); // Define até qual etapa foi concluída
+  const [activeStepData, setActiveStepData] = useState(1); // Define até qual etapa foi concluída
   const params = useParams();
   const id = params.id;
   const parsedId = Array.isArray(id) ? id[0] : id;
 
-  const { pedido, isLoadingPedido, errorPedido } = useFetchPedidoOrcamento(parsedId);
+  const { pedido, isLoadingPedido, errorPedido, activeStep } = useFetchPedidoOrcamento(parsedId);
   const { orcamento, isLoadingOrcamento, errorOrcamento } = useFetchOrcamento(parsedId);
 
   if (isLoadingPedido || isLoadingOrcamento) return <p>Carregando...</p>;
@@ -145,16 +145,15 @@ const RastreamentoClienteScreen = () => {
 
   // colocar o resto da logica de negocio.
   if (createdAtOrcamento && createdPedido) {
-    const orcamentoEhMaiorOuIgual = isAfter(hoje, createdAtOrcamento) || isEqual(hoje, createdAtOrcamento);
-    const pedidoEhMaiorOuIgual = isAfter(hoje, createdPedido) || isEqual(hoje, createdPedido);
+    const orcamentoEhMaiorQueHoje = isAfter(hoje, createdAtOrcamento) || isEqual(hoje, createdAtOrcamento);
+    const pedidoEhMaiorQueHoje = isAfter(hoje, createdPedido) || isEqual(hoje, createdPedido);
 
-    if (orcamentoEhMaiorOuIgual && !pedidoEhMaiorOuIgual) {
-      setActiveStep(1);
-      // setActiveStep(2);
+
+    if (orcamentoEhMaiorQueHoje && !pedidoEhMaiorQueHoje) {
+      setActiveStepData(2);
     }
-    if (pedidoEhMaiorOuIgual && !orcamentoEhMaiorOuIgual) {
-      setActiveStep(2);
-      // setActiveStep(3);
+    if (pedidoEhMaiorQueHoje && !orcamentoEhMaiorQueHoje) {
+      setActiveStepData(3);
     }
   }
 
@@ -177,6 +176,24 @@ const RastreamentoClienteScreen = () => {
     { label: "Pedido esperando retirada", icon: IconHome, date: dataFormatadaTransportadora }, //dataFormatadaTransportadora
     { label: "Pedido entregue", icon: IconHomeCheck, date: "" },
   ];
+
+  const stepsRetiradaButton = [
+    { label: "Pedido realizado", icon: IconShoppingCart, date: dateCreatedOrcamento },
+    { label: "Pagamento confirmado", icon: IconCoinFilled, date: dateCreatedPedido },
+    { label: "Pedido em Produção", icon: IconTruckLoading, date: "" },
+    { label: "Pedido em Retirada", icon: IconHome, date: "" }, 
+    { label: "Pedido Entregue", icon: IconHomeCheck, date: "" },
+  ];
+
+  const stepsTransportadoraButton = [
+    { label: "Pedido realizado", icon: IconShoppingCart, date: dateCreatedOrcamento },
+    { label: "Pagamento confirmado", icon: IconCoinFilled, date: dateCreatedPedido },
+    { label: "Pedido em Produção", icon: IconTruckLoading, date: "" },
+    { label: "Pedido na transportadora", icon: IconTruckDelivery, date: "" }, //dataFormatadaTransportadora
+    { label: "Pedido entregue", icon: IconHomeCheck, date: "" },
+  ];
+
+
 
   const CustomStepIcon = ({ active = false, completed = false, icon }: { active?: boolean; completed?: boolean; icon: React.ElementType }) => {
     const IconComponent = icon;
@@ -204,9 +221,9 @@ const RastreamentoClienteScreen = () => {
               Olá, Seu pedido está a caminho!.
             </Typography>
 
-            {/* Barra de progresso com as etapas */}
-            {transportadora !== "RETIRADA" && (
-              <Stepper activeStep={activeStep} alternativeLabel>
+            {/* Barra de progresso com as etapas POR DATA*/}
+            {transportadora !== "RETIRADA" && activeStep === 1 &&(
+              <Stepper activeStep={activeStepData} alternativeLabel>
                 {stepsTransportadora.map((step, index) => (
                   <Step key={index}>
                     <StepLabel StepIconComponent={(props) => <CustomStepIcon active={props.active !== undefined ? props.active : false} completed={props.completed !== undefined ? props.completed : false} icon={step.icon} />}>
@@ -220,9 +237,40 @@ const RastreamentoClienteScreen = () => {
               </Stepper>
             )}
 
-            {transportadora === "RETIRADA" && (
-              <Stepper activeStep={activeStep} alternativeLabel>
+            {transportadora === "RETIRADA" && activeStep === 1 && (
+              <Stepper activeStep={activeStepData} alternativeLabel>
                 {stepsRetirada.map((step, index) => (
+                  <Step key={index}>
+                    <StepLabel StepIconComponent={(props) => <CustomStepIcon active={props.active !== undefined ? props.active : false} completed={props.completed !== undefined ? props.completed : false} icon={step.icon} />}>
+                      <Typography variant="caption">{step.label}</Typography>
+                      <Typography variant="caption" sx={{ display: "block", fontSize: "0.75rem" }}>
+                        {step.date}
+                      </Typography>
+                    </StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+            )}
+
+            {/* Barra de progresso com as etapas SEM DATA*/}
+            {transportadora !== "RETIRADA" && activeStep !== 1 && (
+              <Stepper activeStep={activeStep} alternativeLabel>
+                {stepsTransportadoraButton.map((step, index) => (
+                  <Step key={index}>
+                    <StepLabel StepIconComponent={(props) => <CustomStepIcon active={props.active !== undefined ? props.active : false} completed={props.completed !== undefined ? props.completed : false} icon={step.icon} />}>
+                      <Typography variant="caption">{step.label}</Typography>
+                      <Typography variant="caption" sx={{ display: "block", fontSize: "0.75rem" }}>
+                        {step.date}
+                      </Typography>
+                    </StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+            )}
+
+            {transportadora === "RETIRADA" && activeStep !== 1 && (
+              <Stepper activeStep={activeStep} alternativeLabel>
+                {stepsRetiradaButton.map((step, index) => (
                   <Step key={index}>
                     <StepLabel StepIconComponent={(props) => <CustomStepIcon active={props.active !== undefined ? props.active : false} completed={props.completed !== undefined ? props.completed : false} icon={step.icon} />}>
                       <Typography variant="caption">{step.label}</Typography>
@@ -256,10 +304,19 @@ const RastreamentoClienteScreen = () => {
                   </Typography>
                 )}
 
+                {orcamento?.prazo_producao !== null && (
+                  <Typography variant="body2" sx={{ marginY: 1 }}>
+                    <b>Prazo de Produção:</b> {orcamento?.prazo_producao} Dias úteis
+                  </Typography>
+                )}
+
                 {/* Prazo da Opção de Entrega */}
-                <Typography variant="body2" sx={{ marginY: 1 }}>
-                  <b>Prazo da Opção de Entrega:</b> {orcamento?.prazo_opcao_entrega}
-                </Typography>
+                {orcamento?.prazo_opcao_entrega !== 1 && (
+                  <Typography variant="body2" sx={{ marginY: 1 }}>
+                    <b>Prazo da Opção de Entrega:</b> {orcamento?.prazo_opcao_entrega}
+                  </Typography>
+                )}
+
                 {!pedido?.codigo_rastreamento || pedido?.codigo_rastreamento === null && (
                   <Typography variant="body2" sx={{ marginY: 1 }}>
                     <b>Codigo de rastreamento:</b> {pedido?.codigo_rastreamento}
@@ -413,17 +470,15 @@ const RastreamentoClienteScreen = () => {
               </Typography>
               {/* aqui vai ficar a table que tem a lista de produtos na pagina de status */}
               <Table size="small">
-
                 <TableRow>
 
-                  {orcamento?.prazo_producao !== null && (
-                    <TableRow>
-                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                        Prazo de produção:
-                      </TableCell>
-                      <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.prazo_producao} dias úteis</TableCell>
-                    </TableRow>
-                  )}
+                  {/* Opção de Entrega */}
+                  <TableRow>
+                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                      Opção de Entrega:
+                    </TableCell>
+                    <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.opcao_entrega}</TableCell>
+                  </TableRow>
 
                   {orcamento?.preco_opcao_entrega !== undefined && (
                     <TableRow>
@@ -460,8 +515,17 @@ const RastreamentoClienteScreen = () => {
                     </>
                   )}
 
-                  {/* Data Antecipação */}
-                  {orcamento?.data_antecipa !== null && (
+                  {/* Taxa Antecipação */}
+                  {orcamento?.taxa_antecipa !== null && (
+                    <TableRow>
+                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
+                        Taxa de Antecipação:
+                      </TableCell>
+                      <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {orcamento?.taxa_antecipa ?? 'Sem Desconto'}</TableCell>
+                    </TableRow>
+                  )}
+
+                  {/* {orcamento?.data_antecipa !== null && (
                     <TableRow>
                       <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
                         Data Antecipação:
@@ -471,17 +535,7 @@ const RastreamentoClienteScreen = () => {
                         : 'Sem Antecipação'}
                       </TableCell>
                     </TableRow>
-                  )}
-
-                  {/* Taxa Antecipação */}
-                  {orcamento?.taxa_antecipa !== null && (
-                    <TableRow>
-                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                        Taxa Antecipação:
-                      </TableCell>
-                      <TableCell sx={{ border: 'none' }} colSpan={1}>R$ {orcamento?.taxa_antecipa ?? 'Sem Taxa de Antecipação'}</TableCell>
-                    </TableRow>
-                  )}
+                  )} */}
 
                   {/* Total Orçamento */}
                   {orcamento?.total_orcamento !== null && (
@@ -504,4 +558,4 @@ const RastreamentoClienteScreen = () => {
   );
 };
 
-export default RastreamentoClienteScreen;
+export default RastreamentoInternoScreen;
