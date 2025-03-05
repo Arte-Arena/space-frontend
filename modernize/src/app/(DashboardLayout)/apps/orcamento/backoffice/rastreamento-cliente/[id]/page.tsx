@@ -256,10 +256,18 @@ const RastreamentoClienteScreen = () => {
                   </Typography>
                 )}
 
+                {orcamento?.prazo_producao !== null && (
+                  <Typography variant="body2" sx={{ marginY: 1 }}>
+                    <b>Prazo de Produção:</b> {orcamento?.prazo_producao} Dias úteis
+                  </Typography>
+                )}
+
                 {/* Prazo da Opção de Entrega */}
-                <Typography variant="body2" sx={{ marginY: 1 }}>
-                  <b>Prazo da Opção de Entrega:</b> {orcamento?.prazo_opcao_entrega}
-                </Typography>
+                {orcamento?.prazo_opcao_entrega !== 1 && (
+                  <Typography variant="body2" sx={{ marginY: 1 }}>
+                    <b>Prazo da Opção de Entrega:</b> {orcamento?.prazo_opcao_entrega}
+                  </Typography>
+                )}
 
                 {!pedido?.codigo_rastreamento || pedido?.codigo_rastreamento === null && (
                   <Typography variant="body2" sx={{ marginY: 1 }}>
@@ -414,16 +422,7 @@ const RastreamentoClienteScreen = () => {
               </Typography>
               {/* aqui vai ficar a table que tem a lista de produtos na pagina de status */}
               <Table size="small">
-
                 <TableRow>
-                  {orcamento?.prazo_producao !== null && (
-                    <TableRow>
-                      <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                        Prazo:
-                      </TableCell>
-                      <TableCell sx={{ border: 'none' }} colSpan={1}>{orcamento?.prazo_producao} dias de produção</TableCell>
-                    </TableRow>
-                  )}
 
                   {/* Opção de Entrega */}
                   <TableRow>
