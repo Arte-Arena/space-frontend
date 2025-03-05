@@ -1,5 +1,6 @@
-export interface PacoteUniforme {
-  id: number;
+
+interface ProdutoPacoteUniforme {
+  id?: number;
   nome: string;
   tipo_de_tecido_camisa: string;
   tipo_de_tecido_calcao: string;
@@ -23,3 +24,5 @@ export interface PacoteUniforme {
   created_at: string;
   updated_at: string;
 }
+
+export default ProdutoPacoteUniforme;

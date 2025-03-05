@@ -1,21 +1,24 @@
 'use client'
 
-import { useState } from "react";
-import { Box, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from "@mui/material";
+import { useState, useEffect } from "react";
+import { Box, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, CircularProgress } from "@mui/material";
 import { useSearchParams } from 'next/navigation';
-import { Column, TableData } from "./types";
+import { useFetch } from "@/utils/useFetch";
+import { Column, TableData, UniformData } from "./types";
 import { PageHeader } from "./PageHeader";
 import { UniformTable } from "./UniformTable";
 import { LoadingState } from "./LoadingState";
+import { NoDataFound } from "./NoDataFound";
 
 const ADULT_SIZES_M = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG', 'XXXG'];
 const ADULT_SIZES_F = ['P', 'M', 'G', 'GG', 'XG', 'XXG', 'XXXG'];
 const KIDS_SIZES = ['2', '4', '6', '8', '10', '12', '14', '16'];
-const LETTERS = Array.from({ length: 4 }, (_, i) => String.fromCharCode(65 + i));
 
 export default function UniformBackofficeScreen() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('id');
+  const { data: uniformData, loading: isLoadingData, error: fetchError, fetchData } = useFetch<UniformData[]>();
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -30,31 +33,7 @@ export default function UniformBackofficeScreen() {
     { id: 5, name: "Tamanho do shorts", type: "select", options: ADULT_SIZES_M },
   ]);
 
-  const [tableData, setTableData] = useState<TableData>({
-    'A': [
-      { id: 1, data: ["M", "João Silva", "10", "G", "G"], confirmed: false },
-      { id: 2, data: ["M", "Pedro Santos", "7", "M", "M"], confirmed: false },
-      { id: 3, data: ["F", "Maria Oliveira", "11", "M", "M"], confirmed: false },
-      { id: 4, data: ["M", "Carlos Souza", "4", "GG", "G"], confirmed: false },
-      { id: 5, data: ["F", "Ana Costa", "8", "P", "P"], confirmed: false }
-    ],
-    'B': [
-      { id: 1, data: ["M", "Roberto Lima", "9", "G", "G"], confirmed: false },
-      { id: 2, data: ["M", "Lucas Ferreira", "5", "M", "M"], confirmed: false },
-      { id: 3, data: ["F", "Paula Ribeiro", "3", "M", "M"], confirmed: false }
-    ],
-    'C': [
-      { id: 1, data: ["M", "André Santos", "15", "XG", "XG"], confirmed: false },
-      { id: 2, data: ["F", "Beatriz Lima", "6", "P", "P"], confirmed: false },
-      { id: 3, data: ["M", "Marcos Silva", "12", "G", "G"], confirmed: false },
-      { id: 4, data: ["F", "Clara Oliveira", "14", "M", "M"], confirmed: false }
-    ],
-    'D': [
-      { id: 1, data: ["M", "Felipe Costa", "2", "G", "G"], confirmed: false },
-      { id: 2, data: ["F", "Julia Santos", "1", "M", "M"], confirmed: false },
-      { id: 3, data: ["M", "Ricardo Pereira", "13", "GG", "GG"], confirmed: false }
-    ]
-  });
+  const [tableData, setTableData] = useState<TableData>({});
 
   const [editingCell, setEditingCell] = useState<{ letter: string; rowId: number; colIndex: number } | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -163,7 +142,8 @@ export default function UniformBackofficeScreen() {
       return;
     }
 
-    const emptyTeams = LETTERS.filter(letter => !tableData[letter] || tableData[letter].length === 0);
+    const availableSketches = Object.keys(tableData);
+    const emptyTeams = availableSketches.filter(letter => !tableData[letter] || tableData[letter].length === 0);
     if (emptyTeams.length > 0) {
       setEmptyTeams(emptyTeams);
       setOpenEmptyTeamsDialog(true);
@@ -195,84 +175,165 @@ export default function UniformBackofficeScreen() {
     setIsLoading(false);
   };
 
+  useEffect(() => {
+    if (orderId) {
+      const apiUrl = `${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${orderId}`;
+      fetchData(apiUrl);
+    }
+  }, [orderId]);
+
+  useEffect(() => {
+    if (!isLoadingData && uniformData) {
+      const transformedData: TableData = {};
+
+      uniformData.forEach(uniform => {
+        const letter = uniform.esboco;
+        if (uniform.configuracoes && uniform.configuracoes.length > 0) {
+          transformedData[letter] = uniform.configuracoes.map((config, index) => ({
+            id: index + 1,
+            data: [
+              config.genero || '',
+              config.nome_jogador || '',
+              config.numero || '',
+              config.tamanho_camisa || '',
+              config.tamanho_shorts || ''
+            ],
+            confirmed: false
+          }));
+        } else {
+          transformedData[letter] = Array(uniform.quantidade_jogadores).fill(null).map((_, index) => ({
+            id: index + 1,
+            data: ['', '', '', '', ''],
+            confirmed: false
+          }));
+        }
+      });
+
+      setTableData(transformedData);
+      setInitialLoading(false);
+    }
+  }, [uniformData, isLoadingData]);
+
+  if (initialLoading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh'
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ p: 3 }}>
-      {!isLoading && !isSuccess && !isError && (
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          Importante: Para cada jogador, você deve confirmar os tamanhos escolhidos marcando a caixa de seleção correspondente. Todos os jogadores devem ter seus tamanhos confirmados antes de prosseguir.
-        </Alert>
+      {fetchError && (
+        <NoDataFound
+          type="error"
+          message={`Erro ao carregar dados dos uniformes: ${fetchError.message}`}
+        />
       )}
 
-      {showValidationError && (
+      {!fetchError && (
         <>
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {validationErrors.length > 0 ? (
-              <>
-                <div>Por favor, corrija os seguintes erros:</div>
-                <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
-                  {validationErrors.map((error, index) => (
-                    <li key={index}>{error}</li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              'Por favor, confirme todos os tamanhos marcando as caixas de seleção para cada jogador antes de prosseguir.'
-            )}
-          </Alert>
+          {isLoadingData ? (
+            <LoadingState isLoading={true} isSuccess={false} onRetry={() => { }} />
+          ) : (
+            <>
+              {uniformData && uniformData.length === 0 ? (
+                <NoDataFound
+                  type="info"
+                  title="Nenhum uniforme encontrado"
+                  message="Não existem uniformes cadastrados para este pedido."
+                />
+              ) : (
+                <>
+                  {!isLoading && !isSuccess && !isError && (
+                    <Alert severity="warning" sx={{ mb: 3 }}>
+                      Importante: Para cada jogador, você deve confirmar os tamanhos escolhidos marcando a caixa de seleção correspondente. Todos os jogadores devem ter seus tamanhos confirmados antes de prosseguir.
+                    </Alert>
+                  )}
+
+                  {showValidationError && (
+                    <>
+                      <Alert severity="error" sx={{ mb: 3 }}>
+                        {validationErrors.length > 0 ? (
+                          <>
+                            <div>Por favor, corrija os seguintes erros:</div>
+                            <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+                              {validationErrors.map((error, index) => (
+                                <li key={index}>{error}</li>
+                              ))}
+                            </ul>
+                          </>
+                        ) : (
+                          'Por favor, confirme todos os tamanhos marcando as caixas de seleção para cada jogador antes de prosseguir.'
+                        )}
+                      </Alert>
+                    </>
+                  )}
+
+                  <PageHeader
+                    orderId={orderId}
+                    onConfirm={handleConfirm}
+                    isSuccess={isSuccess}
+                    isLoading={isLoading}
+                    isError={isError}
+                  />
+
+                  {isLoading || isSuccess || isError ? (
+                    <LoadingState isSuccess={isSuccess} isLoading={isLoading} onRetry={handleRetry} />
+                  ) : (
+                    uniformData && Object.keys(tableData).map((letter) => (
+                      <UniformTable
+                        key={letter}
+                        letter={letter}
+                        columns={columns}
+                        tableData={tableData}
+                        editingCell={editingCell}
+                        editValue={editValue}
+                        onCellClick={handleCellClick}
+                        onCellEdit={handleCellEdit}
+                        onToggleConfirm={handleToggleConfirm}
+                        setEditValue={setEditValue}
+                        setEditingCell={setEditingCell}
+                      />
+                    ))
+                  )}
+
+                  <Dialog
+                    open={openEmptyTeamsDialog}
+                    onClose={() => setOpenEmptyTeamsDialog(false)}
+                  >
+                    <DialogTitle>Confirmar envio</DialogTitle>
+                    <DialogContent>
+                      <DialogContentText>
+                        Os seguintes esboços não possuem jogadores cadastrados:
+                        {emptyTeams.map(team => ` ${team}`).join(', ')}
+                        <br /><br />
+                        Deseja continuar mesmo assim?
+                      </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                      <Button onClick={() => setOpenEmptyTeamsDialog(false)}>Cancelar</Button>
+                      <Button onClick={() => {
+                        setOpenEmptyTeamsDialog(false);
+                        submitData();
+                      }} color="primary" autoFocus>
+                        Confirmar
+                      </Button>
+                    </DialogActions>
+                  </Dialog>
+                </>
+              )}
+            </>
+          )}
         </>
       )}
-
-      <PageHeader
-        orderId={orderId}
-        onConfirm={handleConfirm}
-        isSuccess={isSuccess}
-        isLoading={isLoading}
-        isError={isError}
-      />
-
-      {isLoading || isSuccess || isError ? (
-        <LoadingState isSuccess={isSuccess} isLoading={isLoading} onRetry={handleRetry} />
-      ) : (
-        LETTERS.map((letter) => (
-          <UniformTable
-            key={letter}
-            letter={letter}
-            columns={columns}
-            tableData={tableData}
-            editingCell={editingCell}
-            editValue={editValue}
-            onCellClick={handleCellClick}
-            onCellEdit={handleCellEdit}
-            onToggleConfirm={handleToggleConfirm}
-            setEditValue={setEditValue}
-            setEditingCell={setEditingCell}
-          />
-        ))
-      )}
-
-      <Dialog
-        open={openEmptyTeamsDialog}
-        onClose={() => setOpenEmptyTeamsDialog(false)}
-      >
-        <DialogTitle>Confirmar envio</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Os seguintes esboços não possuem jogadores cadastrados:
-            {emptyTeams.map(team => ` ${team}`).join(', ')}
-            <br /><br />
-            Deseja continuar mesmo assim?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenEmptyTeamsDialog(false)}>Cancelar</Button>
-          <Button onClick={() => {
-            setOpenEmptyTeamsDialog(false);
-            submitData();
-          }} color="primary" autoFocus>
-            Confirmar
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }

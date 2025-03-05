@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-
 // mui imports
 import Chip from '@mui/material/Chip';
 import List from '@mui/material/List';
@@ -29,7 +28,7 @@ type NavGroup = {
   variant?: string | any;
   external?: boolean;
   level?: number;
-  onClick?: React.MouseEvent<HTMLButtonElement, MouseEvent>;
+  onClick?: (event: React.MouseEvent<HTMLElement>) => void;
 };
 
 interface ItemType {
@@ -52,6 +51,7 @@ export default function NavItem({
   const Icon = item?.icon;
   const theme = useTheme();
   const { t } = useTranslation();
+
   const itemIcon =
     level > 1 ? (
       <Icon stroke={1.5} size="1rem" />
@@ -84,25 +84,33 @@ export default function NavItem({
     },
   }));
 
-  const listItemProps: {
-    component: any;
-    href?: string;
-    target?: any;
-    to?: any;
-  } = {
-    component: item?.external ? "a" : Link,
-    to: item?.href,
-    href: item?.external ? item?.href : "",
-    target: item?.external ? "_blank" : "",
+  // Função de manipulação de clique que combina comportamentos
+  const handleClick = (e: React.MouseEvent<HTMLElement>) => {
+    // Se o item tiver sua própria função onClick, execute-a primeiro
+    if (item?.onClick) {
+      item.onClick(e);
+      
+      // Se o evento foi cancelado pelo onClick do item, não continue
+      if (e.defaultPrevented) {
+        return;
+      }
+    }
+    
+    // Em seguida, execute o onClick padrão do NavItem (que fecha o sidebar mobile)
+    if (lgDown) {
+      onClick(e);
+    }
   };
 
-  return (
-    <List component="li" disablePadding key={item?.id && item.title}>
-      <Link href={item.href}>
+  // Decide se deve usar o Link ou renderizar direto o ListItemButton
+  const renderContent = () => {
+    // Se tiver uma função onClick mas não tem href, ou href é "#"
+    if (item?.onClick && (!item.href || item.href === "#")) {
+      return (
         <ListItemStyled
           disabled={item?.disabled}
           selected={pathDirect === item?.href}
-          onClick={lgDown ? onClick : undefined}
+          onClick={handleClick}
         >
           <ListItemIcon
             sx={{
@@ -127,7 +135,49 @@ export default function NavItem({
               ""
             )}
           </ListItemText>
-
+          {!item?.chip || hideMenu ? null : (
+            <Chip
+              color={item?.chipColor}
+              variant={item?.variant ? item?.variant : "filled"}
+              size="small"
+              label={item?.chip}
+            />
+          )}
+        </ListItemStyled>
+      );
+    }
+    
+    // Caso contrário, usa o Link normal
+    return (
+      <Link href={item.href || "#"}>
+        <ListItemStyled
+          disabled={item?.disabled}
+          selected={pathDirect === item?.href}
+          onClick={handleClick}
+        >
+          <ListItemIcon
+            sx={{
+              minWidth: "36px",
+              p: "3px 0",
+              color:
+                level > 1 && pathDirect === item?.href
+                  ? `${theme.palette.primary.main}!important`
+                  : "inherit",
+            }}
+          >
+            {itemIcon}
+          </ListItemIcon>
+          <ListItemText>
+            {hideMenu ? "" : <>{t(`${item?.title}`)}</>}
+            <br />
+            {item?.subtitle ? (
+              <Typography variant="caption">
+                {hideMenu ? "" : item?.subtitle}
+              </Typography>
+            ) : (
+              ""
+            )}
+          </ListItemText>
           {!item?.chip || hideMenu ? null : (
             <Chip
               color={item?.chipColor}
@@ -138,6 +188,12 @@ export default function NavItem({
           )}
         </ListItemStyled>
       </Link>
+    );
+  };
+
+  return (
+    <List component="li" disablePadding key={item?.id && item.title}>
+      {renderContent()}
     </List>
   );
 }

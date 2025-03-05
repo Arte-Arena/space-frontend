@@ -107,124 +107,90 @@ const OrcamentoBackofficeScreen: React.FC = () => {
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, endereco_cobranca_diferente: e.target.checked }));
   };
-  
-  const handleSubmit = async () => {
-    
 
-    console.log(formData);
+  const handleSubmit = async () => {
+
+    // console.log(formData);
 
     // validação de CNPJ
-    if(formData.tipo_pessoa == 'J'){
-      if(formData.razao_social === "" || formData.razao_social === null || formData.razao_social === undefined){
+    if (formData.tipo_pessoa == 'J') {
+      if (formData.razao_social === "" || formData.razao_social === null || formData.razao_social === undefined) {
         alert("razao social é um campo obrigatorio.");
         return;
       }
-      if(formData.cnpj === "" || formData.cnpj === null || formData.cnpj === undefined){
+      if (formData.cnpj === "" || formData.cnpj === null || formData.cnpj === undefined) {
         alert("cnpj é um campo obrigatorio.");
         return;
       }
-      if(formData.inscricao_estadual === "" || formData.inscricao_estadual === null || formData.inscricao_estadual === undefined){
+      if (formData.inscricao_estadual === "" || formData.inscricao_estadual === null || formData.inscricao_estadual === undefined) {
         alert("inscricao estadual é um campo obrigatorio.");
         return;
       }
     }
 
     // validação de CPF
-    if(formData.tipo_pessoa == 'F'){  
-      if(formData.nome === "" || formData.nome === null || formData.nome === undefined){
+    if (formData.tipo_pessoa == 'F') {
+      if (formData.nome === "" || formData.nome === null || formData.nome === undefined) {
         alert("nome é um campo obrigatorio.");
         return;
       }
-      if(formData.cpf === "" || formData.cpf === null || formData.cpf === undefined){
+      if (formData.cpf === "" || formData.cpf === null || formData.cpf === undefined) {
         alert("CPF é um campo obrigatorio.");
         return;
       }
-      if(formData.rg === "" || formData.rg === null || formData.rg === undefined){
+      if (formData.rg === "" || formData.rg === null || formData.rg === undefined) {
         alert("RG é um campo obrigatorio.");
         return;
       }
     }
 
-
+    console.log('chegou aqui 1');
     for (const [key, value] of Object.entries(formData)) {
       if (value === "" || value === null || value === undefined) {
+        console.log('chegou aqui 2');
         let mensagem;
-       
+    
         if (key === "email" && !/\S+@\S+\.\S+/.test(value)) {
           alert("E-mail inválido.");
           return;
         }
-
-        // Define a mensagem de alerta com base no campo
-        switch (key) {
-          case "email":
-            mensagem = "O campo E-mail é obrigatório.";
-            alert(mensagem);
-            break;
-          case "celular":
-            mensagem = "O campo Celular é obrigatório.";
-            alert(mensagem);
-            break;
-          case "cep":
-            mensagem = "O campo CEP é obrigatório.";
-            alert(mensagem);
-            break;
-          case "endereco":
-            mensagem = "O campo Endereço é obrigatório.";
-            alert(mensagem);
-            break;
-          case "numero":
-            mensagem = "O campo Número é obrigatório.";
-            alert(mensagem);
-            break;
-          case "bairro":
-            mensagem = "O campo Bairro é obrigatório.";
-            alert(mensagem);
-            break;
-          case "cidade":
-            mensagem = "O campo Cidade é obrigatório.";
-            alert(mensagem);
-            break;
-          case "uf":
-            mensagem = "O campo UF é obrigatório.";
-            alert(mensagem);
-            break;
-          case "cep_cobranca":
-            mensagem = "O campo CEP de Cobrança é obrigatório.";
-            alert(mensagem);
-            break;
-          case "endereco_cobranca":
-            mensagem = "O campo Endereço de Cobrança é obrigatório.";
-            alert(mensagem);
-            break;
-          case "numero_cobranca":
-            mensagem = "O campo Número de Cobrança é obrigatório.";
-            alert(mensagem);
-            break;
-          case "bairro_cobranca":
-            mensagem = "O campo Bairro de Cobrança é obrigatório.";
-            alert(mensagem);
-            break;
-          case "cidade_cobranca":
-            mensagem = "O campo Cidade de Cobrança é obrigatório.";
-            alert(mensagem);
-            break;
-          case "uf_cobranca":
-            mensagem = "O campo UF de Cobrança é obrigatório.";
-            alert(mensagem);
-            break;
-          }
-        return
+        console.log('chegou aqui 3');
+    
+        if (key === "email") mensagem = "O campo E-mail é obrigatório.";
+        else if (key === "celular") mensagem = "O campo Celular é obrigatório.";
+        else if (key === "cep") mensagem = "O campo CEP é obrigatório.";
+        else if (key === "endereco") mensagem = "O campo Endereço é obrigatório.";
+        else if (key === "numero") mensagem = "O campo Número é obrigatório.";
+        else if (key === "bairro") mensagem = "O campo Bairro é obrigatório.";
+        else if (key === "cidade") mensagem = "O campo Cidade é obrigatório.";
+        else if (key === "uf") mensagem = "O campo UF é obrigatório.";
+        
+        if (formData.endereco_cobranca_diferente) {
+          if (key === "cep_cobranca") mensagem = "O campo CEP de Cobrança é obrigatório.";
+          else if (key === "endereco_cobranca") mensagem = "O campo Endereço de Cobrança é obrigatório.";
+          else if (key === "numero_cobranca") mensagem = "O campo Número de Cobrança é obrigatório.";
+          else if (key === "bairro_cobranca") mensagem = "O campo Bairro de Cobrança é obrigatório.";
+          else if (key === "cidade_cobranca") mensagem = "O campo Cidade de Cobrança é obrigatório.";
+          else if (key === "uf_cobranca") mensagem = "O campo UF de Cobrança é obrigatório.";
+        }
+    
+        if (mensagem) {
+          alert(mensagem);
+        }
       }
     }
 
+    console.log('chegou aqui 5');
+
     try {
-    const formDataWithOrcamentoId = { ...formData, orcamentoId: id };    
-    
+      console.log('chegou aqui 6');
 
-    console.log("Payload enviado:", JSON.stringify(formDataWithOrcamentoId, null, 2));
+      const formDataWithOrcamentoId = { ...formData, orcamentoId: id };
 
-  
+
+      console.log("Payload enviado:", JSON.stringify(formDataWithOrcamentoId, null, 2));
+
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/cliente-cadastro`, {
         method: 'POST',
         headers: {
@@ -237,16 +203,16 @@ const OrcamentoBackofficeScreen: React.FC = () => {
       const data = await response.json();
       console.log("Resposta completa:", data);
 
-      if(data.retorno.status === "Erro"){
+      if (data.retorno.status === "Erro") {
         const registros = data.retorno.registros;
         const ultimoRegistro = registros[registros.length - 1];
         if (ultimoRegistro && ultimoRegistro.registro && ultimoRegistro.registro.erros && ultimoRegistro.registro.erros.length > 0) {
-        const ultimoErro = ultimoRegistro.registro.erros[ultimoRegistro.registro.erros.length - 1];
-        const mensagemErro = ultimoErro.erro;
-        alert('Cliente não salvo! ' + mensagemErro);
-        return
+          const ultimoErro = ultimoRegistro.registro.erros[ultimoRegistro.registro.erros.length - 1];
+          const mensagemErro = ultimoErro.erro;
+          alert('Cliente não salvo! ' + mensagemErro);
+          return
+        }
       }
-    }
 
       if (response.ok) {
         alert('Cliente salvo com sucesso!');
