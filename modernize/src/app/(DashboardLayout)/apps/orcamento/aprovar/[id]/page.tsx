@@ -12,6 +12,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import InputAdornment from '@mui/material/InputAdornment';
 import { NumericFormat, NumericFormatProps } from 'react-number-format';
 import { useRouter } from 'next/navigation';
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs, { Dayjs } from "dayjs";
 
 interface Orcamento {
   id: number;
@@ -105,7 +107,8 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
         if (hojeFormatado === dataCriacaoFormatada) {
           setIsDiaIgual(true);
         }
-
+        setDataEntrega(data.prev_entrega);
+        setValorFatura1(data.total_orcamento);
         setIsLoadingOrcamentoState(false);
       } catch (error) {
         setErrorOrcamentoState(error as Error);
@@ -239,7 +242,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
           Atenção a a data de criação do orçamento não é a data atual!.
         </Alert>
       )}
-
+      
       <Typography variant="h4" sx={{ mb: 4, mt: 4 }}>
         Aprovar Orçamento #{orcamentoId}
       </Typography>
@@ -354,7 +357,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
                   if (value === 3) {
                     setValorFatura1(total ? total / 3 : 0);
                     setValorFatura2(total ? total / 3 : 0);
-                    setValorFatura3(total ? total / 3 : 0);
+                    setValorFatura3(total ? total / 3 : 0); 
                   }
                   if (value === 2) {
                     setValorFatura1(total ? total / 2 : 0);
@@ -389,6 +392,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
                 <DatePicker
                   label="Data Fatura #1"
                   value={dataFatura1}
+                  inputFormat="dd/MM/yyyy"
                   onChange={(newValue) => setDataFatura1(newValue)}
                   renderInput={(params) => <CustomTextField {...params} fullWidth />}
                 />
@@ -421,6 +425,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
                   <DatePicker
                     label="Data Fatura #2"
                     value={dataFatura2}
+                    inputFormat="dd/MM/yyyy"
                     onChange={(newValue) => setDataFatura2(newValue)}
                     renderInput={(params) => <CustomTextField {...params} fullWidth />}
                   />
@@ -451,6 +456,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
                   <DatePicker
                     label="Data Fatura #3"
                     value={dataFatura3}
+                    inputFormat="dd/MM/yyyy"
                     onChange={(newValue) => setDataFatura3(newValue)}
                     renderInput={(params) => <CustomTextField {...params} fullWidth />}
                   />
@@ -480,6 +486,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
             <DatePicker
               label="Data de Entrega"
               value={dataEntrega}
+              inputFormat="dd/MM/yyyy"
               onChange={(newValue) => setDataEntrega(newValue)}
               renderInput={(params) => <CustomTextField {...params} fullWidth />}
             />
