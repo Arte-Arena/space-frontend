@@ -7,9 +7,21 @@ import ProdutoPacoteUniforme from '../types';
 
 export default function ProdutosPacotesUniformesAddScreen() {
 
-  function handleAdd(data: ProdutoPacoteUniforme) {
-    console.log("Pacote criado:", data);
-    // Aqui, você pode enviar a atualização para a API
+  async function handleAdd(data: ProdutoPacoteUniforme) {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/produto/pacote/uniforme/`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (response.ok) {
+      console.log("Pacote criado:", data);
+    } else {
+      console.error("Erro ao criar pacote:", await response.json());
+    }
   }
 
   const BCrumb = [

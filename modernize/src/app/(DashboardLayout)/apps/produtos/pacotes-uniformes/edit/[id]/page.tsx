@@ -47,9 +47,20 @@ export default function ProdutosPacotesUniformesDetailsScreen() {
 
   if (!pacoteUniforme) return <p>Carregando...</p>;
 
-  function handleUpdate(data: ProdutoPacoteUniforme) {
-    console.log("Pacote atualizado:", data);
-    // Aqui, você pode enviar a atualização para a API
+  async function handleUpdate(data: ProdutoPacoteUniforme) {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/produto/pacote/uniforme/`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (response.ok) {
+      console.log("Pacote atualizado:", data);
+    } else {
+      console.error("Erro ao atualizar pacote:", await response.text());
+    }
   }
 
 
