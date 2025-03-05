@@ -119,6 +119,7 @@ const OrcamentoBackofficeScreen = () => {
   const [HasRecebimento, setHasRecebimento] = useState(false);
   const [loadingPedido, setLoadingPedido] = useState(false);
   const [copiedRastreio, setCopiedRastreio] = useState(false);
+  const [handleMakePedidoLoading, sethandleMakePedidoLoading] = useState(false);
   const theme = useTheme()
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
@@ -222,6 +223,7 @@ const OrcamentoBackofficeScreen = () => {
   };
 
   const handleMakePedido = async (orcamento: Orcamento) => {
+    sethandleMakePedidoLoading(true);
 
     const orcamentoFormated = {
       id: orcamento.id,
@@ -243,42 +245,48 @@ const OrcamentoBackofficeScreen = () => {
       taxa_antecipa: orcamento.taxa_antecipa,
       total_orcamento: orcamento.total_orcamento,
     };
+  
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/pedido-cadastro`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(orcamentoFormated),
+      });
+  
+      const data = await response.json();
+      sethandleMakePedidoLoading(false);
 
-    // console.log(orcamentoFormated)
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/pedido-cadastro`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(orcamentoFormated),
-    });
-
-    const data = await response.json()
-
-    if (data.status === "Erro") {
-      const registros = data.retorno.registros;
-      const ultimoRegistro = registros[registros.length - 1];
-      if (ultimoRegistro && ultimoRegistro.registro && ultimoRegistro.registro.erros && ultimoRegistro.registro.erros.length > 0) {
-        const ultimoErro = ultimoRegistro.registro.erros[ultimoRegistro.registro.erros.length - 1];
-        const mensagemErro = ultimoErro.erro;
-        alert('Pedido não salvo! ' + mensagemErro);
-        return
+      // Verifique o status dentro de data.retorno
+      if (data.retorno && data.retorno.status === "Erro") {
+        const registro = data.retorno.registros.registro; // considerando que é um objeto
+        if (registro && registro.erros && registro.erros.length > 0) {
+          const ultimoErro = registro.erros[registro.erros.length - 1];
+          const mensagemErro = ultimoErro.erro;
+          alert('Pedido não salvo! ' + mensagemErro);
+          return;
+        }
       }
-
-      refetch()
+  
       if (response.ok) {
         alert('Pedido N°' + orcamento.id + ' salvo com sucesso!');
       } else {
-        const errorData = await response.json();
-        console.log(errorData.message)
-        alert(`Erro ao salvar: ${errorData.message}`);
+        // Já temos os dados em "data", então não precisamos chamar response.json() novamente.
+        console.log(data.message);
+        alert(`Erro ao salvar: ${data.message}`);
       }
-      refetch()
+  
+      refetch();
+    } catch (error) {
+      console.error("Erro na requisição:", error);
+      alert("Ocorreu um erro ao processar o pedido. Produto Pai Invalido.");
+      sethandleMakePedidoLoading(false);
+      refetch();
     }
-
-  }
+  };
+  
   const handleSearch = () => {
     setSearchQuery(query); // Atualiza a busca
     setPage(1); // Reseta para a primeira página ao realizar uma nova busca
@@ -328,7 +336,7 @@ const OrcamentoBackofficeScreen = () => {
     setApiError(null);
     setIsLinkGenerated(false);
     setIsCheckingUniforms(true);
-    
+
     try {
       const uniformResponse = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${uniformId}`, {
         method: 'GET',
@@ -337,9 +345,9 @@ const OrcamentoBackofficeScreen = () => {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      
+
       const uniformData = await uniformResponse.json();
-      
+
       if (uniformData && uniformData.length > 0) {
         setExistingUniforms(true);
       } else {
@@ -350,7 +358,7 @@ const OrcamentoBackofficeScreen = () => {
     } finally {
       setIsCheckingUniforms(false);
     }
-    
+
     const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/url/${uniformId}`, {
       method: 'GET',
       headers: {
@@ -740,8 +748,13 @@ const OrcamentoBackofficeScreen = () => {
                             </Dialog>
 
                             {/* botão da chamada da api */}
-                            <Button variant="contained" color="primary" onClick={() => handleMakePedido(row)} disabled={hasPedidos}>
-                              <IconCheck />
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              onClick={() => handleMakePedido(row)}
+                              disabled={hasPedidos}
+                            >
+                              {handleMakePedidoLoading ? <CircularProgress /> : <IconCheck />}
                             </Button>
 
                             {/* botão para abrir o dialog de pegar o codigo de rastreio */}
@@ -1000,10 +1013,10 @@ const OrcamentoBackofficeScreen = () => {
                 <DialogContent>
                   <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
                     <DialogContentText>Página do rastreio</DialogContentText>
-                    <Button 
-                    variant="contained" 
-                    color="info" 
-                    // disabled={!hasEntrega}
+                    <Button
+                      variant="contained"
+                      color="info"
+                      // disabled={!hasEntrega}
                       onClick={() => handleOpenRastreamentoInterno(selectedPedido?.orcamento_id)}
                     >
                       Página do rastreio <IconTruckDelivery style={{ marginLeft: '5px' }} />

@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { Box, Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, CircularProgress } from "@mui/material";
 import { useSearchParams } from 'next/navigation';
-import { useFetch } from "@/utils/useFetch";
+import { useFetch, HttpMethod } from "@/utils/useFetch";
+import { logger } from "@/utils/logger";
 import { Column, TableData, UniformData } from "./types";
 import { PageHeader } from "./PageHeader";
 import { UniformTable } from "./UniformTable";
@@ -18,6 +19,7 @@ export default function UniformBackofficeScreen() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('id');
   const { data: uniformData, loading: isLoadingData, error: fetchError, fetchData } = useFetch<UniformData[]>();
+  const { fetchData: submitFormData, loading: isSubmitting, error: submitError } = useFetch<any>();
   const [initialLoading, setInitialLoading] = useState(true);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -157,12 +159,33 @@ export default function UniformBackofficeScreen() {
     setShowValidationError(false);
     setIsLoading(true);
     setIsError(false);
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Dados confirmados:', tableData);
+      const submissionPromises = Object.entries(tableData).map(async ([letter, rows]) => {
+        if (rows.length === 0) return null;
+
+        const uniform = uniformData?.find(u => u.esboco === letter);
+        if (!uniform?.id) return null;
+
+        const configuracoes = rows.map(row => ({
+          genero: row.data[0],
+          nome_jogador: row.data[1],
+          numero: row.data[2],
+          tamanho_camisa: row.data[3],
+          tamanho_shorts: row.data[4]
+        }));
+
+        const apiUrl = `${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${uniform.id}/configuracoes`;
+        return submitFormData(apiUrl, {
+          method: HttpMethod.PUT,
+          body: JSON.stringify({ configuracoes }),
+        });
+      });
+
+      await Promise.all(submissionPromises.filter(p => p !== null));
       setIsSuccess(true);
     } catch (error) {
-      console.error('Erro ao confirmar:', error);
+      logger.error('Erro ao confirmar:', error);
       setIsError(true);
     } finally {
       setIsLoading(false);
