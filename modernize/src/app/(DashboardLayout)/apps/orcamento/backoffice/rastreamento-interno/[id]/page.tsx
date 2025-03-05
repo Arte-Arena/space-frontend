@@ -74,7 +74,7 @@ interface Orcamento {
   prazo_producao: number;
 }
 
-const RastreamentoClienteScreen = () => {
+const RastreamentoInternoScreen = () => {
   // aqui vai ficar a logica das datas de cada coisa, podemos repetir as datas até o separação e transportadora usar o da api de frete.
 
   const [activeStepData, setActiveStepData] = useState(1); // Define até qual etapa foi concluída
@@ -558,4 +558,4 @@ const RastreamentoClienteScreen = () => {
   );
 };
 
-export default RastreamentoClienteScreen;
+export default RastreamentoInternoScreen;
