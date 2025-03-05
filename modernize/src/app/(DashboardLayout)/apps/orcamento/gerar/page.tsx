@@ -2696,9 +2696,9 @@ Orçamento válido somente hoje.
               </Box>
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <IconAlertCircle color="error" />
-                <Typography variant="body2" color="error" sx={{ ml: 1 }}>
-                  Link de pagamento não disponível
+                <CircularProgress size={20} sx={{ mr: 1 }} />
+                <Typography variant="body2" sx={{ ml: 1 }}>
+                  Gerando link de pagamento...
                 </Typography>
               </Box>
             )}
