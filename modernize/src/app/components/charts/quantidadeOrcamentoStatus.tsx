@@ -13,7 +13,7 @@ interface ApexOrcamentosProps {
 }
 
 const ApexOrcamentoStatus: React.FC<ApexOrcamentosProps> = ({ aprovados, naoAprovados }) => {
-  
+
   const theme = useTheme();
   const primary = theme.palette.primary.main;
 
@@ -27,7 +27,7 @@ const ApexOrcamentoStatus: React.FC<ApexOrcamentosProps> = ({ aprovados, naoApro
       foreColor: "#adb0bb",
       toolbar: { show: false }
     },
-    labels: ["Orçamentos Aprovados","Orçamentos Não Aprovados"],
+    labels: ["Orçamentos Aprovados", "Orçamentos Não Aprovados"],
     colors: ['#0b73e5', '#ff4d4d'], // Azul para aprovados, vermelho para não aprovados
     legend: {
       position: 'bottom',
@@ -60,8 +60,8 @@ const ApexOrcamentoStatus: React.FC<ApexOrcamentosProps> = ({ aprovados, naoApro
 
   return (
     <div>
-    <Chart options={options} series={series} type="pie" height={300} />
-    
+      <Chart options={options} series={series} type="pie" height={300} />
+      {/*     
     <div style={{ marginTop: "20px", textAlign: "center" }}>
       <Link href="/apps/vendas/relatorios/quantidade-orcamentos-aprovados" target='_blank'>
         <button style={{ margin: "5px", padding: "10px", backgroundColor: "#0b73e5", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}>
@@ -73,8 +73,8 @@ const ApexOrcamentoStatus: React.FC<ApexOrcamentosProps> = ({ aprovados, naoApro
           Ver Orçamentos Não Aprovados
         </button>
       </Link>
+    </div> */}
     </div>
-  </div>
   );
 };
 
