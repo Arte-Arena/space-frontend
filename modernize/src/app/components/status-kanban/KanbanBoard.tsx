@@ -122,6 +122,21 @@ const KanbanBoard: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [columns, setColumns] = useState<Columns>(initialColumns);
   const [currentPage, setCurrentPage] = useState<Record<string, number>>({});
+  const statusMapping: Record<string, { campo: string; valor: string }> = {
+    etapa1: { campo: "status", valor: "nao_aprovado" },
+    etapa2: { campo: "status_aprovacao_arte_arena", valor: "aprovada" },
+    etapa3: { campo: "status_faturamento", valor: "faturado" },
+    etapa4: { campo: "status_pagamento", valor: "pago" },
+    etapa5: { campo: "status_producao_arte_final", valor: "aguardando_melhoria" },
+    etapa6: { campo: "status_aprovacao_arte_final", valor: "aprovada" },
+    etapa7: { campo: "status_aprovacao_amostra_arte_arena", valor: "aprovada" },
+    etapa8: { campo: "status_envio_amostra", valor: "enviada" },
+    etapa9: { campo: "status_aprovacao_amostra_cliente", valor: "aprovada" },
+    etapa10: { campo: "status_aprovacao_cliente", valor: "aprovado" },
+    etapa11: { campo: "status_producao_esboco", valor: "aguardando_melhoria" },
+    etapa12: { campo: "status_aprovacao_esboco", valor: "aprovado" },
+    etapa13: { campo: "status_envio_pedido", valor: "enviado" },
+  };
   const theme = useTheme();
   // const [isDragging, setIsDragging] = useState(false); 
   // const [dialogOpen, setDialogOpen] = useState(false);
@@ -133,13 +148,10 @@ const KanbanBoard: React.FC = () => {
   //   rowId: number;
   //   approvedValue: string;
   // } | null>(null);
-  
+
   // busca os tipos de status
   // const statusOptions = StatusArray || {};
 
-
-  // Busca os orçamentos da API
-  
   // const handleDragStart = () => {
   //   setIsDragging(true);
   // };
@@ -147,91 +159,56 @@ const KanbanBoard: React.FC = () => {
   // const handleDragEnd = () => {
   //   setIsDragging(false);
   // };
+
+  // Busca os orçamentos da API
   // const { data, isLoading, isError, refetch} = useFetchOrcamentos(searchQuery, page);
 
-  const { etapas, loading, error} = useEtapa()
-  
+  const { etapas, loading, error } = useEtapa()
+
   // tem que mudar toda a logica desse campo aqui e pegar da rota do backend de outro arquivo. 
   // Mapeia os orçamentos para as colunas
   useEffect(() => {
-    // console.log('dados: ', etapas)
     if (etapas && Array.isArray(etapas)) {
       const newColumns: Columns = JSON.parse(JSON.stringify(initialColumns));
-      // valida para os ultimos campos adicionados como aprovados.
+      const etapaMapping: Record<string, string> = {
+        "": "etapa1",
+        "aprovação_arte_arena": "etapa2",
+        "status_faturamento": "etapa3",
+        "status_pagamento": "etapa4",
+        "status_producao_arte_final": "etapa5",
+        "status_aprovacao_arte_final": "etapa6",
+        "status_aprovacao_amostra_arte_arena": "etapa7",
+        "status_envio_amostra": "etapa8",
+        "status_aprovacao_amostra_cliente": "etapa9",
+        "status_aprovacao_cliente": "etapa10",
+        "status_producao_esboco": "etapa11",
+        "status_aprovacao_esboco": "etapa12",
+        "status_envio_pedido": "etapa13",
+      };
+
       etapas.forEach((etapa) => {
-        if(etapa.etapa == ""){
-          newColumns.etapa1.items.push(etapa);
+        const columnId = etapaMapping[etapa.etapa];
+        if (columnId) {
+          newColumns[columnId].items.push(etapa);
         }
-
-        if(etapa.etapa == "aprovação_arte_arena"){
-          newColumns.etapa2.items.push(etapa);
-        }
-        
-        if(etapa.etapa == "status_faturamento")
-        {
-          newColumns.etapa3.items.push(etapa);
-        }
-
-        if(etapa.etapa == "status_pagamento"){
-          newColumns.etapa4.items.push(etapa);
-        }
-        
-        if(etapa.etapa == "status_producao_arte_final"){
-          newColumns.etapa5.items.push(etapa);
-        }
-        
-        if(etapa.etapa == "status_aprovacao_arte_final"){
-          newColumns.etapa6.items.push(etapa);
-        }
-
-        if(etapa.etapa == "status_aprovacao_amostra_arte_arena"){
-          newColumns.etapa7.items.push(etapa);
-        }
-        
-        if(etapa.etapa == "status_envio_amostra"){
-          newColumns.etapa8.items.push(etapa);
-        }
-
-        if(etapa.etapa == "status_aprovacao_amostra_cliente"){
-          newColumns.etapa9.items.push(etapa);
-        }
-
-        if(etapa.etapa == "status_aprovacao_cliente"
-        ){
-          newColumns.etapa10.items.push(etapa);
-        }
-        
-        if(etapa.etapa == "status_producao_esboco"){
-          newColumns.etapa11.items.push(etapa);
-        }
-
-        if(etapa.etapa == "status_aprovacao_esboco"){
-          newColumns.etapa12.items.push(etapa);
-        }
-
-        if(etapa.etapa == "status_envio_pedido"){
-          newColumns.etapa13.items.push(etapa);
-        }
-
       });
 
       setColumns(newColumns);
     }
   }, [etapas]);
 
-
   // Atualiza quando `columns` mudar
   useEffect(() => {
     const initialPages = Object.keys(columns).reduce((acc, columnId) => {
-       acc[columnId] = 1;
-       return acc;
+      acc[columnId] = 1;
+      return acc;
     }, {} as Record<string, number>);
     setCurrentPage(initialPages);
- }, [columns]);
+  }, [columns]);
 
-//  useEffect(() => {
-//   console.log(dialogData)
-//  }, [dialogData])
+  //  useEffect(() => {
+  //   console.log(dialogData)
+  //  }, [dialogData])
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
@@ -269,13 +246,13 @@ const KanbanBoard: React.FC = () => {
       handleSearch();
     }
   };
-  
-  const handleAprovar = async (campo: string, rowId: string) =>{
-    try{
+
+  const handleAprovar = async (campo: string, rowId: string) => {
+    try {
       await useStatusChangeAprovado(campo, rowId);
       // refetch();    
     }
-    catch(err){
+    catch (err) {
       console.log(err)
     }
   }
@@ -285,18 +262,18 @@ const KanbanBoard: React.FC = () => {
   const handleAprovarArteArena = (rowId: number) => {
     window.open(`/apps/orcamento/aprovar/${rowId}`, '_blank');
   };
- 
 
-  const handleDesaprovar = async (campo: string, rowId: number) =>{
-    try{
+
+  const handleDesaprovar = async (campo: string, rowId: number) => {
+    try {
       await useStatusChangeDesaprovado(campo, rowId);
       // refetch();
-    }catch(err){
+    } catch (err) {
       console.log(err)
     }
   }
 
-  
+
 
   // const handleOpenDialog = (statusKey: string, rowId: number, approvedValue: string) => {
   //   setDialogData({ statusKey, rowId, approvedValue });
@@ -307,7 +284,7 @@ const KanbanBoard: React.FC = () => {
   //   setDialogOpen(false);
   //   setDialogData(null);
   // };
-  
+
 
   // const handleAprovarChange = () => {
   //   setIsAprovar(!isAprovar);
@@ -319,238 +296,208 @@ const KanbanBoard: React.FC = () => {
   //   setIsAprovar(false); // Desmarca "Aprovar" ao selecionar "Desaprovar"
   // };
 
+  if (loading) return <div>Carregando...</div>;
+  if (error) return <div>Erro ao carregar as etapas: {error.message}</div>;
 
-// arrumar os campos
+  // arrumar os campos
   const handleChangeStatus = async (orcamento: Etapa, newColumnId: string) => {
-    const statusMap: Record<string, { campo: string; valor: string }> = {
-      etapa1: { campo: "status", valor: "nao_aprovado" },
-      etapa3: { campo: "status_faturamento", valor: "faturado" },
-      etapa4: { campo: "status_pagamento", valor: "pago" },
-      etapa5: { campo: "status_producao_arte_final", valor: "aguardando_melhoria" },
-      etapa6: { campo: "status_aprovacao_arte_final", valor: "aprovada" },
-      etapa7: { campo: "status_aprovacao_amostra_arte_arena", valor: "aprovada" },
-      etapa8: { campo: "status_envio_amostra", valor: "enviada" },
-      etapa9: { campo: "status_aprovacao_amostra_cliente", valor: "aprovada" },
-      etapa10: { campo: "status_aprovacao_cliente", valor: "aprovado" },
-      etapa11: { campo: "status_producao_esboco", valor: "aguardando_melhoria" },
-      etapa12: { campo: "status_aprovacao_esboco", valor: "aprovado" },
-      etapa13: { campo: "status_envio_pedido", valor: "enviado" },
-      etapa2: { campo: "status_aprovacao_arte_arena", valor: "aprovada" },
-    };
-  
-    const statusInfo = statusMap[newColumnId];
+    const statusInfo = statusMapping[newColumnId];
     if (!statusInfo) return;
-    
+
     try {
-
-      console.log(statusInfo)
-  
-      // Atualiza o estado da tela com o novo status
       setColumns((prevColumns) => {
-        const newColumns = JSON.parse(JSON.stringify(prevColumns));
-  
-        // Remove o item da coluna atual
-        // Object.keys(newColumns).forEach((colId) => {
-        //   newColumns[colId].items = newColumns[colId].items.filter((item: { id: string; }) => item.id !== orcamento.orcamento_id);
-        // });
-        
-        // Adiciona na nova coluna
-        // newColumns[newColumnId].items.push({
-        //   ...orcamento,
-        //   [statusInfo.campo]: statusInfo.valor, // Atualiza o status no item
-        // });
+        const newColumns = { ...prevColumns };
+        let movedItem: Etapa | undefined;
 
-        // Encontrar e remover de todas as colunas
-        let itemRemovido: Etapa | null = null;
-        Object.keys(newColumns).forEach(colId => {
-          const index = newColumns[colId].items.findIndex(
-            (item: Etapa) => item.orcamento_id === orcamento.orcamento_id // Corrigir para usar id correto
-          );
-          if (index > -1) {
-            [itemRemovido] = newColumns[colId].items.splice(index, 1);
-          }
+        // Encontrar e remover o item da coluna antiga
+        Object.keys(newColumns).forEach((colId) => {
+          newColumns[colId].items = newColumns[colId].items.filter((item) => {
+            if (item.orcamento_id === orcamento.orcamento_id) {
+              movedItem = item;
+              return false; // Remover o item
+            }
+            return true; // Manter o item
+          });
         });
 
-        // Atualizar e adicionar na nova coluna
-        if (itemRemovido) {
+        // Adicionar o item à nova coluna com o status atualizado
+        if (movedItem) {
           newColumns[newColumnId].items.push({
-            ...(itemRemovido as Etapa), // Type assertion aqui
+            ...movedItem,
             [statusInfo.campo]: statusInfo.valor,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           });
         }
-  
+
         return newColumns;
       });
 
-      // Chama a API para atualizar o status no backend
+      // Chamar a API para atualizar o status no backend
       handleAprovar(statusInfo.campo, orcamento.orcamento_id);
-  
-      // refetch(); // Recarrega os dados do backend
+
     } catch (err) {
-      console.log("Erro ao mudar status:", err);
+      console.error("Erro ao mudar status:", err);
     }
   };
-  
 
   return (
-    <Box>   
-       {/*  onDragStart={handleDragStart} */}
-    <DragDropContext onDragEnd={onDragEnd}> 
-      <Stack spacing={1} direction="row" alignItems="center" mb={2} >
-            <CustomTextField
-              fullWidth
-              value={query}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
-              onKeyPress={handleSearchKeyPress}
-              placeholder="Buscar orçamento..."
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <IconSearch />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSearch}
-              startIcon={<IconSearch />}
-            >
-              Buscar
-            </Button>
-          </Stack>
+    <Box>
+      {/*  onDragStart={handleDragStart} */}
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Stack spacing={1} direction="row" alignItems="center" mb={2} >
+          <CustomTextField
+            fullWidth
+            value={query}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
+            onKeyPress={handleSearchKeyPress}
+            placeholder="Buscar orçamento..."
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <IconSearch />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSearch}
+            startIcon={<IconSearch />}
+          >
+            Buscar
+          </Button>
+        </Stack>
 
-          
-      <Box id="container" display="flex" gap={2} p={2} sx={{marginLeft: '10px', overflowX: 'auto', display: 'flex', gap: 2, width: '100%', whiteSpace: 'nowrap'}}>
-        {Object.entries(columns).map(([columnId, column]) => {
-          const paginatedItems = column.items?.slice(
-            ((currentPage[columnId] || 1) - 1) * 10,
-            (currentPage[columnId] || 1) * 10
-         ) || [];
 
-          // paginação
-          // const handlePageChange = (_: React.ChangeEvent<unknown> | null, newPage: number) => {
-          //   setCurrentPage((prev) => ({ ...prev, [columnId]: newPage }));
+        <Box id="container" display="flex" gap={2} p={2} sx={{ marginLeft: '10px', overflowX: 'auto', display: 'flex', gap: 2, width: '100%', whiteSpace: 'nowrap' }}>
+          {Object.entries(columns).map(([columnId, column]) => {
+            const paginatedItems = column.items?.slice(
+              ((currentPage[columnId] || 1) - 1) * 10,
+              (currentPage[columnId] || 1) * 10
+            ) || [];
+
+            // paginação
+            // const handlePageChange = (_: React.ChangeEvent<unknown> | null, newPage: number) => {
+            //   setCurrentPage((prev) => ({ ...prev, [columnId]: newPage }));
             // refetch(); // Atualiza os dados sempre que a página mudar
-          // };
+            // };
 
-          // console.log("Itens da coluna", columnId, paginatedItems, column);  
-          return (
-            <Box  key={columnId} sx={{overflowY: 'initial'}}>
-            <Droppable key={columnId} droppableId={columnId} isDropDisabled={false}>
-              {(provided) => (
-                <Box
-                className='component'
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  sx={{
-                    width: '270px',
-                    height: '70vh',
-                    overflowY: 'scroll',
-                    background: theme.palette.background.paper,
-                    padding: 2,
-                    borderRadius: 2,
-                    border: `1px solid ${theme.palette.divider}`,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 1,
-                  }}
-                >
-                  <Typography variant="h6" sx={{ textAlign: "start", paddingRight: 2, mb: 0.1, color: theme.palette.text.primary, overflow: "hidden", overflowWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', hyphens: 'auto', paddingBottom: '8%'}}>
-                    {column.name}
-                  </Typography>
-                  {/* box dos itens */}
-                  <Box
-                    sx={{
-                      overflowX: 'hidden', 
-                      overflowY: 'auto', // Scroll vertical
-                      paddingRight: 1, // Espaço para evitar sobreposição com a barra de scroll
-                      display: 'flex', 
-                      flexDirection: 'column',
-                      gap: 1, 
-                      width: '100%',
-                      '&::-webkit-scrollbar': {width: '8px'},
-                    }}
-                  >
+            // console.log("Itens da coluna", columnId, paginatedItems, column);  
+            return (
+              <Box key={columnId} sx={{ overflowY: 'initial' }}>
+                <Droppable key={columnId} droppableId={columnId} isDropDisabled={false}>
+                  {(provided) => (
+                    <Box
+                      className='component'
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      sx={{
+                        width: '270px',
+                        height: '70vh',
+                        overflowY: 'scroll',
+                        background: theme.palette.background.paper,
+                        padding: 2,
+                        borderRadius: 2,
+                        border: `1px solid ${theme.palette.divider}`,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 1,
+                      }}
+                    >
+                      <Typography variant="h6" sx={{ textAlign: "start", paddingRight: 2, mb: 0.1, color: theme.palette.text.primary, overflow: "hidden", overflowWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', hyphens: 'auto', paddingBottom: '8%' }}>
+                        {column.name}
+                      </Typography>
+                      {/* box dos itens */}
+                      <Box
+                        sx={{
+                          overflowX: 'hidden',
+                          overflowY: 'auto', // Scroll vertical
+                          paddingRight: 1, // Espaço para evitar sobreposição com a barra de scroll
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 1,
+                          width: '100%',
+                          '&::-webkit-scrollbar': { width: '8px' },
+                        }}
+                      >
 
-                  {paginatedItems.map((item, index) => {
-                    const itemId = item.orcamento_id.toString();
-                    const total = item.total_orcamento;
-                    let statusEtapa = '';
+                        {paginatedItems.map((item, index) => {
+                          const itemId = item.orcamento_id.toString();
+                          const total = item.total_orcamento;
+                          let statusEtapa = '';
 
-                    if(item.etapa == 'status_aprovacao_amostra_arte_arena'){
-                      statusEtapa = item.status_aprovacao_amostra_arte_arena
-                    }
-                    if(item.etapa == 'status_aprovacao_amostra_cliente'){
-                      statusEtapa = item.status_aprovacao_amostra_cliente
-                    }
-                    if(item.etapa == 'status_aprovacao_arte_arena'){
-                      statusEtapa = item.status_aprovacao_arte_arena
-                    }
-                    if(item.etapa == 'status_aprovacao_arte_final'){
-                      statusEtapa = item.status_aprovacao_arte_final
-                    }
-                    if(item.etapa == 'status_aprovacao_cliente'){
-                      statusEtapa = item.status_aprovacao_cliente
-                    }
-                    if(item.etapa == 'status_aprovacao_esboco'){
-                      statusEtapa = item.status_aprovacao_esboco
-                    }
-                    if(item.etapa == 'status_envio_amostra'){
-                      statusEtapa = item.status_envio_amostra
-                    }
-                    if(item.etapa == 'status_envio_pedido'){
-                      statusEtapa = item.status_envio_pedido
-                    }
-                    if(item.etapa == 'status_faturamento'){
-                      statusEtapa = item.status_faturamento
-                    }
-                    if(item.etapa == 'status_pagamento'){
-                      statusEtapa = item.status_pagamento
-                    }
-                    if(item.etapa == 'status_producao_arte_final'){
-                      statusEtapa = item.status_producao_arte_final
-                    }
-                    if(item.etapa == 'status_producao_esboco'){
-                      statusEtapa = item.status_producao_esboco
-                    }
-              
-                    console.log("item: ",item)
+                          if (item.etapa == 'status_aprovacao_amostra_arte_arena') {
+                            statusEtapa = item.status_aprovacao_amostra_arte_arena
+                          }
+                          if (item.etapa == 'status_aprovacao_amostra_cliente') {
+                            statusEtapa = item.status_aprovacao_amostra_cliente
+                          }
+                          if (item.etapa == 'status_aprovacao_arte_arena') {
+                            statusEtapa = item.status_aprovacao_arte_arena
+                          }
+                          if (item.etapa == 'status_aprovacao_arte_final') {
+                            statusEtapa = item.status_aprovacao_arte_final
+                          }
+                          if (item.etapa == 'status_aprovacao_cliente') {
+                            statusEtapa = item.status_aprovacao_cliente
+                          }
+                          if (item.etapa == 'status_aprovacao_esboco') {
+                            statusEtapa = item.status_aprovacao_esboco
+                          }
+                          if (item.etapa == 'status_envio_amostra') {
+                            statusEtapa = item.status_envio_amostra
+                          }
+                          if (item.etapa == 'status_envio_pedido') {
+                            statusEtapa = item.status_envio_pedido
+                          }
+                          if (item.etapa == 'status_faturamento') {
+                            statusEtapa = item.status_faturamento
+                          }
+                          if (item.etapa == 'status_pagamento') {
+                            statusEtapa = item.status_pagamento
+                          }
+                          if (item.etapa == 'status_producao_arte_final') {
+                            statusEtapa = item.status_producao_arte_final
+                          }
+                          if (item.etapa == 'status_producao_esboco') {
+                            statusEtapa = item.status_producao_esboco
+                          }
 
-                    return (
-                      <Draggable key={itemId} draggableId={itemId} index={index} isDragDisabled={false}>
-                        {(provided) => (
-                          <Card
-                          
-                          ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            sx={{ marginBottom: 1, background: theme.palette.background.default, padding: 0, width: '100%', minHeight: '35%'}}
-                          >
-                          {/* <button style={{backgroundColor: 'transparent', border: '0', cursor: 'pointer'}} onClick={() => handleOpenDialog(statusKey, item.id, statusAprovado)}> */}
-                            <CardContent sx={{textAlign: 'start', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', }}>
-                              <Typography variant="body1" sx={{ color: theme.palette.text.primary}}>
-                                #{itemId}
-                              </Typography>
-                              <Typography variant="body1" sx={{ color: theme.palette.text.primary, marginY: '5px'}}>
-                                R${total}
-                              </Typography>
-                              <Typography variant="body1" sx={{ color: theme.palette.text.primary, overflowWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', hyphens: 'auto'}}>
-                                <b>{item.etapa.replace(/status/g, '').replace(/_/g, ' ')}</b> <br></br>{statusEtapa}
-                              </Typography>
-                            </CardContent>
-                            {/* </button> */}
-                          </Card>
-                        )}
-                      </Draggable>
-                    );
-                  })}
-                  {provided.placeholder}
-                  </Box>
+                          console.log("item: ", item)
 
-                  {/* <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+                          return (
+                            <Draggable key={itemId} draggableId={itemId} index={index} isDragDisabled={false}>
+                              {(provided) => (
+                                <Card
+
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  sx={{ marginBottom: 1, background: theme.palette.background.default, padding: 0, width: '100%', minHeight: '35%' }}
+                                >
+                                  {/* <button style={{backgroundColor: 'transparent', border: '0', cursor: 'pointer'}} onClick={() => handleOpenDialog(statusKey, item.id, statusAprovado)}> */}
+                                  <CardContent sx={{ textAlign: 'start', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', }}>
+                                    <Typography variant="body1" sx={{ color: theme.palette.text.primary }}>
+                                      #{itemId}
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ color: theme.palette.text.primary, marginY: '5px' }}>
+                                      R${total}
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ color: theme.palette.text.primary, overflowWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'normal', hyphens: 'auto' }}>
+                                      <b>{item.etapa.replace(/status/g, '').replace(/_/g, ' ')}</b> <br></br>{statusEtapa}
+                                    </Typography>
+                                  </CardContent>
+                                  {/* </button> */}
+                                </Card>
+                              )}
+                            </Draggable>
+                          );
+                        })}
+                        {provided.placeholder}
+                      </Box>
+
+                      {/* <Dialog open={dialogOpen} onClose={handleCloseDialog}>
                     <DialogTitle>Alterar Status #{dialogData?.rowId}</DialogTitle>
                     <DialogContent>
                       <DialogContentText>Selecione a ação desejada para o status:</DialogContentText>
@@ -560,7 +507,7 @@ const KanbanBoard: React.FC = () => {
                           control={<Checkbox checked={isAprovar} onChange={handleAprovarChange} />}
                           label="Aprovar"
                         /> */}
-                        {/* <FormControlLabel
+                      {/* <FormControlLabel
                           control={<Checkbox checked={isDesaprovar} onChange={handleDesaprovarChange} />}
                           label="Desaprovar"
                         /> */}
@@ -610,7 +557,7 @@ const KanbanBoard: React.FC = () => {
                   </Dialog> */}
 
 
-                  {/* <Box display="flex" justifyContent="space-between" sx={{ mt: 2 }}>
+                      {/* <Box display="flex" justifyContent="space-between" sx={{ mt: 2 }}>
                   <Button
                     disabled={currentPage[columnId] === 1}
                     onClick={() => setCurrentPage((prev) => ({ ...prev, [columnId]: prev[columnId] - 1 }))}
@@ -627,14 +574,14 @@ const KanbanBoard: React.FC = () => {
                   </Box> */}
 
 
-                </Box>
-              )}
-            </Droppable>
-            </Box>
-          );
-        })}
-      </Box>
-    </DragDropContext>
+                    </Box>
+                  )}
+                </Droppable>
+              </Box>
+            );
+          })}
+        </Box>
+      </DragDropContext>
     </Box>
   );
 };
