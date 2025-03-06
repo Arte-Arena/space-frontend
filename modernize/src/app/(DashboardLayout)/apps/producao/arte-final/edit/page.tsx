@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import ArteFinalForm from "@/app/(DashboardLayout)/apps/producao/arte-final/ArteFinalForm";
-import ArteFinal from '../types';
+import {ArteFinal} from '../types';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation'; // Importe useParams
+import ArteFinalForm from "../components/ArteFinalForm";
 
 export default function ProdutosPacotesUniformesDetailsScreen() {
   const params = useParams();
