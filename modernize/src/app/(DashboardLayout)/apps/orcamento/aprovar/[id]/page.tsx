@@ -349,7 +349,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
             <MenuItem value="faturado">Faturado</MenuItem>
           </CustomSelect>
         </Box>
-        {orcamento?.total_orcamento}
+
         {/* Quantidade de Parcelas */}
         {tipoFaturamento === 'faturado' && (
           <Box display="flex" alignItems="center" justifyContent="space-between">
