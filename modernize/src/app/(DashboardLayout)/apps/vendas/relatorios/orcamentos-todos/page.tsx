@@ -67,7 +67,6 @@ const VendasRelatoriosTodosOrcamentos = () => {
       }),
   });
 
-
   const filteredRows = useMemo(() => {
     return orcamentosNaoAprovados.filter((row) => {
       // Verificar se cada coluna e filtro se aplicam
