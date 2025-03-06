@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
+import Pedido from '@/app/Types/Pedido';
 import CircularProgress from '@mui/material/CircularProgress';
 import { IconPlus, IconEdit, IconEye } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
@@ -15,25 +16,6 @@ import {
 import { useRouter } from 'next/navigation';
 import { DataGrid, GridColDef, GridActionsCellItem, GridPaginationModel } from '@mui/x-data-grid';
 
-interface Pedido {
-    id: number;
-    user_id?: number | null;
-    numero_pedido?: string | null;
-    data_prevista?: string | null;
-    lista_produtos: any;
-    observacoes?: string | null;
-    rolo?: string | null;
-    designer_id?: number | null;
-    pedido_status_id?: number | null;
-    pedido_tipo_id?: number | null;
-    estagio?: string | null;
-    url_trello?: string | null;
-    situacao?: string | null;
-    prioridade?: string | null;
-    orcamento_id?: number | null;
-    created_at?: string;
-    updated_at?: string;
-}
 
 const PedidosDataGridScreen = () => {
     const router = useRouter();
@@ -70,7 +52,7 @@ const PedidosDataGridScreen = () => {
             [pedidoId]: { ...(prev[pedidoId] ?? { editing: false, detailing: false }), detailing: true },
         }));
 
-        router.push(`/apps/produção/pedidos/${pedido.id}/`);
+        router.push(`/apps/produção/arte-final/${pedido.id}/`);
     };
 
     const handleEdit = (pedido: Pedido) => {
@@ -81,7 +63,7 @@ const PedidosDataGridScreen = () => {
             [pedidoId]: { ...(prev[pedidoId] ?? { editing: false, detailing: false }), editing: true },
         }));
 
-        router.push(`/apps/produção/pedidos/edit/${pedido.id}/`);
+        router.push(`/apps/produção/arte-final/edit/${pedido.id}/`);
     };
 
     const BCrumb = [
