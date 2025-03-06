@@ -232,14 +232,13 @@ const OrcamentoGerarScreen = () => {
   const searchParams = useSearchParams();
   const id = searchParams.get('id') ?? null;
 
-  const [isLoadedClients, setIsLoadedClients] = useState(false);
+  const [isLoadingClients, setIsLoadingClients] = useState(false);
   const [allClients, setAllClients] = useState<Cliente[]>([]);
   const [currentPageClients, setCurrentPageClients] = useState(1);
   const [totalPagesClients, setTotalPagesClients] = useState<number | null>(null);
   const [searchQueryClients, setSearchQueryClients] = useState<string>('');
   const [clientInputValue, setClientInputValue] = useState<string | null>(null);
   const [clientId, setClientId] = useState<number | ''>('');
-  const [isLoadedProducts, setIsLoadedProducts] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [productNames, setProductNames] = useState<string[] | null>([]);
   const [productsList, setProductsList] = useState<Product[]>([]);
@@ -325,7 +324,7 @@ const OrcamentoGerarScreen = () => {
   useEffect(() => {
     // console.log('allClients: ', allClients);
     if (allClients.length > 0) {
-      setIsLoadedClients(true);
+      setIsLoadingClients(false);
     }
   }, [allClients]);
 
@@ -372,7 +371,7 @@ const OrcamentoGerarScreen = () => {
   };
 
   const handleSearchClientes = () => {
-    setIsLoadedClients(false);
+    setIsLoadingClients(true);
     fetch(`${process.env.NEXT_PUBLIC_API}/api/search-clientes-consolidados?search=${searchQueryClients}&page=${currentPageClients}`, {
       method: 'GET',
       headers: {
@@ -392,14 +391,13 @@ const OrcamentoGerarScreen = () => {
               email: searchQueryClients,
             },
           ]);
-          setIsLoadedClients(true);
         } else {
           // console.log('Opções encontradas [busca de clientes]');
           setAllClients(data.data);
-          setIsLoadedClients(true);
         }
       })
-      .catch((error) => console.error('Erro ao buscar clientes:', error));
+      .catch((error) => console.error('Erro ao buscar clientes:', error))
+      .finally(() => setIsLoadingClients(false));
   };
 
   // Função para reiniciar a pesquisa ao pressionar Enter
@@ -444,12 +442,6 @@ const OrcamentoGerarScreen = () => {
       console.warn('Os dados de produtos não foram encontrados.');
     }
   }, [dataProducts]);
-
-  useEffect(() => {
-    if (allProducts.length > 0) {
-      setIsLoadedProducts(true);
-    }
-  }, [allProducts]);
 
   useEffect(() => {
     if (allProducts) {
@@ -1472,7 +1464,17 @@ Orçamento válido somente hoje.
             }}
             htmlFor="cliente"
           >
-            Cliente
+            Cliente 
+            {isLoadingClients && (
+              <CircularProgress
+                size={20}
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  marginLeft: '10px',
+                }}
+              />
+            )}
           </CustomFormLabel>
 
           <div onScroll={handleScrollClients} style={{ maxHeight: 300, overflowY: 'auto' }}>
@@ -1480,7 +1482,7 @@ Orçamento válido somente hoje.
               fullWidth
               disablePortal
               id="cliente"
-              // loading={!isLoadedClients}
+              loading={isLoadingClients}
               options={allClients}
               getOptionLabel={(option) =>
                 `${option.id} :: ${option.nome} :: (${option.telefone} ${option.email ? ` - ${option.email}` : ''})`
@@ -2673,53 +2675,53 @@ Orçamento válido somente hoje.
               </DialogContentText>
             </DialogContent>
             <DialogActions>
-            {checkoutLink ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-                <IconButton onClick={() => { 
-                  navigator.clipboard.writeText(checkoutLink); 
-                  setOpenSnackbarCopiarLinkPagamento(false);
-                  setTimeout(() => setOpenSnackbarCopiarLinkPagamento(true), 10);
-                }}>
-                  <IconCreditCard />
-                  <Typography variant="body2">Copiar link de pagamento</Typography>
-                </IconButton>
-                {openSnackbarCopiarLinkPagamento && (
-                  <Box 
-                    sx={{ 
-                      position: 'absolute', 
-                      right: '100%', 
-                      backgroundColor: 'success.main', 
-                      color: 'white', 
-                      py: 0.5, 
-                      px: 1.5, 
-                      borderRadius: 1, 
-                      marginRight: '10px',
-                      whiteSpace: 'nowrap',
-                      fontSize: '0.8rem',
-                      boxShadow: 2,
-                      animation: 'fadeIn 0.3s, fadeOut 0.5s 1.5s forwards',
-                      '@keyframes fadeIn': {
-                        '0%': { opacity: 0 },
-                        '100%': { opacity: 1 },
-                      },
-                      '@keyframes fadeOut': {
-                        '0%': { opacity: 1 },
-                        '100%': { opacity: 0 },
-                      }
-                    }}
-                  >
-                    Link copiado!
-                  </Box>
-                )}
-              </Box>
-            ) : (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <CircularProgress size={20} sx={{ mr: 1 }} />
-                <Typography variant="body2" sx={{ ml: 1 }}>
-                  Gerando link de pagamento...
-                </Typography>
-              </Box>
-            )}
+              {checkoutLink ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                  <IconButton onClick={() => {
+                    navigator.clipboard.writeText(checkoutLink);
+                    setOpenSnackbarCopiarLinkPagamento(false);
+                    setTimeout(() => setOpenSnackbarCopiarLinkPagamento(true), 10);
+                  }}>
+                    <IconCreditCard />
+                    <Typography variant="body2">Copiar link de pagamento</Typography>
+                  </IconButton>
+                  {openSnackbarCopiarLinkPagamento && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        right: '100%',
+                        backgroundColor: 'success.main',
+                        color: 'white',
+                        py: 0.5,
+                        px: 1.5,
+                        borderRadius: 1,
+                        marginRight: '10px',
+                        whiteSpace: 'nowrap',
+                        fontSize: '0.8rem',
+                        boxShadow: 2,
+                        animation: 'fadeIn 0.3s, fadeOut 0.5s 1.5s forwards',
+                        '@keyframes fadeIn': {
+                          '0%': { opacity: 0 },
+                          '100%': { opacity: 1 },
+                        },
+                        '@keyframes fadeOut': {
+                          '0%': { opacity: 1 },
+                          '100%': { opacity: 0 },
+                        }
+                      }}
+                    >
+                      Link copiado!
+                    </Box>
+                  )}
+                </Box>
+              ) : (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <CircularProgress size={20} sx={{ mr: 1 }} />
+                  <Typography variant="body2" sx={{ ml: 1 }}>
+                    Gerando link de pagamento...
+                  </Typography>
+                </Box>
+              )}
 
               <IconButton onClick={() => { navigator.clipboard.writeText(orçamentoTexto); setOpenSnackbarCopiarOrcamento(true); }}>
                 <IconCopy />
