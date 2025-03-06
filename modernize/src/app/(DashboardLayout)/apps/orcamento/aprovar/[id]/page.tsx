@@ -131,8 +131,6 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
     return format(parseISO(dataString), "dd/MM/yyyy");
   };
 
-// temos que fazer os campos de data serem padrão brasil e colocar a data prev_entrega no campo de data de entrega
-
   const aprovaOrcamento = () => {
     if (orcamentoId !== null) {
       // Valida o campo data de entrega
@@ -195,6 +193,17 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
         }
       }
 
+      // verifica se as somas das faturas batem com o total do orcamento
+      const somaFaturas =
+        (parseFloat(valorFatura1?.toString().replace(',', '.') || '0') +
+          parseFloat(valorFatura2?.toString().replace(',', '.') || '0') +
+          parseFloat(valorFatura3?.toString().replace(',', '.') || '0')).toFixed(2);
+
+      const totalOrcamento = parseFloat(orcamento?.total_orcamento?.toString().replace(',', '.') || '0').toFixed(2);
+      if (somaFaturas !== totalOrcamento) {
+        alert('O Valor das faturas somadas deve ser o total do orcamento.' + somaFaturas + ' != ' + orcamento?.total_orcamento);
+        return;
+      }
 
       setIsLoadingOrcamentoState(true);
       fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/status/aprova/${orcamentoId}`, {
@@ -242,7 +251,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
           Atenção a a data de criação do orçamento não é a data atual!.
         </Alert>
       )}
-      
+
       <Typography variant="h4" sx={{ mb: 4, mt: 4 }}>
         Aprovar Orçamento #{orcamentoId}
       </Typography>
@@ -340,7 +349,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
             <MenuItem value="faturado">Faturado</MenuItem>
           </CustomSelect>
         </Box>
-
+        {orcamento?.total_orcamento}
         {/* Quantidade de Parcelas */}
         {tipoFaturamento === 'faturado' && (
           <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -357,7 +366,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
                   if (value === 3) {
                     setValorFatura1(total ? total / 3 : 0);
                     setValorFatura2(total ? total / 3 : 0);
-                    setValorFatura3(total ? total / 3 : 0); 
+                    setValorFatura3(total ? total / 3 : 0);
                   }
                   if (value === 2) {
                     setValorFatura1(total ? total / 2 : 0);
