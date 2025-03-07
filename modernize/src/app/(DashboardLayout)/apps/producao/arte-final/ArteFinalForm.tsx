@@ -3,10 +3,30 @@ import { useState, useEffect } from "react";
 import { ArteFinal, Produto, Material } from './types';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
-import { Box, Button, FormControl, InputLabel, MenuItem, ListItemText, SelectChangeEvent, Autocomplete } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import {
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  ListItemText,
+  SelectChangeEvent,
+  Autocomplete,
+  TableContainer,
+  Table,
+  TableRow,
+  TableCell,
+  TableHead,
+  TableBody,
+  Paper, 
+  IconButton
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { NumericFormat } from 'react-number-format';
+
 
 interface ArteFinalFormProps {
   initialData?: ArteFinal;
@@ -60,6 +80,36 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
       setFormData((prev) => ({ ...prev, ...initialData }));
     }
   }, [initialData]);
+
+
+  function adicionarProduto(novoProduto: Produto) {
+      setProductsList([
+        ...productsList,
+        {
+          ...novoProduto
+        },
+      ]);
+  }
+
+  const removerProduto = (productToRemove: Produto) => {
+    const updatedProductsList = productsList.filter((product) => product.id !== productToRemove.id);
+    setProductsList(updatedProductsList);
+  };
+
+  const atualizarProduto = (updatedProduct: Produto) => {
+    const updatedProductsList = productsList.map((product) =>
+      product.id === updatedProduct.id ? updatedProduct : product
+    );
+    setProductsList(updatedProductsList);
+  };
+
+  useEffect(() => {
+    if (selectedProduct) {
+      adicionarProduto(selectedProduct);
+      // console.log('selectedProduct:', selectedProduct);
+    }
+  }, [selectedProduct]);
+  
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     if (readOnly) return;
@@ -146,6 +196,94 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
           )}
         />
       </Box>
+
+      <TableContainer component={Paper}>
+        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+          <TableHead>
+            <TableRow>
+              <TableCell>Produto</TableCell>
+              <TableCell align="right">Material</TableCell>
+              <TableCell align="right">Medida Linear</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {productsList.map((product: Produto, index) => (
+              <TableRow key={index}>
+
+                <TableCell>
+                  <CustomTextField
+                    value={product.tipo_produto}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                      const updatedProduct = { ...product, nome: event.target.value };
+                      atualizarProduto(updatedProduct);
+                    }}
+                    variant="outlined"
+                    size="small"
+                  />
+                </TableCell>
+
+                <TableCell align="right">
+                  <CustomTextField
+                    value={product.materiais}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                      const newProductValue = Math.max(0, +event.target.value);
+                      const updatedProduct = { ...product, peso: newProductValue };
+                      atualizarProduto(updatedProduct);
+                    }}
+                    type="number"
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      width: '70px',
+                      '& input[type=number]::-webkit-inner-spin-button': {
+                        display: 'none',
+                      },
+                      '& input[type=number]::-webkit-outer-spin-button': {
+                        display: 'none',
+                      },
+                      '& input[type=number]': {
+                        MozAppearance: 'textfield', // Para Firefox
+                      },
+                    }}
+                  />
+                </TableCell>
+
+                <TableCell align="right">
+                  <CustomTextField
+                    value={product.medida_linear}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                      const newProductValue = Math.max(0, +event.target.value);
+                      const updatedProduct = { ...product, medida_linear: newProductValue };
+                      atualizarProduto(updatedProduct);
+                    }}
+                    type="number"
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      width: '70px',
+                      '& input[type=number]::-webkit-inner-spin-button': {
+                        display: 'none',
+                      },
+                      '& input[type=number]::-webkit-outer-spin-button': {
+                        display: 'none',
+                      },
+                      '& input[type=number]': {
+                        MozAppearance: 'textfield', // Para Firefox
+                      },
+                    }}
+                  />
+                </TableCell>
+
+                <TableCell align="right" sx={{ display: 'flex', gap: 1 }}>
+                  <IconButton onClick={() => removerProduto(product)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <Box sx={{ mt: 5 }}>
         <CustomTextField

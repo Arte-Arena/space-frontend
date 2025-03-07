@@ -322,7 +322,7 @@ const getMenuItems = (): MenuitemsType[] => {
           id: uniqueId(),
           title: "Atendimento Externo",
           icon: IconMessage2Dollar,
-          href: "/apps/chats/chatbot",
+          href: "/apps/chats/chat-externo",
         },
       ],
     },
@@ -375,12 +375,6 @@ const getMenuItems = (): MenuitemsType[] => {
       title: "Estoque",
       icon: IconStack3,
       href: "/apps/estoque",
-    },
-    {
-      id: uniqueId(),
-      title: "OctaDesk",
-      icon: IconOctahedron,
-      href: "/apps/octadesk",
     },
   ];
 
