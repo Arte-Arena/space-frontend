@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
@@ -8,7 +8,7 @@ import { ArteFinal, Produto, Material } from '../types';
 export default function ProdutosPacotesUniformesAddScreen() {
 
   async function handleAdd(data: ArteFinal) {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/produto/pacote/uniforme/`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedido-arte-final`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

@@ -1,11 +1,12 @@
+'use client';
 import { useState, useEffect } from "react";
 import { ArteFinal, Produto, Material } from './types';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
-import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLabel';
-import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
-
-import { Box, Button, FormControlLabel, FormControl, InputLabel, OutlinedInput, MenuItem, ListItemText, SelectChangeEvent, Autocomplete } from '@mui/material';
+import { Box, Button, FormControl, InputLabel, MenuItem, ListItemText, SelectChangeEvent, Autocomplete } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 interface ArteFinalFormProps {
   initialData?: ArteFinal;
@@ -21,6 +22,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     lista_produtos: [],
     observacao: "",
     rolo: "",
+    url_trello: "",
     designer: "",
     status: "",
     tipo_de_pedido: "",
@@ -82,10 +84,11 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
       <Box sx={{ mt: 5 }}>
         <CustomTextField
           label="Número do Pedido"
-          name="nome"
+          type="number"
+          name="numero_pedido"
           value={formData.numero_pedido}
           onChange={handleChange}
-          placeholder="Nome do produto"
+          placeholder="Numero do pedido"
           variant="outlined"
           fullWidth
           readOnly={readOnly}
@@ -93,15 +96,26 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
       </Box>
 
       <Box sx={{ mt: 5 }}>
-        <CustomTextField
-          label="Data Prevista"
-          name="data_prevista"
-          type="date"
-          value={formData.data_prevista.toISOString().split('T')[0]}
-          onChange={handleChange}
-          fullWidth
-          readOnly={readOnly}
-        />
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <DatePicker
+            label="Data Prevista"
+            value={formData.data_prevista}
+            onChange={(newValue) => {
+              setFormData((prev) => ({
+                ...prev,
+                data_prevista: newValue || new Date(), // Garantir que não seja undefined
+              }));
+            }}
+            inputFormat="dd/MM/yyyy" // Formato desejado
+            renderInput={(params) => (
+              <CustomTextField
+                {...params}
+                fullWidth
+                readOnly={readOnly}
+              />
+            )}
+          />
+        </LocalizationProvider>
       </Box>
 
       <Box sx={{ mt: 5 }}>
@@ -139,7 +153,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
           name="observacao"
           value={formData.observacao}
           onChange={handleChange}
-          placeholder="Observa o"
+          placeholder="Observação"
           fullWidth
           readOnly={readOnly}
         />
@@ -152,6 +166,18 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
           value={formData.rolo}
           onChange={handleChange}
           placeholder="Rolo"
+          fullWidth
+          readOnly={readOnly}
+        />
+      </Box>
+
+      <Box sx={{ mt: 5 }}>
+        <CustomTextField
+          label="Link Trello"
+          name="url_trello"
+          value={formData.url_trello}
+          onChange={handleChange}
+          placeholder="Link Trello"
           fullWidth
           readOnly={readOnly}
         />

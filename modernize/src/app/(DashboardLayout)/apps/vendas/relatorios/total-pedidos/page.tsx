@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import PageContainer from "@/app/components/container/PageContainer";
 import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
-import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Select, MenuItem, FormControl, InputLabel, SelectChangeEvent } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import ApexPedidosTotal from "@/app/components/charts/TotalPedidos";
 import ParentCard from "@/app/components/shared/ParentCard";
@@ -65,7 +65,7 @@ const ValorTotalPedidosScreen = () => {
     }
   }, [data]);
 
-  const handleTipoGraficoChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleTipoGraficoChange = (event: SelectChangeEvent<string>) => {
     setTipoGrafico(event.target.value); // Altera o tipo de gráfico
   };
 
