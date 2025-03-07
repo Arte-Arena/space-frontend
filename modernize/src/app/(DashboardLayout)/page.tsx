@@ -10,6 +10,7 @@ import { Grid } from '@mui/material';
 import VendasRelatoriosOrcamentosComponent from '../components/dashboard-index/orcamentoQuantidade';
 import VendasRelatoriosQuantidadeOrcamentosComponent from '../components/dashboard-index/orcamentoQuantidadeAprovados';
 import ParentCard from "@/app/components/shared/ParentCard";
+import ValorTotalPedidosComponent from '../components/dashboard-index/ValorTotalPedidos';
 
 export default function Dashboard() {
 
@@ -51,7 +52,10 @@ export default function Dashboard() {
           </Grid>
 
           {/* Segunda linha: Três gráficos menores */}
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={12}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-around' }}>
+                <ValorTotalPedidosComponent />  
+              </Box>
             {/* <VendasRelatoriosOrcamentosPorStatusComponent /> */}
           </Grid>
 
