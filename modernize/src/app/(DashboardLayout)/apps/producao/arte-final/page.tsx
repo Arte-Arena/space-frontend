@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal } from './types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconPlus, IconEdit, IconEye, IconTrash, IconLink, IconTiltShift, IconPencilDown } from '@tabler/icons-react';
+import { IconPlus, IconEdit, IconEye, IconTrash, IconLink, IconTiltShift, IconPencilDown, IconShirt, IconEyeCheck } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -16,6 +16,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { DataGrid, GridColDef, GridActionsCellItem, GridPaginationModel, GridRowClassNameParams } from '@mui/x-data-grid';
 import { IconPrinter } from '@tabler/icons-react';
+import { IconBrandTrello } from '@tabler/icons-react';
 
 const ArteFinalScreen = () => {
   const router = useRouter();
@@ -27,6 +28,46 @@ const ArteFinalScreen = () => {
     page: 0,
   });
 
+
+  const pedidosFalsos = [
+    {
+      id: 1,
+      numero_pedido: '12345',
+      data_prevista: '2025-03-20T00:00:00Z',
+      situacao: 'antecipacao',
+      prioridade: 'Alta',
+    },
+    {
+      id: 2,
+      numero_pedido: '67890',
+      data_prevista: '2025-04-15T00:00:00Z',
+      situacao: 'Aguardando Aprovação',
+      prioridade: 'Média',
+    },
+    {
+      id: 3,
+      numero_pedido: '11223',
+      data_prevista: '2025-05-01T00:00:00Z',
+      situacao: 'Finalizado',
+      prioridade: 'Baixa',
+    },
+    {
+      id: 4,
+      numero_pedido: '44556',
+      data_prevista: '2025-06-10T00:00:00Z',
+      situacao: 'Em Produção',
+      prioridade: 'Alta',
+    },
+    {
+      id: 5,
+      numero_pedido: '78901',
+      data_prevista: '2025-07-05T00:00:00Z',
+      situacao: 'Aguardando Aprovação',
+      prioridade: 'Média',
+    },
+  ];
+  
+  
   const { data: pedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, isFetching } = useQuery<ArteFinal[]>({
     queryKey: ['pedidos'],
     queryFn: () =>
@@ -110,7 +151,7 @@ const ArteFinalScreen = () => {
     {
       field: 'data_prevista',
       headerName: 'Data Prevista',
-      width: 120,
+      width: 150,
       renderCell: (params) => {
         const date = params.row.data_prevista;
         return date ? new Date(date).toLocaleDateString('pt-BR') : 'N/A';
@@ -122,7 +163,7 @@ const ArteFinalScreen = () => {
       field: 'actions',
       headerName: 'Ações',
       type: 'actions',
-      width: 100,
+      width: 400,
       getActions: (params) => [
         <GridActionsCellItem
         icon={<IconEye />}
@@ -140,7 +181,7 @@ const ArteFinalScreen = () => {
         onClick={() => handleDelete(params.row)}
       />,
       <GridActionsCellItem
-        icon={<IconLink />}
+        icon={<IconBrandTrello />}
         label="Link Trello"
         onClick={() => handleLinkTrello(params.row)}
       />,
@@ -150,12 +191,12 @@ const ArteFinalScreen = () => {
         onClick={() => handleEnviarImpressora(params.row)}
       />,
       <GridActionsCellItem
-        icon={<IconEye />}
+        icon={<IconEyeCheck />}
         label="Ver Tiny"
         onClick={() => handleVerTiny(params.row)}
       />,
       <GridActionsCellItem
-        icon={<IconTiltShift />}
+        icon={<IconShirt />}
         label="Lista Uniformes"
         onClick={() => handleListaUniformes(params.row)}
       />,
@@ -202,7 +243,8 @@ const ArteFinalScreen = () => {
                     '& .linha-vermelha': { backgroundColor: 'rgba(255, 0, 0, 0.2)' },
                   }}
                   autoHeight
-                  rows={pedidos}
+                  // rows={pedidos}
+                  rows={pedidosFalsos}
                   columns={columns}
                   getRowId={(row) => row.id}
                   paginationModel={paginationModel}
