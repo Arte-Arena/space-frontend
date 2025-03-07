@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal } from './types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconPlus, IconEdit, IconEye } from '@tabler/icons-react';
+import { IconPlus, IconEdit, IconEye, IconTrash, IconLink, IconTiltShift, IconPencilDown } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { DataGrid, GridColDef, GridActionsCellItem, GridPaginationModel, GridRowClassNameParams } from '@mui/x-data-grid';
+import { IconPrinter } from '@tabler/icons-react';
 
 const ArteFinalScreen = () => {
   const router = useRouter();
@@ -65,6 +66,29 @@ const ArteFinalScreen = () => {
     router.push(`/apps/produção/arte-final/edit/${pedido.id}/`);
   };
 
+  const handleDelete = (row: ArteFinal) => {
+    console.log("Deletar pedido", row);
+  };
+
+  const handleLinkTrello = (row: ArteFinal) => {
+    console.log("Deletar pedido", row);
+  };
+  const handleListaUniformes = (row: ArteFinal) => {
+    console.log("Deletar pedido", row);
+  };
+
+  const handleAtribuirDesigner = (row: ArteFinal) => {
+    console.log("Deletar pedido", row);
+  };
+
+  const handleVerTiny = (row: ArteFinal) => {
+    console.log("Deletar pedido", row);
+  };
+
+  const handleEnviarImpressora = (row: ArteFinal) => {
+    console.log("Deletar pedido", row);
+  };
+
   const BCrumb = [
     {
       to: "/",
@@ -101,15 +125,45 @@ const ArteFinalScreen = () => {
       width: 100,
       getActions: (params) => [
         <GridActionsCellItem
-          icon={<IconEye />}
-          label="Detalhes"
-          onClick={() => handleDetails(params.row)}
-        />,
-        <GridActionsCellItem
-          icon={<IconEdit />}
-          label="Editar"
-          onClick={() => handleEdit(params.row)}
-        />,
+        icon={<IconEye />}
+        label="Detalhes"
+        onClick={() => handleDetails(params.row)}
+      />,
+      <GridActionsCellItem
+        icon={<IconEdit />}
+        label="Editar"
+        onClick={() => handleEdit(params.row)}
+      />,
+      <GridActionsCellItem
+        icon={<IconTrash />}
+        label="Deletar"
+        onClick={() => handleDelete(params.row)}
+      />,
+      <GridActionsCellItem
+        icon={<IconLink />}
+        label="Link Trello"
+        onClick={() => handleLinkTrello(params.row)}
+      />,
+      <GridActionsCellItem
+        icon={<IconPrinter />}
+        label="Enviar Impressora"
+        onClick={() => handleEnviarImpressora(params.row)}
+      />,
+      <GridActionsCellItem
+        icon={<IconEye />}
+        label="Ver Tiny"
+        onClick={() => handleVerTiny(params.row)}
+      />,
+      <GridActionsCellItem
+        icon={<IconTiltShift />}
+        label="Lista Uniformes"
+        onClick={() => handleListaUniformes(params.row)}
+      />,
+      <GridActionsCellItem
+        icon={<IconPencilDown />}
+        label="Atribuir Designer"
+        onClick={() => handleAtribuirDesigner(params.row)}
+      />,
       ],
     },
   ];
