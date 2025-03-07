@@ -22,6 +22,11 @@ interface ArteFinal {
   tipo_de_pedido: string;
   created_at: Date;
   updated_at: Date;
+  data: [];
+}
+
+interface Data{
+  ArteFinal: [];
 }
 
 interface Produto {
@@ -36,7 +41,7 @@ interface Material {
   material: string;
 }
 
-export type { ArteFinal, Produto, Material }
+export type { ArteFinal, Produto, Material, Data };
 
 
 

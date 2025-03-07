@@ -3,15 +3,16 @@ import React, { useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { ArteFinal } from './types';
+import { ArteFinal, Data } from './types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconPlus, IconEdit, IconEye, IconTrash, IconLink, IconTiltShift, IconPencilDown, IconShirt, IconEyeCheck } from '@tabler/icons-react';
+import { IconPlus, IconEdit, IconEye, IconTrash, IconLink, IconTiltShift, IconPencilDown, IconShirt, IconEyeCheck, IconBrush } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
   Grid,
   Stack,
   Button,
+  Tooltip,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { DataGrid, GridColDef, GridActionsCellItem, GridPaginationModel, GridRowClassNameParams } from '@mui/x-data-grid';
@@ -66,12 +67,12 @@ const ArteFinalScreen = () => {
       prioridade: 'Média',
     },
   ];
-  
-  
-  const { data: pedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, isFetching } = useQuery<ArteFinal[]>({
+
+
+  const { data: pedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, isFetching } = useQuery<Data>({
     queryKey: ['pedidos'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/pedido-arte-final`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -79,6 +80,10 @@ const ArteFinalScreen = () => {
         },
       }).then((res) => res.json()),
   });
+
+  console.log(pedidos);
+
+  // handles
 
   const handleNovoPedido = () => {
     setIsAdding(true);
@@ -119,15 +124,15 @@ const ArteFinalScreen = () => {
   };
 
   const handleAtribuirDesigner = (row: ArteFinal) => {
-    console.log("Deletar pedido", row);
+    console.log("handleAtribuirDesigner pedido", row);
   };
 
   const handleVerTiny = (row: ArteFinal) => {
-    console.log("Deletar pedido", row);
+    console.log("handleVerTiny pedido", row);
   };
 
   const handleEnviarImpressora = (row: ArteFinal) => {
-    console.log("Deletar pedido", row);
+    console.log("handleEnviarImpressora pedido", row);
   };
 
   const BCrumb = [
@@ -149,11 +154,20 @@ const ArteFinalScreen = () => {
     { field: 'id', headerName: 'ID', width: 70 },
     { field: 'numero_pedido', headerName: 'Número do Pedido', width: 150 },
     {
-      field: 'data_prevista',
-      headerName: 'Data Prevista',
-      width: 150,
+      field: 'prazo_arte_final',
+      headerName: 'Prazo Arte Final',
+      width: 120,
       renderCell: (params) => {
-        const date = params.row.data_prevista;
+        const date = params.row.prazo_arte_final;
+        return date ? new Date(date).toLocaleDateString('pt-BR') : 'N/A';
+      },
+    },
+    {
+      field: 'prazo_confeccao',
+      headerName: 'Prazo confecção',
+      width: 120,
+      renderCell: (params) => {
+        const date = params.row.prazo_confeccao;
         return date ? new Date(date).toLocaleDateString('pt-BR') : 'N/A';
       },
     },
@@ -165,46 +179,69 @@ const ArteFinalScreen = () => {
       type: 'actions',
       width: 400,
       getActions: (params) => [
-        <GridActionsCellItem
-        icon={<IconEye />}
-        label="Detalhes"
-        onClick={() => handleDetails(params.row)}
-      />,
-      <GridActionsCellItem
-        icon={<IconEdit />}
-        label="Editar"
-        onClick={() => handleEdit(params.row)}
-      />,
-      <GridActionsCellItem
-        icon={<IconTrash />}
-        label="Deletar"
-        onClick={() => handleDelete(params.row)}
-      />,
-      <GridActionsCellItem
-        icon={<IconBrandTrello />}
-        label="Link Trello"
-        onClick={() => handleLinkTrello(params.row)}
-      />,
-      <GridActionsCellItem
-        icon={<IconPrinter />}
-        label="Enviar Impressora"
-        onClick={() => handleEnviarImpressora(params.row)}
-      />,
-      <GridActionsCellItem
-        icon={<IconEyeCheck />}
-        label="Ver Tiny"
-        onClick={() => handleVerTiny(params.row)}
-      />,
-      <GridActionsCellItem
-        icon={<IconShirt />}
-        label="Lista Uniformes"
-        onClick={() => handleListaUniformes(params.row)}
-      />,
-      <GridActionsCellItem
-        icon={<IconPencilDown />}
-        label="Atribuir Designer"
-        onClick={() => handleAtribuirDesigner(params.row)}
-      />,
+        <Tooltip title="Ver Detalhes">
+          <GridActionsCellItem
+            icon={<IconEye />}
+            label="Detalhes"
+            onClick={() => handleDetails(params.row)}
+          />
+        </Tooltip>,
+
+        <Tooltip title="Ver Tiny">
+          <GridActionsCellItem
+            icon={<IconEyeCheck />}
+            label="Ver Tiny"
+            onClick={() => handleVerTiny(params.row)}
+          />
+        </Tooltip>,
+
+        <Tooltip title="Link Trello">
+          <GridActionsCellItem
+            icon={<IconBrandTrello />}
+            label="Link Trello"
+            onClick={() => handleLinkTrello(params.row)}
+          />
+        </Tooltip>,
+
+        <Tooltip title="Lista de Uniformes">
+          <GridActionsCellItem
+            icon={<IconShirt />}
+            label="Lista Uniformes"
+            onClick={() => handleListaUniformes(params.row)}
+          />
+        </Tooltip>,
+
+        <Tooltip title="Atribuir Designer">
+          <GridActionsCellItem
+            icon={<IconBrush />}
+            label="Atribuir Designer"
+            onClick={() => handleAtribuirDesigner(params.row)}
+          />
+        </Tooltip>,
+
+        <Tooltip title="Enviar para Impressão!">
+          <GridActionsCellItem
+            icon={<IconPrinter />}
+            label="Enviar Impressora"
+            onClick={() => handleEnviarImpressora(params.row)}
+          />
+        </Tooltip>,
+
+        <Tooltip title="Editar">
+          <GridActionsCellItem
+            icon={<IconEdit />}
+            label="Editar"
+            onClick={() => handleEdit(params.row)}
+          />
+        </Tooltip>,
+
+        <Tooltip title="Excluir">
+          <GridActionsCellItem
+            icon={<IconTrash />}
+            label="Deletar"
+            onClick={() => handleDelete(params.row)}
+          />
+        </Tooltip>,
       ],
     },
   ];
@@ -243,8 +280,8 @@ const ArteFinalScreen = () => {
                     '& .linha-vermelha': { backgroundColor: 'rgba(255, 0, 0, 0.2)' },
                   }}
                   autoHeight
-                  // rows={pedidos}
-                  rows={pedidosFalsos}
+                  rows={pedidos.data}
+                  // rows={pedidosFalsos}
                   columns={columns}
                   getRowId={(row) => row.id}
                   paginationModel={paginationModel}
@@ -259,7 +296,7 @@ const ArteFinalScreen = () => {
                   }
                   initialState={{
                     sorting: {
-                      sortModel: [{ field: 'data_prevista', sort: 'asc' }], //tem que ver se é desc ou asc
+                      sortModel: [{ field: 'prazo_arte_final', sort: 'asc' }], //tem que ver se é desc ou asc
                     },
                   }}
                 />
