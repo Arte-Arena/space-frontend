@@ -299,6 +299,8 @@ const OrcamentoGerarScreen = () => {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [checkoutLink, setCheckoutLink] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [checkoutValue, setCheckoutValue] = useState<number | null>(null);
+  const [isGeneratingCheckoutLink, setIsGeneratingCheckoutLink] = useState(false);
 
   const accessToken = localStorage.getItem('accessToken');
 
@@ -1205,6 +1207,11 @@ const OrcamentoGerarScreen = () => {
     }
   }, [cepError]);
 
+  useEffect(() => {
+    if (!checkoutValue || !totalProductsValue) return;
+    if (checkoutValue >= totalProductsValue) return setCheckoutValue(totalProductsValue);
+  }, [checkoutValue]);
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
@@ -1224,6 +1231,7 @@ const OrcamentoGerarScreen = () => {
 
   const handleCloseBudget = () => {
     setOpenBudget(false);
+    setCheckoutLink(null);
   };
 
   const gerarOrcamento = () => {
@@ -1406,9 +1414,6 @@ Orçamento válido somente hoje.
         throw new Error('Erro ao salvar orçamento');
       }
 
-      const responseData = await response.json();
-      setCheckoutLink(responseData.checkout_link);
-
       // console.log('Orçamento salvo com sucesso');
     } catch (error) {
       console.error('Erro:', error);
@@ -1452,6 +1457,22 @@ Orçamento válido somente hoje.
     // console.log('tipoDesconto:', tipoDesconto);
   }, [tipoDesconto]);
 
+  const handleGenerateCheckoutLink = async () => {
+    if (!checkoutValue || checkoutValue <= 0) return;
+    
+    setIsGeneratingCheckoutLink(true);
+    
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    setCheckoutLink('https://example.com/checkout/123');
+    setIsGeneratingCheckoutLink(false);
+  };
+
+  useEffect(() => {
+    if (totalProductsValue) {
+      setCheckoutValue(totalProductsValue);
+    }
+  }, [totalProductsValue]);
 
   return (
     <PageContainer title="Orçamento / Gerar" description="Gerar Orçamento da Arte Arena">
@@ -2675,54 +2696,75 @@ Orçamento válido somente hoje.
               </DialogContentText>
             </DialogContent>
             <DialogActions>
-              {checkoutLink ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-                  <IconButton onClick={() => {
-                    navigator.clipboard.writeText(checkoutLink);
-                    setOpenSnackbarCopiarLinkPagamento(false);
-                    setTimeout(() => setOpenSnackbarCopiarLinkPagamento(true), 10);
-                  }}>
-                    <IconCreditCard />
-                    <Typography variant="body2">Copiar link de pagamento</Typography>
-                  </IconButton>
-                  {openSnackbarCopiarLinkPagamento && (
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        right: '100%',
-                        backgroundColor: 'success.main',
-                        color: 'white',
-                        py: 0.5,
-                        px: 1.5,
-                        borderRadius: 1,
-                        marginRight: '10px',
-                        whiteSpace: 'nowrap',
-                        fontSize: '0.8rem',
-                        boxShadow: 2,
-                        animation: 'fadeIn 0.3s, fadeOut 0.5s 1.5s forwards',
-                        '@keyframes fadeIn': {
-                          '0%': { opacity: 0 },
-                          '100%': { opacity: 1 },
-                        },
-                        '@keyframes fadeOut': {
-                          '0%': { opacity: 1 },
-                          '100%': { opacity: 0 },
-                        }
-                      }}
-                    >
-                      Link copiado!
-                    </Box>
-                  )}
-                </Box>
-              ) : (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <CircularProgress size={20} sx={{ mr: 1 }} />
-                  <Typography variant="body2" sx={{ ml: 1 }}>
-                    Gerando link de pagamento...
-                  </Typography>
-                </Box>
-              )}
-
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <NumericFormat
+                  value={checkoutValue}
+                  onValueChange={(values) => {
+                    const newValue = values.floatValue ?? 0;
+                    if (!totalProductsValue) return setCheckoutValue(0);
+                    setCheckoutValue(newValue);
+                  }}
+                  thousandSeparator="."
+                  decimalSeparator=","
+                  prefix="R$ "
+                  decimalScale={2}
+                  fixedDecimalScale
+                  allowNegative={false}
+                  customInput={CustomTextField}
+                  size="small"
+                  style={{ width: '150px' }}
+                />
+                
+                {!checkoutLink ? (
+                  <Button
+                    variant="contained"
+                    onClick={handleGenerateCheckoutLink}
+                    disabled={isGeneratingCheckoutLink || !checkoutValue || checkoutValue <= 0}
+                    startIcon={isGeneratingCheckoutLink ? <CircularProgress size={20} /> : <IconCreditCard />}
+                  >
+                    Gerar link de checkout
+                  </Button>
+                ) : (
+                  <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                    <IconButton onClick={() => {
+                      navigator.clipboard.writeText(checkoutLink);
+                      setOpenSnackbarCopiarLinkPagamento(false);
+                      setTimeout(() => setOpenSnackbarCopiarLinkPagamento(true), 10);
+                    }}>
+                      <IconCopy />
+                      <Typography variant="body2">Copiar link do checkout</Typography>
+                    </IconButton>
+                    {openSnackbarCopiarLinkPagamento && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          right: '100%',
+                          backgroundColor: 'success.main',
+                          color: 'white',
+                          py: 0.5,
+                          px: 1.5,
+                          borderRadius: 1,
+                          marginRight: '10px',
+                          whiteSpace: 'nowrap',
+                          fontSize: '0.8rem',
+                          boxShadow: 2,
+                          animation: 'fadeIn 0.3s, fadeOut 0.5s 1.5s forwards',
+                          '@keyframes fadeIn': {
+                            '0%': { opacity: 0 },
+                            '100%': { opacity: 1 },
+                          },
+                          '@keyframes fadeOut': {
+                            '0%': { opacity: 1 },
+                            '100%': { opacity: 0 },
+                          }
+                        }}
+                      >
+                        Link copiado!
+                      </Box>
+                    )}
+                  </Box>
+                )}
+              </Box>
               <IconButton onClick={() => { navigator.clipboard.writeText(orçamentoTexto); setOpenSnackbarCopiarOrcamento(true); }}>
                 <IconCopy />
                 <Typography variant="body2">Copiar Orçamento</Typography>
