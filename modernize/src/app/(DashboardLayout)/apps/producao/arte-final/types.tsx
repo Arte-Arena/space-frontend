@@ -9,6 +9,7 @@ interface ArteFinal {
     designer: string;
     status: string;
     tipo_de_pedido: string;
+    url_trello: string;
     created_at: Date;
     updated_at: Date;
   }

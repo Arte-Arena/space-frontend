@@ -48,7 +48,7 @@ export default function ProdutosPacotesUniformesDetailsScreen() {
   if (!pacoteUniforme) return <p>Carregando...</p>;
 
   async function handleUpdate(data: ArteFinal) {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/produto/pacote/uniforme/`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedido-arte-final`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

@@ -8,7 +8,7 @@ import ArteFinalForm from '../components/ArteFinalForm';
 export default function ProdutosPacotesUniformesAddScreen() {
 
   async function handleAdd(data: ArteFinal) {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/produto/pacote/uniforme/`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedido-arte-final`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

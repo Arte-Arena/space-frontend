@@ -163,11 +163,11 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
 
       <Box sx={{ mt: 5 }}>
         <CustomTextField
-          label="Link Trello"
-          name="url_trello"
-          value={formData.url_trello}
+          label="Rolo"
+          name="rolo"
+          value={formData.rolo}
           onChange={handleChange}
-          placeholder="Link Trello"
+          placeholder="Rolo"
           fullWidth
           readOnly={readOnly}
         />
@@ -175,11 +175,11 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
 
       <Box sx={{ mt: 5 }}>
         <CustomTextField
-          label="Rolo"
-          name="rolo"
-          value={formData.rolo}
+          label="Link Trello"
+          name="url_trello"
+          value={formData.url_trello}
           onChange={handleChange}
-          placeholder="Rolo"
+          placeholder="Link Trello"
           fullWidth
           readOnly={readOnly}
         />
