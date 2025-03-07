@@ -32,6 +32,7 @@ import {
   IconSoccerField,
   IconEye,
   IconDeviceFloppy,
+  IconOctahedron,
   IconBusinessplan,
   IconReportAnalytics,
 } from "@tabler/icons-react";
@@ -374,6 +375,12 @@ const getMenuItems = (): MenuitemsType[] => {
       title: "Estoque",
       icon: IconStack3,
       href: "/apps/estoque",
+    },
+    {
+      id: uniqueId(),
+      title: "OctaDesk",
+      icon: IconOctahedron,
+      href: "/apps/octadesk",
     },
   ];
 
