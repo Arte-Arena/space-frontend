@@ -32,6 +32,7 @@ import {
   IconSoccerField,
   IconEye,
   IconDeviceFloppy,
+  IconOctahedron,
   IconBusinessplan,
   IconReportAnalytics,
 } from "@tabler/icons-react";
@@ -335,19 +336,19 @@ const getMenuItems = (): MenuitemsType[] => {
           id: uniqueId(),
           title: "Arte Final",
           icon: IconBrush,
-          href: "/apps/arte-final",
+          href: "/apps/producao/arte-final",
         },
         {
           id: uniqueId(),
           title: "Impressão",
           icon: IconPrinter,
-          href: "/apps/impressao",
+          href: "/apps/producao/impressao",
         },
         {
           id: uniqueId(),
           title: "Confecção",
           icon: IconNeedleThread,
-          href: "/apps/confeccao",
+          href: "/apps/producao/confeccao",
         },
       ],
     },
@@ -374,6 +375,12 @@ const getMenuItems = (): MenuitemsType[] => {
       title: "Estoque",
       icon: IconStack3,
       href: "/apps/estoque",
+    },
+    {
+      id: uniqueId(),
+      title: "OctaDesk",
+      icon: IconOctahedron,
+      href: "/apps/octadesk",
     },
   ];
 
