@@ -4,10 +4,10 @@ import PageContainer from "@/app/components/container/PageContainer";
 import AppCard from "@/app/components/shared/AppCard";
 import ChatsApp from "@/app/components/apps/chats";
 
-const Chats = () => {
+const ChatExternoScreen = () => {
   return (
     <PageContainer title="Chat" description="this is Chat">
-      <Breadcrumb title="Chat app" subtitle="Messenger" />
+      <Breadcrumb title="Chat Externo" subtitle="Messenger" />
       <AppCard>
         <ChatsApp />
       </AppCard>
@@ -15,4 +15,4 @@ const Chats = () => {
   );
 };
 
-export default Chats;
+export default ChatExternoScreen;
