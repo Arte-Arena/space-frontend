@@ -30,7 +30,7 @@ export default function ProdutosPacotesUniformesAddScreen() {
       title: "Home",
     },
     {
-      to: "/apps/producao/",
+      to: "/apps/producao/arte-final",
       title: "Produção",
     },
     {
@@ -39,7 +39,7 @@ export default function ProdutosPacotesUniformesAddScreen() {
     },
     {
       to: "/apps/producao/arte-final/add",
-      title: "Adicionar Pedido com Arte Final",
+      title: "Adicionar Pedido - Arte Final",
     },
   ];
 
