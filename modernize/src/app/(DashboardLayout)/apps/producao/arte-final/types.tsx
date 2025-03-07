@@ -26,7 +26,7 @@ interface ArteFinal {
 }
 
 interface Data{
-  ArteFinal: [];
+  data: [];
 }
 
 interface Produto {

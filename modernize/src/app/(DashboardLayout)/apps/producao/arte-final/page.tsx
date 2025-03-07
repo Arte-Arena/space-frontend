@@ -280,7 +280,7 @@ const ArteFinalScreen = () => {
                     '& .linha-vermelha': { backgroundColor: 'rgba(255, 0, 0, 0.2)' },
                   }}
                   autoHeight
-                  rows={pedidos.data}
+                  rows={pedidos?.data}
                   // rows={pedidosFalsos}
                   columns={columns}
                   getRowId={(row) => row.id}
