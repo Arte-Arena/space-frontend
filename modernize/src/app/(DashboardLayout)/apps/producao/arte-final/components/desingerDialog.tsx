@@ -8,24 +8,23 @@ import {
     MenuItem,
     Select,
     FormControl,
-    InputLabel,
     Typography,
     CircularProgress,
 } from "@mui/material";
 import { IconAlertTriangle } from "@tabler/icons-react";
-import { User } from "../types";
+import { User, ArteFinal } from "../types";
 import useFetchUsersByRole from "./useGetUsersByRole";
 
 interface AssignDesignerDialogProps {
     openDialogDesinger: boolean;
     onCloseDialogDesinger: () => void;
-    rowId: string | number | null;
+    row: ArteFinal | null;
 }
 
 const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
     openDialogDesinger,
     onCloseDialogDesinger,
-    rowId,
+    row,
 }) => {
 
     const { users: designers, isLoadingUsers: isLoadingDesigners, errorUsers: errorDesigners } = useFetchUsersByRole("Designer");
@@ -34,9 +33,34 @@ const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
 
     const handleAssign = () => {
         // Lógica para atribuir o designer ao pedido
+        console.log(`Row ID: ${row?.id}, Designer: ${selectedDesigner ?? "Sem Designer"}`);
 
+        if (row?.id !== null || row?.id !== undefined) {
+            // fazer a chamada para a API para atribuir o designer ao pedido
+            const accessToken = localStorage.getItem("accessToken");
+            if (!accessToken) throw new Error("Usuário não autenticado.");
 
-        console.log(`Row ID: ${rowId}, Designer: ${selectedDesigner ?? "Sem Designer"}`);
+            fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/atribuir-designer/${row?.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ designer_id: selectedDesigner }),
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao atribuir designer');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Designer atribuído com sucesso:', data);
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                });
+        }
         onCloseDialogDesinger();
     };
 
@@ -65,7 +89,7 @@ const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
                         <MenuItem value={""}>Sem Designer</MenuItem>
                         {designers?.map((designer: User) => (
                             <MenuItem key={designer.id} value={designer.id}>
-                                {designer.name}
+                                {designer.id} - {designer.name}
                             </MenuItem>
                         ))}
                     </Select>

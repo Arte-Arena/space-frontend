@@ -11,7 +11,6 @@ interface ArteFinal {
   estagio?: string | null;
   // situacao?: string | null;
   medidaLinear: number | null;
-  designer: string;
   designer_id?: number | null;
   pedido_status_id?: number | null;
   pedido_tipo_id?: number | null;
@@ -24,6 +23,7 @@ interface ArteFinal {
   created_at: Date;
   updated_at: Date;
   data: [];
+  designer: User;
 }
 
 interface Data{

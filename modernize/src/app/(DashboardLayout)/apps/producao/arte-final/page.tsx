@@ -1,9 +1,9 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { ArteFinal, Data, Material, Produto } from './types';
+import { ArteFinal, Data, Material, Produto, User } from './types';
 import CircularProgress from '@mui/material/CircularProgress';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -29,10 +29,9 @@ import {
   Box,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
-import { DataGrid, GridColDef, GridActionsCellItem, GridPaginationModel, GridRowClassNameParams } from '@mui/x-data-grid';
+import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconPrinter } from '@tabler/icons-react';
 import { IconBrandTrello } from '@tabler/icons-react';
-import { IconMenu } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import AssignDesignerDialog from './components/desingerDialog';
 
@@ -40,9 +39,9 @@ const ArteFinalScreen = () => {
   const router = useRouter();
   const accessToken = localStorage.getItem('accessToken');
   const [openDrawer, setOpenDrawer] = useState(false); //SidePanel
-  const [selectedRowIdDesingerSidePanel, setSelectedRowIdSidePanel] = useState<number | null>(null);//SidePanel
+  const [selectedRowSidePanel, setSelectedRowIdSidePanel] = useState<ArteFinal | null>(null);//SidePanel
   const [openDialogDesinger, setOpenDialogDesinger] = useState(false); //Dialog Designer
-  const [selectedRowIdDesinger, setSelectedRowIdDesinger] = useState<number | null | undefined>(null);//Dialog designer
+  const [selectedRowDesinger, setSelectedRowDesinger] = useState<ArteFinal | null>(null);//Dialog designer
   const [isAdding, setIsAdding] = useState(false);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
@@ -96,7 +95,7 @@ const ArteFinalScreen = () => {
   ];
 
 
-  const { data: pedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, isFetching } = useQuery<Data>({
+  const { data: pedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, isFetching, refetch} = useQuery<Data>({
     queryKey: ['pedidos'],
     queryFn: () =>
       fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final`, {
@@ -108,7 +107,13 @@ const ArteFinalScreen = () => {
       }).then((res) => res.json()),
   });
 
-  console.log(pedidos);
+  // console.log(pedidos);
+
+  useEffect(() => {
+  if (openDialogDesinger) {
+    refetch();
+  }
+}, [openDialogDesinger]);
 
   // handles
 
@@ -142,23 +147,21 @@ const ArteFinalScreen = () => {
   };
 
   const handleAtribuirDesigner = (row: ArteFinal) => {
-    setSelectedRowIdDesinger(row.id);
-    setOpenDialogDesinger(true);
-    console.log("handleAtribuirDesigner pedido", row);
+    setSelectedRowDesinger(row);
+    if (selectedRowDesinger !== null) {
+      setOpenDialogDesinger(true);
+    }
   };
 
   const handleVerDetalhes = (row: ArteFinal) => {
-    setOpenDrawer(true);
-    console.log("handleVerDetalhes pedido", row);
+    setSelectedRowIdSidePanel(row);
+    if (selectedRowDesinger !== null) {
+      setOpenDrawer(true);
+    }
   };
 
   const handleEnviarImpressora = (row: ArteFinal) => {
     console.log("handleEnviarImpressora pedido", row);
-  };
-
-  const handleOpenDialog = (rowId: number) => {
-    setSelectedRowIdDesinger(rowId);
-    setOpenDialogDesinger(true);
   };
 
   // const handleToggleRow = (id: number) => {
@@ -180,7 +183,9 @@ const ArteFinalScreen = () => {
     },
   ];
 
-
+  useEffect(() => {
+    console.log("📌 Estado atualizado - selectedRowIdSidePanel:", selectedRowSidePanel);
+  }, [selectedRowSidePanel]);
 
 
   return (
@@ -264,7 +269,7 @@ const ArteFinalScreen = () => {
                           </TableCell>
 
                           <TableCell align='center'>{row.medidaLinear ?? 0}</TableCell>
-                          <TableCell align='center'>{row.designer ?? 'Não Atribuido'}</TableCell>
+                          <TableCell align='center'>{row.designer?.name ?? 'Não Atribuido'}</TableCell>
                           {/* <TableCell align='center'>{row.situacao ?? ''}</TableCell> */}
 
                           <TableCell align='center'>{row.observacoes ?? ''}</TableCell>
@@ -383,10 +388,10 @@ const ArteFinalScreen = () => {
               />
             </TableContainer>
           )}
-          {selectedRowIdDesinger !== null && (
-            <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} rowId={selectedRowIdDesinger} />
+          {selectedRowDesinger !== null && (
+            <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} />
           )}
-          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} rowId={selectedRowIdDesinger}/>
+          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
         </>
       </ParentCard>
     </PageContainer>
