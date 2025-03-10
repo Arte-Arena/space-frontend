@@ -3,13 +3,13 @@ interface ArteFinal {
   id?: number;
   user_id?: number | null;
   numero_pedido: Number;
+  data_entrega: Date;
   prazo_arte_final: Number;
   prazo_confeccao: Number;
   lista_produtos: Produto[];
   observacao: string;
   rolo: string;
   estagio?: string | null;
-  // situacao?: string | null;
   medidaLinear: number | null;
   designer_id?: number | null;
   pedido_status_id?: number | null;
@@ -31,16 +31,20 @@ interface Data{
 }
 
 interface Produto {
+  uid?: number;
   id: number;
-  tipo_produto: string;
   nome: string;
+  esboco: string;
+  quantidade: number;
   materiais: Material[];
   medida_linear: number;
+  preco: number;
+  prazo: number;
 }
 
 interface Material {
   id: number;
-  material: string;
+  descricao: string;
 }
 
 interface User {
