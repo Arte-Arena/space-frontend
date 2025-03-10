@@ -70,19 +70,19 @@ export default function ProdutosPacotesUniformesDetailsScreen() {
       title: "Home",
     },
     {
-      to: "/apps/produtos/",
-      title: "Produtos",
+      to: "/apps/producao/arte-final",
+      title: "Arte Final",
     },
     {
-      to: "/apps/produtos/pacotes-uniformes",
-      title: "Pacotes de Uniformes",
+      to: "/apps/producao/arte-final",
+      title: "Arte - Final",
     },
   ];
 
   return (
-    <PageContainer title="Produtos / Pacotes de Uniformes" description="Pacotes de Uniformes da Arte Arena">
-      <Breadcrumb title="Produtos / Pacotes de Uniformes" items={BCrumb} />
-      <ParentCard title="Pacotes de Uniformes">
+    <PageContainer title="Produção / Arte Final" description="Arte Final da Arte Arena">
+      <Breadcrumb title="Produção / Arte Final" items={BCrumb} />
+      <ParentCard title="Arte Final">
         <>
           <h2 className="text-xl font-bold">Detalhes do Produto</h2>
           <ArteFinalForm initialData={pacoteUniforme} onSubmit={handleUpdate} />
