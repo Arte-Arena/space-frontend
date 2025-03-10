@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { ArteFinal, Data, Material, Produto, User } from './types';
+import { ArteFinal, Material, Produto } from './types';
 import CircularProgress from '@mui/material/CircularProgress';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -36,12 +36,11 @@ import SidePanel from './components/drawer';
 import AssignDesignerDialog from './components/desingerDialog';
 
 const ArteFinalScreen = () => {
-  const router = useRouter();
-  const accessToken = localStorage.getItem('accessToken');
-  const [openDrawer, setOpenDrawer] = useState(false); //SidePanel
-  const [selectedRowSidePanel, setSelectedRowIdSidePanel] = useState<ArteFinal | null>(null);//SidePanel
-  const [openDialogDesinger, setOpenDialogDesinger] = useState(false); //Dialog Designer
-  const [selectedRowDesinger, setSelectedRowDesinger] = useState<ArteFinal | null>(null);//Dialog designer
+  const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
+  const [openDrawer, setOpenDrawer] = useState(false);
+  const [selectedRowSidePanel, setSelectedRowIdSidePanel] = useState<ArteFinal | null>(null);
+  const [openDialogDesinger, setOpenDialogDesinger] = useState(false);
+  const [selectedRowDesinger, setSelectedRowDesinger] = useState<ArteFinal | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
@@ -49,7 +48,10 @@ const ArteFinalScreen = () => {
     pageSize: 5,
     page: 0,
   });
+  
+  const router = useRouter();
 
+  const accessToken = localStorage.getItem('accessToken');
 
   const pedidosFalsos = [
     {
@@ -95,7 +97,7 @@ const ArteFinalScreen = () => {
   ];
 
 
-  const { data: pedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, isFetching, refetch} = useQuery<Data>({
+  const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch} = useQuery<ArteFinal[]>({
     queryKey: ['pedidos'],
     queryFn: () =>
       fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final`, {
@@ -106,6 +108,12 @@ const ArteFinalScreen = () => {
         },
       }).then((res) => res.json()),
   });
+
+useEffect(() => {
+  if (dataPedidos) {
+    setAllPedidos(dataPedidos);
+  }
+}, [dataPedidos]);
 
   // console.log(pedidos);
 
@@ -223,7 +231,7 @@ const ArteFinalScreen = () => {
                     <TableCell align='center' sx={{ width: '5%' }}>Número do Pedido</TableCell>
                     <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Prazo Arte Final</TableCell>
-                    <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell>
+                    {/* <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell> */}
                     <TableCell align='center' sx={{ width: '10%' }}>Desinger</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Prioridade</TableCell>
@@ -231,7 +239,7 @@ const ArteFinalScreen = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {pedidos?.data.map((row) => {
+                {Array.isArray(allPedidos) && allPedidos.map((row) => {
                     const listaProdutos: Produto[] = row.lista_produtos
                       ? typeof row.lista_produtos === 'string'
                         ? JSON.parse(row.lista_produtos)
@@ -263,13 +271,11 @@ const ArteFinalScreen = () => {
                           </TableCell>
 
                           <TableCell align='center'>
-                            {row.prazo_arte_final
-                              ? new Date(row.prazo_arte_final).toLocaleDateString('pt-BR')
-                              : new Date().toLocaleDateString('pt-BR')}
+                            {Number(row.prazo_arte_final)}
                           </TableCell>
 
-                          <TableCell align='center'>{row.medidaLinear ?? 0}</TableCell>
-                          <TableCell align='center'>{row.designer?.name ?? 'Não Atribuido'}</TableCell>
+                          {/* <TableCell align='center'>{Number(row.medidaLinear) ?? 0}</TableCell> */}
+                          <TableCell align='center'>{Number(row.designer) ?? 'Não Atribuido'}</TableCell>
                           {/* <TableCell align='center'>{row.situacao ?? ''}</TableCell> */}
 
                           <TableCell align='center'>{row.observacoes ?? ''}</TableCell>
@@ -334,7 +340,7 @@ const ArteFinalScreen = () => {
                                               Tipo:
                                             </TableCell>
                                             <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                              Materiais:
+                                              Material:
                                             </TableCell>
                                             <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
                                               Medida linear:
@@ -349,7 +355,7 @@ const ArteFinalScreen = () => {
                                                   {produto.nome}
                                                 </TableCell>
                                                 <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.tipo_produto}
+                                                  {produto.nome}
                                                 </TableCell>
                                                 {/* <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
                                                   {produto.materiais.map((material: Material) => material.material).join(', ')} 
@@ -380,7 +386,7 @@ const ArteFinalScreen = () => {
               <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
-                count={pedidos?.data.length || 0}
+                count={allPedidos.length || 0}
                 rowsPerPage={paginationModel.pageSize}
                 page={paginationModel.page}
                 onPageChange={(event, newPage) => setPaginationModel({ ...paginationModel, page: newPage })}

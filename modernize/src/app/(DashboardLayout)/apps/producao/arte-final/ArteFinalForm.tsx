@@ -48,12 +48,13 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     observacao: "",
     rolo: "",
     url_trello: "",
-    designer: "",
+    designer: 0,
     status: "",
     tipo_de_pedido: "",
     created_at: new Date(),
     updated_at: new Date(),
   });
+
   const [allProducts, setAllProducts] = useState<Produto[]>([]);
   const [productNames, setProductNames] = useState<string[] | null>([]);
   const [productsList, setProductsList] = useState<Produto[]>([]);
@@ -561,12 +562,12 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
         <Select
           label="Designer"
           name="designer"
-          value={formData.designer}
+          value={formData.designer ? String(formData.designer) : ""}
           onChange={(e: SelectChangeEvent<string>) => handleSelectChange(e, 'designer')}
           fullWidth
           readOnly={readOnly}
         >
-          {allDesigners.map((designerName) => ( // Changed variable name to designerName
+          {allDesigners.map((designerName) => (
             <MenuItem key={designerName} value={designerName}>
               <ListItemText primary={designerName} />
             </MenuItem>
