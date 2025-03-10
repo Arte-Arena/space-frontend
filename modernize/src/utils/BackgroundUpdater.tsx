@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 
 const BackgroundUpdater = () => {
 
-  
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
     const fetchDataClientes = async () => {
@@ -17,7 +16,6 @@ const BackgroundUpdater = () => {
         });
         const clientesConsolidados = await response.json();
         localStorage.setItem('clientesConsolidadosOrcamento', JSON.stringify(clientesConsolidados));
-        // console.log('clientesConsolidadosOrcamento: ', clientesConsolidados);
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
       }
@@ -42,7 +40,6 @@ const BackgroundUpdater = () => {
         });
         const produtosConsolidadosOrcamento = await response.json();
         localStorage.setItem('produtosConsolidadosOrcamento', JSON.stringify(produtosConsolidadosOrcamento));
-        // console.log('produtosConsolidadosOrcamento: ', produtosConsolidadosOrcamento);
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
       }
@@ -53,6 +50,55 @@ const BackgroundUpdater = () => {
     const intervalId = setInterval(fetchDataProdutos, 900000);
     return () => clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    const fetchDataMaterials = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/material`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const materiais = await response.json();
+        localStorage.setItem('materiais', JSON.stringify(materiais));
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    };
+
+    fetchDataMaterials();
+
+    const intervalId = setInterval(fetchDataMaterials, 900000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    const fetchDesigners = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/user-role/get-users-by-role?role=Designer`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const designers = await response.json();
+        localStorage.setItem('designers', JSON.stringify(designers));
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    };
+
+    fetchDesigners();
+
+    const intervalId = setInterval(fetchDesigners, 900000);
+    return () => clearInterval(intervalId);
+  }, []);
+  
 
   return null;
 }

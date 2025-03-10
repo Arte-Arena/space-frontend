@@ -23,7 +23,9 @@ import {
   TableHead,
   TableBody,
   Paper,
-  IconButton
+  IconButton,
+  Select,
+  Checkbox,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { IconPlus, IconMinus } from '@tabler/icons-react';
@@ -64,6 +66,22 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
   const [allTiposDePedido, setAllTiposDePedido] = useState<string[]>([]);
 
   const dataProducts = localStorage.getItem('produtosConsolidadosOrcamento');
+  const materiais = localStorage.getItem('materiais');
+  const designers = localStorage.getItem('designers');
+
+  useEffect(() => {
+    if (materiais) {
+      console.log(materiais);
+      const materiaisArray = JSON.parse(materiais);
+      if (Array.isArray(materiaisArray)) {
+        setAllMaterials(materiaisArray);
+      } else {
+        console.error('Dados inválidos recebidos da API:', materiaisArray);
+      }
+    } else {
+      console.warn('Os dados de materiais não foram encontrados.');
+    }
+  }, [materiais]);
 
   useEffect(() => {
     if (dataProducts) {
@@ -95,9 +113,41 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     }
   }, [allProducts]);
 
-  const materials = ["Dryft Liso", "Dryft Sport Star"];
+  useEffect(() => {
+    if (materiais) {
+      const materiaisArray = JSON.parse(materiais);
+      if (materiaisArray && materiaisArray.data && Array.isArray(materiaisArray.data)) {
+        setAllMaterials(materiaisArray.data);
+      } else {
+        console.error('Dados inválidos recebidos da API:', materiaisArray);
+      }
+    } else {
+      console.warn('Os dados de materiais não foram encontrados.');
+    }
+  }, [materiais]);
+
+  useEffect(() => {
+    if (designers) {
+      try {
+        const designersArray = JSON.parse(designers);
+        if (Array.isArray(designersArray)) {
+          // Extract only the names from the designer objects
+          const designerNames = designersArray.map((designer) => designer.name);
+          setAllDesigners(designerNames);
+        } else {
+          console.error('Dados inválidos recebidos de designers:', designersArray);
+        }
+      } catch (error) {
+        console.error('Erro ao analisar JSON de designers:', error);
+      }
+    } else {
+      console.warn('Os dados de designers não foram encontrados.');
+    }
+  }, [designers]);
+
+
   const tipoPedidos = ["Antecipacao", "Prazo Normal"];
-  const designers = ["Bruna", "Eduardo", "Will"];
+
 
   useEffect(() => {
     if (initialData) {
@@ -175,7 +225,6 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
       console.log('productsList:', productsList);
     }
   }, [productsList]);
-
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     if (readOnly) return;
@@ -269,7 +318,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
               <TableCell>Produto</TableCell>
               <TableCell align="right">Esboço</TableCell>
               <TableCell align="right">Quantidade</TableCell>
-              <TableCell align="right">Material</TableCell>
+              <TableCell align="right">Materiais</TableCell>
               <TableCell align="right">Medida Linear</TableCell>
               <TableCell align="right">Prazo Confecção</TableCell>
               <TableCell align="right">Prazo Arte Final</TableCell>
@@ -343,28 +392,33 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
                 </TableCell>
 
                 <TableCell align="right">
-                  <CustomTextField
-                    value={product.materiais}
-                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                      const updatedProduct = { ...product, materiais: [{ id: 1, material: "dryft" }, { id: 2, material: "tactel" }] };
-                      atualizarProduto(updatedProduct);
-                    }}
-                    type="number"
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                      width: '70px',
-                      '& input[type=number]::-webkit-inner-spin-button': {
-                        display: 'none',
-                      },
-                      '& input[type=number]::-webkit-outer-spin-button': {
-                        display: 'none',
-                      },
-                      '& input[type=number]': {
-                        MozAppearance: 'textfield', // Para Firefox
-                      },
-                    }}
-                  />
+                  <FormControl sx={{ m: 1, width: 200 }}>
+                    <InputLabel id="multiple-checkbox-label">Materiais</InputLabel>
+                    <Select
+                      labelId="multiple-checkbox-label"
+                      id="multiple-checkbox"
+                      multiple
+                      value={product.materiais ? product.materiais.map(m => m.id) : []}
+                      onChange={(event) => {
+                        const selectedMaterialIds = event.target.value as number[];
+                        const selectedMaterials = allMaterials.filter(m => selectedMaterialIds.includes(m.id));
+                        const updatedProduct = { ...product, materiais: selectedMaterials };
+                        atualizarProduto(updatedProduct);
+                      }}
+                      renderValue={(selected) => {
+                        if (!selected) return "";
+                        const selectedMaterials = allMaterials.filter(m => selected.includes(m.id));
+                        return selectedMaterials.map(m => m.descricao).join(', ');
+                      }}
+                    >
+                      {allMaterials.map((material) => (
+                        <MenuItem key={material.id} value={material.id}>
+                          <Checkbox checked={product.materiais ? product.materiais.some(m => m.id === material.id) : false} />
+                          <ListItemText primary={material.descricao} />
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                 </TableCell>
 
                 <TableCell align="right">
@@ -452,7 +506,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
                   <IconButton onClick={() => removerProdutoUnidade(product)}>
                     <IconMinus />
                   </IconButton>
-                  <IconButton 
+                  <IconButton
                     onClick={() => adicionarProduto(product)}
                     disabled={!product.esboco}
                   >
@@ -504,7 +558,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
 
       <FormControl sx={{ mt: 5, width: '100%' }}>
         <InputLabel id="designer_pedido">Designer</InputLabel>
-        <CustomSelect
+        <Select
           label="Designer"
           name="designer"
           value={formData.designer}
@@ -512,12 +566,12 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
           fullWidth
           readOnly={readOnly}
         >
-          {designers.map((designer) => (
-            <MenuItem key={designer} value={designer}>
-              <ListItemText primary={designer} />
+          {allDesigners.map((designerName) => ( // Changed variable name to designerName
+            <MenuItem key={designerName} value={designerName}>
+              <ListItemText primary={designerName} />
             </MenuItem>
           ))}
-        </CustomSelect>
+        </Select>
       </FormControl>
 
       <FormControl sx={{ mt: 5, width: '100%' }}>

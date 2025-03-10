@@ -39,7 +39,7 @@ interface Produto {
 
 interface Material {
   id: number;
-  material: string;
+  descricao: string;
 }
 
 export type { ArteFinal, Produto, Material }
