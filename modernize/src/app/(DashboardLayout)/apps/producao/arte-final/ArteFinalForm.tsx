@@ -27,7 +27,6 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { NumericFormat } from 'react-number-format';
 
-
 interface ArteFinalFormProps {
   initialData?: ArteFinal;
   onSubmit?: (data: ArteFinal) => void;
@@ -38,7 +37,8 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
   const [formData, setFormData] = useState<ArteFinal>({
     id: undefined,
     numero_pedido: 0,
-    data_prevista: new Date(),
+    prazo_arte_final: 0,
+    prazo_confeccao: 0,
     lista_produtos: [],
     observacao: "",
     rolo: "",
@@ -49,26 +49,31 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     created_at: new Date(),
     updated_at: new Date(),
   });
-  const [productsList, setProductsList] = useState<Produto[]>([
-    {
-      id: 1,
-      tipo_produto: "Abadá",
-      materiais: [],
-      medida_linear: 10,
-    },
-    {
-      id: 2,
-      tipo_produto: "Camisa",
-      materiais: [],
-      medida_linear: 10,
-    }, {
-      id: 3,
-      tipo_produto: "Bandeira",
-      materiais: [],
-      medida_linear: 10,
-    }
-  ]);
+  const [productsList, setProductsList] = useState<Produto[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Produto | null>(null);
+  
+  // const [productsList, setProductsList] = useState<Produto[]>([
+  //   {
+  //     id: 1,
+  //     tipo_produto: "Abadá",
+  //     materiais: [],
+  //     medida_linear: 10,
+  //   },
+  //   {
+  //     id: 2,
+  //     tipo_produto: "Camisa",
+  //     materiais: [],
+  //     medida_linear: 10,
+  //   }, {
+  //     id: 3,
+  //     tipo_produto: "Bandeira",
+  //     materiais: [],
+  //     medida_linear: 10,
+  //   }
+  // ]);
+
+  const dataProdutosCategorias = localStorage.getItem('produtosCategorias');
+
 
   const productNames = productsList.map((product) => product.tipo_produto);
   const materials = ["Dryft Liso", "Dryft Sport Star"];
@@ -149,7 +154,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DatePicker
             label="Data Prevista"
-            value={formData.data_prevista}
+            value={formData.prazo_arte_final}
             onChange={(newValue) => {
               setFormData((prev) => ({
                 ...prev,
