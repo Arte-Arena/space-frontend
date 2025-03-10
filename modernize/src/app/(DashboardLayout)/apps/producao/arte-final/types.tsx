@@ -10,19 +10,24 @@ interface ArteFinal {
   observacao: string;
   rolo: string;
   estagio?: string | null;
-  designer: string;
+  medidaLinear: number | null;
   designer_id?: number | null;
   pedido_status_id?: number | null;
   pedido_tipo_id?: number | null;
   observacoes?: string | null;
   status: string;
   url_trello?: string | null;
-  situacao?: string | null;
   prioridade?: string | null;
   orcamento_id?: number | null;
   tipo_de_pedido: string;
   created_at: Date;
   updated_at: Date;
+  data: [];
+  designer: User;
+}
+
+interface Data{
+  data: ArteFinal[];
 }
 
 interface Produto {
@@ -42,7 +47,13 @@ interface Material {
   descricao: string;
 }
 
-export type { ArteFinal, Produto, Material }
+interface User {
+  id: number;
+  name: string;
+  role_id: number;
+}
+
+export type { ArteFinal, Produto, Material, Data, User };
 
 
 
