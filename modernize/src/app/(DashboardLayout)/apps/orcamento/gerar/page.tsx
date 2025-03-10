@@ -1463,10 +1463,29 @@ Orçamento válido somente hoje.
     
     setIsGeneratingCheckoutLink(true);
     
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setCheckoutLink('https://example.com/checkout/123');
-    setIsGeneratingCheckoutLink(false);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/payment/generate-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ valor: checkoutValue }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao gerar link de pagamento');
+      }
+
+      const data = await response.json();
+      setCheckoutLink(data.checkout_link);
+      navigator.clipboard.writeText(data.checkout_link);
+      setOpenSnackbarCopiarLinkPagamento(true);
+    } catch (error) {
+      console.error('Erro ao gerar link de pagamento:', error);
+    } finally {
+      setIsGeneratingCheckoutLink(false);
+    }
   };
 
   useEffect(() => {
