@@ -5,9 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Material, Produto } from './types';
 import CircularProgress from '@mui/material/CircularProgress';
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import { IconPlus, IconEdit, IconEye, IconTrash, IconLink, IconTiltShift, IconPencilDown, IconShirt, IconEyeCheck, IconBrush } from '@tabler/icons-react';
+import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -34,7 +32,7 @@ import { IconPrinter } from '@tabler/icons-react';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import AssignDesignerDialog from './components/desingerDialog';
-import { all } from 'axios';
+import { ApiResponsePedidosArteFinal } from './components/types';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -54,51 +52,8 @@ const ArteFinalScreen = () => {
 
   const accessToken = localStorage.getItem('accessToken');
 
-  const pedidosFalsos = [
-    {
-      id: 1,
-      numero_pedido: '12345',
-      prazo_confeccao: '2025-03-20T00:00:00Z',
-      prazo_arte_final: '2025-03-20T00:00:00Z',
-      situacao: 'antecipacao',
-      prioridade: 'Alta',
-    },
-    {
-      id: 2,
-      numero_pedido: '67890',
-      prazo_confeccao: '2025-04-15T00:00:00Z',
-      prazo_arte_final: '2025-04-15T00:00:00Z',
-      situacao: 'Aguardando Aprovação',
-      prioridade: 'Média',
-    },
-    {
-      id: 3,
-      numero_pedido: '11223',
-      prazo_confeccao: '2025-05-01T00:00:00Z',
-      prazo_arte_final: '2025-05-10T00:00:00Z',
-      situacao: 'Finalizado',
-      prioridade: 'Baixa',
-    },
-    {
-      id: 4,
-      numero_pedido: '44556',
-      prazo_confeccao: '2025-06-10T00:00:00Z',
-      prazo_arte_final: '2025-06-10T00:00:00Z',
-      situacao: 'Em Produção',
-      prioridade: 'Alta',
-    },
-    {
-      id: 5,
-      numero_pedido: '78901',
-      prazo_confeccao: '2025-07-05T00:00:00Z',
-      prazo_arte_final: '2025-07-05T00:00:00Z',
-      situacao: 'Aguardando Aprovação',
-      prioridade: 'Média',
-    },
-  ];
 
-
-  const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch} = useQuery<ArteFinal[]>({
+  const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch} = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
     queryFn: () =>
       fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final`, {
@@ -111,8 +66,8 @@ const ArteFinalScreen = () => {
   });
 
 useEffect(() => {
-  if (dataPedidos) {
-    setAllPedidos(dataPedidos);
+  if (dataPedidos && dataPedidos.data) { // Verificação adicional
+    setAllPedidos(dataPedidos.data);
   }
 }, [dataPedidos]);
 
@@ -286,7 +241,7 @@ useEffect(() => {
                           <TableCell align='center'>
                             <Tooltip title="Ver Detalhes">
                               <IconButton onClick={() => handleVerDetalhes(row)}>
-                                <IconEyeCheck />
+                                <IconEye />
                               </IconButton>
                             </Tooltip>
                             <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
