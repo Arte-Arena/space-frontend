@@ -1210,7 +1210,8 @@ const OrcamentoGerarScreen = () => {
   useEffect(() => {
     if (!checkoutValue || !totalProductsValue) return;
     if (checkoutValue >= totalProductsValue) return setCheckoutValue(totalProductsValue);
-  }, [checkoutValue]);
+    setCheckoutLink(null);
+  }, [checkoutValue, totalProductsValue]);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
