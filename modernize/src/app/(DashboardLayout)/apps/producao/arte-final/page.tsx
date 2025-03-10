@@ -34,6 +34,7 @@ import { IconPrinter } from '@tabler/icons-react';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import AssignDesignerDialog from './components/desingerDialog';
+import { all } from 'axios';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -195,6 +196,7 @@ useEffect(() => {
     console.log("📌 Estado atualizado - selectedRowIdSidePanel:", selectedRowSidePanel);
   }, [selectedRowSidePanel]);
 
+  console.log(allPedidos);
 
   return (
     <PageContainer title="Produção / Arte - Final" description="Tela de Produção da Arte - Final | Arte Arena">

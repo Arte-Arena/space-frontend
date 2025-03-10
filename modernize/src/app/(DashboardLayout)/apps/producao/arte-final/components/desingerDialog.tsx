@@ -12,7 +12,7 @@ import {
     CircularProgress,
 } from "@mui/material";
 import { IconAlertTriangle } from "@tabler/icons-react";
-import { User, ArteFinal } from "../types";
+import { ArteFinal } from "../types";
 import useFetchUsersByRole from "./useGetUsersByRole";
 
 interface AssignDesignerDialogProps {
@@ -68,7 +68,7 @@ const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
         <Dialog open={openDialogDesinger} onClose={onCloseDialogDesinger} fullWidth >
             <DialogTitle>Atribuir Designer</DialogTitle>
             <DialogContent sx={{ minHeight: 'fitContent', paddingTop: 2 }}>
-                <FormControl fullWidth>
+                {/* <FormControl fullWidth>
                     <Typography>Selecione um Designer</Typography>
                     {errorDesigners && (
                         <Typography color="error">
@@ -93,7 +93,7 @@ const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
                             </MenuItem>
                         ))}
                     </Select>
-                </FormControl>
+                </FormControl> */}
             </DialogContent>
             <DialogActions>
                 <Button onClick={onCloseDialogDesinger} color="secondary">
