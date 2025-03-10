@@ -35,6 +35,7 @@ import {
   IconOctahedron,
   IconBusinessplan,
   IconReportAnalytics,
+  IconMoneybag, // Added for payments icon
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -139,6 +140,12 @@ const getMenuItems = (): MenuitemsType[] => {
           title: "Buscar Conta",
           icon: IconZoomMoney,
           href: "/apps/contas-pagar-receber/buscar",
+        },
+        {
+          id: uniqueId(),
+          title: "Pagamentos",
+          icon: IconMoneybag,
+          href: "/apps/contas-pagar-receber/pagamentos",
         },
         {
           id: uniqueId(),
