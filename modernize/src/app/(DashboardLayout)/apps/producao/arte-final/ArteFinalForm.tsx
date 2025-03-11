@@ -26,10 +26,11 @@ import {
   Paper,
   IconButton,
   Select,
-  Checkbox,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { IconPlus, IconMinus } from '@tabler/icons-react';
+import {calcularDataFuturaDiasUteis, calcDiasUteisEntreDatas} from '@/utils/calcDiasUteis';
+import { DateTime } from 'luxon';
 
 interface ArteFinalFormProps {
   initialData?: ArteFinal;
@@ -60,14 +61,15 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
   const [selectedProduct, setSelectedProduct] = useState<Produto | null>(null);
   const [countProduct, setCountProduct] = useState<number | null>(0);
   const [allMaterials, setAllMaterials] = useState<string[]>([]);
-  const [selectedMaterial, setSelectedMaterial] = useState<"" | null>(null);
   const [allDesigners, setAllDesigners] = useState<string[]>([]);
-  const [allStatus, setAllStatus] = useState<string[]>([]);
+  const [allStatusPedido, setAllStatusPedido] = useState<string[]>([]);
   const [allTiposDePedido, setAllTiposDePedido] = useState<string[]>([]);
 
   const dataProducts = localStorage.getItem('produtosConsolidadosOrcamento');
   const materiais = localStorage.getItem('materiais');
   const designers = localStorage.getItem('designers');
+  const statusPedidos = localStorage.getItem('pedidosStatus');
+  const tiposPedidos = localStorage.getItem('pedidosTipos');
 
   useEffect(() => {
     if (dataProducts) {
@@ -124,6 +126,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
         if (Array.isArray(designersArray)) {
           const designerNames = designersArray.map((designer) => designer.name);
           setAllDesigners(designerNames);
+          console.log("designerNames", designerNames)
         } else {
           console.error('Dados inválidos recebidos de designers:', designersArray);
         }
@@ -135,8 +138,60 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     }
   }, [designers]);
 
+  useEffect(() => {
+    if (statusPedidos) {
+      try {
+        const statusPedidosArray = JSON.parse(statusPedidos);
+        if (Array.isArray(statusPedidosArray)) {
+          const statusPedidosNames = statusPedidosArray.map((status) => {
+            let fila = '';
+            switch (status.fila) {
+              case 'D':
+                fila = 'Design';
+                break;
+              case 'I':
+                fila = 'Impressão';
+                break;
+              default:
+                break;
+            }
+            return fila ? `${fila} - ${status.nome}` : status.nome;
+          });
+          setAllStatusPedido(statusPedidosNames);
+          console.log("statusPedidosNames", statusPedidosNames)
 
-  const tipoPedidos = ["Antecipacao", "Prazo Normal"];
+        } else {
+          console.error('Dados inválidos recebidos de statusPedidos:', statusPedidosArray);
+        }
+      } catch (error) {
+        console.error('Erro ao analisar JSON de statusPedidos:', error);
+      }
+    } else {
+      console.warn('Os dados de statusPedidos não foram encontrados.');
+    }
+  }, [statusPedidos]);
+
+  useEffect(() => {
+    if (tiposPedidos) {
+      try {
+        const tiposPedidosArray = JSON.parse(tiposPedidos);
+        if (Array.isArray(tiposPedidosArray)) {
+          const tiposPedidosNames = tiposPedidosArray.map((tipo) => tipo.nome);
+          setAllTiposDePedido(tiposPedidosNames);
+          console.log("tiposPedidosNames", tiposPedidosNames)
+        } else {
+          console.error('Dados inválidos recebidos de tiposPedidos:', tiposPedidosArray);
+        }
+      } catch (error) {
+        console.error('Erro ao analisar JSON de tiposPedidos:', error);
+      }
+    } else {
+      console.warn('Os dados de tiposPedidos não foram encontrados.');
+    }
+  }, [tiposPedidos]);
+
+
+  // const tipoPedidos = ["Antecipacao", "Prazo Normal"];
 
 
   useEffect(() => {
@@ -237,7 +292,23 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     };
     atualizarProduto(updatedProduct);
   };
-  
+
+  const calcPrazoArteFinal = (dataEntrega: Date | null, hoje: Date, prazo_confeccao: number): number => {
+    if (!dataEntrega) {
+      console.error('Erro: dataEntrega é nula ou indefinida.');
+      return 0;
+    }
+  const dataEntregaLuxon = DateTime.fromJSDate(dataEntrega);
+  const hojeLuxon = DateTime.fromJSDate(hoje);
+  const dataFeriados = localStorage.getItem('feriados') ? JSON.parse(localStorage.getItem('feriados') as string) : { dias_feriados: [] };
+  const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
+
+  const dataProjetada = calcularDataFuturaDiasUteis(hojeLuxon, prazo_confeccao, safeDataFeriados);
+  const diasUteisRestantes = calcDiasUteisEntreDatas(dataProjetada, dataEntregaLuxon, safeDataFeriados);
+
+  return diasUteisRestantes;
+};
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (onSubmit) onSubmit(formData);
@@ -483,7 +554,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
 
                 <TableCell align="right">
                   <CustomTextField
-                    value=""
+                    value={calcPrazoArteFinal(formData.data_entrega, getBrazilTime(), product.prazo)}
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                       const newProductValue = Math.max(0, +event.target.value);
                       const updatedProduct = { ...product, prazo_arte: newProductValue };
@@ -592,7 +663,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
           fullWidth
           readOnly={readOnly}
         >
-          {tipoPedidos.map((tipo) => (
+          {allStatusPedido.map((tipo) => (
             <MenuItem key={tipo} value={tipo}>
               <ListItemText primary={tipo} />
             </MenuItem>
@@ -610,7 +681,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
           fullWidth
           readOnly={readOnly}
         >
-          {tipoPedidos.map((tipo) => (
+          {allTiposDePedido.map((tipo) => (
             <MenuItem key={tipo} value={tipo}>
               <ListItemText primary={tipo} />
             </MenuItem>
