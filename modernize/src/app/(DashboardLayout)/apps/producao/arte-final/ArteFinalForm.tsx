@@ -255,12 +255,23 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
           value={formData.numero_pedido}
           onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const { name, value } = e.target;
-            setFormData((prev) => ({ ...prev, [name]: value }));
+            const newValue = Math.max(0, parseFloat(value));
+            setFormData((prev) => ({ ...prev, [name]: newValue.toString() }));
           }}
           placeholder="Numero do pedido"
           variant="outlined"
           fullWidth
           readOnly={readOnly}
+          inputProps={{ min: 0 }}
+          sx={{
+            '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
+              WebkitAppearance: 'none',
+              margin: 0,
+            },
+            '& input[type=number]': {
+              MozAppearance: 'textfield',
+            },
+          }}
         />
       </Box>
 
