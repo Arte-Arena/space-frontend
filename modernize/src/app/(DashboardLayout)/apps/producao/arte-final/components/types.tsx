@@ -15,7 +15,7 @@ interface ArteFinal {
     observacao: string;
     rolo: string;
     estagio?: string | null;
-    designer?: number | null;
+    designer_id?: number | null;
     pedido_status_id?: number | null;
     pedido_tipo_id?: number | null;
     observacoes?: string | null;
