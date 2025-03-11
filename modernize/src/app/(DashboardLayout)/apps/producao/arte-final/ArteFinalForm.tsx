@@ -253,7 +253,10 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
           type="number"
           name="numero_pedido"
           value={formData.numero_pedido}
-          onChange={handleChange}
+          onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+            const { name, value } = e.target;
+            setFormData((prev) => ({ ...prev, [name]: value }));
+          }}
           placeholder="Numero do pedido"
           variant="outlined"
           fullWidth
