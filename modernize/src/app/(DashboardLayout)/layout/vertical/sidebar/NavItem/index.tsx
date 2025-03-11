@@ -63,13 +63,13 @@ export default function NavItem({
     whiteSpace: "nowrap",
     marginBottom: "2px",
     padding: "8px 10px",
+    paddingLeft: hideMenu ? "10px" : level > 1 ? `${level * 15}px` : "10px",
     borderRadius: `${customizer.borderRadius}px`,
     backgroundColor: level > 1 ? "transparent !important" : "inherit",
     color:
       level > 1 && pathDirect === item?.href
         ? `${theme.palette.primary.main}!important`
         : theme.palette.text.secondary,
-    paddingLeft: hideMenu ? "10px" : level > 2 ? `${level * 15}px` : "10px",
     "&:hover": {
       backgroundColor: theme.palette.primary.light,
       color: theme.palette.primary.main,
