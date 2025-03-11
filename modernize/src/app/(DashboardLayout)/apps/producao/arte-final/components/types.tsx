@@ -34,7 +34,7 @@ interface Produto {
     nome: string;
     esboco: string;
     quantidade: number;
-    materiais: Material[];
+    material: Material[];
     medida_linear: number;
     preco: number;
     prazo: number;
