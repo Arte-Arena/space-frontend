@@ -48,7 +48,7 @@ export default function ProdutosPacotesUniformesAddScreen() {
       <Breadcrumb title="Produção / Arte Final" items={BCrumb} />
       <ParentCard title="Arte Final">
         <>
-          <h2 className="text-xl font-bold">Adicionar Novo Pacote de Uniformes</h2>
+          <h2 className="text-xl font-bold">Adicionar Novo Pedido com Arte Final</h2>
           <ArteFinalForm onSubmit={handleAdd} />
         </>
       </ParentCard>
