@@ -12,8 +12,9 @@ import {
     CircularProgress,
 } from "@mui/material";
 import { IconAlertTriangle } from "@tabler/icons-react";
-import { ArteFinal } from "../types";
+import { ArteFinal } from "./types";
 import useFetchUsersByRole from "./useGetUsersByRole";
+import { User } from "../types";
 
 interface AssignDesignerDialogProps {
     openDialogDesinger: boolean;
@@ -26,10 +27,13 @@ const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
     onCloseDialogDesinger,
     row,
 }) => {
-
-    const { users: designers, isLoadingUsers: isLoadingDesigners, errorUsers: errorDesigners } = useFetchUsersByRole("Designer");
-
     const [selectedDesigner, setSelectedDesigner] = useState<string | null>(null);
+    const designers = localStorage.getItem("designers");
+
+    const designerList = designers ? typeof designers === 'string'
+        ? JSON.parse(designers)
+        : designers
+        : [];
 
     const handleAssign = () => {
         // Lógica para atribuir o designer ao pedido
@@ -40,7 +44,7 @@ const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
             const accessToken = localStorage.getItem("accessToken");
             if (!accessToken) throw new Error("Usuário não autenticado.");
 
-            fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/atribuir-designer/${row?.id}`, {
+            fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-designer-change/${row?.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -68,18 +72,8 @@ const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
         <Dialog open={openDialogDesinger} onClose={onCloseDialogDesinger} fullWidth >
             <DialogTitle>Atribuir Designer</DialogTitle>
             <DialogContent sx={{ minHeight: 'fitContent', paddingTop: 2 }}>
-                {/* <FormControl fullWidth>
+                <FormControl fullWidth>
                     <Typography>Selecione um Designer</Typography>
-                    {errorDesigners && (
-                        <Typography color="error">
-                            <IconAlertTriangle /> Erro ao carregar designers {errorDesigners.message}
-                        </Typography>
-                    )}
-                    {isLoadingDesigners && (
-                        <Typography color="secondary">
-                            <CircularProgress /> Carregando designers...
-                        </Typography>
-                    )}
                     <Select
                         sx={{ marginTop: 1, marginBottom: 2 }}
                         value={selectedDesigner}
@@ -87,13 +81,13 @@ const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
                         displayEmpty
                     >
                         <MenuItem value={""}>Sem Designer</MenuItem>
-                        {designers?.map((designer: User) => (
+                        {designerList?.map((designer: User) => (
                             <MenuItem key={designer.id} value={designer.id}>
                                 {designer.id} - {designer.name}
                             </MenuItem>
                         ))}
                     </Select>
-                </FormControl> */}
+                </FormControl>
             </DialogContent>
             <DialogActions>
                 <Button onClick={onCloseDialogDesinger} color="secondary">

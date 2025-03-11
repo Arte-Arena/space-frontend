@@ -40,7 +40,13 @@ interface Material {
   descricao: string;
 }
 
-export type { ArteFinal, Produto, Material };
+interface User{
+  id: number;
+  name: string;
+  role_id: number;
+}
+
+export type { ArteFinal, Produto, Material, User };
 
 
 
