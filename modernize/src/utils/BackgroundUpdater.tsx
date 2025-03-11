@@ -63,7 +63,7 @@ const BackgroundUpdater = () => {
           },
         });
         const materiais = await response.json();
-        localStorage.setItem('materiais', JSON.stringify(materiais));
+        localStorage.setItem('materiais', JSON.stringify(materiais.data));
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
       }
