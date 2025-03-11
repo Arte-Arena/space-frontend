@@ -27,20 +27,18 @@ import Image from "next/image";
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { DateTime } from 'luxon';
-import formatarPDF from '@/utils/formatarPDF';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { IconCopy, IconPlus, IconMinus, IconDeviceFloppy, IconFileTypePdf, IconCreditCard, IconAlertCircle } from '@tabler/icons-react';
+import { IconPlus, IconMinus, IconDeviceFloppy } from '@tabler/icons-react';
 import CustomCheckbox from '@/app/components/forms/theme-elements/CustomCheckbox';
 import InputAdornment from '@mui/material/InputAdornment';
 import ptBR from 'date-fns/locale/pt-BR';
+import BudgetDialog from './BudgetDialog';
 import {
   Button,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogContentText,
   DialogActions,
-  DialogProps,
   Box,
   FormControl,
   Radio,
@@ -249,7 +247,6 @@ const OrcamentoGerarScreen = () => {
   const [productsBrindeList, setProductsBrindeList] = useState<Product[]>([]);
   const [selectedProductBrinde, setSelectedProductBrinde] = useState<Product | null>(null);
   const [openBudget, setOpenBudget] = React.useState(false);
-  const [scroll, setScroll] = React.useState<DialogProps['scroll']>('paper');
   const [orçamentoTexto, setOrçamentoTexto] = useState('');
   const [cep, setCEP] = useState('');
   const [cepError, setCepError] = useState(false);
@@ -284,8 +281,6 @@ const OrcamentoGerarScreen = () => {
   const [previsaoEntrega, setPrevisaoEntrega] = useState<DateTime | null>(null)
   const [checkedOcultaPrevisao, setCheckedOcultaPrevisao] = useState<boolean>(false);
   const descriptionElementRef = React.useRef<HTMLElement>(null);
-  const [openSnackbarCopiarOrcamento, setOpenSnackbarCopiarOrcamento] = useState(false);
-  const [openSnackbarCopiarLinkPagamento, setOpenSnackbarCopiarLinkPagamento] = useState(false);
   const [taxaAntecipaInput, setTaxaAntecipaInput] = useState<number | null>(null);
   const [taxaAntecipa, setTaxaAntecipa] = useState<number | null>(null);
   const [prazoProducaoAntecipado, setPrazoProducaoAntecipado] = useState<number | null>(null);
@@ -297,10 +292,8 @@ const OrcamentoGerarScreen = () => {
   const [percentualDesconto, setPercentualDesconto] = useState<number | null>(null);
   const [valorDesconto, setValorDesconto] = useState<number | null>(null);
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [checkoutLink, setCheckoutLink] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [checkoutValue, setCheckoutValue] = useState<number | null>(null);
-  const [isGeneratingCheckoutLink, setIsGeneratingCheckoutLink] = useState(false);
+  const [orcamentoId, setOrcamentoId] = useState<number | null>(null);
 
   const accessToken = localStorage.getItem('accessToken');
 
@@ -1207,12 +1200,6 @@ const OrcamentoGerarScreen = () => {
     }
   }, [cepError]);
 
-  useEffect(() => {
-    if (!checkoutValue || !totalProductsValue) return;
-    if (checkoutValue >= totalProductsValue) return setCheckoutValue(totalProductsValue);
-    setCheckoutLink(null);
-  }, [checkoutValue, totalProductsValue]);
-
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
@@ -1232,7 +1219,6 @@ const OrcamentoGerarScreen = () => {
 
   const handleCloseBudget = () => {
     setOpenBudget(false);
-    setCheckoutLink(null);
   };
 
   const gerarOrcamento = () => {
@@ -1269,16 +1255,11 @@ const OrcamentoGerarScreen = () => {
     }
 
     productsList.forEach((product) => {
-
       const produtoTotal = product.preco * product.quantidade;
-
-      // Formatação da linha do produto para garantir alinhamento
       const quantidade = `${product.quantidade} un`;
       const nomeProduto = product.nome;
       const precoUnitario = `R$ ${product.preco.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`;
       const totalProduto = `R$ ${produtoTotal.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`;
-
-      // Concatena as informações do produto
       produtosTexto += `${quantidade} ${nomeProduto} ${precoUnitario} (${totalProduto})\n`;
       totalOrçamento += produtoTotal;
     });
@@ -1308,19 +1289,13 @@ const OrcamentoGerarScreen = () => {
     }
 
     productsBrindeList.forEach((product) => {
-
       const produtoTotal = product.preco * product.quantidade;
-
-      // Formatação da linha do produto para garantir alinhamento
       const quantidade = `${product.quantidade} un`;
       const nomeProduto = product.nome;
       const precoUnitario = `R$ ${product.preco.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`;
       const totalProduto = `R$ ${produtoTotal.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`;
-
-      // Concatena as informações do produto
       produtosBrindeTexto += `${quantidade} ${nomeProduto} ${precoUnitario} (${totalProduto})\n`;
     });
-
 
     let precoFreteTexto = '0.00';
     if (precoFrete) {
@@ -1332,11 +1307,6 @@ const OrcamentoGerarScreen = () => {
         }
       }
     }
-
-    // console.log('Testando o estado previsaoEntrega: ', previsaoEntrega);
-
-    console.log('0019');
-    console.log(prazoProducaoAntecipado);
 
     const textoOrcamento = `
 Lista de Produtos:
@@ -1385,9 +1355,9 @@ Orçamento válido somente hoje.
       tipo_desconto: tipoDesconto || null,
       valor_desconto: checkedDesconto && tipoDesconto
         ? tipoDesconto === 'valor'
-          ? valorDesconto ?? 0 // If valorDesconto is null, use 0
+          ? valorDesconto ?? 0
           : tipoDesconto === 'percentual'
-            ? (totalProductsValue ?? 0) * ((percentualDesconto ?? 0) / 100) // If either is null, use 0
+            ? (totalProductsValue ?? 0) * ((percentualDesconto ?? 0) / 100)
             : null
         : null,
       percentual_desconto: percentualDesconto ? parseFloat(percentualDesconto.toFixed(2)) : null,
@@ -1415,7 +1385,8 @@ Orçamento válido somente hoje.
         throw new Error('Erro ao salvar orçamento');
       }
 
-      // console.log('Orçamento salvo com sucesso');
+      const data = await response.json();
+      setOrcamentoId(data.orcamento.id);
     } catch (error) {
       console.error('Erro:', error);
     }
@@ -1426,17 +1397,6 @@ Orçamento válido somente hoje.
       salvarOrcamento();
     }
   }, [orçamentoTexto]);
-
-  const handleCloseSnackbarCopiarOrcamento = () => {
-    setOpenSnackbarCopiarOrcamento(false);
-  }
-
-  const handleCloseSnackbarCopiarLinkPagamento = () => {
-    setOpenSnackbarCopiarLinkPagamento(false);
-  }
-
-  // Definindo a data mínima para amanhã
-  const tomorrow = DateTime.now().plus({ days: 1 });
 
   const handleAntecipa = () => {
     setIsAnticipation(true);
@@ -1457,42 +1417,6 @@ Orçamento válido somente hoje.
   useEffect(() => {
     // console.log('tipoDesconto:', tipoDesconto);
   }, [tipoDesconto]);
-
-  const handleGenerateCheckoutLink = async () => {
-    if (!checkoutValue || checkoutValue <= 0) return;
-    
-    setIsGeneratingCheckoutLink(true);
-    
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/payment/generate-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ valor: checkoutValue }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao gerar link de pagamento');
-      }
-
-      const data = await response.json();
-      setCheckoutLink(data.checkout_link);
-      navigator.clipboard.writeText(data.checkout_link);
-      setOpenSnackbarCopiarLinkPagamento(true);
-    } catch (error) {
-      console.error('Erro ao gerar link de pagamento:', error);
-    } finally {
-      setIsGeneratingCheckoutLink(false);
-    }
-  };
-
-  useEffect(() => {
-    if (totalProductsValue) {
-      setCheckoutValue(totalProductsValue);
-    }
-  }, [totalProductsValue]);
 
   return (
     <PageContainer title="Orçamento / Gerar" description="Gerar Orçamento da Arte Arena">
@@ -2699,143 +2623,19 @@ Orçamento válido somente hoje.
             </Button>
           </div>
 
-          <Dialog
+          <BudgetDialog
             open={openBudget}
             onClose={handleCloseBudget}
-            scroll={scroll}
-            maxWidth="lg"
-            fullWidth
-          >
-            <DialogTitle id="scroll-dialog-title">Orçamento Arte Arena</DialogTitle>
-            <DialogContent dividers={scroll === 'paper'}>
-              <DialogContentText
-                ref={descriptionElementRef}
-                tabIndex={-1}
-              >
-                <pre>{orçamentoTexto}</pre>
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <NumericFormat
-                  value={checkoutValue}
-                  onValueChange={(values) => {
-                    const newValue = values.floatValue ?? 0;
-                    if (!totalProductsValue) return setCheckoutValue(0);
-                    setCheckoutValue(newValue);
-                  }}
-                  thousandSeparator="."
-                  decimalSeparator=","
-                  prefix="R$ "
-                  decimalScale={2}
-                  fixedDecimalScale
-                  allowNegative={false}
-                  customInput={CustomTextField}
-                  size="small"
-                  style={{ width: '150px' }}
-                />
-                
-                {!checkoutLink ? (
-                  <Button
-                    variant="contained"
-                    onClick={handleGenerateCheckoutLink}
-                    disabled={isGeneratingCheckoutLink || !checkoutValue || checkoutValue <= 0}
-                    startIcon={isGeneratingCheckoutLink ? <CircularProgress size={20} /> : <IconCreditCard />}
-                  >
-                    Gerar link de checkout
-                  </Button>
-                ) : (
-                  <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-                    <IconButton onClick={() => {
-                      navigator.clipboard.writeText(checkoutLink);
-                      setOpenSnackbarCopiarLinkPagamento(false);
-                      setTimeout(() => setOpenSnackbarCopiarLinkPagamento(true), 10);
-                    }}>
-                      <IconCopy />
-                      <Typography variant="body2">Copiar link do checkout</Typography>
-                    </IconButton>
-                    {openSnackbarCopiarLinkPagamento && (
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          right: '100%',
-                          backgroundColor: 'success.main',
-                          color: 'white',
-                          py: 0.5,
-                          px: 1.5,
-                          borderRadius: 1,
-                          marginRight: '10px',
-                          whiteSpace: 'nowrap',
-                          fontSize: '0.8rem',
-                          boxShadow: 2,
-                          animation: 'fadeIn 0.3s, fadeOut 0.5s 1.5s forwards',
-                          '@keyframes fadeIn': {
-                            '0%': { opacity: 0 },
-                            '100%': { opacity: 1 },
-                          },
-                          '@keyframes fadeOut': {
-                            '0%': { opacity: 1 },
-                            '100%': { opacity: 0 },
-                          }
-                        }}
-                      >
-                        Link copiado!
-                      </Box>
-                    )}
-                  </Box>
-                )}
-              </Box>
-              <IconButton onClick={() => { navigator.clipboard.writeText(orçamentoTexto); setOpenSnackbarCopiarOrcamento(true); }}>
-                <IconCopy />
-                <Typography variant="body2">Copiar Orçamento</Typography>
-              </IconButton>
-
-              <IconButton
-                onClick={() => {
-
-                  const htmlContent = `
-                  <style>
-                    body {
-                      color: black !important; /* Garante que o texto seja preto */
-                      font-family: Arial, sans-serif;
-                      font-size: 12px;
-                    }
-                    p {
-                      margin: 0;
-                    }
-                  </style>
-                  <div>
-                    <p><pre>${orçamentoTexto}</pre></p>
-                  </div>
-                `;
-
-                  formatarPDF(htmlContent, address); // Passa o HTML com a cor ajustada
-                }}
-              >
-                <IconFileTypePdf />
-                <Typography variant="body2">Exportar PDF</Typography>
-              </IconButton>
-
-              <Button autoFocus onClick={handleCloseBudget} color="primary">
-                Fechar
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          <Snackbar
-            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            open={openSnackbarCopiarOrcamento}
-            onClose={handleCloseSnackbarCopiarOrcamento}
-            key={'orcamento' + 'copiado'}
-          >
-            <Alert onClose={handleCloseSnackbarCopiarOrcamento} severity="success" sx={{ width: '100%' }}>
-              Orçamento copiado com sucesso!
-            </Alert>
-          </Snackbar>
+            orcamentoTexto={orçamentoTexto}
+            address={address}
+            totalProductsValue={totalProductsValue}
+            accessToken={accessToken}
+            orcamentoId={orcamentoId}
+          />
 
         </>
       </ParentCard>
-    </PageContainer >
+    </PageContainer>
   );
 };
 
