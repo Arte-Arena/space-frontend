@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { ArteFinal, Material, Produto } from './types';
+import { ArteFinal, Material, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
 import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
@@ -47,13 +47,14 @@ const ArteFinalScreen = () => {
     pageSize: 5,
     page: 0,
   });
-  
+
   const router = useRouter();
 
   const accessToken = localStorage.getItem('accessToken');
+  const designers = localStorage.getItem('designers');
 
 
-  const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch} = useQuery<ApiResponsePedidosArteFinal>({
+  const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
     queryFn: () =>
       fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final`, {
@@ -65,19 +66,20 @@ const ArteFinalScreen = () => {
       }).then((res) => res.json()),
   });
 
-useEffect(() => {
-  if (dataPedidos && dataPedidos.data) { // Verificação adicional
-    setAllPedidos(dataPedidos.data);
-  }
-}, [dataPedidos]);
+  useEffect(() => {
+    if (dataPedidos && dataPedidos.data) { // Verificação adicional
+      setAllPedidos(dataPedidos.data);
+    }
+  }, [dataPedidos]);
 
-  // console.log(pedidos);
+  console.log(allPedidos);
 
   useEffect(() => {
-  if (openDialogDesinger) {
-    refetch();
-  }
-}, [openDialogDesinger]);
+    if (!openDialogDesinger) {
+      refetch(); // Chama refetch quando o dialog é fechado
+    }
+  }, [openDialogDesinger, refetch]);
+
 
   // handles
 
@@ -152,6 +154,7 @@ useEffect(() => {
   }, [selectedRowSidePanel]);
 
   console.log(allPedidos);
+  console.log(designers);
 
   return (
     <PageContainer title="Produção / Arte - Final" description="Tela de Produção da Arte - Final | Arte Arena">
@@ -191,17 +194,59 @@ useEffect(() => {
                     {/* <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell> */}
                     <TableCell align='center' sx={{ width: '10%' }}>Desinger</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Prioridade</TableCell>
+                    <TableCell align='center' sx={{ width: '10%' }}>Tipo</TableCell>
+                    <TableCell align='center' sx={{ width: '10%' }}>Status</TableCell>
                     <TableCell align='center' sx={{ width: '20%' }}>Ações</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                {Array.isArray(allPedidos) && allPedidos.map((row) => {
+                  {Array.isArray(allPedidos) && allPedidos.map((row) => {
                     const listaProdutos: Produto[] = row.lista_produtos
                       ? typeof row.lista_produtos === 'string'
                         ? JSON.parse(row.lista_produtos)
                         : row.lista_produtos
                       : [];
+
+                    // tem que definir aqui o que cada status vai ser em cada row e cada tipo vai ser em cada row.
+                    const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
+                    const usersMap = new Map(
+                      Array.isArray(parsedDesigners)
+                        ? parsedDesigners.map(designer => [designer.id, designer.name])
+                        : []
+                    );
+
+                    const getUserNameById = (id: number | null | undefined) => {
+                      return id && usersMap.has(id) ? usersMap.get(id) : "Desconhecido";
+                    };
+                    const designerNome = getUserNameById(row.designer_id);
+
+                    const pedidoTipos = {
+                      1: 'Prazo normal',
+                      2: 'Antecipação',
+                      3: 'Faturado',
+                      4: 'Metade/Metade',
+                      5: 'Amostra',
+                    } as const;
+
+                    const pedidoStatus = {
+                      1: { nome: 'Pendente', fila: 'D' },
+                      2: { nome: 'Em andamento', fila: 'D' },
+                      3: { nome: 'Arte OK', fila: 'D' },
+                      4: { nome: 'Em espera', fila: 'D' },
+                      5: { nome: 'Cor teste', fila: 'D' },
+                      8: { nome: 'Pendente', fila: 'I' },
+                      9: { nome: 'Processando', fila: 'I' },
+                      10: { nome: 'Renderizando', fila: 'I' },
+                      11: { nome: 'Impresso', fila: 'I' },
+                      12: { nome: 'Em Impressão', fila: 'I' },
+                      13: { nome: 'Separação', fila: 'I' },
+                      14: { nome: 'Em Transporte', fila: 'E' },
+                      15: { nome: 'Entregue', fila: 'E' },
+                    } as const;
+
+                    const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
+                    const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
+
 
                     return (
                       <>
@@ -232,11 +277,13 @@ useEffect(() => {
                           </TableCell>
 
                           {/* <TableCell align='center'>{Number(row.medidaLinear) ?? 0}</TableCell> */}
-                          <TableCell align='center'>{Number(row.designer) ?? 'Não Atribuido'}</TableCell>
+                          <TableCell align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
                           {/* <TableCell align='center'>{row.situacao ?? ''}</TableCell> */}
 
                           <TableCell align='center'>{row.observacoes ?? ''}</TableCell>
-                          <TableCell align='center'>{row.prioridade ?? 'Antecipação'}</TableCell>
+                          <TableCell align='center'>{tipo ?? 'null'}</TableCell>
+                          <TableCell align='center'>{status.nome ?? 'null'}</TableCell>
+
 
                           <TableCell align='center'>
                             <Tooltip title="Ver Detalhes">
@@ -352,7 +399,7 @@ useEffect(() => {
             </TableContainer>
           )}
           {selectedRowDesinger !== null && (
-            <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} />
+            <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} refetch={refetch}/>
           )}
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
         </>
