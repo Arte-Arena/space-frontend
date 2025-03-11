@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Dialog,
     DialogTitle,
@@ -9,25 +9,30 @@ import {
     Select,
     FormControl,
     Typography,
-    CircularProgress,
 } from "@mui/material";
-import { IconAlertTriangle } from "@tabler/icons-react";
 import { ArteFinal } from "./types";
-import useFetchUsersByRole from "./useGetUsersByRole";
 import { User } from "../types";
+import { useRouter } from 'next/navigation';
 
 interface AssignDesignerDialogProps {
     openDialogDesinger: boolean;
     onCloseDialogDesinger: () => void;
     row: ArteFinal | null;
+    refetch: () => void;
+
 }
+
+
 
 const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
     openDialogDesinger,
     onCloseDialogDesinger,
     row,
+    refetch
 }) => {
     const [selectedDesigner, setSelectedDesigner] = useState<string | null>(null);
+    const router = useRouter();
+
     const designers = localStorage.getItem("designers");
 
     const designerList = designers ? typeof designers === 'string'
@@ -36,35 +41,41 @@ const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
         : [];
 
     const handleAssign = () => {
-        // Lógica para atribuir o designer ao pedido
-        console.log(`Row ID: ${row?.id}, Designer: ${selectedDesigner ?? "Sem Designer"}`);
-
-        if (row?.id !== null || row?.id !== undefined) {
-            // fazer a chamada para a API para atribuir o designer ao pedido
-            const accessToken = localStorage.getItem("accessToken");
-            if (!accessToken) throw new Error("Usuário não autenticado.");
-
-            fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-designer-change/${row?.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({ designer_id: selectedDesigner }),
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erro ao atribuir designer');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Designer atribuído com sucesso:', data);
-                })
-                .catch(error => {
-                    console.error('Erro:', error);
-                });
+        if (!row?.id) {
+            console.error("ID do pedido não encontrado");
+            return;
         }
+
+        // Chamada para a API para atribuir o designer ao pedido
+        const accessToken = localStorage.getItem("accessToken");
+        if (!accessToken) {
+            console.error("Usuário não autenticado");
+            return;
+        }
+
+        fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-designer-change/${row.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({ designer_id: selectedDesigner }),
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao atribuir designer');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Designer atribuído com sucesso:', data);
+                refetch();
+                router.refresh();  // Atualiza os dados da página
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+            });
+
         onCloseDialogDesinger();
     };
 
