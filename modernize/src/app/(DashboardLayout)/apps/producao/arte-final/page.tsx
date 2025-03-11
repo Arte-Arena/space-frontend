@@ -31,13 +31,13 @@ import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconPrinter } from '@tabler/icons-react';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
-import AssignDesignerDialog from './components/desingerDialog';
+import AssignDesignerDialog from './components/designerDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
-  const [selectedRowSidePanel, setSelectedRowIdSidePanel] = useState<ArteFinal | null>(null);
+  const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
   const [openDialogDesinger, setOpenDialogDesinger] = useState(false);
   const [selectedRowDesinger, setSelectedRowDesinger] = useState<ArteFinal | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -114,16 +114,12 @@ const ArteFinalScreen = () => {
 
   const handleAtribuirDesigner = (row: ArteFinal) => {
     setSelectedRowDesinger(row);
-    if (selectedRowDesinger !== null) {
-      setOpenDialogDesinger(true);
-    }
+    setOpenDialogDesinger(true);
   };
 
   const handleVerDetalhes = (row: ArteFinal) => {
-    setSelectedRowIdSidePanel(row);
-    if (selectedRowDesinger !== null) {
-      setOpenDrawer(true);
-    }
+    setSelectedRowSidePanel(row);
+    setOpenDrawer(true);
   };
 
   const handleEnviarImpressora = (row: ArteFinal) => {
@@ -153,8 +149,8 @@ const ArteFinalScreen = () => {
     console.log("📌 Estado atualizado - selectedRowIdSidePanel:", selectedRowSidePanel);
   }, [selectedRowSidePanel]);
 
-  console.log(allPedidos);
-  console.log(designers);
+  // console.log(allPedidos);
+  // console.log(designers);
 
   return (
     <PageContainer title="Produção / Arte - Final" description="Tela de Produção da Arte - Final | Arte Arena">
