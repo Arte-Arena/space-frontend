@@ -1,12 +1,13 @@
 'use client';
 import { useState, useEffect } from "react";
-import { ArteFinal, Produto, Material } from './types';
+import { ArteFinal, Produto } from './types';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import getBrazilTime from "@/utils/brazilTime";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { subDays } from 'date-fns';
 import {
   Box,
   Button,
@@ -30,7 +31,6 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { IconPlus, IconMinus } from '@tabler/icons-react';
 
-
 interface ArteFinalFormProps {
   initialData?: ArteFinal;
   onSubmit?: (data: ArteFinal) => void;
@@ -40,8 +40,8 @@ interface ArteFinalFormProps {
 export default function ArteFinalForm({ initialData, onSubmit, readOnly = false }: ArteFinalFormProps) {
   const [formData, setFormData] = useState<ArteFinal>({
     id: undefined,
-    numero_pedido: 0,
-    data_entrega: getBrazilTime(),
+    numero_pedido: undefined,
+    data_entrega: null,
     prazo_arte_final: 0,
     prazo_confeccao: 0,
     lista_produtos: [],
@@ -54,14 +54,13 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     created_at: new Date(),
     updated_at: new Date(),
   });
-
   const [allProducts, setAllProducts] = useState<Produto[]>([]);
   const [productNames, setProductNames] = useState<string[] | null>([]);
   const [productsList, setProductsList] = useState<Produto[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Produto | null>(null);
   const [countProduct, setCountProduct] = useState<number | null>(0);
-  const [allMaterials, setAllMaterials] = useState<Material[]>([]);
-  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
+  const [allMaterials, setAllMaterials] = useState<string[]>([]);
+  const [selectedMaterial, setSelectedMaterial] = useState<"" | null>(null);
   const [allDesigners, setAllDesigners] = useState<string[]>([]);
   const [allStatus, setAllStatus] = useState<string[]>([]);
   const [allTiposDePedido, setAllTiposDePedido] = useState<string[]>([]);
@@ -71,30 +70,15 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
   const designers = localStorage.getItem('designers');
 
   useEffect(() => {
-    if (materiais) {
-      console.log(materiais);
-      const materiaisArray = JSON.parse(materiais);
-      if (Array.isArray(materiaisArray)) {
-        setAllMaterials(materiaisArray);
-      } else {
-        console.error('Dados inválidos recebidos da API:', materiaisArray);
-      }
-    } else {
-      console.warn('Os dados de materiais não foram encontrados.');
-    }
-  }, [materiais]);
-
-  useEffect(() => {
     if (dataProducts) {
       const dataProductsArray = JSON.parse(dataProducts);
-      // console.log('productData:', dataProductsArray);
       if (Array.isArray(dataProductsArray)) {
         const transformedProducts = dataProductsArray.map((item: Produto) => ({
           id: item.id,
           nome: item.nome,
           esboco: "",
           quantidade: 1,
-          materiais: [],
+          material: "",
           medida_linear: 0,
           preco: item.preco,
           prazo: (item as any).dias_preparacao,
@@ -116,23 +100,28 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
 
   useEffect(() => {
     if (materiais) {
-      const materiaisArray = JSON.parse(materiais);
-      if (materiaisArray && materiaisArray.data && Array.isArray(materiaisArray.data)) {
-        setAllMaterials(materiaisArray.data);
-      } else {
-        console.error('Dados inválidos recebidos da API:', materiaisArray);
+      try {
+        const materiaisArray = JSON.parse(materiais);
+        if (Array.isArray(materiaisArray)) {
+          const materialNames = materiaisArray.map((material) => material.descricao);
+          setAllMaterials(materialNames);
+          console.log("materialNames", materialNames)
+        } else {
+          console.error('Dados inválidos recebidos de materiais:', materiaisArray);
+        }
+      } catch (error) {
+        console.error('Erro ao analisar JSON de materiais:', error);
       }
     } else {
       console.warn('Os dados de materiais não foram encontrados.');
     }
-  }, [materiais]);
+  }, [designers]);
 
   useEffect(() => {
     if (designers) {
       try {
         const designersArray = JSON.parse(designers);
         if (Array.isArray(designersArray)) {
-          // Extract only the names from the designer objects
           const designerNames = designersArray.map((designer) => designer.name);
           setAllDesigners(designerNames);
         } else {
@@ -237,7 +226,18 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     if (readOnly) return;
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
   };
-
+  
+  const handleMaterialChange = (
+    event: SelectChangeEvent<string>,
+    product: Produto
+  ) => {
+    const updatedProduct = {
+      ...product,
+      material: event.target.value
+    };
+    atualizarProduto(updatedProduct);
+  };
+  
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (onSubmit) onSubmit(formData);
@@ -255,27 +255,40 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
           value={formData.numero_pedido}
           onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const { name, value } = e.target;
-            setFormData((prev) => ({ ...prev, [name]: value }));
+            const newValue = Math.max(0, parseFloat(value));
+            setFormData((prev) => ({ ...prev, [name]: newValue.toString() }));
           }}
           placeholder="Numero do pedido"
           variant="outlined"
           fullWidth
           readOnly={readOnly}
+          disabled={!initialData}
+          inputProps={{ min: 0 }}
+          sx={{
+            '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
+              WebkitAppearance: 'none',
+              margin: 0,
+            },
+            '& input[type=number]': {
+              MozAppearance: 'textfield',
+            },
+          }}
         />
       </Box>
 
       <Box sx={{ mt: 5 }}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DatePicker
-            label="Data Prevista"
+            label="Data de Entrega Prevista"
             value={formData.data_entrega}
             onChange={(newValue) => {
               setFormData((prev) => ({
                 ...prev,
-                data_prevista: newValue || getBrazilTime,
+                data_entrega: newValue,
               }));
             }}
-            inputFormat="dd/MM/yyyy" // Formato desejado
+            inputFormat="dd/MM/yyyy"
+            minDate={subDays(getBrazilTime(), 1)}
             renderInput={(params) => (
               <CustomTextField
                 {...params}
@@ -291,6 +304,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
         <Autocomplete
           freeSolo
           id="produto"
+          disabled={!formData.data_entrega}
           options={productNames?.length ? productNames : []}
           onChange={(event, selectedValue) => {
             if (selectedValue) {
@@ -310,6 +324,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
               margin="normal"
               variant="outlined"
               fullWidth
+              helperText={formData.data_entrega ? '' : 'Insira a data de entrega para habilitar este campo. Resete o campo para adicionar o mesmo produto.'}
             />
           )}
         />
@@ -363,7 +378,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
                         display: 'none',
                       },
                       '& input[type=number]': {
-                        MozAppearance: 'textfield', // Para Firefox
+                        MozAppearance: 'textfield',
                       },
                     }}
                   />
@@ -389,36 +404,25 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
                         display: 'none',
                       },
                       '& input[type=number]': {
-                        MozAppearance: 'textfield', // Para Firefox
+                        MozAppearance: 'textfield',
                       },
                     }}
                   />
                 </TableCell>
 
                 <TableCell align="right">
-                  <FormControl sx={{ m: 1, width: 200 }}>
-                    <InputLabel id="multiple-checkbox-label">Materiais</InputLabel>
+
+                  <FormControl fullWidth sx={{ minWidth: '100px' }}>
+                    <InputLabel id="material-select-label">Material</InputLabel>
                     <Select
-                      labelId="multiple-checkbox-label"
-                      id="multiple-checkbox"
-                      multiple
-                      value={product.materiais ? product.materiais.map(m => m.id) : []}
-                      onChange={(event) => {
-                        const selectedMaterialIds = event.target.value as number[];
-                        const selectedMaterials = allMaterials.filter(m => selectedMaterialIds.includes(m.id));
-                        const updatedProduct = { ...product, materiais: selectedMaterials };
-                        atualizarProduto(updatedProduct);
-                      }}
-                      renderValue={(selected) => {
-                        if (!selected) return "";
-                        const selectedMaterials = allMaterials.filter(m => selected.includes(m.id));
-                        return selectedMaterials.map(m => m.descricao).join(', ');
-                      }}
+                      labelId="material-select-label"
+                      name="material"
+                      value={product.material || ''}
+                      onChange={(e) => handleMaterialChange(e, product)}
                     >
                       {allMaterials.map((material) => (
-                        <MenuItem key={material.id} value={material.id}>
-                          <Checkbox checked={product.materiais ? product.materiais.some(m => m.id === material.id) : false} />
-                          <ListItemText primary={material.descricao} />
+                        <MenuItem key={material} value={material}>
+                          <ListItemText primary={material} />
                         </MenuItem>
                       ))}
                     </Select>
@@ -427,7 +431,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
 
                 <TableCell align="right">
                   <CustomTextField
-                    value={product.medida_linear}
+                    value=""
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                       const newProductValue = Math.max(0, +event.target.value);
                       const updatedProduct = { ...product, medida_linear: newProductValue };
@@ -445,7 +449,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
                         display: 'none',
                       },
                       '& input[type=number]': {
-                        MozAppearance: 'textfield', // Para Firefox
+                        MozAppearance: 'textfield',
                       },
                     }}
                   />
@@ -456,7 +460,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
                     value={product.prazo}
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                       const newProductValue = Math.max(0, +event.target.value);
-                      const updatedProduct = { ...product, medida_linear: newProductValue };
+                      const updatedProduct = { ...product, prazo_confeccao: newProductValue };
                       atualizarProduto(updatedProduct);
                     }}
                     type="number"
@@ -471,7 +475,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
                         display: 'none',
                       },
                       '& input[type=number]': {
-                        MozAppearance: 'textfield', // Para Firefox
+                        MozAppearance: 'textfield',
                       },
                     }}
                   />
@@ -479,10 +483,10 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
 
                 <TableCell align="right">
                   <CustomTextField
-                    value={product.prazo}
+                    value=""
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                       const newProductValue = Math.max(0, +event.target.value);
-                      const updatedProduct = { ...product, medida_linear: newProductValue };
+                      const updatedProduct = { ...product, prazo_arte: newProductValue };
                       atualizarProduto(updatedProduct);
                     }}
                     type="number"
@@ -497,7 +501,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
                         display: 'none',
                       },
                       '& input[type=number]': {
-                        MozAppearance: 'textfield', // Para Firefox
+                        MozAppearance: 'textfield',
                       },
                     }}
                   />

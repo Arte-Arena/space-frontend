@@ -2,8 +2,8 @@
 interface ArteFinal {
   id?: number;
   user_id?: number | null;
-  numero_pedido: Number;
-  data_entrega: Date;
+  numero_pedido: Number | undefined;
+  data_entrega: Date | null;
   prazo_arte_final: Number;
   prazo_confeccao: Number;
   lista_produtos: Produto[];
@@ -29,15 +29,10 @@ interface Produto {
   nome: string;
   esboco: string;
   quantidade: number;
-  materiais: Material[];
+  material: string | undefined;
   medida_linear: number;
   preco: number;
   prazo: number;
-}
-
-interface Material {
-  id: number;
-  descricao: string;
 }
 
 interface User{
@@ -46,7 +41,7 @@ interface User{
   role_id: number;
 }
 
-export type { ArteFinal, Produto, Material, User };
+export type { ArteFinal, Produto, User };
 
 
 
