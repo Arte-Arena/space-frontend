@@ -46,22 +46,6 @@ export default function EditArteFinalScreen() {
 
   if (!pedidoArteFinal) return <p>Carregando...</p>;
 
-  async function handleUpdate(data: ArteFinal) {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedido-arte-final`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(data),
-    });
-    if (response.ok) {
-      console.log("Pacote atualizado:", data);
-    } else {
-      console.error("Erro ao atualizar pacote:", await response.text());
-    }
-  }
-
 
   const BCrumb = [
     {
@@ -78,7 +62,7 @@ export default function EditArteFinalScreen() {
     },
   ];
 
-  console.log(pedidoArteFinal);
+  console.log('pedidoArteFinal', pedidoArteFinal);
 
   return (
     <PageContainer title="Produção / Arte Final" description="Arte Final da Arte Arena">
@@ -86,7 +70,7 @@ export default function EditArteFinalScreen() {
       <ParentCard title="Arte Final">
         <>
           <h2 className="text-xl font-bold">Detalhes do Produto</h2>
-          <ArteFinalForm initialData={pedidoArteFinal} onSubmit={handleUpdate} />
+          <ArteFinalForm initialData={pedidoArteFinal} />
         </>
       </ParentCard>
     </PageContainer>

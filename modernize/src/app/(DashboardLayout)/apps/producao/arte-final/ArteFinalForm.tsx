@@ -39,8 +39,8 @@ interface ArteFinalFormProps {
 
 export default function ArteFinalForm({ initialData, onSubmit, readOnly = false }: ArteFinalFormProps) {
   const [formData, setFormData] = useState<ArteFinal>({
-    id: undefined,
-    numero_pedido: undefined,
+    id: 0,
+    numero_pedido: 0,
     data_prevista: null,
     prazo_arte_final: 0,
     prazo_confeccao: 0,
@@ -51,6 +51,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     designer_id: 0,
     pedido_status_id: 0,
     pedido_tipo_id: 0,
+    vendedor_id: 0,
     created_at: new Date(),
     updated_at: new Date(),
   });
@@ -64,12 +65,14 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
   const [allDesigners, setAllDesigners] = useState<User[]>([]);
   const [allStatusPedido, setAllStatusPedido] = useState<PedidoStatus[]>([]);
   const [allTiposDePedido, setAllTiposDePedido] = useState<PedidoTipo[]>([]);
+  const [allVendedores, setAllVendedores] = useState<User[]>([]);
 
   const dataProducts = localStorage.getItem('produtosConsolidadosOrcamento');
   const materiais = localStorage.getItem('materiais');
   const designers = localStorage.getItem('designers');
   const statusPedidos = localStorage.getItem('pedidosStatus');
   const tiposPedidos = localStorage.getItem('pedidosTipos');
+  const vendedores = localStorage.getItem('vendedores');
 
   useEffect(() => {
     if (dataProducts) {
@@ -107,7 +110,6 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
         if (Array.isArray(materiaisArray)) {
           const materialNames = materiaisArray.map((material) => material.descricao);
           setAllMaterials(materialNames);
-          console.log("materialNames", materialNames)
         } else {
           console.error('Dados inválidos recebidos de materiais:', materiaisArray);
         }
@@ -124,7 +126,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
       try {
         const designersArray = JSON.parse(designers);
         if (Array.isArray(designersArray)) {
-          setAllDesigners(designersArray); // Store the objects directly
+          setAllDesigners(designersArray);
         } else {
           console.error('Dados inválidos recebidos de designers:', designersArray);
         }
@@ -135,6 +137,23 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
       console.warn('Os dados de designers não foram encontrados.');
     }
   }, [designers]);
+
+  useEffect(() => {
+    if (vendedores) {
+      try {
+        const vendedoresArray = JSON.parse(vendedores);
+        if (Array.isArray(vendedoresArray)) {
+          setAllVendedores(vendedoresArray);
+        } else {
+          console.error('Dados inválidos recebidos de designers:', vendedoresArray);
+        }
+      } catch (error) {
+        console.error('Erro ao analisar JSON de designers:', error);
+      }
+    } else {
+      console.warn('Os dados de designers não foram encontrados.');
+    }
+  }, [vendedores]);
 
   useEffect(() => {
     if (statusPedidos) {
@@ -161,6 +180,14 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
   useEffect(() => {
     if (initialData) {
       setFormData((prev) => ({ ...prev, ...initialData }));
+  
+      const initialProductsList = initialData.lista_produtos.map((product, index) => ({
+        ...product,
+        uid: Number(`${product.id}${index}`),
+        esboco: product.esboco || "",
+      }));
+  
+      setProductsList(initialProductsList);
     }
   }, [initialData]);
 
@@ -224,15 +251,8 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
   useEffect(() => {
     if (selectedProduct) {
       adicionarProduto(selectedProduct);
-      console.log('selectedProduct:', selectedProduct);
     }
   }, [selectedProduct]);
-
-  useEffect(() => {
-    if (productsList) {
-      console.log('productsList:', productsList);
-    }
-  }, [productsList]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     if (readOnly) return;
@@ -693,10 +713,26 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
         </CustomSelect>
       </FormControl>
 
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <InputLabel>Vendedor</InputLabel>
+        <CustomSelect
+          value={String(formData.vendedor_id)}
+          onChange={(e: SelectChangeEvent<string>) => handleSelectChange(e, 'vendedor_id')}
+          fullWidth
+          readOnly={readOnly}
+        >
+          {allVendedores.map((tipo) => (
+            <MenuItem key={tipo.id} value={tipo.id}>
+              {tipo.name}
+            </MenuItem>
+          ))}
+        </CustomSelect>
+      </FormControl>
+
       {!readOnly && (
         <Box sx={{ mt: 5 }}>
           <Button type="submit" variant="contained" color="primary">
-            {initialData ? "Salvar Alterações" : "Cadastrar Produto"}
+            {initialData ? "Salvar Alterações" : "Cadastrar Pedido"}
           </Button>
         </Box>
       )}

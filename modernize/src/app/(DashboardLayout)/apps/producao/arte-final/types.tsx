@@ -16,6 +16,7 @@ interface ArteFinal {
   url_trello?: string | null;
   prioridade?: string | null;
   orcamento_id?: number | null;
+  vendedor_id?: number | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -40,7 +41,8 @@ interface User{
 
 interface PedidoStatus {
   id: number;
-  nome: string;
+  nome?: string;
+  name?: string;
   fila: string;
 }
 
