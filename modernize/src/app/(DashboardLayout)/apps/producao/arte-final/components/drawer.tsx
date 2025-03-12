@@ -103,10 +103,10 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
               </span>
             </Typography>
             <Typography>
-              <strong>Prazo de Arte:</strong> <span style={{ fontWeight: 500 }}>{Number(row?.prazo_arte_final)}</span>
+            <strong>Prazo de Arte:</strong> <span style={{ fontWeight: 500 }}>{row?.prazo_arte_final ? format(new Date(row?.prazo_arte_final), "dd/MM/yyyy") : "Data inválida"}</span>
             </Typography>
             <Typography>
-              <strong>Prazo de Confecção:</strong> <span style={{ fontWeight: 500 }}>{Number(row?.prazo_confeccao)}</span>
+            <strong>Prazo de Confecção:</strong> <span style={{ fontWeight: 500 }}>{row?.prazo_confeccao ? format(new Date(row?.prazo_confeccao), "dd/MM/yyyy") : "Data inválida"}</span>
             </Typography>
 
           </CardContent>

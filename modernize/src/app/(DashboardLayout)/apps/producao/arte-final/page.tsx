@@ -33,6 +33,8 @@ import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import AssignDesignerDialog from './components/designerDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
+import { format } from 'date-fns';
+import trocarStatusPedido from './components/useTrocarStatusPedido';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -104,7 +106,12 @@ const ArteFinalScreen = () => {
   };
 
   const handleLinkTrello = (row: ArteFinal) => {
-    console.log("Deletar pedido", row);
+    if (row.url_trello) {
+      window.open(row.url_trello, '_blank');
+    } else {
+      alert('URL do Trello não disponível');
+      console.warn('URL do Trello não disponível');
+    }
   };
   const handleListaUniformes = (row: ArteFinal) => {
     // provavelmente tem que ver validar se existe uma lista de uniformes nesse pedido
@@ -122,8 +129,14 @@ const ArteFinalScreen = () => {
     setOpenDrawer(true);
   };
 
-  const handleEnviarImpressora = (row: ArteFinal) => {
-    console.log("handleEnviarImpressora pedido", row);
+  const handleEnviarImpressora = async (row: ArteFinal) => {
+    const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
+    if (sucesso) {
+      console.log("Pedido enviado com sucesso!");
+      alert('sucesso');
+    } else {
+      console.log("Falha ao enviar pedido.");
+    }
   };
 
   // const handleToggleRow = (id: number) => {
@@ -246,9 +259,19 @@ const ArteFinalScreen = () => {
 
                     return (
                       <>
+                        {/* colocar as condições de data e de tipos de status e suas cores */}
                         <TableRow
                           key={row.id}
-                          sx={{ backgroundColor: row.prioridade === 'Antecipação' || row.prioridade === null ? '#710f17' : 'inherit', }}
+                          sx={{
+                            backgroundColor:
+                              row.prioridade === 'Antecipação'
+                                ? '#710f17'
+                                : row.prioridade === 'Urgente'
+                                  ? '#ff0000'
+                                  : row.prioridade === 'Normal'
+                                    ? '#ffa500'
+                                    : 'inherit',
+                          }}
                         >
                           {/* <TableCell>
                             <IconButton
@@ -269,7 +292,7 @@ const ArteFinalScreen = () => {
                           </TableCell>
 
                           <TableCell align='center'>
-                            {Number(row.prazo_arte_final)}
+                            {row?.prazo_arte_final ? format(new Date(row?.prazo_arte_final), "dd/MM/yyyy") : "Data inválida"}
                           </TableCell>
 
                           {/* <TableCell align='center'>{Number(row.medidaLinear) ?? 0}</TableCell> */}
@@ -278,7 +301,7 @@ const ArteFinalScreen = () => {
 
                           <TableCell align='center'>{row.observacoes ?? ''}</TableCell>
                           <TableCell align='center'>{tipo ?? 'null'}</TableCell>
-                          <TableCell align='center'>{status.nome ?? 'null'}</TableCell>
+                          <TableCell align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell>
 
 
                           <TableCell align='center'>
@@ -395,7 +418,7 @@ const ArteFinalScreen = () => {
             </TableContainer>
           )}
           {selectedRowDesinger !== null && (
-            <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} refetch={refetch}/>
+            <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} refetch={refetch} />
           )}
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
         </>
