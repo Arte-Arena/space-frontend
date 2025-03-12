@@ -100,7 +100,31 @@ const BackgroundUpdater = () => {
     const intervalId = setInterval(fetchDesigners, 900000);
     return () => clearInterval(intervalId);
   }, []);
-  
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    const fetchVendedores = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/user-role/get-users-by-role?role=Comercial`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const vendedores = await response.json();
+        localStorage.setItem('vendedores', JSON.stringify(vendedores));
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    };
+
+    fetchVendedores();
+
+    const intervalId = setInterval(fetchVendedores, 900000);
+    return () => clearInterval(intervalId);
+  }, []);
+
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
     const fetchDataPedidoStatus = async () => {
