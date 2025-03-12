@@ -643,13 +643,8 @@ const OrcamentoEditarIdScreen = () => {
   }
 
   const today = DateTime.fromJSDate(getBrazilTime());
-
-  // console.log('Today: ' + today);
   const mesAtual = today.month;
   const anoAtual = today.year;
-
-  // console.log('mesAtual', mesAtual);
-  // console.log('anoAtual', anoAtual);
 
   const { isFetching: isFetchingFeriados, error: errorFeriados, data: dataFeriados } = useQuery<ApiResponseFeriados>({
     queryKey: ['feriadosData'], // Chave da query

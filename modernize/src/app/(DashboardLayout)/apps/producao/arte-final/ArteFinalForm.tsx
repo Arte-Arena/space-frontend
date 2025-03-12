@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from "react";
-import { ArteFinal, Produto } from './types';
+import { ArteFinal, Produto, PedidoStatus, PedidoTipo, User } from './types';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import getBrazilTime from "@/utils/brazilTime";
@@ -25,11 +25,11 @@ import {
   TableBody,
   Paper,
   IconButton,
-  Select,
-  Checkbox,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { IconPlus, IconMinus } from '@tabler/icons-react';
+import { calcularDataFuturaDiasUteis, calcDiasUteisEntreDatas } from '@/utils/calcDiasUteis';
+import { DateTime } from 'luxon';
 
 interface ArteFinalFormProps {
   initialData?: ArteFinal;
@@ -45,29 +45,31 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     prazo_arte_final: 0,
     prazo_confeccao: 0,
     lista_produtos: [],
-    observacao: "",
+    observacoes: "",
     rolo: "",
     url_trello: "",
-    designer: 0,
-    status: "",
-    tipo_de_pedido: "",
+    designer_id: 0,
+    pedido_status_id: 0,
+    pedido_tipo_id: 0,
     created_at: new Date(),
     updated_at: new Date(),
   });
+
   const [allProducts, setAllProducts] = useState<Produto[]>([]);
   const [productNames, setProductNames] = useState<string[] | null>([]);
   const [productsList, setProductsList] = useState<Produto[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Produto | null>(null);
   const [countProduct, setCountProduct] = useState<number | null>(0);
   const [allMaterials, setAllMaterials] = useState<string[]>([]);
-  const [selectedMaterial, setSelectedMaterial] = useState<"" | null>(null);
-  const [allDesigners, setAllDesigners] = useState<string[]>([]);
-  const [allStatus, setAllStatus] = useState<string[]>([]);
-  const [allTiposDePedido, setAllTiposDePedido] = useState<string[]>([]);
+  const [allDesigners, setAllDesigners] = useState<User[]>([]);
+  const [allStatusPedido, setAllStatusPedido] = useState<PedidoStatus[]>([]);
+  const [allTiposDePedido, setAllTiposDePedido] = useState<PedidoTipo[]>([]);
 
   const dataProducts = localStorage.getItem('produtosConsolidadosOrcamento');
   const materiais = localStorage.getItem('materiais');
   const designers = localStorage.getItem('designers');
+  const statusPedidos = localStorage.getItem('pedidosStatus');
+  const tiposPedidos = localStorage.getItem('pedidosTipos');
 
   useEffect(() => {
     if (dataProducts) {
@@ -122,8 +124,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
       try {
         const designersArray = JSON.parse(designers);
         if (Array.isArray(designersArray)) {
-          const designerNames = designersArray.map((designer) => designer.name);
-          setAllDesigners(designerNames);
+          setAllDesigners(designersArray); // Store the objects directly
         } else {
           console.error('Dados inválidos recebidos de designers:', designersArray);
         }
@@ -135,16 +136,33 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     }
   }, [designers]);
 
+  useEffect(() => {
+    if (statusPedidos) {
+      try {
+        const statusPedidosArray = JSON.parse(statusPedidos);
+        setAllStatusPedido(statusPedidosArray);
+      } catch (error) {
+        console.error('Erro ao analisar statusPedidos:', error);
+      }
+    }
+  }, [statusPedidos]);
 
-  const tipoPedidos = ["Antecipacao", "Prazo Normal"];
-
+  useEffect(() => {
+    if (tiposPedidos) {
+      try {
+        const tiposPedidosArray = JSON.parse(tiposPedidos);
+        setAllTiposDePedido(tiposPedidosArray);
+      } catch (error) {
+        console.error('Erro ao analisar tiposPedidos:', error);
+      }
+    }
+  }, [tiposPedidos]);
 
   useEffect(() => {
     if (initialData) {
       setFormData((prev) => ({ ...prev, ...initialData }));
     }
   }, [initialData]);
-
 
   function adicionarProduto(novoProduto: Produto) {
     const existingProduct = productsList.find((product) => product.uid === novoProduto.uid);
@@ -226,7 +244,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     if (readOnly) return;
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
   };
-  
+
   const handleMaterialChange = (
     event: SelectChangeEvent<string>,
     product: Produto
@@ -237,12 +255,69 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     };
     atualizarProduto(updatedProduct);
   };
-  
-  function handleSubmit(e: React.FormEvent) {
+
+  const calcPrazoArteFinal = (dataEntrega: Date | null, hoje: Date, prazo_confeccao: number): number => {
+    if (!dataEntrega) {
+      console.error('Erro: dataEntrega é nula ou indefinida.');
+      return 0;
+    }
+    const dataEntregaLuxon = DateTime.fromJSDate(dataEntrega);
+    const hojeLuxon = DateTime.fromJSDate(hoje);
+    const dataFeriados = localStorage.getItem('feriados') ? JSON.parse(localStorage.getItem('feriados') as string) : { dias_feriados: [] };
+    const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
+
+    const dataProjetada = calcularDataFuturaDiasUteis(hojeLuxon, prazo_confeccao, safeDataFeriados);
+    const diasUteisRestantes = calcDiasUteisEntreDatas(dataProjetada, dataEntregaLuxon, safeDataFeriados);
+
+    return diasUteisRestantes;
+  };
+
+  const accessToken = localStorage.getItem('accessToken');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (onSubmit) onSubmit(formData);
-    console.log('enviado');
-  }
+
+    const payload = {
+      pedido_id: formData.id,
+      pedido_numero: String(formData.numero_pedido),
+      prazo_arte_final: '',
+      prazo_confeccao: '',
+      pedido_observacoes: formData.observacoes,
+      pedido_rolo: formData.rolo,
+      pedido_designer_id: formData.designer_id,
+      pedido_status_id: formData.pedido_status_id,
+      pedido_tipo_id: formData.pedido_tipo_id,
+      pedido_url_trello: formData.url_trello,
+      lista_produtos: productsList.map(produto => ({
+        id: produto.id,
+        nome: produto.nome,
+        quantidade: produto.quantidade,
+        material: produto.material,
+        medida_linear: produto.medida_linear,
+        preco: produto.preco,
+        prazo: produto.prazo,
+      }))
+    };
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error('Erro na requisição');
+
+      const data = await response.json();
+      if (onSubmit) onSubmit(data);
+
+    } catch (error) {
+      console.error('Erro:', error);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4 border rounded-lg shadow-md">
@@ -414,28 +489,32 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
 
                   <FormControl fullWidth sx={{ minWidth: '100px' }}>
                     <InputLabel id="material-select-label">Material</InputLabel>
-                    <Select
+                    <CustomSelect
                       labelId="material-select-label"
                       name="material"
                       value={product.material || ''}
-                      onChange={(e) => handleMaterialChange(e, product)}
+                      onChange={(e: SelectChangeEvent<string>) => handleMaterialChange(e, product)}
                     >
                       {allMaterials.map((material) => (
                         <MenuItem key={material} value={material}>
                           <ListItemText primary={material} />
                         </MenuItem>
                       ))}
-                    </Select>
+                    </CustomSelect>
                   </FormControl>
                 </TableCell>
 
                 <TableCell align="right">
                   <CustomTextField
-                    value=""
+                    value={product.medida_linear === 0 ? "" : product.medida_linear}
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                      const newProductValue = Math.max(0, +event.target.value);
-                      const updatedProduct = { ...product, medida_linear: newProductValue };
-                      atualizarProduto(updatedProduct);
+                      const inputValue = event.target.value;
+                      if (/^\d*\.?\d*$/.test(inputValue)) {
+                        const newValue = inputValue === "" ? 0 : Number(inputValue);
+                        const newProductValue = Math.max(0, newValue);
+                        const updatedProduct = { ...product, medida_linear: newProductValue };
+                        atualizarProduto(updatedProduct);
+                      }
                     }}
                     type="number"
                     variant="outlined"
@@ -483,7 +562,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
 
                 <TableCell align="right">
                   <CustomTextField
-                    value=""
+                    value={calcPrazoArteFinal(formData.data_entrega, getBrazilTime(), product.prazo)}
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                       const newProductValue = Math.max(0, +event.target.value);
                       const updatedProduct = { ...product, prazo_arte: newProductValue };
@@ -530,11 +609,11 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
 
       <Box sx={{ mt: 5 }}>
         <CustomTextField
-          label="Observação"
-          name="observacao"
-          value={formData.observacao}
+          label="Observações"
+          name="observacoes"
+          value={formData.observacoes}
           onChange={handleChange}
-          placeholder="Observação"
+          placeholder="Observações"
           fullWidth
           readOnly={readOnly}
         />
@@ -566,58 +645,53 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
 
       <FormControl sx={{ mt: 5, width: '100%' }}>
         <InputLabel id="designer_pedido">Designer</InputLabel>
-        <Select
+        <CustomSelect
           label="Designer"
           name="designer"
-          value={formData.designer ? String(formData.designer) : ""}
-          onChange={(e: SelectChangeEvent<string>) => handleSelectChange(e, 'designer')}
+          value={formData.designer_id}
+          onChange={(e: SelectChangeEvent<number>) => handleSelectChange(e, 'designer_id')}
           fullWidth
           readOnly={readOnly}
         >
-          {allDesigners.map((designerName) => (
-            <MenuItem key={designerName} value={designerName}>
-              <ListItemText primary={designerName} />
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <FormControl sx={{ mt: 5, width: '100%' }}>
-        <InputLabel id="status_pedido">Status do Pedido com Arte Final</InputLabel>
-        <CustomSelect
-          label="Status"
-          name="status"
-          value={formData.status}
-          onChange={(e: SelectChangeEvent<string>) => handleSelectChange(e, 'status')}
-          fullWidth
-          readOnly={readOnly}
-        >
-          {tipoPedidos.map((tipo) => (
-            <MenuItem key={tipo} value={tipo}>
-              <ListItemText primary={tipo} />
+          {allDesigners.map((designer) => (
+            <MenuItem key={designer.id} value={designer.id}>
+              <ListItemText primary={designer.name} />
             </MenuItem>
           ))}
         </CustomSelect>
       </FormControl>
 
       <FormControl sx={{ mt: 5, width: '100%' }}>
-        <InputLabel id="tipo_pedido">Tipo de Pedido</InputLabel>
+        <InputLabel>Status</InputLabel>
         <CustomSelect
-          label="Tipo de Pedido"
-          name="tipo_de_pedido"
-          value={formData.tipo_de_pedido}
-          onChange={(e: SelectChangeEvent<string>) => handleSelectChange(e, 'tipo_de_pedido')}
+          value={String(formData.pedido_status_id)}
+          onChange={(e: SelectChangeEvent<string>) => handleSelectChange(e, 'pedido_status_id')}
           fullWidth
           readOnly={readOnly}
         >
-          {tipoPedidos.map((tipo) => (
-            <MenuItem key={tipo} value={tipo}>
-              <ListItemText primary={tipo} />
+          {allStatusPedido.map((status) => (
+            <MenuItem key={status.id} value={status.id}>
+              {`${status.fila === 'D' ? 'Design' : 'Impressão'} - ${status.nome}`}
             </MenuItem>
           ))}
         </CustomSelect>
       </FormControl>
 
+      <FormControl sx={{ mt: 5, width: '100%' }}>
+        <InputLabel>Tipo de Pedido</InputLabel>
+        <CustomSelect
+          value={String(formData.pedido_tipo_id)}
+          onChange={(e: SelectChangeEvent<string>) => handleSelectChange(e, 'pedido_tipo_id')}
+          fullWidth
+          readOnly={readOnly}
+        >
+          {allTiposDePedido.map((tipo) => (
+            <MenuItem key={tipo.id} value={tipo.id}>
+              {tipo.nome}
+            </MenuItem>
+          ))}
+        </CustomSelect>
+      </FormControl>
 
       {!readOnly && (
         <Box sx={{ mt: 5 }}>

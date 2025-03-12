@@ -7,18 +7,15 @@ interface ArteFinal {
   prazo_arte_final: Number;
   prazo_confeccao: Number;
   lista_produtos: Produto[];
-  observacao: string;
   rolo: string;
   estagio?: string | null;
-  designer?: number | null;
+  designer_id?: number | null;
   pedido_status_id?: number | null;
   pedido_tipo_id?: number | null;
   observacoes?: string | null;
-  status: string;
   url_trello?: string | null;
   prioridade?: string | null;
   orcamento_id?: number | null;
-  tipo_de_pedido: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -41,7 +38,18 @@ interface User{
   role_id: number;
 }
 
-export type { ArteFinal, Produto, User };
+interface PedidoStatus {
+  id: number;
+  nome: string;
+  fila: string;
+}
+
+interface PedidoTipo {
+  id: number;
+  nome: string;
+}
+
+export type { ArteFinal, Produto, User, PedidoStatus, PedidoTipo };
 
 
 

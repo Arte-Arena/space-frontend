@@ -1,5 +1,7 @@
 'use client';
 import { useEffect } from 'react';
+import { DateTime } from 'luxon';
+import getBrazilTime from "@/utils/brazilTime";
 
 const BackgroundUpdater = () => {
 
@@ -99,6 +101,87 @@ const BackgroundUpdater = () => {
     return () => clearInterval(intervalId);
   }, []);
   
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    const fetchDataPedidoStatus = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedido-status`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const statusPedidos = await response.json();
+        localStorage.setItem('pedidosStatus', JSON.stringify(statusPedidos));
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    };
+
+    fetchDataPedidoStatus();
+
+    const intervalId = setInterval(fetchDataPedidoStatus, 900000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    const fetchDataPedidoTipos = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedido-tipos`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const tiposPedidos = await response.json();
+        localStorage.setItem('pedidosTipos', JSON.stringify(tiposPedidos));
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    };
+
+    fetchDataPedidoTipos();
+
+    const intervalId = setInterval(fetchDataPedidoTipos, 900000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    const today = DateTime.fromJSDate(getBrazilTime());
+    const mesAtual = today.month;
+    const anoAtual = today.year;
+
+    const fetchFeriados = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/calendar/feriados-ano-mes?ano=${anoAtual}&mes=${mesAtual}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erro ao buscar feriados: ${response.statusText}`);
+        }
+
+        const feriadosData = await response.json();
+        localStorage.setItem('feriados', JSON.stringify(feriadosData));
+      } catch (error) {
+        console.error('Erro ao buscar dados dos feriados:', error);
+      }
+    };
+
+    fetchFeriados();
+
+    const intervalId = setInterval(fetchFeriados, 900000);
+    return () => clearInterval(intervalId);
+  }, []);
+
 
   return null;
 }
