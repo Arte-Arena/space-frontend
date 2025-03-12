@@ -21,6 +21,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { IconTruckDelivery } from '@tabler/icons-react';
 import { useStatusChangeAprovado } from '@/utils/PutStatusOrcamentos';
 import useAprovarPedidoStatus from './components/useAprovarPedidoStatus';
+import { logger } from '@/utils/logger';
 
 interface Pedidos {
   id: number;
@@ -472,11 +473,10 @@ const OrcamentoBackofficeScreen = () => {
   const handleBrushClick = async (id: number) => {
     setIsLoadingBrush(true);
     try {
-      // Simulando uma chamada de API com setTimeout
       await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Simulação de API concluída para o ID:', id);
+      logger.log('Simulação de API concluída para o ID:', id);
     } catch (error) {
-      console.error('Erro na simulação:', error);
+      logger.error('Erro na simulação:', error);
     } finally {
       setIsLoadingBrush(false);
     }
