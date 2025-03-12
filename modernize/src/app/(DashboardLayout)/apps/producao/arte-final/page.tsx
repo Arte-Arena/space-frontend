@@ -25,6 +25,11 @@ import {
   IconButton,
   Collapse,
   Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  SelectChangeEvent,
+  useTheme,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { GridPaginationModel } from '@mui/x-data-grid';
@@ -35,6 +40,7 @@ import AssignDesignerDialog from './components/designerDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import { format } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
+import { Select } from 'formik-mui';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -51,6 +57,7 @@ const ArteFinalScreen = () => {
   });
 
   const router = useRouter();
+  const theme = useTheme()
 
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
@@ -139,6 +146,17 @@ const ArteFinalScreen = () => {
     }
   };
 
+  // handles dos selects
+  const handleStatusChange = async (row: ArteFinal, status_id: number) => {
+    const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
+    if (sucesso) {
+      console.log("Pedido enviado com sucesso!");
+      alert('sucesso');
+    } else {
+      console.log("Falha ao enviar pedido.");
+    }
+  }
+
   // const handleToggleRow = (id: number) => {
   //   setOpenRow(prev => ({ ...prev, [id]: !prev[id] }));
   // };
@@ -216,7 +234,18 @@ const ArteFinalScreen = () => {
                         : row.lista_produtos
                       : [];
 
-                    // tem que definir aqui o que cada status vai ser em cada row e cada tipo vai ser em cada row.
+                    // tem que definir se as datas são maiores ou não e assim definir se vai ficar vermelho ou não
+                    // definição das datas e atrasos
+                    const prazoArteFinal = row?.prazo_arte_final ? new Date(row?.prazo_arte_final) : null;
+                    const dataAtual = new Date();
+                    let atraso = false;
+                    if (prazoArteFinal && prazoArteFinal < dataAtual) {
+                      atraso = true;
+                      console.log("A data de prazo_arte_final esta em atraso.");
+                    }
+
+
+                    // definição dos designers
                     const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
                     const usersMap = new Map(
                       Array.isArray(parsedDesigners)
@@ -243,14 +272,15 @@ const ArteFinalScreen = () => {
                       3: { nome: 'Arte OK', fila: 'D' },
                       4: { nome: 'Em espera', fila: 'D' },
                       5: { nome: 'Cor teste', fila: 'D' },
-                      8: { nome: 'Pendente', fila: 'I' },
-                      9: { nome: 'Processando', fila: 'I' },
-                      10: { nome: 'Renderizando', fila: 'I' },
-                      11: { nome: 'Impresso', fila: 'I' },
-                      12: { nome: 'Em Impressão', fila: 'I' },
-                      13: { nome: 'Separação', fila: 'I' },
-                      14: { nome: 'Em Transporte', fila: 'E' },
-                      15: { nome: 'Entregue', fila: 'E' },
+
+                      // 8: { nome: 'Pendente', fila: 'I' },
+                      // 9: { nome: 'Processando', fila: 'I' },
+                      // 10: { nome: 'Renderizando', fila: 'I' },
+                      // 11: { nome: 'Impresso', fila: 'I' },
+                      // 12: { nome: 'Em Impressão', fila: 'I' },
+                      // 13: { nome: 'Separação', fila: 'I' },
+                      // 14: { nome: 'Em Transporte', fila: 'E' },
+                      // 15: { nome: 'Entregue', fila: 'E' },
                     } as const;
 
                     const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
@@ -264,13 +294,13 @@ const ArteFinalScreen = () => {
                           key={row.id}
                           sx={{
                             backgroundColor:
-                              row.prioridade === 'Antecipação'
+                              row.pedido_tipo_id === 2
                                 ? '#710f17'
-                                : row.prioridade === 'Urgente'
-                                  ? '#ff0000'
-                                  : row.prioridade === 'Normal'
+                                : row.pedido_status_id === 2
+                                  ? '#f54b07'
+                                  : row.pedido_status_id === 4
                                     ? '#ffa500'
-                                    : 'inherit',
+                                    : (atraso ? 'inher' : 'inhert') // Fixed here
                           }}
                         >
                           {/* <TableCell>
@@ -285,14 +315,29 @@ const ArteFinalScreen = () => {
 
                           <TableCell>{String(row.numero_pedido)}</TableCell>
 
-                          <TableCell align='center'>
+                          {/* Nome de produto */}
+
+                          {/* <TableCell align='center'>
                             {row.lista_produtos?.length > 0
                               ? listaProdutos.map((produto) => produto.nome).join(', ')
+                              : 'N/A'}
+                          </TableCell> */}
+
+                          <TableCell align='center'>
+                            {row.lista_produtos?.length > 0
+                              ? (
+                                <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
+                                  {listaProdutos.map((produto, index) => (
+                                    <li key={index}>{produto.nome}</li> // Cada produto em uma nova linha
+                                  ))}
+                                </ul>
+                              )
                               : 'N/A'}
                           </TableCell>
 
                           <TableCell align='center'>
                             {row?.prazo_arte_final ? format(new Date(row?.prazo_arte_final), "dd/MM/yyyy") : "Data inválida"}
+                            {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
                           {/* <TableCell align='center'>{Number(row.medidaLinear) ?? 0}</TableCell> */}
@@ -301,7 +346,38 @@ const ArteFinalScreen = () => {
 
                           <TableCell align='center'>{row.observacoes ?? ''}</TableCell>
                           <TableCell align='center'>{tipo ?? 'null'}</TableCell>
-                          <TableCell align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell>
+
+                          {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
+                          {/* <TableCell align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
+                          <TableCell align='center'>
+                            <select
+                              style={{
+                                padding: '0px',
+                                fontSize: '12px',
+                                borderRadius: '4px',
+                                borderColor: 'transparent',
+                                backgroundColor: 'transparent',
+                                color: theme.palette.text.primary,
+                                appearance: 'none',
+                                WebkitAppearance: 'none',
+                                MozAppearance: 'none',
+                                cursor: 'pointer',
+                                width: 'auto',
+                                boxSizing: 'border-box',  // Para garantir que o padding não quebre a largura
+                              }}
+                              value={String(row.pedido_status_id)} // O valor precisa ser uma string
+                              onChange={(event) => {
+                                const newStatus = event.target.value;  // O valor será do tipo string
+                                handleStatusChange(row, Number(newStatus)); // Converte para número antes de passar para a função
+                              }}
+                            >
+                              {Object.entries(pedidoStatus).map(([id, status]) => (
+                                <option key={id} value={id}>  {/* O 'id' ainda é uma string */}
+                                  {status.nome}  {/* Exibe o nome do status */}
+                                </option>
+                              ))}
+                            </select>
+                          </TableCell>
 
 
                           <TableCell align='center'>
