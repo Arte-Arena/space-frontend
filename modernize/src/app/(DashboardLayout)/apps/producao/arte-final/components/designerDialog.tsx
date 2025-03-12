@@ -19,7 +19,6 @@ interface AssignDesignerDialogProps {
     onCloseDialogDesinger: () => void;
     row: ArteFinal | null;
     refetch: () => void;
-
 }
 
 

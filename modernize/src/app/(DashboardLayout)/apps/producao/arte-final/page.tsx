@@ -131,13 +131,13 @@ const ArteFinalScreen = () => {
 
   const handleEnviarImpressora = async (row: ArteFinal) => {
     console.log("handleEnviarImpressora pedido", row);
-    const sucesso = await trocarStatusPedido(row?.id, 8);
+    const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
+      alert('sucesso');
     } else {
       console.log("Falha ao enviar pedido.");
     }
-    alert(pedido);
   };
 
   // const handleToggleRow = (id: number) => {

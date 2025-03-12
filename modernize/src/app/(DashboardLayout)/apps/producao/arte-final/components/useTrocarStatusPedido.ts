@@ -1,4 +1,4 @@
-const trocarStatusPedido = async (id: number, status_id: number): Promise<boolean> => {
+const trocarStatusPedido = async (id: number | undefined, status_id: number | undefined, refetch: () => void): Promise<boolean> => {
   try {
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) throw new Error("Usuário não autenticado.");
@@ -16,7 +16,7 @@ const trocarStatusPedido = async (id: number, status_id: number): Promise<boolea
     );
 
     if (!res.ok) throw new Error("Erro ao alterar o status do pedido.");
-
+    refetch();
     return true; // ✅ Sucesso
   } catch (error) {
     console.error("Erro ao trocar status do pedido:", error);
