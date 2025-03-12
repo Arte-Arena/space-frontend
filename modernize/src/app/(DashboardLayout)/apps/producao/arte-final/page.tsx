@@ -98,7 +98,7 @@ const ArteFinalScreen = () => {
       [pedidoId]: { ...(prev[pedidoId] ?? { editing: false, detailing: false }), editing: true },
     }));
 
-    router.push(`/apps/produção/arte-final/edit/${pedido.id}/`);
+    router.push(`/apps/producao/arte-final/edit/${pedido.id}/`);
   };
 
   const handleDelete = (row: ArteFinal) => {
