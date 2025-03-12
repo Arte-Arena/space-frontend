@@ -1,4 +1,3 @@
-'use client'
 import React, { useRef, useState } from 'react';
 import {
   Button,
@@ -13,7 +12,11 @@ import {
   IconButton,
   Snackbar,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import { IconCopy, IconFileTypePdf, IconCreditCard } from '@tabler/icons-react';
 import { NumericFormat } from 'react-number-format';
@@ -38,6 +41,7 @@ const BudgetDialog = ({ open, onClose, orcamentoTexto, address, totalProductsVal
   const [checkoutValue, setCheckoutValue] = useState<number | null>(null);
   const [checkoutLink, setCheckoutLink] = useState<string | null>(null);
   const [isGeneratingCheckoutLink, setIsGeneratingCheckoutLink] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'inter'>('mercadopago');
 
   React.useEffect(() => {
     if (totalProductsValue) {
@@ -65,25 +69,32 @@ const BudgetDialog = ({ open, onClose, orcamentoTexto, address, totalProductsVal
     setIsGeneratingCheckoutLink(true);
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/payment/generate-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ 
-          valor: checkoutValue,
-          orcamento_id: orcamentoId
-        }),
-      });
+      if (paymentMethod === 'mercadopago') {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/payment/generate-checkout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ 
+            valor: checkoutValue,
+            orcamento_id: orcamentoId
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Erro ao gerar link de pagamento');
+        if (!response.ok) {
+          throw new Error('Erro ao gerar link de pagamento');
+        }
+
+        const data = await response.json();
+        setCheckoutLink(data.checkout_link);
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const mockInterLink = `https://banco.inter.com.br/pix/checkout/${Math.random().toString(36).substring(7)}`;
+        setCheckoutLink(mockInterLink);
       }
-
-      const data = await response.json();
-      setCheckoutLink(data.checkout_link);
-      navigator.clipboard.writeText(data.checkout_link);
+      
+      navigator.clipboard.writeText(checkoutLink || '');
       setOpenSnackbarCopiarLinkPagamento(true);
     } catch (error) {
       console.error('Erro ao gerar link de pagamento:', error);
@@ -112,6 +123,22 @@ const BudgetDialog = ({ open, onClose, orcamentoTexto, address, totalProductsVal
         </DialogContent>
         <DialogActions>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel id="payment-method-label">Método de pagamento</InputLabel>
+              <Select
+                labelId="payment-method-label"
+                value={paymentMethod}
+                label="Método de Pagamento"
+                onChange={(e) => {
+                  setPaymentMethod(e.target.value as 'mercadopago' | 'inter');
+                  setCheckoutLink(null);
+                }}
+              >
+                <MenuItem value="mercadopago">Mercado Pago</MenuItem>
+                <MenuItem value="inter">Banco Inter</MenuItem>
+              </Select>
+            </FormControl>
+
             <NumericFormat
               value={checkoutValue}
               onValueChange={(values) => {
@@ -229,4 +256,4 @@ const BudgetDialog = ({ open, onClose, orcamentoTexto, address, totalProductsVal
   );
 };
 
-export default BudgetDialog; 
+export default BudgetDialog;
