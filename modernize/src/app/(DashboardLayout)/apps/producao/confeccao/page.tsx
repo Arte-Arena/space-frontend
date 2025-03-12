@@ -140,15 +140,15 @@ const ConfeccaoScreen = () => {
     // };
 
     // handles dos selects
-    // const handleStatusChange = async (row: ArteFinal, status_id: number) => {
-    //     const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
-    //     if (sucesso) {
-    //         console.log("Pedido enviado com sucesso!");
-    //         alert('sucesso');
-    //     } else {
-    //         console.log("Falha ao enviar pedido.");
-    //     }
-    // }
+    const handleStatusChange = async (row: ArteFinal, status_id: number) => {
+        const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
+        if (sucesso) {
+            console.log("Pedido enviado com sucesso!");
+            alert('sucesso');
+        } else {
+            console.log("Falha ao enviar pedido.");
+        }
+    }
 
     // const handleToggleRow = (id: number) => {
     //   setOpenRow(prev => ({ ...prev, [id]: !prev[id] }));
@@ -296,25 +296,9 @@ const ConfeccaoScreen = () => {
                                                                         : (atraso ? 'inher' : 'inhert') // Fixed here
                                                     }}
                                                 >
-                                                    {/* <TableCell>
-                            <IconButton
-                              aria-label="expand row"
-                              size="small"
-                              onClick={() => handleToggleRow(row.id ?? 0)}
-                            >
-                              {openRow[row.id ?? 0] ? <KeyboardArrowUpIcon sx={{ fontSize: '15px' }} /> : <KeyboardArrowDownIcon sx={{ fontSize: '15px' }} />}
-                            </IconButton>
-                          </TableCell> */}
 
                                                     <TableCell>{String(row.numero_pedido)}</TableCell>
 
-                                                    {/* Nome de produto */}
-
-                                                    {/* <TableCell align='center'>
-                            {row.lista_produtos?.length > 0
-                              ? listaProdutos.map((produto) => produto.nome).join(', ')
-                              : 'N/A'}
-                          </TableCell> */}
 
                                                     <TableCell align='center'>
                                                         {row.lista_produtos?.length > 0
@@ -480,9 +464,6 @@ const ConfeccaoScreen = () => {
                                 onRowsPerPageChange={(event) => setPaginationModel({ ...paginationModel, pageSize: parseInt(event.target.value, 10), page: 0 })}
                             />
                         </TableContainer>
-                    )}
-                    {selectedRowDesinger !== null && (
-                        <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} refetch={refetch} />
                     )}
                     <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
                 </>
