@@ -8,7 +8,7 @@ interface ArteFinal {
     id?: number;
     user_id?: number | null;
     numero_pedido: Number;
-    data_prevista: Date;
+    data_entrega: Date;
     prazo_arte_final: Date;
     prazo_confeccao: Date;
     lista_produtos: Produto[];
@@ -44,5 +44,21 @@ interface Material {
     id: number;
     descricao: string;
 }
+interface User {
+    id: number;
+    name: string;
+    role_id: number;
+}
 
-export type { ApiResponsePedidosArteFinal, ArteFinal, Produto, Material };
+interface PedidoStatus {
+    id: number;
+    nome: string;
+    fila: string;
+}
+
+interface PedidoTipo {
+    id: number;
+    nome: string;
+}
+
+export type { ApiResponsePedidosArteFinal, ArteFinal, Produto, Material, User, PedidoStatus, PedidoTipo };

@@ -40,17 +40,22 @@ import AssignDesignerDialog from './components/designerDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import { format } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
+import trocarObsPedido from './components/usetrocarObservacao';
 import { Select } from 'formik-mui';
+import DialogObs from './components/observacaoDialog';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
   const [openDialogDesinger, setOpenDialogDesinger] = useState(false);
+  const [openDialogObs, setOpenDialogObs] = useState(false);
   const [selectedRowDesinger, setSelectedRowDesinger] = useState<ArteFinal | null>(null);
+  const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
+  const [rows, setRows] = useState<ArteFinal[]>([]);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 5,
     page: 0,
@@ -157,9 +162,11 @@ const ArteFinalScreen = () => {
     }
   }
 
-  // const handleToggleRow = (id: number) => {
-  //   setOpenRow(prev => ({ ...prev, [id]: !prev[id] }));
-  // };
+  const handleClickOpenDialogObs = async (row: ArteFinal) => {
+    // abre o dialog e passa a row
+    setSelectedRowObs(row);
+    setOpenDialogObs(true);
+  };
 
   const BCrumb = [
     {
@@ -215,9 +222,9 @@ const ArteFinalScreen = () => {
                 <TableHead>
                   <TableRow>
                     {/* <TableCell> </TableCell> */}
-                    <TableCell align='center' sx={{ width: '5%' }}>Número do Pedido</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
                     <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Prazo Arte Final</TableCell>
+                    <TableCell align='center' sx={{ width: '10%' }}>Previsão de Entrega</TableCell>
                     {/* <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell> */}
                     <TableCell align='center' sx={{ width: '10%' }}>Desinger</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
@@ -234,16 +241,14 @@ const ArteFinalScreen = () => {
                         : row.lista_produtos
                       : [];
 
-                    // tem que definir se as datas são maiores ou não e assim definir se vai ficar vermelho ou não
                     // definição das datas e atrasos
-                    const prazoArteFinal = row?.prazo_arte_final ? new Date(row?.prazo_arte_final) : null;
+                    const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
                     const dataAtual = new Date();
                     let atraso = false;
-                    if (prazoArteFinal && prazoArteFinal < dataAtual) {
+                    if (dataPrevista && dataPrevista < dataAtual) {
                       atraso = true;
                       console.log("A data de prazo_arte_final esta em atraso.");
                     }
-
 
                     // definição dos designers
                     const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
@@ -293,36 +298,21 @@ const ArteFinalScreen = () => {
                         <TableRow
                           key={row.id}
                           sx={{
-                            backgroundColor:
-                              row.pedido_tipo_id === 2
+                            backgroundColor: atraso
+                              ? 'red' // Prioridade máxima
+                              : row.pedido_tipo_id === 2
                                 ? '#710f17'
                                 : row.pedido_status_id === 2
                                   ? '#f54b07'
                                   : row.pedido_status_id === 4
                                     ? '#ffa500'
-                                    : (atraso ? 'inher' : 'inhert') // Fixed here
+                                    : 'inherit' // Correção na grafia ('inherit' em vez de 'inhert')
                           }}
                         >
-                          {/* <TableCell>
-                            <IconButton
-                              aria-label="expand row"
-                              size="small"
-                              onClick={() => handleToggleRow(row.id ?? 0)}
-                            >
-                              {openRow[row.id ?? 0] ? <KeyboardArrowUpIcon sx={{ fontSize: '15px' }} /> : <KeyboardArrowDownIcon sx={{ fontSize: '15px' }} />}
-                            </IconButton>
-                          </TableCell> */}
 
                           <TableCell>{String(row.numero_pedido)}</TableCell>
 
                           {/* Nome de produto */}
-
-                          {/* <TableCell align='center'>
-                            {row.lista_produtos?.length > 0
-                              ? listaProdutos.map((produto) => produto.nome).join(', ')
-                              : 'N/A'}
-                          </TableCell> */}
-
                           <TableCell align='center'>
                             {row.lista_produtos?.length > 0
                               ? (
@@ -340,11 +330,29 @@ const ArteFinalScreen = () => {
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
-                          {/* <TableCell align='center'>{Number(row.medidaLinear) ?? 0}</TableCell> */}
-                          <TableCell align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
-                          {/* <TableCell align='center'>{row.situacao ?? ''}</TableCell> */}
+                          <TableCell align='center'>{designerNome ?? 'Sem Designer'}</TableCell>
 
-                          <TableCell align='center'>{row.observacoes ?? ''}</TableCell>
+                          <TableCell align="center">
+                            <Button
+                              sx={{
+                                background: 'transparent',
+                                color: theme.palette.text.primary,
+                                borderRadius: '4px',
+                                border: '1px solid GrayText',
+                                fontSize: '12px',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(13, 12, 12, 0.1)', // Cor neutra ao passar o mouse
+                                  color: theme.palette.text.secondary, // Cor do texto ao passar o mouse
+                                }
+                              }}
+                              onClick={() => handleClickOpenDialogObs(row)}
+                            >
+                              {row.observacoes ?? "Adicionar Observação"}
+                            </Button>
+                          </TableCell>
+
+
+
                           <TableCell align='center'>{tipo ?? 'null'}</TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
@@ -352,10 +360,11 @@ const ArteFinalScreen = () => {
                           <TableCell align='center'>
                             <select
                               style={{
+                                textAlign: 'center',
                                 padding: '0px',
                                 fontSize: '12px',
                                 borderRadius: '4px',
-                                borderColor: 'transparent',
+                                border: '1px solid GrayText',
                                 backgroundColor: 'transparent',
                                 color: theme.palette.text.primary,
                                 appearance: 'none',
@@ -496,6 +505,7 @@ const ArteFinalScreen = () => {
           {selectedRowDesinger !== null && (
             <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} refetch={refetch} />
           )}
+          <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
         </>
       </ParentCard>
