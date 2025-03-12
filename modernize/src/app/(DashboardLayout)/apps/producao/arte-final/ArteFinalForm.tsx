@@ -41,7 +41,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
   const [formData, setFormData] = useState<ArteFinal>({
     id: undefined,
     numero_pedido: undefined,
-    data_entrega: null,
+    data_prevista: null,
     prazo_arte_final: 0,
     prazo_confeccao: 0,
     lista_produtos: [],
@@ -355,11 +355,11 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DatePicker
             label="Data de Entrega Prevista"
-            value={formData.data_entrega}
+            value={formData.data_prevista}
             onChange={(newValue) => {
               setFormData((prev) => ({
                 ...prev,
-                data_entrega: newValue,
+                data_prevista: newValue,
               }));
             }}
             inputFormat="dd/MM/yyyy"
@@ -379,7 +379,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
         <Autocomplete
           freeSolo
           id="produto"
-          disabled={!formData.data_entrega}
+          disabled={!formData.data_prevista}
           options={productNames?.length ? productNames : []}
           onChange={(event, selectedValue) => {
             if (selectedValue) {
@@ -399,7 +399,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
               margin="normal"
               variant="outlined"
               fullWidth
-              helperText={formData.data_entrega ? '' : 'Insira a data de entrega para habilitar este campo. Resete o campo para adicionar o mesmo produto.'}
+              helperText={formData.data_prevista ? '' : 'Insira a data de entrega para habilitar este campo. Resete o campo para adicionar o mesmo produto.'}
             />
           )}
         />
@@ -562,7 +562,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
 
                 <TableCell align="right">
                   <CustomTextField
-                    value={calcPrazoArteFinal(formData.data_entrega, getBrazilTime(), product.prazo)}
+                    value={calcPrazoArteFinal(formData.data_prevista, getBrazilTime(), product.prazo)}
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                       const newProductValue = Math.max(0, +event.target.value);
                       const updatedProduct = { ...product, prazo_arte: newProductValue };
