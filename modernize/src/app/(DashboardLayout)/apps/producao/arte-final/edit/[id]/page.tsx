@@ -4,23 +4,23 @@ import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcr
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import ArteFinalForm from "@/app/(DashboardLayout)/apps/producao/arte-final/ArteFinalForm";
-import { ArteFinal } from '../types';
+import { ArteFinal } from '../../types';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation'; // Importe useParams
+import { useParams } from 'next/navigation';
 
-export default function ProdutosPacotesUniformesDetailsScreen() {
+export default function EditArteFinalScreen() {
   const params = useParams();
-  const pacoteId = params.id;
+  const pedidoId = params.id;
 
-  const [pacoteUniforme, setPacoteUniforme] = useState<ArteFinal | null>(null);
+  const [pedidoArteFinal, setPedidoArteFinal] = useState<ArteFinal | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const accessToken = localStorage.getItem('accessToken');
 
-  const { data: pacotesUniformeData, isLoading: isLoadingPacotesUniforme } = useQuery<ArteFinal[]>({
-    queryKey: ['pacotes-uniforme'],
+  const { data: pedidoData, isLoading: isLoadingPedido } = useQuery<ArteFinal>({
+    queryKey: ['pedido'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/produto/pacote/uniforme/`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final/${pedidoId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -30,22 +30,21 @@ export default function ProdutosPacotesUniformesDetailsScreen() {
   });
 
   useEffect(() => {
-    if (!isLoadingPacotesUniforme && pacotesUniformeData) {
-      const pacote = pacotesUniformeData.find((p) => p.id === Number(pacoteId));
-      if (pacote) {
-        setPacoteUniforme(pacote);
+    if (!isLoadingPedido && pedidoData) {
+      if (pedidoData) {
+        setPedidoArteFinal(pedidoData);
         setError(null);
       } else {
-        setError(`Produto não encontrado com id ${pacoteId}`);
+        setError(`Produto não encontrado com id ${pedidoId}`);
       }
     }
-  }, [isLoadingPacotesUniforme, pacotesUniformeData, pacoteId]);
+  }, [isLoadingPedido, pedidoData, pedidoId]);
 
-  if (isLoadingPacotesUniforme) return <p>Carregando...</p>;
+  if (isLoadingPedido) return <p>Carregando...</p>;
 
   if (error) return <p>{error}</p>;
 
-  if (!pacoteUniforme) return <p>Carregando...</p>;
+  if (!pedidoArteFinal) return <p>Carregando...</p>;
 
   async function handleUpdate(data: ArteFinal) {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedido-arte-final`, {
@@ -79,13 +78,15 @@ export default function ProdutosPacotesUniformesDetailsScreen() {
     },
   ];
 
+  console.log(pedidoArteFinal);
+
   return (
     <PageContainer title="Produção / Arte Final" description="Arte Final da Arte Arena">
       <Breadcrumb title="Produção / Arte Final" items={BCrumb} />
       <ParentCard title="Arte Final">
         <>
           <h2 className="text-xl font-bold">Detalhes do Produto</h2>
-          <ArteFinalForm initialData={pacoteUniforme} onSubmit={handleUpdate} />
+          <ArteFinalForm initialData={pedidoArteFinal} onSubmit={handleUpdate} />
         </>
       </ParentCard>
     </PageContainer>
