@@ -41,16 +41,16 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
   const [formData, setFormData] = useState<ArteFinal>({
     id: undefined,
     numero_pedido: undefined,
-    data_entrega: null,
+    data_prevista: null,
     prazo_arte_final: 0,
     prazo_confeccao: 0,
     lista_produtos: [],
-    observacao: "",
+    observacoes: "",
     rolo: "",
     url_trello: "",
-    designer: 0,
-    status: "",
-    tipo_de_pedido: "",
+    designer_id: 0,
+    pedido_status_id: 0,
+    pedido_tipo_id: 0,
     created_at: new Date(),
     updated_at: new Date(),
   });
@@ -280,11 +280,11 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DatePicker
             label="Data de Entrega Prevista"
-            value={formData.data_entrega}
+            value={formData.data_prevista}
             onChange={(newValue) => {
               setFormData((prev) => ({
                 ...prev,
-                data_entrega: newValue,
+                data_prevista: newValue,
               }));
             }}
             inputFormat="dd/MM/yyyy"
@@ -304,7 +304,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
         <Autocomplete
           freeSolo
           id="produto"
-          disabled={!formData.data_entrega}
+          disabled={!formData.data_prevista}
           options={productNames?.length ? productNames : []}
           onChange={(event, selectedValue) => {
             if (selectedValue) {
@@ -324,7 +324,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
               margin="normal"
               variant="outlined"
               fullWidth
-              helperText={formData.data_entrega ? '' : 'Insira a data de entrega para habilitar este campo. Resete o campo para adicionar o mesmo produto.'}
+              helperText={formData.data_prevista ? '' : 'Insira a data de entrega para habilitar este campo. Resete o campo para adicionar o mesmo produto.'}
             />
           )}
         />
@@ -531,8 +531,8 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
       <Box sx={{ mt: 5 }}>
         <CustomTextField
           label="Observação"
-          name="observacao"
-          value={formData.observacao}
+          name="observacoes"
+          value={formData.observacoes}
           onChange={handleChange}
           placeholder="Observação"
           fullWidth
@@ -568,8 +568,8 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
         <InputLabel id="designer_pedido">Designer</InputLabel>
         <Select
           label="Designer"
-          name="designer"
-          value={formData.designer ? String(formData.designer) : ""}
+          name="designer_id"
+          value={formData.designer_id ? String(formData.designer_id) : ""}
           onChange={(e: SelectChangeEvent<string>) => handleSelectChange(e, 'designer')}
           fullWidth
           readOnly={readOnly}
@@ -586,8 +586,8 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
         <InputLabel id="status_pedido">Status do Pedido com Arte Final</InputLabel>
         <CustomSelect
           label="Status"
-          name="status"
-          value={formData.status}
+          name="pedido_status_id"
+          value={formData.pedido_status_id}
           onChange={(e: SelectChangeEvent<string>) => handleSelectChange(e, 'status')}
           fullWidth
           readOnly={readOnly}
@@ -604,8 +604,8 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
         <InputLabel id="tipo_pedido">Tipo de Pedido</InputLabel>
         <CustomSelect
           label="Tipo de Pedido"
-          name="tipo_de_pedido"
-          value={formData.tipo_de_pedido}
+          name="pedido_tipo_id"
+          value={formData.pedido_tipo_id}
           onChange={(e: SelectChangeEvent<string>) => handleSelectChange(e, 'tipo_de_pedido')}
           fullWidth
           readOnly={readOnly}
