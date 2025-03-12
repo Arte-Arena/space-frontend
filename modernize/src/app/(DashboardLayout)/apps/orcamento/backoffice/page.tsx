@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
@@ -14,7 +15,7 @@ import IconButton from '@mui/material/IconButton';
 import { Pagination, Stack, Button, Box, Typography, Collapse, FormControlLabel, Checkbox, TextField, useTheme, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import { IconSearch, IconLink, IconShirtSport, IconCheck, IconTrash, IconBrush } from '@tabler/icons-react';
+import { IconSearch, IconLink, IconShirtSport, IconCheck, IconTrash, IconBrush, IconUser } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -91,6 +92,7 @@ interface Sketch {
 }
 
 const OrcamentoBackofficeScreen = () => {
+  const router = useRouter();
   const [query, setQuery] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
@@ -122,6 +124,7 @@ const OrcamentoBackofficeScreen = () => {
   const [copiedRastreio, setCopiedRastreio] = useState(false);
   const [handleMakePedidoLoading, setIsLoadingMakePeido] = useState(false);
   const [isLoadingBrush, setIsLoadingBrush] = useState<boolean>(false);
+  const [navigateTo, setNavigateTo] = useState<string | null>(null);
   const theme = useTheme()
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
@@ -163,6 +166,11 @@ const OrcamentoBackofficeScreen = () => {
     }
   }, [selectedPedido]);
 
+  useEffect(() => {
+    if (navigateTo) {
+      router.push(navigateTo);
+    }
+  }, [navigateTo, router]);
 
   const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos, refetch } = useQuery({
     queryKey: ['budgetData', searchQuery, page],
@@ -473,11 +481,27 @@ const OrcamentoBackofficeScreen = () => {
   const handleBrushClick = async (id: number) => {
     setIsLoadingBrush(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      logger.log('Simulação de API concluída para o ID:', id);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final/from-backoffice/${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create pedido');
+      }
+
+      const data = await response.json();
+      if (data.pedido && data.pedido.id) {
+        setNavigateTo(`/apps/producao/arte-final/edit/${data.pedido.id}`);
+      } else {
+        throw new Error('Invalid response data');
+      }
     } catch (error) {
-      logger.error('Erro na simulação:', error);
-    } finally {
+      logger.error('Erro ao criar pedido:', error);
+      alert('Erro ao criar pedido. Por favor, tente novamente.');
       setIsLoadingBrush(false);
     }
   };
@@ -566,7 +590,7 @@ const OrcamentoBackofficeScreen = () => {
                                   handleLinkOrcamento(row.id);
                                 }}
                               >
-                                <IconLink />
+                                <IconUser />
                               </IconButton>
                               <Dialog
                                 open={openLinkDialog}
