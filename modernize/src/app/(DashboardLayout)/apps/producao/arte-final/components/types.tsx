@@ -9,8 +9,8 @@ interface ArteFinal {
     user_id?: number | null;
     numero_pedido: Number;
     data_entrega: Date;
-    prazo_arte_final: Number;
-    prazo_confeccao: Number;
+    prazo_arte_final: Date;
+    prazo_confeccao: Date;
     lista_produtos: Produto[];
     observacao: string;
     rolo: string;
