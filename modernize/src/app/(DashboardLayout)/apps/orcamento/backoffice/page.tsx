@@ -14,7 +14,7 @@ import IconButton from '@mui/material/IconButton';
 import { Pagination, Stack, Button, Box, Typography, Collapse, FormControlLabel, Checkbox, TextField, useTheme, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import { IconSearch, IconLink, IconShirtSport, IconCheck, IconTrash } from '@tabler/icons-react';
+import { IconSearch, IconLink, IconShirtSport, IconCheck, IconTrash, IconBrush } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -120,6 +120,7 @@ const OrcamentoBackofficeScreen = () => {
   const [loadingPedido, setLoadingPedido] = useState(false);
   const [copiedRastreio, setCopiedRastreio] = useState(false);
   const [handleMakePedidoLoading, setIsLoadingMakePeido] = useState(false);
+  const [isLoadingBrush, setIsLoadingBrush] = useState<boolean>(false);
   const theme = useTheme()
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
@@ -468,6 +469,18 @@ const OrcamentoBackofficeScreen = () => {
     // setHasRecebimento(true);
   }
 
+  const handleBrushClick = async (id: number) => {
+    setIsLoadingBrush(true);
+    try {
+      // Simulando uma chamada de API com setTimeout
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Simulação de API concluída para o ID:', id);
+    } catch (error) {
+      console.error('Erro na simulação:', error);
+    } finally {
+      setIsLoadingBrush(false);
+    }
+  };
 
   return (
     <PageContainer title="Orçamento / Backoffice" description="Gerenciar Pedidos da Arte Arena">
@@ -583,6 +596,13 @@ const OrcamentoBackofficeScreen = () => {
                               handleShortlinkUniform(row.id);
                             }}>
                               <IconShirtSport />
+                            </Button>
+                            <Button 
+                              variant="outlined" 
+                              onClick={() => handleBrushClick(row.id)}
+                              disabled={isLoadingBrush}
+                            >
+                              {isLoadingBrush ? <CircularProgress size={20} /> : <IconBrush />}
                             </Button>
                             <Dialog
                               open={openUniformDialog}
