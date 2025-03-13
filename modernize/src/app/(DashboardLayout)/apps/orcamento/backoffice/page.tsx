@@ -495,7 +495,7 @@ const OrcamentoBackofficeScreen = () => {
 
       const data = await response.json();
       if (data.pedido && data.pedido.id) {
-        setNavigateTo(`/apps/producao/arte-final/edit/${data.pedido.id}`);
+        setNavigateTo(`/apps/producao/arte-final/edit/${data.pedido.id}?block_tiny=${data.blockTiny}`);
       } else {
         throw new Error('Invalid response data');
       }
