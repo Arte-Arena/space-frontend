@@ -74,7 +74,7 @@ const ArteFinalScreen = () => {
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=D`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -389,7 +389,7 @@ const ArteFinalScreen = () => {
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
                                 <option key={id} value={id}>  {/* O 'id' ainda é uma string */}
-                                  {status.nome}  {/* Exibe o nome do status */}
+                                  {status.nome}  {status.fila} {/* Exibe o nome do status */}
                                 </option>
                               ))}
                             </select>
