@@ -43,6 +43,7 @@ import trocarStatusPedido from './components/useTrocarStatusPedido';
 import trocarObsPedido from './components/usetrocarObservacao';
 import { Select } from 'formik-mui';
 import DialogObs from './components/observacaoDialog';
+import deletePedidoArteFinal from './components/useDeletePedido';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -74,7 +75,7 @@ const ArteFinalScreen = () => {
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=D`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -116,8 +117,14 @@ const ArteFinalScreen = () => {
     router.push(`/apps/producao/arte-final/edit/${pedido.id}/`);
   };
 
-  const handleDelete = (row: ArteFinal) => {
-    console.log("Deletar pedido", row);
+  const handleDelete = async (row: ArteFinal) => {
+    const sucesso = await deletePedidoArteFinal(row?.id,refetch);
+    if (sucesso) {
+      console.log("Pedido deletado com sucesso!");
+      alert('sucesso');
+    } else {
+      console.log("Falha ao excluir pedido.");
+    }
   };
 
   const handleLinkTrello = (row: ArteFinal) => {
@@ -128,10 +135,28 @@ const ArteFinalScreen = () => {
       console.warn('URL do Trello não disponível');
     }
   };
-  const handleListaUniformes = (row: ArteFinal) => {
-    // provavelmente tem que ver validar se existe uma lista de uniformes nesse pedido
-    // unica forma atualmente é pelo 'ocamento_id'
-    console.log("Deletar pedido", row);
+  const handleListaUniformes = async (row: ArteFinal) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final/${row.id}/verificar-uniformes`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        router.push(data.redirect);
+      } else {
+        console.error('Erro ao verificar uniformes:', data.error);
+        alert('Erro ao verificar uniformes: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar uniformes:', error);
+      alert('Erro ao verificar uniformes');
+    }
   };
 
   const handleAtribuirDesigner = (row: ArteFinal) => {
@@ -389,7 +414,7 @@ const ArteFinalScreen = () => {
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
                                 <option key={id} value={id}>  {/* O 'id' ainda é uma string */}
-                                  {status.nome}  {/* Exibe o nome do status */}
+                                  {status.nome}  {status.fila} {/* Exibe o nome do status */}
                                 </option>
                               ))}
                             </select>

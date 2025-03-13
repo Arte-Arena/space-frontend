@@ -61,7 +61,7 @@ const ConfeccaoScreen = () => {
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=I`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -265,7 +265,20 @@ const ConfeccaoScreen = () => {
                           <TableCell align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
                           {/* <TableCell align='center'>{row.situacao ?? ''}</TableCell> */}
 
-                          <TableCell align='center'>{row.observacoes ?? ''}</TableCell>
+                          <TableCell
+                            align='center'
+                            sx={{
+                              background: 'transparent',
+                              color: theme.palette.text.primary,
+                              fontSize: '12px',
+                              whiteSpace: 'nowrap', // Impede que o texto quebre em várias linhas
+                              overflowY: 'auto', // Esconde o texto que ultrapassa o limite do botão
+                              textOverflow: 'ellipsis', 
+                              maxWidth: '150px', // Define uma largura máxima
+                            }}
+                          >
+                            {row.observacoes ?? ''}
+                          </TableCell>
                           <TableCell align='center'>{tipo ?? 'null'}</TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
@@ -307,24 +320,11 @@ const ConfeccaoScreen = () => {
                                 <IconEye />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
-                              <IconButton
-                                onClick={() => handleLinkTrello(row)}
-                                disabled={row.url_trello === null}
-                              >
-                                <IconBrandTrello />
-                              </IconButton>
-                            </Tooltip>
                             <Tooltip title="Lista de Uniformes">
                               <IconButton onClick={() => handleListaUniformes(row)}>
                                 <IconShirt />
                               </IconButton>
                             </Tooltip>
-                            {/* <Tooltip title="Enviar para Impressão!">
-                                                            <IconButton onClick={() => handleEnviarImpressora(row)}>
-                                                                <IconPrinter />
-                                                            </IconButton>
-                                                        </Tooltip> */}
                           </TableCell>
                         </TableRow>
 
