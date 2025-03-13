@@ -11,6 +11,7 @@ import { useParams } from 'next/navigation';
 export default function EditArteFinalScreen() {
   const params = useParams();
   const pedidoId = params.id;
+  const block_tiny = params.block_tiny;
 
   const [pedidoArteFinal, setPedidoArteFinal] = useState<ArteFinal | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +71,7 @@ export default function EditArteFinalScreen() {
       <ParentCard title="Arte Final">
         <>
           <h2 className="text-xl font-bold">Detalhes do Produto</h2>
-          <ArteFinalForm initialData={pedidoArteFinal} />
+          <ArteFinalForm initialData={pedidoArteFinal} block_tiny={block_tiny} />
         </>
       </ParentCard>
     </PageContainer>

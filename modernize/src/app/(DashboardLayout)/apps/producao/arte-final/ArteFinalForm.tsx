@@ -35,9 +35,10 @@ interface ArteFinalFormProps {
   initialData?: ArteFinal;
   onSubmit?: (data: ArteFinal) => void;
   readOnly?: boolean;
+  block_tiny?: boolean;
 }
 
-export default function ArteFinalForm({ initialData, onSubmit, readOnly = false }: ArteFinalFormProps) {
+export default function ArteFinalForm({ initialData, onSubmit, readOnly = false, block_tiny = false }: ArteFinalFormProps) {
   const [formData, setFormData] = useState<ArteFinal>({
     id: 0,
     numero_pedido: 0,
@@ -303,6 +304,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     e.preventDefault();
 
     const payload = {
+      block_tiny: block_tiny,
       pedido_id: formData.id,
       pedido_numero: String(formData.numero_pedido),
       prazo_arte_final: '',
