@@ -44,11 +44,8 @@ const ConfeccaoScreen = () => {
     const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
     const [openDrawer, setOpenDrawer] = useState(false);
     const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
-    const [openDialogDesinger, setOpenDialogDesinger] = useState(false);
-    const [selectedRowDesinger, setSelectedRowDesinger] = useState<ArteFinal | null>(null);
-    const [isAdding, setIsAdding] = useState(false);
-    const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
     const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
+    const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
     const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
         pageSize: 5,
         page: 0,
@@ -79,37 +76,9 @@ const ConfeccaoScreen = () => {
         }
     }, [dataPedidos]);
 
-    console.log(allPedidos);
-
-    useEffect(() => {
-        if (!openDialogDesinger) {
-            refetch(); // Chama refetch quando o dialog é fechado
-        }
-    }, [openDialogDesinger, refetch]);
-
+    // console.log(allPedidos);
 
     // handles
-
-    const handleNovoPedido = () => {
-        setIsAdding(true);
-        router.push('/apps/producao/arte-final/add/');
-    };
-
-    const handleEdit = (pedido: ArteFinal) => {
-        const pedidoId = String(pedido.id);
-
-        setLoadingStates((prev) => ({
-            ...prev,
-            [pedidoId]: { ...(prev[pedidoId] ?? { editing: false, detailing: false }), editing: true },
-        }));
-
-        router.push(`/apps/producao/arte-final/edit/${pedido.id}/`);
-    };
-
-    const handleDelete = (row: ArteFinal) => {
-        console.log("Deletar pedido", row);
-    };
-
     const handleLinkTrello = (row: ArteFinal) => {
         if (row.url_trello) {
             window.open(row.url_trello, '_blank');
@@ -118,6 +87,7 @@ const ConfeccaoScreen = () => {
             console.warn('URL do Trello não disponível');
         }
     };
+
     const handleListaUniformes = (row: ArteFinal) => {
         // provavelmente tem que ver validar se existe uma lista de uniformes nesse pedido
         // unica forma atualmente é pelo 'ocamento_id'
@@ -129,16 +99,6 @@ const ConfeccaoScreen = () => {
         setOpenDrawer(true);
     };
 
-    // const handleEnviarImpressora = async (row: ArteFinal) => {
-    //     const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
-    //     if (sucesso) {
-    //         console.log("Pedido enviado com sucesso!");
-    //         alert('sucesso');
-    //     } else {
-    //         console.log("Falha ao enviar pedido.");
-    //     }
-    // };
-
     // handles dos selects
     const handleStatusChange = async (row: ArteFinal, status_id: number) => {
         const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
@@ -149,10 +109,6 @@ const ConfeccaoScreen = () => {
             console.log("Falha ao enviar pedido.");
         }
     }
-
-    // const handleToggleRow = (id: number) => {
-    //   setOpenRow(prev => ({ ...prev, [id]: !prev[id] }));
-    // };
 
     const BCrumb = [
         {
@@ -181,18 +137,6 @@ const ConfeccaoScreen = () => {
             <Breadcrumb title="Produção / Confecção" items={BCrumb} />
             <ParentCard title="Confecção">
                 <>
-                    <Stack direction="row" spacing={1} sx={{ marginBottom: '1em', height: '3em', justifyContent: 'flex-end' }}>
-                        <Button
-                            variant="contained"
-                            startIcon={isAdding ? <CircularProgress size={20} /> : <IconPlus />}
-                            sx={{ height: '100%' }}
-                            onClick={handleNovoPedido}
-                            disabled={isAdding}
-                        >
-                            {isAdding ? 'Adicionando...' : 'Adicionar Novo pedido'}
-                        </Button>
-                    </Stack>
-
                     {isErrorPedidos ? (
                         <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
                             <Typography variant="body1" color="error">Erro ao carregar pedidos.</Typography>
@@ -260,11 +204,11 @@ const ConfeccaoScreen = () => {
                                         } as const;
 
                                         const pedidoStatus = {
-                                            1: { nome: 'Pendente', fila: 'D' },
-                                            2: { nome: 'Em andamento', fila: 'D' },
-                                            3: { nome: 'Arte OK', fila: 'D' },
-                                            4: { nome: 'Em espera', fila: 'D' },
-                                            5: { nome: 'Cor teste', fila: 'D' },
+                                            // 1: { nome: 'Pendente', fila: 'D' },
+                                            // 2: { nome: 'Em andamento', fila: 'D' },
+                                            // 3: { nome: 'Arte OK', fila: 'D' },
+                                            // 4: { nome: 'Em espera', fila: 'D' },
+                                            // 5: { nome: 'Cor teste', fila: 'D' },
 
                                             8: { nome: 'Pendente', fila: 'I' },
                                             9: { nome: 'Processando', fila: 'I' },
@@ -381,16 +325,6 @@ const ConfeccaoScreen = () => {
                                                                 <IconPrinter />
                                                             </IconButton>
                                                         </Tooltip> */}
-                                                        <Tooltip title="Editar">
-                                                            <IconButton onClick={() => handleEdit(row)}>
-                                                                <IconEdit />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                        <Tooltip title="Excluir">
-                                                            <IconButton onClick={() => handleDelete(row)}>
-                                                                <IconTrash />
-                                                            </IconButton>
-                                                        </Tooltip>
                                                     </TableCell>
                                                 </TableRow>
 
@@ -428,9 +362,6 @@ const ConfeccaoScreen = () => {
                                                                                                 <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
                                                                                                     {produto.nome}
                                                                                                 </TableCell>
-                                                                                                {/* <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.materiais.map((material: Material) => material.material).join(', ')} 
-                                                </TableCell> */}
                                                                                                 <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
                                                                                                     {produto.medida_linear}
                                                                                                 </TableCell>
