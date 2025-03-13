@@ -90,8 +90,8 @@ const DialogObs: React.FC<DialogObsProps> = ({
             <Typography
               paragraph
               sx={{
-                color: 'text.secondary',
-                fontSize: '14x',
+                color: 'text.primary',
+                fontSize: '15px',
                 lineHeight: '1.6',
               }}
             >
