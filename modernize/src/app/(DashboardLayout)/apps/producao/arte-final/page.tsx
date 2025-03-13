@@ -43,6 +43,7 @@ import trocarStatusPedido from './components/useTrocarStatusPedido';
 import trocarObsPedido from './components/usetrocarObservacao';
 import { Select } from 'formik-mui';
 import DialogObs from './components/observacaoDialog';
+import deletePedidoArteFinal from './components/useDeletePedido';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -116,8 +117,14 @@ const ArteFinalScreen = () => {
     router.push(`/apps/producao/arte-final/edit/${pedido.id}/`);
   };
 
-  const handleDelete = (row: ArteFinal) => {
-    console.log("Deletar pedido", row);
+  const handleDelete = async (row: ArteFinal) => {
+    const sucesso = await deletePedidoArteFinal(row?.id,refetch);
+    if (sucesso) {
+      console.log("Pedido deletado com sucesso!");
+      alert('sucesso');
+    } else {
+      console.log("Falha ao excluir pedido.");
+    }
   };
 
   const handleLinkTrello = (row: ArteFinal) => {
