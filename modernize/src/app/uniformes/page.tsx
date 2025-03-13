@@ -18,6 +18,7 @@ const KIDS_SIZES = ['2', '4', '6', '8', '10', '12', '14', '16'];
 export default function UniformBackofficeScreen() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('id');
+  const pid = searchParams.get('pid');
   const { data: uniformData, loading: isLoadingData, error: fetchError, fetchData } = useFetch<UniformData[]>();
   const { fetchData: submitFormData, loading: isSubmitting, error: submitError } = useFetch<any>();
   const [initialLoading, setInitialLoading] = useState(true);
@@ -175,7 +176,10 @@ export default function UniformBackofficeScreen() {
           tamanho_shorts: row.data[4]
         }));
 
-        const apiUrl = `${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${uniform.id}/configuracoes`;
+        const apiUrl = pid 
+          ? `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final/uniformes/${uniform.id}/configuracoes`
+          : `${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${uniform.id}/configuracoes`;
+
         return submitFormData(apiUrl, {
           method: HttpMethod.PUT,
           body: JSON.stringify({ configuracoes }),
@@ -202,8 +206,11 @@ export default function UniformBackofficeScreen() {
     if (orderId) {
       const apiUrl = `${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${orderId}`;
       fetchData(apiUrl);
+    } else if (pid) {
+      const apiUrl = `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final/uniformes/${pid}`;
+      fetchData(apiUrl);
     }
-  }, [orderId]);
+  }, [orderId, pid]);
 
   useEffect(() => {
     if (!isLoadingData && uniformData) {
