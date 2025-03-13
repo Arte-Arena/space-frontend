@@ -7,23 +7,6 @@ import { ArteFinal } from '../types';
 
 export default function ProdutosPacotesUniformesAddScreen() {
 
-  async function handleAdd(data: ArteFinal) {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedido-arte-final`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (response.ok) {
-      console.log("Pacote criado:", data);
-    } else {
-      console.error("Erro ao criar pacote:", await response.json());
-    }
-  }
-
   const BCrumb = [
     {
       to: "/",
@@ -49,7 +32,7 @@ export default function ProdutosPacotesUniformesAddScreen() {
       <ParentCard title="Arte Final">
         <>
           <h2 className="text-xl font-bold">Adicionar Novo Pedido com Arte Final</h2>
-          <ArteFinalForm onSubmit={handleAdd} />
+          <ArteFinalForm />
         </>
       </ParentCard>
     </PageContainer>

@@ -69,6 +69,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
   const [allTiposDePedido, setAllTiposDePedido] = useState<PedidoTipo[]>([]);
   const [allVendedores, setAllVendedores] = useState<User[]>([]);
   const [loadingSubmit, setLoadingSubmit] = useState<boolean>(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
   const dataProducts = localStorage.getItem('produtosConsolidadosOrcamento');
   const materiais = localStorage.getItem('materiais');
@@ -183,7 +184,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
   useEffect(() => {
     if (initialData) {
       setFormData((prev) => ({ ...prev, ...initialData }));
-  
+
       if (initialData.lista_produtos) {
 
         const initialProductsList = initialData.lista_produtos.map((product, index) => ({
@@ -195,7 +196,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
       } else {
         console.log("Não foi possível carregar aLista de Produtos");
       }
-  
+
     }
   }, [initialData]);
 
@@ -304,12 +305,16 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formSubmitted) return;
+
+    setFormSubmitted(true);
     setLoadingSubmit(true);
 
     const payload = {
       block_tiny: block_tiny,
       pedido_id: formData.id,
       pedido_numero: String(formData.numero_pedido),
+      data_prevista: formData.data_prevista,
       prazo_arte_final: '',
       prazo_confeccao: '',
       pedido_observacoes: formData.observacoes,
@@ -321,12 +326,14 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
       lista_produtos: productsList.map(produto => ({
         id: produto.id,
         nome: produto.nome,
+        esboco: produto.esboco,
         quantidade: produto.quantidade,
         material: produto.material,
         medida_linear: produto.medida_linear,
         preco: produto.preco,
         prazo: produto.prazo,
-      }))
+      })),
+      vendedor_id: formData.vendedor_id,
     };
 
     try {
@@ -348,6 +355,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
       console.error('Erro:', error);
     } finally {
       setLoadingSubmit(false);
+      setFormSubmitted(false);
     }
   };
 
