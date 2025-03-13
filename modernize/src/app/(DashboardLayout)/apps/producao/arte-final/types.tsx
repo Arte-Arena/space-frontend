@@ -2,41 +2,56 @@
 interface ArteFinal {
   id?: number;
   user_id?: number | null;
-  numero_pedido: Number;
+  numero_pedido: Number | undefined;
+  data_prevista: Date | null;
   prazo_arte_final: Number;
   prazo_confeccao: Number;
   lista_produtos: Produto[];
-  observacao: string;
   rolo: string;
   estagio?: string | null;
-  designer: string;
   designer_id?: number | null;
   pedido_status_id?: number | null;
   pedido_tipo_id?: number | null;
   observacoes?: string | null;
-  status: string;
   url_trello?: string | null;
-  situacao?: string | null;
   prioridade?: string | null;
   orcamento_id?: number | null;
-  tipo_de_pedido: string;
+  vendedor_id?: number | null;
   created_at: Date;
   updated_at: Date;
 }
 
 interface Produto {
+  uid?: number;
   id: number;
-  tipo_produto: string;
-  materiais: Material[];
+  nome: string;
+  esboco: string;
+  quantidade: number;
+  material: string | undefined;
   medida_linear: number;
+  preco: number;
+  prazo: number;
 }
 
-interface Material {
+interface User{
   id: number;
-  material: string;
+  name: string;
+  role_id: number;
 }
 
-export type { ArteFinal, Produto, Material }
+interface PedidoStatus {
+  id: number;
+  nome?: string;
+  name?: string;
+  fila: string;
+}
+
+interface PedidoTipo {
+  id: number;
+  nome: string;
+}
+
+export type { ArteFinal, Produto, User, PedidoStatus, PedidoTipo };
 
 
 

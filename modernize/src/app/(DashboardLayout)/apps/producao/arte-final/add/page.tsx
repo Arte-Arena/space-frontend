@@ -3,26 +3,9 @@ import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcr
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import ArteFinalForm from "@/app/(DashboardLayout)/apps/producao/arte-final/ArteFinalForm";
-import { ArteFinal, Produto, Material } from '../types';
+import { ArteFinal } from '../types';
 
 export default function ProdutosPacotesUniformesAddScreen() {
-
-  async function handleAdd(data: ArteFinal) {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedido-arte-final`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (response.ok) {
-      console.log("Pacote criado:", data);
-    } else {
-      console.error("Erro ao criar pacote:", await response.json());
-    }
-  }
 
   const BCrumb = [
     {
@@ -48,8 +31,8 @@ export default function ProdutosPacotesUniformesAddScreen() {
       <Breadcrumb title="Produção / Arte Final" items={BCrumb} />
       <ParentCard title="Arte Final">
         <>
-          <h2 className="text-xl font-bold">Adicionar Novo Pacote de Uniformes</h2>
-          <ArteFinalForm onSubmit={handleAdd} />
+          <h2 className="text-xl font-bold">Adicionar Novo Pedido com Arte Final</h2>
+          <ArteFinalForm />
         </>
       </ParentCard>
     </PageContainer>

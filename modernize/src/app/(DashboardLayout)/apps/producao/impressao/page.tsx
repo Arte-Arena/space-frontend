@@ -36,26 +36,16 @@ import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconPrinter } from '@tabler/icons-react';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
-import AssignDesignerDialog from './components/designerDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import { format } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
-import trocarObsPedido from './components/usetrocarObservacao';
-import { Select } from 'formik-mui';
-import DialogObs from './components/observacaoDialog';
 
-const ArteFinalScreen = () => {
+const ConfeccaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
-  const [openDialogDesinger, setOpenDialogDesinger] = useState(false);
-  const [openDialogObs, setOpenDialogObs] = useState(false);
-  const [selectedRowDesinger, setSelectedRowDesinger] = useState<ArteFinal | null>(null);
-  const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
-  const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
-  const [rows, setRows] = useState<ArteFinal[]>([]);
+  const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 5,
     page: 0,
@@ -66,9 +56,6 @@ const ArteFinalScreen = () => {
 
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
-  const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
-  const allowedRoles = [1, 3, 4];
-  const canShowButton = roles.some(role => allowedRoles.includes(role));
 
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
@@ -89,37 +76,9 @@ const ArteFinalScreen = () => {
     }
   }, [dataPedidos]);
 
-  console.log(allPedidos);
-
-  useEffect(() => {
-    if (!openDialogDesinger) {
-      refetch(); // Chama refetch quando o dialog é fechado
-    }
-  }, [openDialogDesinger, refetch]);
-
+  // console.log(allPedidos);
 
   // handles
-
-  const handleNovoPedido = () => {
-    setIsAdding(true);
-    router.push('/apps/producao/arte-final/add/');
-  };
-
-  const handleEdit = (pedido: ArteFinal) => {
-    const pedidoId = String(pedido.id);
-
-    setLoadingStates((prev) => ({
-      ...prev,
-      [pedidoId]: { ...(prev[pedidoId] ?? { editing: false, detailing: false }), editing: true },
-    }));
-
-    router.push(`/apps/producao/arte-final/edit/${pedido.id}/`);
-  };
-
-  const handleDelete = (row: ArteFinal) => {
-    console.log("Deletar pedido", row);
-  };
-
   const handleLinkTrello = (row: ArteFinal) => {
     if (row.url_trello) {
       window.open(row.url_trello, '_blank');
@@ -128,30 +87,16 @@ const ArteFinalScreen = () => {
       console.warn('URL do Trello não disponível');
     }
   };
+
   const handleListaUniformes = (row: ArteFinal) => {
     // provavelmente tem que ver validar se existe uma lista de uniformes nesse pedido
     // unica forma atualmente é pelo 'ocamento_id'
     console.log("Deletar pedido", row);
   };
 
-  const handleAtribuirDesigner = (row: ArteFinal) => {
-    setSelectedRowDesinger(row);
-    setOpenDialogDesinger(true);
-  };
-
   const handleVerDetalhes = (row: ArteFinal) => {
     setSelectedRowSidePanel(row);
     setOpenDrawer(true);
-  };
-
-  const handleEnviarImpressora = async (row: ArteFinal) => {
-    const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
-    if (sucesso) {
-      console.log("Pedido enviado com sucesso!");
-      alert('sucesso');
-    } else {
-      console.log("Falha ao enviar pedido.");
-    }
   };
 
   // handles dos selects
@@ -164,12 +109,6 @@ const ArteFinalScreen = () => {
       console.log("Falha ao enviar pedido.");
     }
   }
-
-  const handleClickOpenDialogObs = async (row: ArteFinal) => {
-    // abre o dialog e passa a row
-    setSelectedRowObs(row);
-    setOpenDialogObs(true);
-  };
 
   const BCrumb = [
     {
@@ -194,22 +133,10 @@ const ArteFinalScreen = () => {
   // console.log(designers);
 
   return (
-    <PageContainer title="Produção / Arte - Final" description="Tela de Produção da Arte - Final | Arte Arena">
-      <Breadcrumb title="Produção / Arte - Final" items={BCrumb} />
-      <ParentCard title="Arte - Final">
+    <PageContainer title="Produção / Confecção" description="Tela de Produção da Confecção | Arte Arena">
+      <Breadcrumb title="Produção / Confecção" items={BCrumb} />
+      <ParentCard title="Confecção">
         <>
-          <Stack direction="row" spacing={1} sx={{ marginBottom: '1em', height: '3em', justifyContent: 'flex-end' }}>
-            <Button
-              variant="contained"
-              startIcon={isAdding ? <CircularProgress size={20} /> : <IconPlus />}
-              sx={{ height: '100%' }}
-              onClick={handleNovoPedido}
-              disabled={isAdding}
-            >
-              {isAdding ? 'Adicionando...' : 'Adicionar Novo pedido'}
-            </Button>
-          </Stack>
-
           {isErrorPedidos ? (
             <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
               <Typography variant="body1" color="error">Erro ao carregar pedidos.</Typography>
@@ -227,7 +154,7 @@ const ArteFinalScreen = () => {
                     {/* <TableCell> </TableCell> */}
                     <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
                     <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Previsão de Entrega</TableCell>
+                    <TableCell align='center' sx={{ width: '10%' }}>Prazo Arte Final</TableCell>
                     {/* <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell> */}
                     <TableCell align='center' sx={{ width: '10%' }}>Desinger</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
@@ -244,14 +171,16 @@ const ArteFinalScreen = () => {
                         : row.lista_produtos
                       : [];
 
+                    // tem que definir se as datas são maiores ou não e assim definir se vai ficar vermelho ou não
                     // definição das datas e atrasos
-                    const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
+                    const prazoArteFinal = row?.prazo_arte_final ? new Date(row?.prazo_arte_final) : null;
                     const dataAtual = new Date();
                     let atraso = false;
-                    if (dataPrevista && dataPrevista < dataAtual) {
+                    if (prazoArteFinal && prazoArteFinal < dataAtual) {
                       atraso = true;
                       console.log("A data de prazo_arte_final esta em atraso.");
                     }
+
 
                     // definição dos designers
                     const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
@@ -275,20 +204,20 @@ const ArteFinalScreen = () => {
                     } as const;
 
                     const pedidoStatus = {
-                      1: { nome: 'Pendente', fila: 'D' },
-                      2: { nome: 'Em andamento', fila: 'D' },
-                      3: { nome: 'Arte OK', fila: 'D' },
-                      4: { nome: 'Em espera', fila: 'D' },
-                      5: { nome: 'Cor teste', fila: 'D' },
+                      // 1: { nome: 'Pendente', fila: 'D' },
+                      // 2: { nome: 'Em andamento', fila: 'D' },
+                      // 3: { nome: 'Arte OK', fila: 'D' },
+                      // 4: { nome: 'Em espera', fila: 'D' },
+                      // 5: { nome: 'Cor teste', fila: 'D' },
 
-                      // 8: { nome: 'Pendente', fila: 'I' },
-                      // 9: { nome: 'Processando', fila: 'I' },
-                      // 10: { nome: 'Renderizando', fila: 'I' },
-                      // 11: { nome: 'Impresso', fila: 'I' },
-                      // 12: { nome: 'Em Impressão', fila: 'I' },
-                      // 13: { nome: 'Separação', fila: 'I' },
-                      // 14: { nome: 'Em Transporte', fila: 'E' },
-                      // 15: { nome: 'Entregue', fila: 'E' },
+                      8: { nome: 'Pendente', fila: 'I' },
+                      9: { nome: 'Processando', fila: 'I' },
+                      10: { nome: 'Renderizando', fila: 'I' },
+                      11: { nome: 'Impresso', fila: 'I' },
+                      12: { nome: 'Em Impressão', fila: 'I' },
+                      13: { nome: 'Separação', fila: 'I' },
+                      14: { nome: 'Em Transporte', fila: 'E' },
+                      15: { nome: 'Entregue', fila: 'E' },
                     } as const;
 
                     const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
@@ -301,21 +230,20 @@ const ArteFinalScreen = () => {
                         <TableRow
                           key={row.id}
                           sx={{
-                            backgroundColor: atraso
-                              ? 'red' // Prioridade máxima
-                              : row.pedido_tipo_id === 2
+                            backgroundColor:
+                              row.pedido_tipo_id === 2
                                 ? '#710f17'
                                 : row.pedido_status_id === 2
                                   ? '#f54b07'
                                   : row.pedido_status_id === 4
                                     ? '#ffa500'
-                                    : 'inherit' // Correção na grafia ('inherit' em vez de 'inhert')
+                                    : (atraso ? 'inher' : 'inhert') // Fixed here
                           }}
                         >
 
                           <TableCell>{String(row.numero_pedido)}</TableCell>
 
-                          {/* Nome de produto */}
+
                           <TableCell align='center'>
                             {row.lista_produtos?.length > 0
                               ? (
@@ -333,33 +261,11 @@ const ArteFinalScreen = () => {
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
-                          <TableCell align='center'>{designerNome ?? 'Sem Designer'}</TableCell>
+                          {/* <TableCell align='center'>{Number(row.medidaLinear) ?? 0}</TableCell> */}
+                          <TableCell align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
+                          {/* <TableCell align='center'>{row.situacao ?? ''}</TableCell> */}
 
-                          <TableCell align="center">
-                            <Button
-                              sx={{
-                                background: 'transparent',
-                                color: theme.palette.text.primary,
-                                borderRadius: '4px',
-                                border: '1px solid GrayText',
-                                fontSize: '12px',
-                                whiteSpace: 'nowrap', // Impede que o texto quebre em várias linhas
-                                overflow: 'hidden', // Esconde o texto que ultrapassa o limite do botão
-                                textOverflow: 'ellipsis', // Adiciona "..." ao texto que não cabe
-                                maxWidth: '150px', // Define uma largura máxima para o botão
-                                '&:hover': {
-                                  backgroundColor: 'rgba(13, 12, 12, 0.1)', // Cor neutra ao passar o mouse
-                                  color: theme.palette.text.secondary, // Cor do texto ao passar o mouse
-                                }
-                              }}
-                              onClick={() => handleClickOpenDialogObs(row)}
-                            >
-                              {row.observacoes ?? "Adicionar Observação"}
-                            </Button>
-                          </TableCell>
-
-
-
+                          <TableCell align='center'>{row.observacoes ?? ''}</TableCell>
                           <TableCell align='center'>{tipo ?? 'null'}</TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
@@ -367,11 +273,10 @@ const ArteFinalScreen = () => {
                           <TableCell align='center'>
                             <select
                               style={{
-                                textAlign: 'center',
                                 padding: '0px',
                                 fontSize: '12px',
                                 borderRadius: '4px',
-                                border: '1px solid GrayText',
+                                borderColor: 'transparent',
                                 backgroundColor: 'transparent',
                                 color: theme.palette.text.primary,
                                 appearance: 'none',
@@ -415,32 +320,11 @@ const ArteFinalScreen = () => {
                                 <IconShirt />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Atribuir Designer">
-                              <IconButton onClick={() => handleAtribuirDesigner(row)}>
-                                <IconBrush />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Enviar para Impressão!">
-                              <IconButton onClick={() => handleEnviarImpressora(row)}>
-                                <IconPrinter />
-                              </IconButton>
-                            </Tooltip>
-                            {/* validar a role do user 3,4,1*/}
-
-                            {canShowButton && (
-                              <>
-                                <Tooltip title="Editar">
-                                  <IconButton onClick={() => handleEdit(row)}>
-                                    <IconEdit />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Excluir">
-                                  <IconButton onClick={() => handleDelete(row)}>
-                                    <IconTrash />
-                                  </IconButton>
-                                </Tooltip>
-                              </>
-                            )}
+                            {/* <Tooltip title="Enviar para Impressão!">
+                                                            <IconButton onClick={() => handleEnviarImpressora(row)}>
+                                                                <IconPrinter />
+                                                            </IconButton>
+                                                        </Tooltip> */}
                           </TableCell>
                         </TableRow>
 
@@ -478,9 +362,6 @@ const ArteFinalScreen = () => {
                                                 <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
                                                   {produto.nome}
                                                 </TableCell>
-                                                {/* <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.materiais.map((material: Material) => material.material).join(', ')} 
-                                                </TableCell> */}
                                                 <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
                                                   {produto.medida_linear}
                                                 </TableCell>
@@ -503,7 +384,7 @@ const ArteFinalScreen = () => {
                   })}
                 </TableBody>
 
-              </Table >
+              </Table>
               <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
@@ -515,10 +396,6 @@ const ArteFinalScreen = () => {
               />
             </TableContainer>
           )}
-          {selectedRowDesinger !== null && (
-            <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} refetch={refetch} />
-          )}
-          <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
         </>
       </ParentCard>
@@ -527,4 +404,4 @@ const ArteFinalScreen = () => {
   );
 };
 
-export default ArteFinalScreen;
+export default ConfeccaoScreen;
