@@ -181,13 +181,18 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false 
     if (initialData) {
       setFormData((prev) => ({ ...prev, ...initialData }));
   
-      const initialProductsList = initialData.lista_produtos.map((product, index) => ({
-        ...product,
-        uid: Number(`${product.id}${index}`),
-        esboco: product.esboco || "",
-      }));
+      if (initialData.lista_produtos) {
+
+        const initialProductsList = initialData.lista_produtos.map((product, index) => ({
+          ...product,
+          uid: Number(`${product.id}${index}`),
+          esboco: product.esboco || "",
+        }));
+        setProductsList(initialProductsList);
+      } else {
+        console.log("Não foi possível carregar aLista de Produtos");
+      }
   
-      setProductsList(initialProductsList);
     }
   }, [initialData]);
 
