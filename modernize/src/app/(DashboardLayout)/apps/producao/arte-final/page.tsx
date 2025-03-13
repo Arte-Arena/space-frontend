@@ -128,10 +128,28 @@ const ArteFinalScreen = () => {
       console.warn('URL do Trello não disponível');
     }
   };
-  const handleListaUniformes = (row: ArteFinal) => {
-    // provavelmente tem que ver validar se existe uma lista de uniformes nesse pedido
-    // unica forma atualmente é pelo 'ocamento_id'
-    console.log("Deletar pedido", row);
+  const handleListaUniformes = async (row: ArteFinal) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final/${row.id}/verificar-uniformes`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        router.push(data.redirect);
+      } else {
+        console.error('Erro ao verificar uniformes:', data.error);
+        alert('Erro ao verificar uniformes: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar uniformes:', error);
+      alert('Erro ao verificar uniformes');
+    }
   };
 
   const handleAtribuirDesigner = (row: ArteFinal) => {
