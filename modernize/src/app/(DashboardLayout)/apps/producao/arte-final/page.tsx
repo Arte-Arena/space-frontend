@@ -66,6 +66,9 @@ const ArteFinalScreen = () => {
 
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
+  const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
+  const allowedRoles = [1, 3, 4];
+  const canShowButton = roles.some(role => allowedRoles.includes(role));
 
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
@@ -340,6 +343,10 @@ const ArteFinalScreen = () => {
                                 borderRadius: '4px',
                                 border: '1px solid GrayText',
                                 fontSize: '12px',
+                                whiteSpace: 'nowrap', // Impede que o texto quebre em várias linhas
+                                overflow: 'hidden', // Esconde o texto que ultrapassa o limite do botão
+                                textOverflow: 'ellipsis', // Adiciona "..." ao texto que não cabe
+                                maxWidth: '150px', // Define uma largura máxima para o botão
                                 '&:hover': {
                                   backgroundColor: 'rgba(13, 12, 12, 0.1)', // Cor neutra ao passar o mouse
                                   color: theme.palette.text.secondary, // Cor do texto ao passar o mouse
@@ -418,16 +425,22 @@ const ArteFinalScreen = () => {
                                 <IconPrinter />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Editar">
-                              <IconButton onClick={() => handleEdit(row)}>
-                                <IconEdit />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Excluir">
-                              <IconButton onClick={() => handleDelete(row)}>
-                                <IconTrash />
-                              </IconButton>
-                            </Tooltip>
+                            {/* validar a role do user 3,4,1*/}
+
+                            {canShowButton && (
+                              <>
+                                <Tooltip title="Editar">
+                                  <IconButton onClick={() => handleEdit(row)}>
+                                    <IconEdit />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Excluir">
+                                  <IconButton onClick={() => handleDelete(row)}>
+                                    <IconTrash />
+                                  </IconButton>
+                                </Tooltip>
+                              </>
+                            )}
                           </TableCell>
                         </TableRow>
 
@@ -490,7 +503,7 @@ const ArteFinalScreen = () => {
                   })}
                 </TableBody>
 
-              </Table>
+              </Table >
               <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
