@@ -25,6 +25,7 @@ import {
   TableBody,
   Paper,
   IconButton,
+  CircularProgress
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { IconPlus, IconMinus } from '@tabler/icons-react';
@@ -67,6 +68,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
   const [allStatusPedido, setAllStatusPedido] = useState<PedidoStatus[]>([]);
   const [allTiposDePedido, setAllTiposDePedido] = useState<PedidoTipo[]>([]);
   const [allVendedores, setAllVendedores] = useState<User[]>([]);
+  const [loadingSubmit, setLoadingSubmit] = useState<boolean>(false);
 
   const dataProducts = localStorage.getItem('produtosConsolidadosOrcamento');
   const materiais = localStorage.getItem('materiais');
@@ -302,6 +304,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoadingSubmit(true);
 
     const payload = {
       block_tiny: block_tiny,
@@ -343,6 +346,8 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
 
     } catch (error) {
       console.error('Erro:', error);
+    } finally {
+      setLoadingSubmit(false);
     }
   };
 
@@ -738,8 +743,12 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
 
       {!readOnly && (
         <Box sx={{ mt: 5 }}>
-          <Button type="submit" variant="contained" color="primary">
-            {initialData ? "Salvar Alterações" : "Cadastrar Pedido"}
+          <Button type="submit" variant="contained" color="primary" disabled={loadingSubmit}>
+            {loadingSubmit ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              initialData ? "Salvar Alterações" : "Cadastrar Pedido"
+            )}
           </Button>
         </Box>
       )}
