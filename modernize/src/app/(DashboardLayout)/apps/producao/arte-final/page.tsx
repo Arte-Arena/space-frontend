@@ -40,10 +40,9 @@ import AssignDesignerDialog from './components/designerDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import { format } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
-import trocarObsPedido from './components/usetrocarObservacao';
-import { Select } from 'formik-mui';
 import DialogObs from './components/observacaoDialog';
 import deletePedidoArteFinal from './components/useDeletePedido';
+import { useThemeMode } from '@/utils/useThemeMode';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -64,12 +63,17 @@ const ArteFinalScreen = () => {
 
   const router = useRouter();
   const theme = useTheme()
+  const myTheme = useThemeMode()
 
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
   const allowedRoles = [1, 3, 4];
   const canShowButton = roles.some(role => allowedRoles.includes(role));
+
+  const startIndex = paginationModel.page * paginationModel.pageSize;
+  const endIndex = startIndex + paginationModel.pageSize;
+  const paginatedPedidos = allPedidos.slice(startIndex, endIndex);
 
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
@@ -87,6 +91,7 @@ const ArteFinalScreen = () => {
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) { // Verificação adicional
       setAllPedidos(dataPedidos.data);
+      console.log(dataPedidos);
     }
   }, [dataPedidos]);
 
@@ -118,7 +123,7 @@ const ArteFinalScreen = () => {
   };
 
   const handleDelete = async (row: ArteFinal) => {
-    const sucesso = await deletePedidoArteFinal(row?.id,refetch);
+    const sucesso = await deletePedidoArteFinal(row?.id, refetch);
     if (sucesso) {
       console.log("Pedido deletado com sucesso!");
       alert('sucesso');
@@ -262,7 +267,7 @@ const ArteFinalScreen = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Array.isArray(allPedidos) && allPedidos.map((row) => {
+                  {Array.isArray(paginatedPedidos) && paginatedPedidos.map((row) => {
                     const listaProdutos: Produto[] = row.lista_produtos
                       ? typeof row.lista_produtos === 'string'
                         ? JSON.parse(row.lista_produtos)
@@ -275,7 +280,6 @@ const ArteFinalScreen = () => {
                     let atraso = false;
                     if (dataPrevista && dataPrevista < dataAtual) {
                       atraso = true;
-                      console.log("A data de prazo_arte_final esta em atraso.");
                     }
 
                     // definição dos designers
@@ -323,25 +327,30 @@ const ArteFinalScreen = () => {
                     return (
                       <>
                         {/* colocar as condições de data e de tipos de status e suas cores */}
+                        {/* teste usar a theme   */}
                         <TableRow
                           key={row.id}
                           sx={{
                             backgroundColor: atraso
-                              ? 'red' // Prioridade máxima
+                              ? 'rgba(250, 0, 0, 0.8)' // Prioridade máxima
                               : row.pedido_tipo_id === 2
-                                ? '#710f17'
+                                ? 'rgba(205, 92, 92, 0.8)' // indianred com transparência
                                 : row.pedido_status_id === 2
-                                  ? '#f54b07'
+                                  ? 'rgba(245, 75, 7, 0.8)' // #f54b07 com transparência
                                   : row.pedido_status_id === 4
-                                    ? '#ffa500'
-                                    : 'inherit' // Correção na grafia ('inherit' em vez de 'inhert')
+                                    ? 'rgba(255, 165, 0, 0.8)' // #ffa500 com transparência
+                                    : 'inherit',
                           }}
                         >
 
-                          <TableCell>{String(row.numero_pedido)}</TableCell>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                          }}>{String(row.numero_pedido)}</TableCell>
 
                           {/* Nome de produto */}
-                          <TableCell align='center'>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                          }} align='center'>
                             {row.lista_produtos?.length > 0
                               ? (
                                 <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
@@ -353,20 +362,26 @@ const ArteFinalScreen = () => {
                               : 'N/A'}
                           </TableCell>
 
-                          <TableCell align='center'>
-                            {row?.prazo_arte_final ? format(new Date(row?.prazo_arte_final), "dd/MM/yyyy") : "Data inválida"}
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                          }} align='center'>
+                            {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
-                          <TableCell align='center'>{designerNome ?? 'Sem Designer'}</TableCell>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                          }} align='center'>{designerNome ?? 'Sem Designer'}</TableCell>
 
-                          <TableCell align="center">
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                          }} align="center">
                             <Button
                               sx={{
                                 background: 'transparent',
-                                color: theme.palette.text.primary,
+                                color: myTheme === 'dark' ? 'white' : 'black',
                                 borderRadius: '4px',
-                                border: '1px solid GrayText',
+                                border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
                                 fontSize: '12px',
                                 whiteSpace: 'nowrap', // Impede que o texto quebre em várias linhas
                                 overflow: 'hidden', // Esconde o texto que ultrapassa o limite do botão
@@ -385,20 +400,25 @@ const ArteFinalScreen = () => {
 
 
 
-                          <TableCell align='center'>{tipo ?? 'null'}</TableCell>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                          }} align='center'>{tipo ?? 'null'}</TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
-                          {/* <TableCell align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
-                          <TableCell align='center'>
+                          {/* <TableCell sx={{
+                          color: 'black'}} align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                          }} align='center'>
                             <select
                               style={{
                                 textAlign: 'center',
                                 padding: '0px',
                                 fontSize: '12px',
                                 borderRadius: '4px',
-                                border: '1px solid GrayText',
+                                border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
                                 backgroundColor: 'transparent',
-                                color: theme.palette.text.primary,
+                                color: myTheme === 'dark' ? 'white' : 'black',
                                 appearance: 'none',
                                 WebkitAppearance: 'none',
                                 MozAppearance: 'none',
@@ -421,7 +441,9 @@ const ArteFinalScreen = () => {
                           </TableCell>
 
 
-                          <TableCell align='center'>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                          }} align='center'>
                             <Tooltip title="Ver Detalhes">
                               <IconButton onClick={() => handleVerDetalhes(row)}>
                                 <IconEye />
@@ -530,7 +552,7 @@ const ArteFinalScreen = () => {
 
               </Table >
               <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
+                rowsPerPageOptions={[15, 25, 50]}
                 component="div"
                 count={allPedidos.length || 0}
                 rowsPerPage={paginationModel.pageSize}

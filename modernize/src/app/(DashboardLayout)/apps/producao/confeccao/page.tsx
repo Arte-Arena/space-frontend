@@ -57,6 +57,10 @@ const ConfeccaoScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
 
+  const startIndex = paginationModel.page * paginationModel.pageSize;
+  const endIndex = startIndex + paginationModel.pageSize;
+  const paginatedPedidos = allPedidos.slice(startIndex, endIndex);
+
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
@@ -164,7 +168,7 @@ const ConfeccaoScreen = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Array.isArray(allPedidos) && allPedidos.map((row) => {
+                {Array.isArray(paginatedPedidos) && paginatedPedidos.map((row) => {
                     const listaProdutos: Produto[] = row.lista_produtos
                       ? typeof row.lista_produtos === 'string'
                         ? JSON.parse(row.lista_produtos)
@@ -173,12 +177,11 @@ const ConfeccaoScreen = () => {
 
                     // tem que definir se as datas são maiores ou não e assim definir se vai ficar vermelho ou não
                     // definição das datas e atrasos
-                    const prazoArteFinal = row?.prazo_arte_final ? new Date(row?.prazo_arte_final) : null;
+                    const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
                     const dataAtual = new Date();
                     let atraso = false;
-                    if (prazoArteFinal && prazoArteFinal < dataAtual) {
+                    if (dataPrevista && dataPrevista < dataAtual) {
                       atraso = true;
-                      console.log("A data de prazo_arte_final esta em atraso.");
                     }
 
 
@@ -257,7 +260,7 @@ const ConfeccaoScreen = () => {
                           </TableCell>
 
                           <TableCell align='center'>
-                            {row?.prazo_arte_final ? format(new Date(row?.prazo_arte_final), "dd/MM/yyyy") : "Data inválida"}
+                            {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
@@ -386,7 +389,7 @@ const ConfeccaoScreen = () => {
 
               </Table>
               <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
+                rowsPerPageOptions={[15, 25, 50]}
                 component="div"
                 count={allPedidos.length || 0}
                 rowsPerPage={paginationModel.pageSize}
