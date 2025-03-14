@@ -39,6 +39,7 @@ import { ApiResponsePedidosArteFinal } from './components/types';
 import { format } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
+import { useThemeMode } from '@/utils/useThemeMode';
 
 const ConfeccaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -56,6 +57,7 @@ const ConfeccaoScreen = () => {
 
   const router = useRouter();
   const theme = useTheme()
+  const myTheme = useThemeMode()
 
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
@@ -240,21 +242,29 @@ const ConfeccaoScreen = () => {
                         <TableRow
                           key={row.id}
                           sx={{
-                            backgroundColor:
-                              row.pedido_tipo_id === 2
-                                ? '#710f17'
+                            backgroundColor: atraso
+                              ? 'rgba(250, 0, 0, 0.8)' // Prioridade máxima
+                              : row.pedido_tipo_id === 2
+                                ? 'rgba(205, 92, 92, 0.8)' // indianred com transparência
                                 : row.pedido_status_id === 2
-                                  ? '#f54b07'
+                                  ? 'rgba(245, 75, 7, 0.8)' // #f54b07 com transparência
                                   : row.pedido_status_id === 4
-                                    ? '#ffa500'
-                                    : (atraso ? 'inher' : 'inhert') // Fixed here
+                                    ? 'rgba(255, 165, 0, 0.8)' // #ffa500 com transparência
+                                    : 'inherit',
                           }}
                         >
 
-                          <TableCell>{String(row.numero_pedido)}</TableCell>
-
-
-                          <TableCell align='center'>
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            }}
+                          >
+                            {String(row.numero_pedido)}</TableCell>
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            }}
+                            align='center'>
                             {row.lista_produtos?.length > 0
                               ? (
                                 <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
@@ -266,20 +276,35 @@ const ConfeccaoScreen = () => {
                               : 'N/A'}
                           </TableCell>
 
-                          <TableCell align='center'>
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            }}
+                            align='center'
+                          >
                             {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
-                          <TableCell align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
-
-                          <TableCell align="center">
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            }}
+                            align='center'
+                          >
+                            {designerNome ?? 'Não Atribuido'}</TableCell>
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            }}
+                            align="center"
+                          >
                             <Button
                               sx={{
                                 background: 'transparent',
-                                color: theme.palette.text.primary,
+                                color: myTheme === 'dark' ? 'white' : 'black',
                                 borderRadius: '4px',
-                                border: '1px solid GrayText',
+                                border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
                                 fontSize: '12px',
                                 whiteSpace: 'nowrap', // Impede que o texto quebre em várias linhas
                                 overflow: 'hidden', // Esconde o texto que ultrapassa o limite do botão
@@ -296,19 +321,27 @@ const ConfeccaoScreen = () => {
                             </Button>
                           </TableCell>
 
-                          <TableCell align='center'>{tipo ?? 'null'}</TableCell>
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            }}
+                            align='center'
+                          >
+                            {tipo ?? 'null'}
+                          </TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
                           {/* <TableCell align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
                           <TableCell align='center'>
                             <select
                               style={{
+                                textAlign: 'center',
                                 padding: '0px',
                                 fontSize: '12px',
                                 borderRadius: '4px',
-                                borderColor: 'transparent',
+                                border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
                                 backgroundColor: 'transparent',
-                                color: theme.palette.text.primary,
+                                color: myTheme === 'dark' ? 'white' : 'black',
                                 appearance: 'none',
                                 WebkitAppearance: 'none',
                                 MozAppearance: 'none',

@@ -3,6 +3,7 @@ import { Drawer, Box, Typography, IconButton, Card, CardContent, Divider, Table,
 import CloseIcon from "@mui/icons-material/Close";
 import { ArteFinal, Produto } from "./types";
 import { format } from "date-fns";
+import { useThemeMode } from "@/utils/useThemeMode";
 
 interface SidePanelProps {
   row: ArteFinal | null;
@@ -14,6 +15,8 @@ interface SidePanelProps {
 const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer }) => {
   // console.log('ROW DRAWER: ', row);
   const designers = localStorage.getItem('designers');
+
+  const theme = useThemeMode();
 
   const listaProdutos: Produto[] = row?.lista_produtos
     ? typeof row?.lista_produtos === "string"
@@ -231,11 +234,11 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
             <Typography variant="h6" fontWeight="bold">🔗 Trello</Typography>
             <Divider sx={{ mb: 1 }} />
             {row?.url_trello ? (
-              <a href={row.url_trello} style={{fontWeight: 500}} target="_blank" rel="noopener noreferrer">
+              <a href={row.url_trello} style={{fontWeight: 500, color: theme === 'dark' ? 'rgb(0, 255, 255)' : 'blue' }} target="_blank" rel="noopener noreferrer">
                 Acessar Trello
               </a>
             ) : (
-              <Typography sx={{fontWeight: 500}}>Nenhuma URL disponível.</Typography>
+              <Typography sx={{fontWeight: 500, color: theme === 'dark' ? 'rgb(0, 255, 255)' : 'blue'}}>Nenhuma URL disponível.</Typography>
             )}
           </CardContent>
         </Card>
