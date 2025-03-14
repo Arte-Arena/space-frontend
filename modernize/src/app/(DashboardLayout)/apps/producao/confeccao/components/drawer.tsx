@@ -52,6 +52,8 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
     3: { nome: 'Arte OK', fila: 'D' },
     4: { nome: 'Em espera', fila: 'D' },
     5: { nome: 'Cor teste', fila: 'D' },
+    6: { nome: 'Em espera', fila: 'D' },
+    7: { nome: 'Em espera', fila: 'D' },
     8: { nome: 'Pendente', fila: 'I' },
     9: { nome: 'Processando', fila: 'I' },
     10: { nome: 'Renderizando', fila: 'I' },
@@ -71,7 +73,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
       open={openDrawer}
       onClose={onCloseDrawer}
       PaperProps={{
-        sx: { width: "40vw", padding: 2 }, // Largura de 40% da tela
+        sx: { width: "45vw", padding: 2 }, // Largura de 40% da tela
       }}
     >
       {/* Cabeçalho */}
@@ -128,18 +130,15 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
                     <TableHead>
                       <TableRow>
                         <TableCell></TableCell>
-                        {/* <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                          Nome:
-                        </TableCell> */}
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
                           Esboço:
                         </TableCell>
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
                           Quantidade:
                         </TableCell>
-                        {/* <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                        <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
                           Material:
-                        </TableCell> */}
+                        </TableCell>
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
                           Medida linear:
                         </TableCell>
@@ -161,9 +160,9 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.quantidade}
                             </TableCell>
-                            {/* <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
+                            <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.material}
-                              </TableCell> */}
+                              </TableCell>
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.medida_linear}
                             </TableCell>

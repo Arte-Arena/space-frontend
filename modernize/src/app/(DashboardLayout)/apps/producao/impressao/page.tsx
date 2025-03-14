@@ -147,9 +147,9 @@ const ConfeccaoScreen = () => {
   // console.log(designers);
 
   return (
-    <PageContainer title="Produção / Confecção" description="Tela de Produção da Confecção | Arte Arena">
-      <Breadcrumb title="Produção / Confecção" items={BCrumb} />
-      <ParentCard title="Confecção">
+    <PageContainer title="Produção / Impressão" description="Tela de Produção da Impressão | Arte Arena">
+      <Breadcrumb title="Produção / Impressão" items={BCrumb} />
+      <ParentCard title="Impressão">
         <>
           {isErrorPedidos ? (
             <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
@@ -168,7 +168,7 @@ const ConfeccaoScreen = () => {
                     {/* <TableCell> </TableCell> */}
                     <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
                     <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Prazo Arte Final</TableCell>
+                    <TableCell align='center' sx={{ width: '10%' }}>Data De Entrega</TableCell>
                     {/* <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell> */}
                     <TableCell align='center' sx={{ width: '10%' }}>Designer</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
