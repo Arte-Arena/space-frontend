@@ -57,7 +57,7 @@ const ArteFinalScreen = () => {
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [rows, setRows] = useState<ArteFinal[]>([]);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    pageSize: 5,
+    pageSize: 50,
     page: 0,
   });
 
@@ -259,7 +259,7 @@ const ArteFinalScreen = () => {
                     <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Previsão de Entrega</TableCell>
                     {/* <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell> */}
-                    <TableCell align='center' sx={{ width: '10%' }}>Desinger</TableCell>
+                    <TableCell align='center' sx={{ width: '10%' }}>Designer</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Tipo</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Status</TableCell>
