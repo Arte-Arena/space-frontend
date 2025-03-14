@@ -173,12 +173,11 @@ const ConfeccaoScreen = () => {
 
                     // tem que definir se as datas são maiores ou não e assim definir se vai ficar vermelho ou não
                     // definição das datas e atrasos
-                    const prazoArteFinal = row?.prazo_arte_final ? new Date(row?.prazo_arte_final) : null;
+                    const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
                     const dataAtual = new Date();
                     let atraso = false;
-                    if (prazoArteFinal && prazoArteFinal < dataAtual) {
+                    if (dataPrevista && dataPrevista < dataAtual) {
                       atraso = true;
-                      console.log("A data de prazo_arte_final esta em atraso.");
                     }
 
 
@@ -257,7 +256,7 @@ const ConfeccaoScreen = () => {
                           </TableCell>
 
                           <TableCell align='center'>
-                            {row?.prazo_arte_final ? format(new Date(row?.prazo_arte_final), "dd/MM/yyyy") : "Data inválida"}
+                            {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 

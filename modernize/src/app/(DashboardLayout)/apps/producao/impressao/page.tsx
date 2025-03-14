@@ -33,18 +33,21 @@ import {
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { GridPaginationModel } from '@mui/x-data-grid';
-import { IconPrinter } from '@tabler/icons-react';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import { format } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
+import DialogObs from './components/observacaoDialog';
 
 const ConfeccaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
+    const [openDialogObs, setOpenDialogObs] = useState(false);
+  
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
+  const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 5,
@@ -110,6 +113,12 @@ const ConfeccaoScreen = () => {
     }
   }
 
+  const handleClickOpenDialogObs = async (row: ArteFinal) => {
+    // abre o dialog e passa a row
+    setSelectedRowObs(row);
+    setOpenDialogObs(true);
+  };
+
   const BCrumb = [
     {
       to: "/",
@@ -173,14 +182,12 @@ const ConfeccaoScreen = () => {
 
                     // tem que definir se as datas são maiores ou não e assim definir se vai ficar vermelho ou não
                     // definição das datas e atrasos
-                    const prazoArteFinal = row?.prazo_arte_final ? new Date(row?.prazo_arte_final) : null;
+                    const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
                     const dataAtual = new Date();
                     let atraso = false;
-                    if (prazoArteFinal && prazoArteFinal < dataAtual) {
+                    if (dataPrevista && dataPrevista < dataAtual) {
                       atraso = true;
-                      console.log("A data de prazo_arte_final esta em atraso.");
                     }
-
 
                     // definição dos designers
                     const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
@@ -257,7 +264,7 @@ const ConfeccaoScreen = () => {
                           </TableCell>
 
                           <TableCell align='center'>
-                            {row?.prazo_arte_final ? format(new Date(row?.prazo_arte_final), "dd/MM/yyyy") : "Data inválida"}
+                            {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
@@ -265,7 +272,31 @@ const ConfeccaoScreen = () => {
                           <TableCell align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
                           {/* <TableCell align='center'>{row.situacao ?? ''}</TableCell> */}
 
-                          <TableCell align='center'>{row.observacoes ?? ''}</TableCell>
+                          {/* <TableCell align='center'>{row.observacoes ?? ''}</TableCell> */}
+
+                          <TableCell align="center">
+                            <Button
+                              sx={{
+                                background: 'transparent',
+                                color: theme.palette.text.primary,
+                                borderRadius: '4px',
+                                border: '1px solid GrayText',
+                                fontSize: '12px',
+                                whiteSpace: 'nowrap', // Impede que o texto quebre em várias linhas
+                                overflow: 'hidden', // Esconde o texto que ultrapassa o limite do botão
+                                textOverflow: 'ellipsis', // Adiciona "..." ao texto que não cabe
+                                maxWidth: '150px', // Define uma largura máxima para o botão
+                                '&:hover': {
+                                  backgroundColor: 'rgba(13, 12, 12, 0.1)', // Cor neutra ao passar o mouse
+                                  color: theme.palette.text.secondary, // Cor do texto ao passar o mouse
+                                }
+                              }}
+                              onClick={() => handleClickOpenDialogObs(row)}
+                            >
+                              {row.observacoes ?? "Adicionar Observação"}
+                            </Button>
+                          </TableCell>
+
                           <TableCell align='center'>{tipo ?? 'null'}</TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
@@ -397,6 +428,7 @@ const ConfeccaoScreen = () => {
             </TableContainer>
           )}
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
+          <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
         </>
       </ParentCard>
     </PageContainer>

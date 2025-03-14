@@ -40,10 +40,9 @@ import AssignDesignerDialog from './components/designerDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import { format } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
-import trocarObsPedido from './components/usetrocarObservacao';
-import { Select } from 'formik-mui';
 import DialogObs from './components/observacaoDialog';
 import deletePedidoArteFinal from './components/useDeletePedido';
+import { useThemeMode } from '@/utils/useThemeMode';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -64,6 +63,7 @@ const ArteFinalScreen = () => {
 
   const router = useRouter();
   const theme = useTheme()
+  const myTheme = useThemeMode()
 
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
@@ -118,7 +118,7 @@ const ArteFinalScreen = () => {
   };
 
   const handleDelete = async (row: ArteFinal) => {
-    const sucesso = await deletePedidoArteFinal(row?.id,refetch);
+    const sucesso = await deletePedidoArteFinal(row?.id, refetch);
     if (sucesso) {
       console.log("Pedido deletado com sucesso!");
       alert('sucesso');
@@ -257,7 +257,6 @@ const ArteFinalScreen = () => {
                     let atraso = false;
                     if (dataPrevista && dataPrevista < dataAtual) {
                       atraso = true;
-                      console.log("A data de prazo_arte_final esta em atraso.");
                     }
 
                     // definição dos designers
@@ -305,25 +304,38 @@ const ArteFinalScreen = () => {
                     return (
                       <>
                         {/* colocar as condições de data e de tipos de status e suas cores */}
+                        {/* teste usar a theme   */}
                         <TableRow
                           key={row.id}
                           sx={{
                             backgroundColor: atraso
-                              ? 'red' // Prioridade máxima
+                              ? 'rgba(250, 0, 0, 0.8)' // Prioridade máxima
                               : row.pedido_tipo_id === 2
-                                ? '#710f17'
+                                ? 'indianred'
                                 : row.pedido_status_id === 2
                                   ? '#f54b07'
                                   : row.pedido_status_id === 4
                                     ? '#ffa500'
-                                    : 'inherit' // Correção na grafia ('inherit' em vez de 'inhert')
+                                    : 'inherit', // Correção na grafia ('inherit' em vez de 'inhert')
+                            color: atraso || row.pedido_tipo_id === 2
+                              ? 'white' // Para fundos escuros
+                              : row.pedido_status_id === 2
+                                ? 'white'
+                                : row.pedido_status_id === 4
+                                  ? 'black' // Para fundos claros
+                                  : 'inherit'
+
                           }}
                         >
 
-                          <TableCell>{String(row.numero_pedido)}</TableCell>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? '#fff' : '#2A3547' // Branco no modo escuro e azul escuro no claro
+                          }}>{String(row.numero_pedido)}</TableCell>
 
                           {/* Nome de produto */}
-                          <TableCell align='center'>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? '#fff' : '#2A3547' // Branco no modo escuro e azul escuro no claro
+                          }} align='center'>
                             {row.lista_produtos?.length > 0
                               ? (
                                 <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
@@ -335,14 +347,20 @@ const ArteFinalScreen = () => {
                               : 'N/A'}
                           </TableCell>
 
-                          <TableCell align='center'>
-                            {row?.prazo_arte_final ? format(new Date(row?.prazo_arte_final), "dd/MM/yyyy") : "Data inválida"}
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? '#fff' : '#2A3547' // Branco no modo escuro e azul escuro no claro
+                          }} align='center'>
+                            {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
-                          <TableCell align='center'>{designerNome ?? 'Sem Designer'}</TableCell>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? '#fff' : '#2A3547' // Branco no modo escuro e azul escuro no claro
+                          }} align='center'>{designerNome ?? 'Sem Designer'}</TableCell>
 
-                          <TableCell align="center">
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? '#fff' : '#2A3547' // Branco no modo escuro e azul escuro no claro
+                          }} align="center">
                             <Button
                               sx={{
                                 background: 'transparent',
@@ -367,11 +385,16 @@ const ArteFinalScreen = () => {
 
 
 
-                          <TableCell align='center'>{tipo ?? 'null'}</TableCell>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? '#fff' : '#2A3547' // Branco no modo escuro e azul escuro no claro
+                          }} align='center'>{tipo ?? 'null'}</TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
-                          {/* <TableCell align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
-                          <TableCell align='center'>
+                          {/* <TableCell sx={{
+                          color: 'black'}} align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? '#fff' : '#2A3547' // Branco no modo escuro e azul escuro no claro
+                          }} align='center'>
                             <select
                               style={{
                                 textAlign: 'center',
@@ -403,7 +426,9 @@ const ArteFinalScreen = () => {
                           </TableCell>
 
 
-                          <TableCell align='center'>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? '#fff' : '#2A3547' // Branco no modo escuro e azul escuro no claro
+                          }} align='center'>
                             <Tooltip title="Ver Detalhes">
                               <IconButton onClick={() => handleVerDetalhes(row)}>
                                 <IconEye />
