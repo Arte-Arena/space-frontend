@@ -268,11 +268,7 @@ const ConfeccaoScreen = () => {
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
-                          {/* <TableCell align='center'>{Number(row.medidaLinear) ?? 0}</TableCell> */}
                           <TableCell align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
-                          {/* <TableCell align='center'>{row.situacao ?? ''}</TableCell> */}
-
-                          {/* <TableCell align='center'>{row.observacoes ?? ''}</TableCell> */}
 
                           <TableCell align="center">
                             <Button
@@ -338,24 +334,11 @@ const ConfeccaoScreen = () => {
                                 <IconEye />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
-                              <IconButton
-                                onClick={() => handleLinkTrello(row)}
-                                disabled={row.url_trello === null}
-                              >
-                                <IconBrandTrello />
-                              </IconButton>
-                            </Tooltip>
                             <Tooltip title="Lista de Uniformes">
                               <IconButton onClick={() => handleListaUniformes(row)}>
                                 <IconShirt />
                               </IconButton>
                             </Tooltip>
-                            {/* <Tooltip title="Enviar para Impressão!">
-                                                            <IconButton onClick={() => handleEnviarImpressora(row)}>
-                                                                <IconPrinter />
-                                                            </IconButton>
-                                                        </Tooltip> */}
                           </TableCell>
                         </TableRow>
 
