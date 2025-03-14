@@ -25,7 +25,8 @@ import {
   TableBody,
   Paper,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { IconPlus, IconMinus } from '@tabler/icons-react';
@@ -70,6 +71,9 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
   const [allVendedores, setAllVendedores] = useState<User[]>([]);
   const [loadingSubmit, setLoadingSubmit] = useState<boolean>(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [openSucesso, setOpenSucesso] = useState(false);
+  const [openFracasso, setOpenFracasso] = useState(false);
+  const [fadeOut, setFadeOut] = useState(false)
 
   const dataProducts = localStorage.getItem('produtosConsolidadosOrcamento');
   const materiais = localStorage.getItem('materiais');
@@ -77,6 +81,32 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
   const statusPedidos = localStorage.getItem('pedidosStatus');
   const tiposPedidos = localStorage.getItem('pedidosTipos');
   const vendedores = localStorage.getItem('vendedores');
+
+
+  useEffect(() => {
+    if (openSucesso === true) {
+      const timer = setTimeout(() => {
+        setTimeout(() => {
+          setOpenFracasso(false);
+        }, 500);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [openFracasso]);
+
+  useEffect(() => {
+    if (openSucesso === true) {
+      const timer = setTimeout(() => {
+        setTimeout(() => {
+          setOpenSucesso(false);
+        }, 500);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [openSucesso]);
+
 
   useEffect(() => {
     if (dataProducts) {
@@ -301,6 +331,13 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
     return diasUteisRestantes;
   };
 
+  const handleClick = () => {
+    setOpenSucesso(true); // Exibe o alert
+    setTimeout(() => {
+      setOpenSucesso(false); // Oculta o alert após 3 segundos
+    }, 3000);
+  };
+
   const accessToken = localStorage.getItem('accessToken');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -346,10 +383,14 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
         body: JSON.stringify(payload)
       });
 
-      if (!response.ok) throw new Error('Erro na requisição');
-
+      if (!response.ok) {
+        setOpenFracasso(true)
+        throw new Error('Erro na requisição');
+      }
       const data = await response.json();
       if (onSubmit) onSubmit(data);
+      handleClick();
+      // window.open('/apps/producao/arte-final/', '_blank');
 
     } catch (error) {
       console.error('Erro:', error);
@@ -760,6 +801,48 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
           </Button>
         </Box>
       )}
+      {openSucesso && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            padding: 2,
+            backgroundColor: 'tranparent',
+            borderRadius: 1,
+            boxShadow: 3,
+            opacity: fadeOut ? 0 : 1, // Opacidade muda para 0 quando fadeOut é true
+            transition: 'opacity 0.5s ease-out', // Transição suave de opacidade
+          }}
+        >
+          <Alert severity="success" onClose={() => setOpenSucesso(false)}>
+            Pedido Enviado Com Sucesso!!
+          </Alert>
+        </Box>
+      )}
+
+      {openFracasso && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            padding: 2,
+            backgroundColor: 'tranparent',
+            borderRadius: 1,
+            boxShadow: 3,
+            opacity: fadeOut ? 0 : 1, // Opacidade muda para 0 quando fadeOut é true
+            transition: 'opacity 0.5s ease-out', // Transição suave de opacidade
+          }}
+        >
+          <Alert severity="error" onClose={() => setOpenFracasso(false)}>
+            Pedido Não enviado
+          </Alert>
+        </Box>
+      )}
+
     </form>
   );
 }
