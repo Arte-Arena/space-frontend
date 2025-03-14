@@ -89,7 +89,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
             <Divider sx={{ mb: 1 }} />
             <Typography>
               <strong>Previsão de Entrega:</strong> <span style={{ fontWeight: 500 }}>
-                {row?.data_entrega ? format(new Date(row.data_entrega), "dd/MM/yyyy") : "Data não encontrada."}
+                {row?.data_prevista ? format(new Date(row.data_prevista), "dd/MM/yyyy") : "Data não encontrada."}
               </span>
             </Typography>
             <Typography>

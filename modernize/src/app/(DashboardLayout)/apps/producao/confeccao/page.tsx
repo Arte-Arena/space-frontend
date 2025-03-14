@@ -57,6 +57,10 @@ const ConfeccaoScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
 
+  const startIndex = paginationModel.page * paginationModel.pageSize;
+  const endIndex = startIndex + paginationModel.pageSize;
+  const paginatedPedidos = allPedidos.slice(startIndex, endIndex);
+
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
@@ -164,7 +168,7 @@ const ConfeccaoScreen = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Array.isArray(allPedidos) && allPedidos.map((row) => {
+                {Array.isArray(paginatedPedidos) && paginatedPedidos.map((row) => {
                     const listaProdutos: Produto[] = row.lista_produtos
                       ? typeof row.lista_produtos === 'string'
                         ? JSON.parse(row.lista_produtos)
@@ -385,7 +389,7 @@ const ConfeccaoScreen = () => {
 
               </Table>
               <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
+                rowsPerPageOptions={[15, 25, 50]}
                 component="div"
                 count={allPedidos.length || 0}
                 rowsPerPage={paginationModel.pageSize}
