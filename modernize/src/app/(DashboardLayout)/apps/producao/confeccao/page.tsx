@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { ArteFinal, Material, Produto } from './components/types';
+import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
 import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
@@ -160,7 +160,7 @@ const ConfeccaoScreen = () => {
                     {/* <TableCell> </TableCell> */}
                     <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
                     <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Prazo Arte Final</TableCell>
+                    <TableCell align='center' sx={{ width: '10%' }}>Data De Entrega</TableCell>
                     {/* <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell> */}
                     <TableCell align='center' sx={{ width: '10%' }}>Designer</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
@@ -214,6 +214,8 @@ const ConfeccaoScreen = () => {
                       // 3: { nome: 'Arte OK', fila: 'D' },
                       // 4: { nome: 'Em espera', fila: 'D' },
                       // 5: { nome: 'Cor teste', fila: 'D' },
+                      // 6: { nome: 'Em espera', fila: 'D' },
+                      // 7: { nome: 'Em espera', fila: 'D' },
 
                       8: { nome: 'Pendente', fila: 'I' },
                       9: { nome: 'Processando', fila: 'I' },
@@ -318,7 +320,8 @@ const ConfeccaoScreen = () => {
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
                                 <option key={id} value={id}>  {/* O 'id' ainda é uma string */}
-                                  {status.nome}  {/* Exibe o nome do status */}
+                                  {status.nome}  
+                                  {/* {status.fila} */}
                                 </option>
                               ))}
                             </select>
