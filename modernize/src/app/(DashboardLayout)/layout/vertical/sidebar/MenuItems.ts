@@ -138,9 +138,9 @@ const getMenuItems = (): MenuitemsType[] => {
         },
         {
           id: uniqueId(),
-          title: "Aprovar Orçamento",
-          icon: IconCircleCheck,
-          href: "/apps/orcamento/aprovar",
+          title: "Buscar Orçamento",
+          icon: IconZoomMoney,
+          href: "/apps/orcamento/buscar",
         },
         {
           id: uniqueId(),
