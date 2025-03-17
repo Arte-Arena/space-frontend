@@ -353,7 +353,14 @@ const ConfeccaoScreen = () => {
                               }}
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
-                                <option key={id} value={id}>  {/* O 'id' ainda é uma string */}
+                                <option
+                                  key={id}
+                                  value={id}
+                                  style={{
+                                    backgroundColor: myTheme === 'dark' ? 'black' : 'white', // Define um fundo para os options
+                                    color: myTheme === 'dark' ? 'white' : 'black',
+                                  }}
+                                >
                                   {status.nome}
                                   {/* {status.fila} */}
                                 </option>
@@ -381,11 +388,6 @@ const ConfeccaoScreen = () => {
                                 <IconShirt />
                               </IconButton>
                             </Tooltip>
-                            {/* <Tooltip title="Enviar para Impressão!">
-                                                            <IconButton onClick={() => handleEnviarImpressora(row)}>
-                                                                <IconPrinter />
-                                                            </IconButton>
-                                                        </Tooltip> */}
                           </TableCell>
                         </TableRow>
 
