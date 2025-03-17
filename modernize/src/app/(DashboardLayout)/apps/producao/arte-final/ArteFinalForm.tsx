@@ -215,8 +215,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
     if (initialData) {
       setFormData((prev) => ({ ...prev, ...initialData }));
 
-      if (initialData.lista_produtos) {
-
+      if (initialData.lista_produtos && Array.isArray(initialData.lista_produtos) && initialData.lista_produtos.length > 0) {
         const initialProductsList = initialData.lista_produtos.map((product, index) => ({
           ...product,
           uid: Number(`${product.id}${index}`),
@@ -224,9 +223,9 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
         }));
         setProductsList(initialProductsList);
       } else {
-        console.log("Não foi possível carregar aLista de Produtos");
+        console.log("Lista de Produtos está vazia ou não é um array");
+        setProductsList([]);
       }
-
     }
   }, [initialData]);
 
