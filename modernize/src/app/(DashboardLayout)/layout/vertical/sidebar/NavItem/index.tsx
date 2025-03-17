@@ -63,7 +63,11 @@ export default function NavItem({
     whiteSpace: "nowrap",
     marginBottom: "2px",
     padding: "8px 10px",
-    paddingLeft: hideMenu ? "10px" : level > 1 ? `${level * 15}px` : "10px",
+    paddingLeft: hideMenu 
+      ? "10px" 
+      : level > 0 
+        ? `${10 + (level * 12)}px`
+        : "10px",
     borderRadius: `${customizer.borderRadius}px`,
     backgroundColor: level > 1 ? "transparent !important" : "inherit",
     color:

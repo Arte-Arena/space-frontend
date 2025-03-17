@@ -60,8 +60,14 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
     11: { nome: 'Impresso', fila: 'I' },
     12: { nome: 'Em Impressão', fila: 'I' },
     13: { nome: 'Separação', fila: 'I' },
-    14: { nome: 'Em Transporte', fila: 'E' },
-    15: { nome: 'Entregue', fila: 'E' },
+    14: { nome: 'prensa/clandra', fila: 'C' },
+    15: { nome: 'checagem', fila: 'C' },
+    16: { nome: 'corte/preparaçao', fila: 'C' },
+    17: { nome: 'prateleriera/pendente', fila: 'C' },
+    18: { nome: 'costura/confeccao', fila: 'C' },
+    19: { nome: 'conferencia final', fila: 'C' },
+    20: { nome: 'finalizado', fila: 'C' },
+    21: { nome: 'reposição', fila: 'C' },
   } as const;
 
   const status = pedidoStatus[row?.pedido_status_id as keyof typeof pedidoStatus] || { nome: "Desconhecido", fila: "N/A" };
@@ -108,10 +114,10 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
               </span>
             </Typography>
             <Typography>
-            <strong>Prazo de Arte:</strong> <span style={{ fontWeight: 500 }}>{row?.prazo_arte_final ? format(new Date(row?.prazo_arte_final), "dd/MM/yyyy") : "Data inválida"}</span>
+              <strong>Prazo de Arte:</strong> <span style={{ fontWeight: 500 }}>{row?.prazo_arte_final ? format(new Date(row?.prazo_arte_final), "dd/MM/yyyy") : "Data inválida"}</span>
             </Typography>
             <Typography>
-            <strong>Prazo de Confecção:</strong> <span style={{ fontWeight: 500 }}>{row?.prazo_confeccao ? format(new Date(row?.prazo_confeccao), "dd/MM/yyyy") : "Data inválida"}</span>
+              <strong>Prazo de Confecção:</strong> <span style={{ fontWeight: 500 }}>{row?.prazo_confeccao ? format(new Date(row?.prazo_confeccao), "dd/MM/yyyy") : "Data inválida"}</span>
             </Typography>
 
           </CardContent>
@@ -162,7 +168,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
                             </TableCell>
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.material}
-                              </TableCell>
+                            </TableCell>
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.medida_linear}
                             </TableCell>
@@ -223,7 +229,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
           <CardContent>
             <Typography variant="h6" fontWeight="bold">📝 Observações</Typography>
             <Divider sx={{ mb: 1 }} />
-            <Typography sx={{fontWeight: 500}}>{row?.observacoes || "Nenhuma observação disponível."}</Typography>
+            <Typography sx={{ fontWeight: 500 }}>{row?.observacoes || "Nenhuma observação disponível."}</Typography>
           </CardContent>
         </Card>
 
@@ -233,11 +239,11 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
             <Typography variant="h6" fontWeight="bold">🔗 Trello</Typography>
             <Divider sx={{ mb: 1 }} />
             {row?.url_trello ? (
-              <a href={row.url_trello} style={{fontWeight: 500, color: theme === 'dark' ? 'rgb(0, 255, 255)' : 'blue' }} target="_blank" rel="noopener noreferrer">
+              <a href={row.url_trello} style={{ fontWeight: 500, color: theme === 'dark' ? 'rgb(0, 255, 255)' : 'blue' }} target="_blank" rel="noopener noreferrer">
                 Acessar Trello
               </a>
             ) : (
-              <Typography sx={{fontWeight: 500, color: theme === 'dark' ? 'rgb(0, 255, 255)' : 'blue'}}>Nenhuma URL disponível.</Typography>
+              <Typography sx={{ fontWeight: 500, color: theme === 'dark' ? 'rgb(0, 255, 255)' : 'blue' }}>Nenhuma URL disponível.</Typography>
             )}
           </CardContent>
         </Card>

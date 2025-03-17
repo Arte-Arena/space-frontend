@@ -35,7 +35,10 @@ import {
   IconOctahedron,
   IconBusinessplan,
   IconReportAnalytics,
-  IconMoneybag, // Added for payments icon
+  IconMoneybag,
+  IconFolder,
+  IconTools,
+  IconCalendarTime,
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -89,95 +92,49 @@ const getMenuItems = (): MenuitemsType[] => {
   const menuItems: MenuitemsType[] = [
     {
       navlabel: true,
-      subheader: "Apps",
+      subheader: "Menu",
     },
     {
       id: uniqueId(),
-      title: "Produtos",
-      icon: IconBrandProducthunt,
-      href: "/apps/produtos/buscar",
+      title: "Comercial",
+      icon: IconBuildingStore,
       children: [
         {
           id: uniqueId(),
-          title: "Buscar Produto",
-          icon: IconBrandProducthunt,
-          href: "/apps/produtos/buscar"
+          title: "CRM",
+          icon: IconBrandTrello,
+          href: "/apps/vendas/crm",
         },
         {
           id: uniqueId(),
-          title: "Pacotes de Uniformes",
-          icon: IconShirt,
-          href: "/apps/produtos/pacotes-uniformes"
-        },
-        {
-          id: uniqueId(),
-          title: "Bandeiras Oficiais",
-          icon: IconFlag,
-          href: "/apps/produtos/bandeiras-oficiais"
-        },
-        {
-          id: uniqueId(),
-          title: "Produos Personalizados",
-          icon: IconShoppingBagEdit,
-          href: "/apps/produtos/produtos-personalizados"
-        },
-      ]
-    },
-    {
-      id: uniqueId(),
-      title: "Contas",
-      icon: IconBrandCashapp,
-      href: "/apps/contas-pagar-receber",
-      children: [
-        {
-          id: uniqueId(),
-          title: "Adicionar Conta",
-          icon: IconBrandCashapp,
-          href: "/apps/contas-pagar-receber/adicionar",
-        },
-        {
-          id: uniqueId(),
-          title: "Buscar Conta",
-          icon: IconZoomMoney,
-          href: "/apps/contas-pagar-receber/buscar",
-        },
-        {
-          id: uniqueId(),
-          title: "Pagamentos",
-          icon: IconMoneybag,
-          href: "/apps/contas-pagar-receber/pagamentos",
-        },
-        {
-          id: uniqueId(),
-          title: "Relatórios de Contas",
+          title: "Relatórios",
           icon: IconChartBar,
-          href: "/apps/contas-pagar-receber/relatorios",
+          href: "/apps/vendas/relatorios",
         },
-      ],
-    },
-    {
-      id: uniqueId(),
-      title: "Orçamento",
-      icon: IconReportMoney,
-      href: "/apps/orcamento",
-      children: [
+        {
+          id: uniqueId(),
+          title: "Chat",
+          icon: IconMessage2,
+          children: [
+            {
+              id: uniqueId(),
+              title: "Chat Interno",
+              icon: IconBrandSlack,
+              href: "/apps/chats/chat-interno",
+            },
+            {
+              id: uniqueId(),
+              title: "Atendimento Externo",
+              icon: IconMessage2Dollar,
+              href: "/apps/chats/chat-externo",
+            },
+          ],
+        },
         {
           id: uniqueId(),
           title: "Gerar Orçamento",
           icon: IconReportMoney,
           href: "/apps/orcamento/gerar",
-        },
-        {
-          id: uniqueId(),
-          title: "Aprovar Orçamento",
-          icon: IconCircleCheck,
-          href: "/apps/orcamento/aprovar",
-        },
-        {
-          id: uniqueId(),
-          title: "Editar Orçamento",
-          icon: IconPencil,
-          href: "/apps/orcamento/editar",
         },
         {
           id: uniqueId(),
@@ -187,15 +144,34 @@ const getMenuItems = (): MenuitemsType[] => {
         },
         {
           id: uniqueId(),
-          title: "Status de Orçamento",
-          icon: IconProgressCheck,
-          href: "/apps/orcamento/status",
+          title: "Recursos",
+          icon: IconTools,
+          children: [
+            {
+              id: uniqueId(),
+              title: "Preço de Bandeira",
+              icon: IconFlag,
+              href: "/apps/orcamento/preco-bandeira",
+            },
+            {
+              id: uniqueId(),
+              title: "Encurtador de Link",
+              icon: IconLink,
+              href: "/apps/encurtador-link",
+            },
+            {
+              id: uniqueId(),
+              title: "Contagem Dias Úteis",
+              icon: IconCalendarTime,
+              href: "/apps/dias-uteis",
+            },
+          ],
         },
         {
           id: uniqueId(),
-          title: "Backoffice",
-          icon: IconBuilding,
-          href: "/apps/orcamento/backoffice",
+          title: "Documentos",
+          icon: IconFolder,
+          href: "/apps/documentos",
         },
         {
           id: uniqueId(),
@@ -284,60 +260,18 @@ const getMenuItems = (): MenuitemsType[] => {
             },
           ]
         },
-        {
-          id: uniqueId(),
-          title: "Preco de Bandeira",
-          icon: IconFlag,
-          href: "/apps/orcamento/preco-bandeira",
-        },
-        ...(isSuperUser ? [custoBandeiraItem] : []),
       ],
     },
     {
       id: uniqueId(),
-      title: "Vendas",
-      icon: IconBuildingStore,
-      href: "/apps/vendas",
-      children: [
-        {
-          id: uniqueId(),
-          title: "CRM",
-          icon: IconBrandTrello,
-          href: "/apps/vendas/crm",
-        },
-        {
-          id: uniqueId(),
-          title: "Relatórios de Vendas",
-          icon: IconChartBar,
-          href: "/apps/vendas/relatorios",
-        },
-      ],
-    },
-    {
-      id: uniqueId(),
-      title: "Chats",
-      icon: IconMessage2,
-      href: "/apps/chats",
-      children: [
-        {
-          id: uniqueId(),
-          title: "Chat Interno",
-          icon: IconBrandSlack,
-          href: "/apps/chats/chat-interno",
-        },
-        {
-          id: uniqueId(),
-          title: "Atendimento Externo",
-          icon: IconMessage2Dollar,
-          href: "/apps/chats/chat-externo",
-        },
-      ],
+      title: "BackOffice",
+      icon: IconBuilding,
+      href: "/apps/orcamento/backoffice",
     },
     {
       id: uniqueId(),
       title: "Produção",
       icon: IconBuildingFactory,
-      href: "/apps/orcamento",
       children: [
         {
           id: uniqueId(),
@@ -357,31 +291,114 @@ const getMenuItems = (): MenuitemsType[] => {
           icon: IconNeedleThread,
           href: "/apps/producao/confeccao",
         },
+        {
+          id: uniqueId(),
+          title: "Reposição",
+          icon: IconReplace,
+          href: "/apps/reposicao",
+        },
+        {
+          id: uniqueId(),
+          title: "Relatórios",
+          icon: IconChartBar,
+          href: "/apps/producao/relatorios",
+        },
       ],
     },
     {
       id: uniqueId(),
-      title: "Reposição",
-      icon: IconReplace,
-      href: "/apps/reposicao",
+      title: "Gerência",
+      icon: IconBusinessplan,
+      children: [
+        ...(isSuperUser ? [{
+          id: uniqueId(),
+          title: "Custo de Bandeira",
+          icon: IconFlag,
+          href: "/apps/orcamento/custo-bandeira",
+        }] : []),
+        {
+          id: uniqueId(),
+          title: "Relatórios",
+          icon: IconReportAnalytics,
+          href: "/apps/gerencia/relatorios",
+        },
+        {
+          id: uniqueId(),
+          title: "Estoque",
+          icon: IconStack3,
+          href: "/apps/estoque",
+        },
+        {
+          id: uniqueId(),
+          title: "Produtos",
+          icon: IconBrandProducthunt,
+          href: "/apps/produtos/buscar",
+          children: [
+            {
+              id: uniqueId(),
+              title: "Buscar Produto",
+              icon: IconBrandProducthunt,
+              href: "/apps/produtos/buscar"
+            },
+            {
+              id: uniqueId(),
+              title: "Pacotes de Uniformes",
+              icon: IconShirt,
+              href: "/apps/produtos/pacotes-uniformes"
+            },
+            {
+              id: uniqueId(),
+              title: "Bandeiras Oficiais",
+              icon: IconFlag,
+              href: "/apps/produtos/bandeiras-oficiais"
+            },
+            {
+              id: uniqueId(),
+              title: "Produtos Personalizados",
+              icon: IconShoppingBagEdit,
+              href: "/apps/produtos/produtos-personalizados"
+            },
+          ]
+        },
+        {
+          id: uniqueId(),
+          title: "Contas",
+          icon: IconBrandCashapp,
+          href: "/apps/contas-pagar-receber",
+          children: [
+            {
+              id: uniqueId(),
+              title: "Adicionar Conta",
+              icon: IconBrandCashapp,
+              href: "/apps/contas-pagar-receber/adicionar",
+            },
+            {
+              id: uniqueId(),
+              title: "Buscar Conta",
+              icon: IconZoomMoney,
+              href: "/apps/contas-pagar-receber/buscar",
+            },
+            {
+              id: uniqueId(),
+              title: "Pagamentos",
+              icon: IconMoneybag,
+              href: "/apps/contas-pagar-receber/pagamentos",
+            },
+            {
+              id: uniqueId(),
+              title: "Relatórios de Contas",
+              icon: IconChartBar,
+              href: "/apps/contas-pagar-receber/relatorios",
+            },
+          ],
+        },
+      ],
     },
     {
       id: uniqueId(),
-      title: "Encurtador de Link",
-      icon: IconLink,
-      href: "/apps/encurtador-link",
-    },
-    {
-      id: uniqueId(),
-      title: "Calendar",
+      title: "Calendário",
       icon: IconCalendar,
       href: "/apps/calendar",
-    },
-    {
-      id: uniqueId(),
-      title: "Estoque",
-      icon: IconStack3,
-      href: "/apps/estoque",
     },
   ];
 

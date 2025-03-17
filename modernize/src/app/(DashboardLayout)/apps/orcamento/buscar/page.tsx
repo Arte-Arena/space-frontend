@@ -14,12 +14,14 @@ import IconButton from '@mui/material/IconButton';
 import { Pagination, Stack, Button, Box, Typography, Collapse } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import { IconSearch } from '@tabler/icons-react';
+import { IconSearch, IconCircleCheck, IconCircleCheckFilled } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { useThemeMode } from '@/utils/useThemeMode';
 import Link from 'next/link';
+import Tooltip from '@mui/material/Tooltip';
+import { useRouter } from 'next/navigation';
 
 interface Produto {
   id: number;
@@ -87,7 +89,7 @@ const useFetchOrcamentos = (searchQuery: string, page: number) => {
 };
 
 const OrcamentoBuscarScreen = () => {
-
+  const router = useRouter();
   const [query, setQuery] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
@@ -125,6 +127,11 @@ const OrcamentoBuscarScreen = () => {
 
   const handleToggleRow = (id: number) => {
     setOpenRow(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleAprovarOrcamento = (orcamentoId: number) => {
+    router.push(`/apps/orcamento/aprovar/${orcamentoId}`);
+    console.log('Aguarde.');
   };
 
   if (isFetching) return <CircularProgress />;
@@ -169,8 +176,7 @@ const OrcamentoBuscarScreen = () => {
                   <TableCell>ID</TableCell>
                   <TableCell>Número do Cliente</TableCell>
                   <TableCell>Data de Criação</TableCell>
-
-                  {/* <TableCell>Ações</TableCell> */}
+                  <TableCell>Aprovar</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -230,6 +236,30 @@ const OrcamentoBuscarScreen = () => {
                       </TableCell>
                       <TableCell>{row.cliente_octa_number}</TableCell>
                       <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {row.status === "aprovado" ? (
+                          <Stack direction="row" alignItems={"center"} spacing={1}>
+                            <Tooltip title="Orçamento Aprovado">
+                              <IconButton
+                                aria-label="orçamento aprovado"
+                              >
+                                <IconCircleCheckFilled />
+                              </IconButton>
+                            </Tooltip>
+                          </Stack>
+                        ) : (
+                          <Stack direction="row" alignItems={"center"} spacing={1}>
+                            <Tooltip title="Aprovar Orçamento">
+                              <IconButton
+                                aria-label="aprovar orçamento"
+                                onClick={() => handleAprovarOrcamento(row.id)}
+                              >
+                                <IconCircleCheck />
+                              </IconButton>
+                            </Tooltip>
+                          </Stack>
+                        )}
+                      </TableCell>
                     </TableRow>
 
                     <TableRow>
