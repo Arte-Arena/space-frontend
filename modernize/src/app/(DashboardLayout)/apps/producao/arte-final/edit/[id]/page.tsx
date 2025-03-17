@@ -33,7 +33,13 @@ export default function EditArteFinalScreen() {
   useEffect(() => {
     if (!isLoadingPedido && pedidoData) {
       if (pedidoData) {
-        setPedidoArteFinal(pedidoData);
+        const processedData = {
+          ...pedidoData,
+          lista_produtos: typeof pedidoData.lista_produtos === 'string' 
+            ? JSON.parse(pedidoData.lista_produtos)
+            : pedidoData.lista_produtos
+        };
+        setPedidoArteFinal(processedData);
         setError(null);
       } else {
         setError(`Produto não encontrado com id ${pedidoId}`);
