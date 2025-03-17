@@ -113,8 +113,11 @@ const ConfeccaoScreen = () => {
   };
 
   const handleVerDetalhes = (row: ArteFinal) => {
-    setSelectedRowSidePanel(row);
-    setOpenDrawer(true);
+    setSelectedRowSidePanel(null); // Zera antes de atualizar
+    setTimeout(() => {
+      setSelectedRowSidePanel(row);
+      setOpenDrawer(true);
+    }, 0);
   };
 
   // handles dos selects
@@ -469,7 +472,7 @@ const ConfeccaoScreen = () => {
               />
             </TableContainer>
           )}
-          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
+          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
           <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
         </>
       </ParentCard>
