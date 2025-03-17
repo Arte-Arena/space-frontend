@@ -7,7 +7,7 @@ import getBrazilTime from "@/utils/brazilTime";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { subDays } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import {
   Box,
   Button,
@@ -437,11 +437,16 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DatePicker
             label="Data de Entrega Prevista"
-            value={formData.data_prevista}
+            value={formData.data_prevista ? new Date(formData.data_prevista) : null} // Garante que a data inicial seja válida
             onChange={(newValue) => {
+              if (!newValue) return;
+
+              const dataCorrigida = new Date(newValue);
+              dataCorrigida.setHours(0, 0, 0, 0); // Define o horário para meia-noite
+
               setFormData((prev) => ({
                 ...prev,
-                data_prevista: newValue,
+                data_prevista: dataCorrigida
               }));
             }}
             inputFormat="dd/MM/yyyy"
