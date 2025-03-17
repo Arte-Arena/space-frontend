@@ -36,6 +36,7 @@ import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconPrinter } from '@tabler/icons-react';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
+import DialogObs from './components/observacaoDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import { format } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
@@ -44,7 +45,9 @@ import { useThemeMode } from '@/utils/useThemeMode';
 const ConfeccaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
+  const [openDialogObs, setOpenDialogObs] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
+  const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
@@ -115,6 +118,12 @@ const ConfeccaoScreen = () => {
       console.log("Falha ao enviar pedido.");
     }
   }
+
+  const handleClickOpenDialogObs = async (row: ArteFinal) => {
+    // abre o dialog e passa a row
+    setSelectedRowObs(row);
+    setOpenDialogObs(true);
+  };
 
   const BCrumb = [
     {
@@ -281,14 +290,36 @@ const ConfeccaoScreen = () => {
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
-                          
+
                           <TableCell sx={{
                             color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
                           }} align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
-                    
+
                           <TableCell sx={{
                             color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }} align='center'>{row.observacoes ?? ''}</TableCell>
+                          }} align="center">
+                            <Button
+                              sx={{
+                                background: 'transparent',
+                                color: myTheme === 'dark' ? 'white' : 'black',
+                                borderRadius: '4px',
+                                border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
+                                fontSize: '12px',
+                                whiteSpace: 'nowrap', // Impede que o texto quebre em várias linhas
+                                overflow: 'hidden', // Esconde o texto que ultrapassa o limite do botão
+                                textOverflow: 'ellipsis', // Adiciona "..." ao texto que não cabe
+                                maxWidth: '150px', // Define uma largura máxima para o botão
+                                '&:hover': {
+                                  backgroundColor: 'rgba(13, 12, 12, 0.1)', // Cor neutra ao passar o mouse
+                                  color: theme.palette.text.secondary, // Cor do texto ao passar o mouse
+                                }
+                              }}
+                              onClick={() => handleClickOpenDialogObs(row)}
+                            >
+                              {row.observacoes ?? "Adicionar Observação"}
+                            </Button>
+                          </TableCell>
+
                           <TableCell sx={{
                             color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
                           }} align='center'>{tipo ?? 'null'}</TableCell>
@@ -322,8 +353,15 @@ const ConfeccaoScreen = () => {
                               }}
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
-                                <option key={id} value={id}>  {/* O 'id' ainda é uma string */}
-                                  {status.nome}  
+                                <option
+                                  key={id}
+                                  value={id}
+                                  style={{
+                                    backgroundColor: myTheme === 'dark' ? 'black' : 'white', // Define um fundo para os options
+                                    color: myTheme === 'dark' ? 'white' : 'black',
+                                  }}
+                                >
+                                  {status.nome}
                                   {/* {status.fila} */}
                                 </option>
                               ))}
@@ -350,11 +388,6 @@ const ConfeccaoScreen = () => {
                                 <IconShirt />
                               </IconButton>
                             </Tooltip>
-                            {/* <Tooltip title="Enviar para Impressão!">
-                                                            <IconButton onClick={() => handleEnviarImpressora(row)}>
-                                                                <IconPrinter />
-                                                            </IconButton>
-                                                        </Tooltip> */}
                           </TableCell>
                         </TableRow>
 
@@ -427,6 +460,7 @@ const ConfeccaoScreen = () => {
             </TableContainer>
           )}
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
+          <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
         </>
       </ParentCard>
     </PageContainer>
