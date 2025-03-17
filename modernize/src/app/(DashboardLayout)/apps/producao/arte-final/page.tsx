@@ -175,14 +175,23 @@ const ArteFinalScreen = () => {
   };
 
   const handleEnviarImpressora = async (row: ArteFinal) => {
-    const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
-    if (sucesso) {
-      console.log("Pedido enviado com sucesso!");
-      alert('sucesso');
+    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido +' para Impressão?');
+
+    if (confirmar) {
+      const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
+      if (sucesso) {
+        console.log("Pedido enviado com sucesso!");
+        alert('Sucesso');
+      } else {
+        console.log("Falha ao enviar pedido.");
+        alert('Falha ao enviar pedido.');
+      }
     } else {
-      console.log("Falha ao enviar pedido.");
+      console.log("Envio cancelado.");
+      alert('Envio cancelado.');
     }
   };
+  
 
   // handles dos selects
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
