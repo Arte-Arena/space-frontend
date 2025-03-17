@@ -81,7 +81,11 @@ export default function NavCollapse({
   const ListItemStyled = styled(ListItemButton)(() => ({
     marginBottom: "2px",
     padding: "8px 10px",
-    paddingLeft: hideMenu ? "10px" : level > 2 ? `${level * 15}px` : "10px",
+    paddingLeft: hideMenu 
+      ? "10px" 
+      : level > 0 
+        ? `${10 + (level * 12)}px`
+        : "10px",
     backgroundColor: open && level < 2 ? theme.palette.primary.main : "",
     whiteSpace: "nowrap",
     "&:hover": {
