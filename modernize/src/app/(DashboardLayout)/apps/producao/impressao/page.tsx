@@ -102,14 +102,20 @@ const ConfeccaoScreen = () => {
   };
 
   const handleEnviarConfeccao = async (row: ArteFinal) => {
-    const sucesso = await trocarStatusPedido(row?.id, 14, refetch);
-    if (sucesso) {
-      console.log("Pedido enviado com sucesso!");
-      alert('sucesso');
+    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Confecção?');
+
+    if (confirmar) {
+      const sucesso = await trocarStatusPedido(row?.id, 14, refetch);
+      if (sucesso) {
+        // console.log("Pedido enviado com sucesso!");
+        alert('sucesso');
+      } else {
+        console.log("Falha ao enviar pedido.");
+      }
     } else {
-      console.log("Falha ao enviar pedido.");
+      console.log("Envio cancelado.");
+      alert('Envio cancelado.');
     }
-    console.log("Deletar pedido", row);
   };
 
   const handleVerDetalhes = (row: ArteFinal) => {
