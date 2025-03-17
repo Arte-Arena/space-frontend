@@ -216,15 +216,21 @@ const ConfeccaoScreen = () => {
                       // 5: { nome: 'Cor teste', fila: 'D' },
                       // 6: { nome: 'Em espera', fila: 'D' },
                       // 7: { nome: 'Em espera', fila: 'D' },
+                      // 8: { nome: 'Pendente', fila: 'I' },
+                      // 9: { nome: 'Processando', fila: 'I' },
+                      // 10: { nome: 'Renderizando', fila: 'I' },
+                      // 11: { nome: 'Impresso', fila: 'I' },
+                      // 12: { nome: 'Em Impressão', fila: 'I' },
+                      // 13: { nome: 'Separação', fila: 'I' },
 
-                      8: { nome: 'Pendente', fila: 'I' },
-                      9: { nome: 'Processando', fila: 'I' },
-                      10: { nome: 'Renderizando', fila: 'I' },
-                      11: { nome: 'Impresso', fila: 'I' },
-                      12: { nome: 'Em Impressão', fila: 'I' },
-                      13: { nome: 'Separação', fila: 'I' },
-                      14: { nome: 'Em Transporte', fila: 'E' },
-                      15: { nome: 'Entregue', fila: 'E' },
+                      14: { nome: 'prensa/clandra', fila: 'C' },
+                      15: { nome: 'checagem', fila: 'C' },
+                      16: { nome: 'corte/preparaçao', fila: 'C' },
+                      17: { nome: 'prateleriera/pendente', fila: 'C' },
+                      18: { nome: 'costura/confeccao', fila: 'C' },
+                      19: { nome: 'conferencia final', fila: 'C' },
+                      20: { nome: 'finalizado', fila: 'C' },
+                      21: { nome: 'reposição', fila: 'C' },
                     } as const;
 
                     const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
@@ -288,9 +294,6 @@ const ConfeccaoScreen = () => {
                           }} align='center'>{tipo ?? 'null'}</TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
-                          {/* <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }} align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
                           <TableCell
                             sx={{
                               color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
@@ -413,7 +416,7 @@ const ConfeccaoScreen = () => {
 
               </Table>
               <TablePagination
-                rowsPerPageOptions={[15, 25, 50]}
+                rowsPerPageOptions={[15, 25, 50, 100, 200]}
                 component="div"
                 count={allPedidos.length || 0}
                 rowsPerPage={paginationModel.pageSize}

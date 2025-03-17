@@ -40,6 +40,7 @@ import { format } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
 import { useThemeMode } from '@/utils/useThemeMode';
+import { IconDirectionSign } from '@tabler/icons-react';
 
 const ConfeccaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -84,8 +85,6 @@ const ConfeccaoScreen = () => {
     }
   }, [dataPedidos]);
 
-  // console.log(allPedidos);
-
   // handles
   const handleLinkTrello = (row: ArteFinal) => {
     if (row.url_trello) {
@@ -99,6 +98,17 @@ const ConfeccaoScreen = () => {
   const handleListaUniformes = (row: ArteFinal) => {
     // provavelmente tem que ver validar se existe uma lista de uniformes nesse pedido
     // unica forma atualmente é pelo 'ocamento_id'
+    console.log("Deletar pedido", row);
+  };
+
+  const handleEnviarConfeccao = async (row: ArteFinal) => {
+    const sucesso = await trocarStatusPedido(row?.id, 14, refetch);
+    if (sucesso) {
+      console.log("Pedido enviado com sucesso!");
+      alert('sucesso');
+    } else {
+      console.log("Falha ao enviar pedido.");
+    }
     console.log("Deletar pedido", row);
   };
 
@@ -228,8 +238,8 @@ const ConfeccaoScreen = () => {
                       11: { nome: 'Impresso', fila: 'I' },
                       12: { nome: 'Em Impressão', fila: 'I' },
                       13: { nome: 'Separação', fila: 'I' },
-                      14: { nome: 'Em Transporte', fila: 'E' },
-                      15: { nome: 'Entregue', fila: 'E' },
+                      // 14: { nome: 'Em Transporte', fila: 'E' },
+                      // 15: { nome: 'Entregue', fila: 'E' },
                     } as const;
 
                     const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
@@ -373,6 +383,19 @@ const ConfeccaoScreen = () => {
                             <Tooltip title="Lista de Uniformes">
                               <IconButton onClick={() => handleListaUniformes(row)}>
                                 <IconShirt />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
+                              <IconButton
+                                onClick={() => handleLinkTrello(row)}
+                                disabled={row.url_trello === null}
+                              >
+                                <IconBrandTrello />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Enviar para Confecção!">
+                              <IconButton onClick={() => handleEnviarConfeccao(row)}>
+                                <IconDirectionSign />
                               </IconButton>
                             </Tooltip>
                           </TableCell>

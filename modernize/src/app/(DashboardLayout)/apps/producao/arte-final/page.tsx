@@ -68,7 +68,7 @@ const ArteFinalScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
-  const allowedRoles = [1, 3, 4];
+  const allowedRoles = [1, 2, 3, 4];
   const canShowButton = roles.some(role => allowedRoles.includes(role));
 
   const startIndex = paginationModel.page * paginationModel.pageSize;
@@ -405,8 +405,6 @@ const ArteFinalScreen = () => {
                           }} align='center'>{tipo ?? 'null'}</TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
-                          {/* <TableCell sx={{
-                          color: 'black'}} align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
                           <TableCell sx={{
                             color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
                           }} align='center'>
@@ -439,7 +437,6 @@ const ArteFinalScreen = () => {
                               ))}
                             </select>
                           </TableCell>
-
 
                           <TableCell sx={{
                             color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
