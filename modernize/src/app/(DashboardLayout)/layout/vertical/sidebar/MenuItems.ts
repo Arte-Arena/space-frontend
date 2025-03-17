@@ -138,6 +138,12 @@ const getMenuItems = (): MenuitemsType[] => {
         },
         {
           id: uniqueId(),
+          title: "Aprovar Orçamento",
+          icon: IconCircleCheck,
+          href: "/apps/orcamento/aprovar",
+        },
+        {
+          id: uniqueId(),
           title: "Recursos",
           icon: IconTools,
           children: [
