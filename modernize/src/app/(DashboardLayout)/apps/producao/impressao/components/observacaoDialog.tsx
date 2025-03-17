@@ -78,7 +78,7 @@ const DialogObs: React.FC<DialogObsProps> = ({
             sx={{ marginTop: 1, marginBottom: 2 }}
             value={observacoes}
             onChange={(e) => setObservacoes(e.target.value)}
-            placeholder="Observações"
+            placeholder="Digite aqui suas Observações"
             fullWidth
           />
         </FormControl>
