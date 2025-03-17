@@ -1,45 +1,49 @@
-import React from "react";
-import { Drawer, Box, Typography, IconButton, Card, CardContent, Divider, Table, TableBody, TableRow, TableCell, TableHead, TextField } from "@mui/material";
+'use client'
+import React, { useEffect, useState } from "react";
+import { Drawer, Box, Typography, IconButton, Card, CardContent, Divider, Table, TableBody, TableRow, TableCell, TableHead, TextField, Button } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { ArteFinal, Produto } from "./types";
 import { format } from "date-fns";
 import { useThemeMode } from "@/utils/useThemeMode";
 import trocarMedidaLinear from "./useTrocarMedidaLinear";
+import { IconCheck } from "@tabler/icons-react";
 
 interface SidePanelProps {
   row: ArteFinal | null;
   openDrawer: boolean;
   onCloseDrawer: () => void;
+  refetch: () => void;
 }
 
-
-const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer }) => {
-  // console.log('ROW DRAWER: ', row);
-  
+const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, refetch }) => {
   const designers = localStorage.getItem('designers');
   const theme = useThemeMode();
-  
+
   const listaProdutos: Produto[] = row?.lista_produtos
-  ? typeof row?.lista_produtos === "string"
-  ? JSON.parse(row?.lista_produtos)
-  : row?.lista_produtos
-  : [];
-  
-  const [produtos, setProdutos] = React.useState<Produto[]>(listaProdutos);
-  
-  // tem que definir aqui o que cada status vai ser em cada row e cada tipo vai ser em cada row.
+    ? typeof row?.lista_produtos === "string"
+      ? JSON.parse(row?.lista_produtos)
+      : row?.lista_produtos
+    : [];
+
+  const [produtos, setProdutos] = useState<Produto[]>(listaProdutos); // Estado corrigido para array de produtos
+  const [digitando, setDigitando] = useState(false); // Estado para saber se o usuário está digitando
+
+  useEffect(() => {
+    setProdutos(listaProdutos);
+  }, [row]);
+
   const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
   const usersMap = new Map(
     Array.isArray(parsedDesigners)
-    ? parsedDesigners.map(designer => [designer.id, designer.name])
-    : []
+      ? parsedDesigners.map(designer => [designer.id, designer.name])
+      : []
   );
-  
+
   const getUserNameById = (id: number | null | undefined) => {
     return id && usersMap.has(id) ? usersMap.get(id) : "Desconhecido";
   };
   const designerNome = getUserNameById(row?.designer_id);
-  
+
   const pedidoTipos = {
     1: 'Prazo normal',
     2: 'Antecipação',
@@ -69,25 +73,46 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
 
   const atualizarProduto = (produtoAtualizado: Produto) => {
     setProdutos((prevProdutos) =>
-      prevProdutos.map((p) => (p.id === produtoAtualizado.id ? produtoAtualizado : p))
+      prevProdutos.map((p) => (p.uid === produtoAtualizado.uid ? produtoAtualizado : p))
     );
   };
 
-  // precisa de um selected produto
-  // const handletrocarMedidaLinear = (uid, medidaLinear, id) => {
-  //   const response = trocarMedidaLinear(uid, medidaLinear, id)
-  // }
+  const handletrocarMedidaLinear = async (uid: number | null, medidaLinear: number, id: number) => {
+    try {
+      const response = await trocarMedidaLinear(id, uid, medidaLinear, refetch);
+      if (response) {
+        console.log("Medida linear atualizada com sucesso!");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar medida linear:", error);
+    }
+  };
+
+  const handleMedidaLinearChange = (produto: Produto, novaMedidaLinear: number) => {
+    // Atualiza o estado local
+    const produtoAtualizado = { ...produto, medida_linear: novaMedidaLinear };
+    atualizarProduto(produtoAtualizado);
+
+    // Define um timeout para chamar a API após 1 segundo de inatividade
+    setDigitando(true);
+    setDigitando(false);
+    if (produto.uid && row?.id) {
+      handletrocarMedidaLinear(produto.uid, novaMedidaLinear, row.id);
+    }
+    if (row?.id) {
+      handletrocarMedidaLinear(null, novaMedidaLinear, row.id);
+    }
+  };
 
   return (
     <Drawer
-      anchor="right" // Abre na lateral direita
+      anchor="right"
       open={openDrawer}
       onClose={onCloseDrawer}
       PaperProps={{
-        sx: { width: "40vw", padding: 2 }, // Largura de 40% da tela
+        sx: { width: "40vw", padding: 2 },
       }}
     >
-      {/* Cabeçalho */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={0}>
         <Typography variant="h5" fontWeight="bold">
           Detalhes do Pedido N°{Number(row?.numero_pedido)}
@@ -97,8 +122,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
         </IconButton>
       </Box>
 
-      <Box sx={{}}>
-        {/* Seção de Datas */}
+      <Box>
         <Card sx={{ mb: 2 }}>
           <CardContent>
             <Typography variant="h6" fontWeight="bold">📅 Datas</Typography>
@@ -124,16 +148,14 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
             <Typography>
               <strong>Prazo de Confecção:</strong> <span style={{ fontWeight: 500 }}>{row?.prazo_confeccao ? format(new Date(row?.prazo_confeccao), "dd/MM/yyyy") : "Data inválida"}</span>
             </Typography>
-
           </CardContent>
         </Card>
 
-        {/* Detalhes Gerais */}
         <Card>
           <CardContent>
             <Typography variant="h6" fontWeight="bold">📦 Produtos do Pedido</Typography>
             <Divider sx={{ mb: 1 }} />
-            <Table size="small" aria-label="detalhes" >
+            <Table size="small" aria-label="detalhes">
               <TableBody>
                 <TableRow>
                   <TableCell sx={{ border: 'none' }} colSpan={4}>
@@ -141,18 +163,12 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
                     <TableHead>
                       <TableRow>
                         <TableCell></TableCell>
-                        {/* <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                          Nome:
-                        </TableCell> */}
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
                           Esboço:
                         </TableCell>
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
                           Quantidade:
                         </TableCell>
-                        {/* <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                          Material:
-                        </TableCell> */}
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
                           Medida linear:
                         </TableCell>
@@ -162,9 +178,9 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {listaProdutos.length > 0 ? (
-                        listaProdutos.map((produto: Produto, index: number) => (
-                          <TableRow key={produto.id || index}>
+                      {produtos.length > 0 ? (
+                        produtos.map((produto: Produto, index: number) => (
+                          <TableRow key={produto.uid || index}>
                             <TableCell sx={{ fontSize: '12px', fontWeight: 'bold', padding: '8px' }} colSpan={1}>
                               {produto.nome}
                             </TableCell>
@@ -174,36 +190,43 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.quantidade}
                             </TableCell>
-                            <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
+                            <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center', display: 'flex' }} colSpan={1}>
                               <TextField
                                 type="number"
                                 size="small"
                                 variant="outlined"
                                 value={produto.medida_linear}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                  atualizarProduto({
-                                    ...produto,
-                                    medida_linear: Number(e.target.value)
-                                  })
+                                  const novaMedidaLinear = Number(e.target.value);
+                                  handleMedidaLinearChange(produto, novaMedidaLinear);
                                 }}
                                 sx={{
-                                  width: '100px',
+                                  minWidth: '50px',
+                                  '& input': {
+                                    fontSize: '14px',
+                                  },
                                   '& input[type=number]': {
-                                    MozAppearance: 'textfield', // Remove as setas no Firefox
-                                    WebkitAppearance: 'textfield', // Remove as setas no Chrome, Safari, Edge
+                                    MozAppearance: 'textfield',
+                                    WebkitAppearance: 'textfield',
                                   },
                                   '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
-                                    WebkitAppearance: 'none', 
-                                    margin: 0, 
+                                    WebkitAppearance: 'none',
+                                    margin: 0,
                                   }
                                 }}
                                 InputProps={{
-                                  inputProps: { 
+                                  inputProps: {
                                     min: 0,
-                                    step: 'any',  // Permite valores decimais
+                                    step: 'any',
                                   }
                                 }}
                               />
+                              {/* <Button
+                                onClick={() => handleMedidaLinearChange(produto, produto.medida_linear || 0)}
+                                sx={{ ml: 1, padding: 0 }}
+                              >
+                                <IconCheck size={16}/>
+                              </Button> */}
                             </TableCell>
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.prazo}
@@ -221,26 +244,10 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
           </CardContent>
         </Card>
 
-        {/* Detalhes Gerais */}
-        {/* <Card>
-          <CardContent>
-            <Typography variant="h6" fontWeight="bold">📦 🏭 Detalhes do Pedido</Typography>
-            <Divider sx={{ mb: 1 }} />
-            <Typography>ID: {row?.id}</Typography>
-            <Typography>N° Pedido: {Number(row?.numero_pedido)}</Typography>
-            <Typography>Orçamento ID: {Number(row?.orcamento_id)}</Typography>
-            <Typography>Rolo: {row?.rolo}</Typography>
-            <Typography>User ID: {row?.user_id}</Typography>
-          </CardContent>
-        </Card> */}
-
-        {/* Seção de Status */}
         <Card sx={{ mb: 2 }}>
           <CardContent>
             <Typography variant="h6" fontWeight="bold">📌 Status</Typography>
             <Divider sx={{ mb: 1 }} />
-            {/* <Typography>Estágio: {row?.estagio}</Typography> */}
-            {/* <Typography>Status: {row?.status}</Typography> */}
             <Typography>
               <strong>Designer alocado:</strong> <span style={{ fontWeight: 500 }}>{designerNome}</span>
             </Typography>
@@ -253,11 +260,9 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
             <Typography>
               <strong>Tipo do Pedido:</strong> <span style={{ fontWeight: 500 }}>{tipo}</span>
             </Typography>
-
           </CardContent>
         </Card>
 
-        {/* Seção de Observações */}
         <Card sx={{ mb: 2 }}>
           <CardContent>
             <Typography variant="h6" fontWeight="bold">📝 Observações</Typography>
@@ -266,7 +271,6 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
           </CardContent>
         </Card>
 
-        {/* URL do Trello */}
         <Card sx={{ mb: 2 }}>
           <CardContent>
             <Typography variant="h6" fontWeight="bold">🔗 Trello</Typography>
@@ -281,7 +285,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
           </CardContent>
         </Card>
       </Box>
-    </Drawer>
+    </Drawer >
   );
 };
 

@@ -102,19 +102,28 @@ const ConfeccaoScreen = () => {
   };
 
   const handleEnviarConfeccao = async (row: ArteFinal) => {
-    const sucesso = await trocarStatusPedido(row?.id, 14, refetch);
-    if (sucesso) {
-      console.log("Pedido enviado com sucesso!");
-      alert('sucesso');
+    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Confecção?');
+
+    if (confirmar) {
+      const sucesso = await trocarStatusPedido(row?.id, 14, refetch);
+      if (sucesso) {
+        // console.log("Pedido enviado com sucesso!");
+        alert('sucesso');
+      } else {
+        console.log("Falha ao enviar pedido.");
+      }
     } else {
-      console.log("Falha ao enviar pedido.");
+      console.log("Envio cancelado.");
+      alert('Envio cancelado.');
     }
-    console.log("Deletar pedido", row);
   };
 
   const handleVerDetalhes = (row: ArteFinal) => {
-    setSelectedRowSidePanel(row);
-    setOpenDrawer(true);
+    setSelectedRowSidePanel(null); // Zera antes de atualizar
+    setTimeout(() => {
+      setSelectedRowSidePanel(row);
+      setOpenDrawer(true);
+    }, 0);
   };
 
   // handles dos selects
@@ -469,7 +478,7 @@ const ConfeccaoScreen = () => {
               />
             </TableContainer>
           )}
-          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
+          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
           <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
         </>
       </ParentCard>
