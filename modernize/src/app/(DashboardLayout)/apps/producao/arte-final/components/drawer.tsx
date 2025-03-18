@@ -114,7 +114,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
     setDigitando(true);
     setDigitando(false);
 
-    if(row?.id){
+    if(row?.id !== undefined){
       setTimeout(() => {
         handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id as number);
       }, 2000);
