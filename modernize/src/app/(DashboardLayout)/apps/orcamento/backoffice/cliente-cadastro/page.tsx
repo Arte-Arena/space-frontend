@@ -19,6 +19,7 @@ import {
   Box,
 } from '@mui/material';
 import { IconDeviceFloppy, IconBuilding, IconUser } from '@tabler/icons-react';
+import { logger } from '@/utils/logger';
 
 const REGEX = {
   email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
@@ -74,6 +75,7 @@ const OrcamentoBackofficeScreen: React.FC = () => {
   const navigate = useRouter();
   const id = searchParams.get('id') ?? null;
 
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState<ClienteCadastroForm>({
     tipo_pessoa: 'F',
     nome: '',
@@ -106,6 +108,68 @@ const OrcamentoBackofficeScreen: React.FC = () => {
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [alert, setAlert] = useState<AlertMessage | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const fetchClientData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/get-cliente-cadastro?id=${id}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data) {
+          setIsEditing(true);
+          setFormData({
+            ...formData,
+            tipo_pessoa: data.tipo_pessoa === 'PJ' ? 'J' : 'F',
+            nome: data.nome_completo || '',
+            rg: data.rg || '',
+            cpf: data.cpf || '',
+            email: data.email || '',
+            celular: data.celular || '',
+            cep: data.cep || '',
+            endereco: data.endereco || '',
+            numero: data.numero || '',
+            complemento: data.complemento || '',
+            bairro: data.bairro || '',
+            cidade: data.cidade || '',
+            uf: data.uf || '',
+            razao_social: data.razao_social || '',
+            cnpj: data.cnpj || '',
+            inscricao_estadual: data.inscricao_estadual || '',
+            cep_cobranca: data.cep_cobranca || '',
+            endereco_cobranca: data.endereco_cobranca || '',
+            numero_cobranca: data.numero_cobranca || '',
+            complemento_cobranca: data.complemento_cobranca || '',
+            bairro_cobranca: data.bairro_cobranca || '',
+            cidade_cobranca: data.cidade_cobranca || '',
+            uf_cobranca: data.uf_cobranca || '',
+            endereco_cobranca_diferente: !!(data.endereco_cobranca || data.cep_cobranca),
+          });
+          setAlert({
+            type: 'info',
+            message: 'Cliente encontrado! Os dados foram carregados no formulário.'
+          });
+        }
+      }
+    } catch (error) {
+      logger.error('Error fetching client data:', error);
+      setAlert({
+        type: 'error',
+        message: 'Erro ao carregar dados do cliente.'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (id) {
+      fetchClientData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [id]);
 
   const validateField = (name: string, value: string): ValidationError | null => {
     if (!value || value.trim() === '') {
@@ -283,6 +347,19 @@ const OrcamentoBackofficeScreen: React.FC = () => {
     'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
   ];
 
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <Stack spacing={2} alignItems="center">
+            <CircularProgress size={40} />
+            <Typography variant="h6">Carregando dados do cliente...</Typography>
+          </Stack>
+        </Box>
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer title="Orçamento / Backoffice / Cadastro de Cliente" description="Cadastrar Cliente da Arte Arena">
       <Breadcrumb title="Orçamento / Backoffice / Cadastro de Cliente" subtitle="Cadastrar Cliente da Arte Arena / Backoffice" />
@@ -302,7 +379,7 @@ const OrcamentoBackofficeScreen: React.FC = () => {
         </Alert>
       </Snackbar>
 
-      <ParentCard title="Cadastro de Cliente">
+      <ParentCard title={isEditing ? "Editar Cliente" : "Cadastro de Cliente"}>
         <Stack spacing={3}>
           <Box sx={{ mb: 3 }}>
             <Typography variant="h6" gutterBottom>
@@ -667,7 +744,7 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                 ) : (
                   <>
                     <IconDeviceFloppy style={{ marginRight: '8px' }} />
-                    Salvar Cliente
+                    {isEditing ? 'Editar Cliente' : 'Salvar Cliente'}
                   </>
                 )}
               </Button>
