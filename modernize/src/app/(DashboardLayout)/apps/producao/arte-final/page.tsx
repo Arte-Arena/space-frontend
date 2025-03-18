@@ -108,6 +108,19 @@ const ArteFinalScreen = () => {
   }, [openDialogDesinger, refetch]);
 
 
+
+  const totalMedidaLinearGlobal = Array.isArray(paginatedPedidos)
+    ? paginatedPedidos.reduce((totalPedido, row) => {
+      const listaProdutos: Produto[] = row.lista_produtos
+        ? typeof row.lista_produtos === "string"
+          ? JSON.parse(row.lista_produtos)
+          : row.lista_produtos
+        : [];
+
+      return totalPedido + listaProdutos.reduce((acc, produto) => acc + (produto.medida_linear ?? 0), 0);
+    }, 0)
+    : 0;
+
   // handles
 
   const handleNovoPedido = () => {
@@ -253,6 +266,7 @@ const ArteFinalScreen = () => {
       <Breadcrumb title="Produção / Arte - Final" items={BCrumb} />
       <ParentCard title="Arte - Final">
         <>
+        {totalMedidaLinearGlobal}
           <Stack direction="row" spacing={1} sx={{ marginBottom: '1em', height: '3em', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
