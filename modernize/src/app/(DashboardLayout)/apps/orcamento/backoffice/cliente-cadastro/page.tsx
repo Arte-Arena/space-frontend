@@ -103,7 +103,6 @@ const OrcamentoBackofficeScreen: React.FC = () => {
     situacao: "A"
   });
 
-  const [isTipoPessoaSelected, setIsTipoPessoaSelected] = useState(false);
   const [errors, setErrors] = useState<ValidationError[]>([]);
   const [alert, setAlert] = useState<AlertMessage | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -256,7 +255,6 @@ const OrcamentoBackofficeScreen: React.FC = () => {
           type: 'success',
           message: 'Cliente salvo com sucesso!'
         });
-        setIsTipoPessoaSelected(false);
         navigate.push('/apps/orcamento/backoffice/cliente-cadastro/sucesso');
       } else {
         const errorData = await response.json();
@@ -331,7 +329,6 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                     cnpj: '',
                     inscricao_estadual: '',
                   }));
-                  setIsTipoPessoaSelected(true);
                   setErrors([]);
                 }}
               >
@@ -368,7 +365,6 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                     cnpj: '',
                     inscricao_estadual: '',
                   }));
-                  setIsTipoPessoaSelected(true);
                   setErrors([]);
                 }}
               >
@@ -387,298 +383,296 @@ const OrcamentoBackofficeScreen: React.FC = () => {
             </Stack>
           </Box>
 
-          {isTipoPessoaSelected && (
-            <Stack spacing={3}>
-              {formData.tipo_pessoa === 'F' && (
-                <>
-                  <CustomTextField
-                    label="Nome Completo"
-                    name="nome"
-                    value={formData.nome}
-                    onChange={handleInputChange}
-                    fullWidth
-                    error={!!getFieldError('nome')}
-                    helperText={getFieldError('nome')}
-                    required
-                  />
-                  <CustomTextField
-                    label="CPF"
-                    name="cpf"
-                    value={formData.cpf}
-                    onChange={handleInputChange}
-                    fullWidth
-                    error={!!getFieldError('cpf')}
-                    helperText={getFieldError('cpf')}
-                    required
-                  />
-                  <CustomTextField
-                    label="RG"
-                    name="rg"
-                    value={formData.rg}
-                    onChange={handleInputChange}
-                    fullWidth
-                    error={!!getFieldError('rg')}
-                    helperText={getFieldError('rg')}
-                    required
-                  />
-                </>
-              )}
+          <Stack spacing={3}>
+            {formData.tipo_pessoa === 'F' && (
+              <>
+                <CustomTextField
+                  label="Nome Completo"
+                  name="nome"
+                  value={formData.nome}
+                  onChange={handleInputChange}
+                  fullWidth
+                  error={!!getFieldError('nome')}
+                  helperText={getFieldError('nome')}
+                  required
+                />
+                <CustomTextField
+                  label="CPF"
+                  name="cpf"
+                  value={formData.cpf}
+                  onChange={handleInputChange}
+                  fullWidth
+                  error={!!getFieldError('cpf')}
+                  helperText={getFieldError('cpf')}
+                  required
+                />
+                <CustomTextField
+                  label="RG"
+                  name="rg"
+                  value={formData.rg}
+                  onChange={handleInputChange}
+                  fullWidth
+                  error={!!getFieldError('rg')}
+                  helperText={getFieldError('rg')}
+                  required
+                />
+              </>
+            )}
 
-              {formData.tipo_pessoa === 'J' && (
-                <>
-                  <CustomTextField
-                    label="Razão Social"
-                    name="razao_social"
-                    value={formData.razao_social}
-                    onChange={handleInputChange}
-                    fullWidth
-                    error={!!getFieldError('razao_social')}
-                    helperText={getFieldError('razao_social')}
-                    required
-                  />
-                  <CustomTextField
-                    label="CNPJ"
-                    name="cnpj"
-                    value={formData.cnpj}
-                    onChange={handleInputChange}
-                    fullWidth
-                    error={!!getFieldError('cnpj')}
-                    helperText={getFieldError('cnpj')}
-                    required
-                  />
-                  <CustomTextField
-                    label="Inscrição Estadual"
-                    name="inscricao_estadual"
-                    value={formData.inscricao_estadual}
-                    onChange={handleInputChange}
-                    fullWidth
-                    error={!!getFieldError('inscricao_estadual')}
-                    helperText={getFieldError('inscricao_estadual')}
-                    required
-                  />
-                </>
-              )}
+            {formData.tipo_pessoa === 'J' && (
+              <>
+                <CustomTextField
+                  label="Razão Social"
+                  name="razao_social"
+                  value={formData.razao_social}
+                  onChange={handleInputChange}
+                  fullWidth
+                  error={!!getFieldError('razao_social')}
+                  helperText={getFieldError('razao_social')}
+                  required
+                />
+                <CustomTextField
+                  label="CNPJ"
+                  name="cnpj"
+                  value={formData.cnpj}
+                  onChange={handleInputChange}
+                  fullWidth
+                  error={!!getFieldError('cnpj')}
+                  helperText={getFieldError('cnpj')}
+                  required
+                />
+                <CustomTextField
+                  label="Inscrição Estadual"
+                  name="inscricao_estadual"
+                  value={formData.inscricao_estadual}
+                  onChange={handleInputChange}
+                  fullWidth
+                  error={!!getFieldError('inscricao_estadual')}
+                  helperText={getFieldError('inscricao_estadual')}
+                  required
+                />
+              </>
+            )}
 
+            <CustomTextField
+              label="Email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              fullWidth
+              error={!!getFieldError('email')}
+              helperText={getFieldError('email')}
+              required
+            />
+            <CustomTextField
+              label="Telefone Celular"
+              name="celular"
+              value={formData.celular}
+              onChange={handleInputChange}
+              fullWidth
+              error={!!getFieldError('celular')}
+              helperText={getFieldError('celular')}
+              required
+            />
+
+            <h3>Endereço</h3>
+            <Stack spacing={2}>
               <CustomTextField
-                label="Email"
-                name="email"
-                value={formData.email}
+                label="CEP"
+                name="cep"
+                value={formData.cep}
                 onChange={handleInputChange}
                 fullWidth
-                error={!!getFieldError('email')}
-                helperText={getFieldError('email')}
+                error={!!getFieldError('cep')}
+                helperText={getFieldError('cep')}
                 required
               />
               <CustomTextField
-                label="Telefone Celular"
-                name="celular"
-                value={formData.celular}
+                label="Endereço"
+                name="endereco"
+                value={formData.endereco}
                 onChange={handleInputChange}
                 fullWidth
-                error={!!getFieldError('celular')}
-                helperText={getFieldError('celular')}
+                error={!!getFieldError('endereco')}
+                helperText={getFieldError('endereco')}
                 required
               />
-
-              <h3>Endereço</h3>
-              <Stack spacing={2}>
-                <CustomTextField
-                  label="CEP"
-                  name="cep"
-                  value={formData.cep}
-                  onChange={handleInputChange}
-                  fullWidth
-                  error={!!getFieldError('cep')}
-                  helperText={getFieldError('cep')}
-                  required
-                />
-                <CustomTextField
-                  label="Endereço"
-                  name="endereco"
-                  value={formData.endereco}
-                  onChange={handleInputChange}
-                  fullWidth
-                  error={!!getFieldError('endereco')}
-                  helperText={getFieldError('endereco')}
-                  required
-                />
-                <CustomTextField
-                  label="Número"
-                  name="numero"
-                  value={formData.numero}
-                  onChange={handleInputChange}
-                  fullWidth
-                  error={!!getFieldError('numero')}
-                  helperText={getFieldError('numero')}
-                  required
-                />
-                <CustomTextField
-                  label="Complemento"
-                  name="complemento"
-                  value={formData.complemento}
-                  onChange={handleInputChange}
-                  fullWidth
-                />
-                <CustomTextField
-                  label="Bairro"
-                  name="bairro"
-                  value={formData.bairro}
-                  onChange={handleInputChange}
-                  fullWidth
-                  error={!!getFieldError('bairro')}
-                  helperText={getFieldError('bairro')}
-                  required
-                />
-                <CustomTextField
-                  label="Cidade"
-                  name="cidade"
-                  value={formData.cidade}
-                  onChange={handleInputChange}
-                  fullWidth
-                  error={!!getFieldError('cidade')}
-                  helperText={getFieldError('cidade')}
-                  required
-                />
-                <CustomTextField
-                  label="UF"
-                  name="uf"
-                  value={formData.uf}
-                  onChange={handleInputChange}
-                  select
-                  fullWidth
-                  error={!!getFieldError('uf')}
-                  helperText={getFieldError('uf')}
-                  required
-                  SelectProps={{
-                    native: true,
-                  }}
-                >
-                  <option value="">Selecione</option>
-                  {estados.map((estado) => (
-                    <option key={estado} value={estado}>
-                      {estado}
-                    </option>
-                  ))}
-                </CustomTextField>
-              </Stack>
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.endereco_cobranca_diferente}
-                    onChange={handleCheckboxChange}
-                    name="endereco_cobranca_diferente"
-                    color="primary"
-                  />
-                }
-                label="Endereço de Cobrança Diferente"
+              <CustomTextField
+                label="Número"
+                name="numero"
+                value={formData.numero}
+                onChange={handleInputChange}
+                fullWidth
+                error={!!getFieldError('numero')}
+                helperText={getFieldError('numero')}
+                required
               />
-
-              {formData.endereco_cobranca_diferente && (
-                <>
-                  <h3>Endereço de Cobrança</h3>
-                  <Stack spacing={2}>
-                    <CustomTextField
-                      label="CEP Cobrança"
-                      name="cep_cobranca"
-                      value={formData.cep_cobranca}
-                      onChange={handleInputChange}
-                      fullWidth
-                      error={!!getFieldError('cep_cobranca')}
-                      helperText={getFieldError('cep_cobranca')}
-                      required
-                    />
-                    <CustomTextField
-                      label="Endereço Cobrança"
-                      name="endereco_cobranca"
-                      value={formData.endereco_cobranca}
-                      onChange={handleInputChange}
-                      fullWidth
-                      error={!!getFieldError('endereco_cobranca')}
-                      helperText={getFieldError('endereco_cobranca')}
-                      required
-                    />
-                    <CustomTextField
-                      label="Número Cobrança"
-                      name="numero_cobranca"
-                      value={formData.numero_cobranca}
-                      onChange={handleInputChange}
-                      fullWidth
-                      error={!!getFieldError('numero_cobranca')}
-                      helperText={getFieldError('numero_cobranca')}
-                      required
-                    />
-                    <CustomTextField
-                      label="Complemento Cobrança"
-                      name="complemento_cobranca"
-                      value={formData.complemento_cobranca}
-                      onChange={handleInputChange}
-                      fullWidth
-                    />
-                    <CustomTextField
-                      label="Bairro Cobrança"
-                      name="bairro_cobranca"
-                      value={formData.bairro_cobranca}
-                      onChange={handleInputChange}
-                      fullWidth
-                      error={!!getFieldError('bairro_cobranca')}
-                      helperText={getFieldError('bairro_cobranca')}
-                      required
-                    />
-                    <CustomTextField
-                      label="Cidade Cobrança"
-                      name="cidade_cobranca"
-                      value={formData.cidade_cobranca}
-                      onChange={handleInputChange}
-                      fullWidth
-                      error={!!getFieldError('cidade_cobranca')}
-                      helperText={getFieldError('cidade_cobranca')}
-                      required
-                    />
-                    <CustomTextField
-                      label="UF Cobrança"
-                      name="uf_cobranca"
-                      value={formData.uf_cobranca}
-                      onChange={handleInputChange}
-                      select
-                      fullWidth
-                      error={!!getFieldError('uf_cobranca')}
-                      helperText={getFieldError('uf_cobranca')}
-                      required
-                      SelectProps={{
-                        native: true,
-                      }}
-                    >
-                      <option value="">Selecione</option>
-                      {estados.map((estado) => (
-                        <option key={estado} value={estado}>
-                          {estado}
-                        </option>
-                      ))}
-                    </CustomTextField>
-                  </Stack>
-                </>
-              )}
-
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginTop: '16px' }}>
-                <Button
-                  color="primary"
-                  variant="contained"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || errors.length > 0}
-                >
-                  {isSubmitting ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    <>
-                      <IconDeviceFloppy style={{ marginRight: '8px' }} />
-                      Salvar Cliente
-                    </>
-                  )}
-                </Button>
-              </div>
+              <CustomTextField
+                label="Complemento"
+                name="complemento"
+                value={formData.complemento}
+                onChange={handleInputChange}
+                fullWidth
+              />
+              <CustomTextField
+                label="Bairro"
+                name="bairro"
+                value={formData.bairro}
+                onChange={handleInputChange}
+                fullWidth
+                error={!!getFieldError('bairro')}
+                helperText={getFieldError('bairro')}
+                required
+              />
+              <CustomTextField
+                label="Cidade"
+                name="cidade"
+                value={formData.cidade}
+                onChange={handleInputChange}
+                fullWidth
+                error={!!getFieldError('cidade')}
+                helperText={getFieldError('cidade')}
+                required
+              />
+              <CustomTextField
+                label="UF"
+                name="uf"
+                value={formData.uf}
+                onChange={handleInputChange}
+                select
+                fullWidth
+                error={!!getFieldError('uf')}
+                helperText={getFieldError('uf')}
+                required
+                SelectProps={{
+                  native: true,
+                }}
+              >
+                <option value="">Selecione</option>
+                {estados.map((estado) => (
+                  <option key={estado} value={estado}>
+                    {estado}
+                  </option>
+                ))}
+              </CustomTextField>
             </Stack>
-          )}
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={formData.endereco_cobranca_diferente}
+                  onChange={handleCheckboxChange}
+                  name="endereco_cobranca_diferente"
+                  color="primary"
+                />
+              }
+              label="Endereço de Cobrança Diferente"
+            />
+
+            {formData.endereco_cobranca_diferente && (
+              <>
+                <h3>Endereço de Cobrança</h3>
+                <Stack spacing={2}>
+                  <CustomTextField
+                    label="CEP Cobrança"
+                    name="cep_cobranca"
+                    value={formData.cep_cobranca}
+                    onChange={handleInputChange}
+                    fullWidth
+                    error={!!getFieldError('cep_cobranca')}
+                    helperText={getFieldError('cep_cobranca')}
+                    required
+                  />
+                  <CustomTextField
+                    label="Endereço Cobrança"
+                    name="endereco_cobranca"
+                    value={formData.endereco_cobranca}
+                    onChange={handleInputChange}
+                    fullWidth
+                    error={!!getFieldError('endereco_cobranca')}
+                    helperText={getFieldError('endereco_cobranca')}
+                    required
+                  />
+                  <CustomTextField
+                    label="Número Cobrança"
+                    name="numero_cobranca"
+                    value={formData.numero_cobranca}
+                    onChange={handleInputChange}
+                    fullWidth
+                    error={!!getFieldError('numero_cobranca')}
+                    helperText={getFieldError('numero_cobranca')}
+                    required
+                  />
+                  <CustomTextField
+                    label="Complemento Cobrança"
+                    name="complemento_cobranca"
+                    value={formData.complemento_cobranca}
+                    onChange={handleInputChange}
+                    fullWidth
+                  />
+                  <CustomTextField
+                    label="Bairro Cobrança"
+                    name="bairro_cobranca"
+                    value={formData.bairro_cobranca}
+                    onChange={handleInputChange}
+                    fullWidth
+                    error={!!getFieldError('bairro_cobranca')}
+                    helperText={getFieldError('bairro_cobranca')}
+                    required
+                  />
+                  <CustomTextField
+                    label="Cidade Cobrança"
+                    name="cidade_cobranca"
+                    value={formData.cidade_cobranca}
+                    onChange={handleInputChange}
+                    fullWidth
+                    error={!!getFieldError('cidade_cobranca')}
+                    helperText={getFieldError('cidade_cobranca')}
+                    required
+                  />
+                  <CustomTextField
+                    label="UF Cobrança"
+                    name="uf_cobranca"
+                    value={formData.uf_cobranca}
+                    onChange={handleInputChange}
+                    select
+                    fullWidth
+                    error={!!getFieldError('uf_cobranca')}
+                    helperText={getFieldError('uf_cobranca')}
+                    required
+                    SelectProps={{
+                      native: true,
+                    }}
+                  >
+                    <option value="">Selecione</option>
+                    {estados.map((estado) => (
+                      <option key={estado} value={estado}>
+                        {estado}
+                      </option>
+                    ))}
+                  </CustomTextField>
+                </Stack>
+              </>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginTop: '16px' }}>
+              <Button
+                color="primary"
+                variant="contained"
+                onClick={handleSubmit}
+                disabled={isSubmitting || errors.length > 0}
+              >
+                {isSubmitting ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  <>
+                    <IconDeviceFloppy style={{ marginRight: '8px' }} />
+                    Salvar Cliente
+                  </>
+                )}
+              </Button>
+            </div>
+          </Stack>
         </Stack>
       </ParentCard>
     </PageContainer>
