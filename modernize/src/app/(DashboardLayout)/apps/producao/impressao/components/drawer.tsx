@@ -80,18 +80,6 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
   const status = pedidoStatus[row?.pedido_status_id as keyof typeof pedidoStatus] || { nome: "Desconhecido", fila: "N/A" };
   const tipo = row?.pedido_tipo_id && pedidoTipos[row?.pedido_tipo_id as keyof typeof pedidoTipos];
 
-  // const handleMedidaLinearChange = (produto: Produto, novaMedidaLinear: number) => {
-  //   setMedidasLineares(prevState => ({
-  //     ...prevState,
-  //     [produto.uid]: novaMedidaLinear,
-  //   }));
-  // };
-
-  const atualizarProduto = (produtoAtualizado: Produto) => {
-    setProdutos((prevProdutos) =>
-      prevProdutos.map((p) => (p.uid === produtoAtualizado.uid ? produtoAtualizado : p))
-    );
-  };
 
   const handletrocarMedidaLinear = async (uid: number | null, medidasLineares: Record<string, number>, id: number) => {
     try {
