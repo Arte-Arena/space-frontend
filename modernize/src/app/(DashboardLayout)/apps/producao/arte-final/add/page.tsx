@@ -3,7 +3,6 @@ import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcr
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import ArteFinalForm from "@/app/(DashboardLayout)/apps/producao/arte-final/ArteFinalForm";
-import { ArteFinal } from '../types';
 
 export default function ProdutosPacotesUniformesAddScreen() {
 
@@ -31,8 +30,8 @@ export default function ProdutosPacotesUniformesAddScreen() {
       <Breadcrumb title="Produção / Arte Final" items={BCrumb} />
       <ParentCard title="Arte Final">
         <>
-          <h2 className="text-xl font-bold">Adicionar Novo Pedido com Arte Final</h2>
-          <ArteFinalForm />
+          <h2 className="text-xl font-bold">Adicionar Novo Pedido com Arte Final (apenas Space)</h2>
+          <ArteFinalForm block_tiny={true}/>
         </>
       </ParentCard>
     </PageContainer>

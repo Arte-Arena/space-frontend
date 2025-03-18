@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Material, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush } from '@tabler/icons-react';
+import { IconEdit, IconEye, IconTrash, IconShirt, IconBrush } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -54,7 +54,6 @@ const ArteFinalScreen = () => {
   const [openDialogObs, setOpenDialogObs] = useState(false);
   const [selectedRowDesinger, setSelectedRowDesinger] = useState<ArteFinal | null>(null);
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [rows, setRows] = useState<ArteFinal[]>([]);
@@ -106,14 +105,6 @@ const ArteFinalScreen = () => {
       refetch(); // Chama refetch quando o dialog é fechado
     }
   }, [openDialogDesinger, refetch]);
-
-
-  // handles
-
-  const handleNovoPedido = () => {
-    setIsAdding(true);
-    router.push('/apps/producao/arte-final/add/');
-  };
 
   const handleEdit = (pedido: ArteFinal) => {
     const pedidoId = String(pedido.id);
@@ -253,18 +244,6 @@ const ArteFinalScreen = () => {
       <Breadcrumb title="Produção / Arte - Final" items={BCrumb} />
       <ParentCard title="Arte - Final">
         <>
-          <Stack direction="row" spacing={1} sx={{ marginBottom: '1em', height: '3em', justifyContent: 'flex-end' }}>
-            <Button
-              variant="contained"
-              startIcon={isAdding ? <CircularProgress size={20} /> : <IconPlus />}
-              sx={{ height: '100%' }}
-              onClick={handleNovoPedido}
-              disabled={isAdding}
-            >
-              {isAdding ? 'Adicionando...' : 'Adicionar Novo pedido'}
-            </Button>
-          </Stack>
-
           {isErrorPedidos ? (
             <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
               <Typography variant="body1" color="error">Erro ao carregar pedidos.</Typography>
