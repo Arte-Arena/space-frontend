@@ -15,12 +15,11 @@ import IconButton from '@mui/material/IconButton';
 import { Pagination, Stack, Button, Box, Typography, Collapse, FormControlLabel, Checkbox, TextField, useTheme, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import { IconSearch, IconLink, IconShirtSport, IconCheck, IconTrash, IconBrush, IconUser } from '@tabler/icons-react';
+import { IconPlus, IconSearch, IconLink, IconShirtSport, IconCheck, IconTrash, IconBrush, IconUser } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { IconTruckDelivery } from '@tabler/icons-react';
-import { useStatusChangeAprovado } from '@/utils/PutStatusOrcamentos';
 import useAprovarPedidoStatus from './components/useAprovarPedidoStatus';
 import { logger } from '@/utils/logger';
 
@@ -94,6 +93,7 @@ interface Sketch {
 const OrcamentoBackofficeScreen = () => {
   const router = useRouter();
   const [query, setQuery] = useState<string>('');
+  const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
@@ -136,6 +136,16 @@ const OrcamentoBackofficeScreen = () => {
   if (!accessToken) {
     throw new Error('Access token is missing');
   }
+
+  const handleNovoPedido = () => {
+    setIsAdding(true);
+    router.push('/apps/producao/arte-final/add/');
+  };
+
+  const handleNovoPedidoTiny = () => {
+    setIsAdding(true);
+    router.push('/apps/producao/arte-final/add-tiny/');
+  };
 
   const handleFetchPedido = async (id: number | undefined) => {
     try {
@@ -255,7 +265,7 @@ const OrcamentoBackofficeScreen = () => {
       taxa_antecipa: orcamento.taxa_antecipa,
       total_orcamento: orcamento.total_orcamento,
     };
-  
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/pedido-cadastro`, {
         method: 'POST',
@@ -265,7 +275,7 @@ const OrcamentoBackofficeScreen = () => {
         },
         body: JSON.stringify(orcamentoFormated),
       });
-  
+
       const data = await response.json();
       setIsLoadingMakePeido(false);
 
@@ -279,7 +289,7 @@ const OrcamentoBackofficeScreen = () => {
           return;
         }
       }
-  
+
       if (response.ok) {
         alert('Pedido N°' + orcamento.id + ' salvo com sucesso!');
       } else {
@@ -287,7 +297,7 @@ const OrcamentoBackofficeScreen = () => {
         console.log(data.message);
         alert(`Erro ao salvar: ${data.message}`);
       }
-  
+
       refetch();
     } catch (error) {
       console.error("Erro na requisição:", error);
@@ -296,7 +306,7 @@ const OrcamentoBackofficeScreen = () => {
       refetch();
     }
   };
-  
+
   const handleSearch = () => {
     setSearchQuery(query); // Atualiza a busca
     setPage(1); // Reseta para a primeira página ao realizar uma nova busca
@@ -512,6 +522,27 @@ const OrcamentoBackofficeScreen = () => {
       <ParentCard title="Backoffice" >
         <>
 
+          <Stack direction="row" spacing={1} sx={{ marginBottom: '1em', height: '3em', justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              startIcon={isAdding ? <CircularProgress size={20} /> : <IconPlus />}
+              sx={{ height: '100%' }}
+              onClick={handleNovoPedidoTiny}
+              disabled={isAdding}
+            >
+              {isAdding ? 'Adicionando...' : 'Adicionar pedido'}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={isAdding ? <CircularProgress size={20} /> : <IconPlus />}
+              sx={{ height: '100%' }}
+              onClick={handleNovoPedido}
+              disabled={isAdding}
+            >
+              {isAdding ? 'Adicionando...' : 'Adicionar pedido (+ Tiny)'}
+            </Button>
+          </Stack>
+
           <Stack spacing={2} direction="row" alignItems="center" mb={2}>
             <CustomTextField
               fullWidth
@@ -621,8 +652,8 @@ const OrcamentoBackofficeScreen = () => {
                             }}>
                               <IconShirtSport />
                             </Button>
-                            <Button 
-                              variant="outlined" 
+                            <Button
+                              variant="outlined"
                               onClick={() => handleBrushClick(row.id)}
                               disabled={isLoadingBrush}
                             >
@@ -1146,6 +1177,5 @@ const OrcamentoBackofficeScreen = () => {
     </PageContainer>
   );
 }
-
 
 export default OrcamentoBackofficeScreen;
