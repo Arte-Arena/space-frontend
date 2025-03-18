@@ -41,6 +41,7 @@ import { ApiResponsePedidosArteFinal } from './components/types';
 import { format } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import { useThemeMode } from '@/utils/useThemeMode';
+import { IconDirectionSign } from '@tabler/icons-react';
 
 const ConfeccaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -86,6 +87,18 @@ const ConfeccaoScreen = () => {
   }, [dataPedidos]);
 
   // console.log(allPedidos);
+  // total de medidas
+  const totalMedidaLinearGlobal = Array.isArray(paginatedPedidos)
+    ? paginatedPedidos.reduce((totalPedido, row) => {
+      const listaProdutos: Produto[] = row.lista_produtos
+        ? typeof row.lista_produtos === "string"
+          ? JSON.parse(row.lista_produtos)
+          : row.lista_produtos
+        : [];
+
+      return totalPedido + listaProdutos.reduce((acc, produto) => acc + (produto.medida_linear ?? 0), 0);
+    }, 0)
+    : 0;
 
   // handles
   const handleLinkTrello = (row: ArteFinal) => {
@@ -107,6 +120,23 @@ const ConfeccaoScreen = () => {
     setSelectedRowSidePanel(row);
     setOpenDrawer(true);
   };
+
+  const handleEnviarEntrega = async (row: ArteFinal) => {
+    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Impressão?');
+    if (confirmar) {
+      const sucesso = await trocarStatusPedido(row?.id, 22, refetch);
+      if (sucesso) {
+        console.log("Pedido enviado com sucesso!");
+        alert('Sucesso');
+      } else {
+        console.log("Falha ao enviar pedido.");
+        alert('Falha ao enviar pedido.');
+      }
+    } else {
+      console.log("Envio cancelado.");
+      alert('Envio cancelado.');
+    }
+  }
 
   // handles dos selects
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
@@ -152,6 +182,8 @@ const ConfeccaoScreen = () => {
       <Breadcrumb title="Produção / Confecção" items={BCrumb} />
       <ParentCard title="Confecção">
         <>
+          Total: {totalMedidaLinearGlobal}
+
           {isErrorPedidos ? (
             <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
               <Typography variant="body1" color="error">Erro ao carregar pedidos.</Typography>
@@ -247,10 +279,14 @@ const ConfeccaoScreen = () => {
                     const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
                     const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
 
+                    const totalMedidaLinearPorPedido = listaProdutos.reduce((acc, produto) => {
+                      return acc + (produto.medida_linear ?? 0);
+                    }, 0);
 
                     return (
                       <>
                         {/* colocar as condições de data e de tipos de status e suas cores */}
+                        {/* total: {totalMedidaLinearPorPedido} */}
                         <TableRow
                           key={row.id}
                           sx={{
@@ -370,7 +406,6 @@ const ConfeccaoScreen = () => {
                             </select>
                           </TableCell>
 
-
                           <TableCell align='center'>
                             <Tooltip title="Ver Detalhes">
                               <IconButton onClick={() => handleVerDetalhes(row)}>
@@ -388,6 +423,11 @@ const ConfeccaoScreen = () => {
                             <Tooltip title="Lista de Uniformes">
                               <IconButton onClick={() => handleListaUniformes(row)}>
                                 <IconShirt />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Ver Detalhes">
+                              <IconButton onClick={() => handleEnviarEntrega(row)}>
+                                <IconDirectionSign />
                               </IconButton>
                             </Tooltip>
                           </TableCell>
