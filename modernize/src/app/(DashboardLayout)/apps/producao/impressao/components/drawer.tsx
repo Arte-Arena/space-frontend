@@ -25,6 +25,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
       : row?.lista_produtos
     : [];
 
+  const [medidasLineares, setMedidasLineares] = useState<Record<string, number>>({});
   const [produtos, setProdutos] = useState<Produto[]>(listaProdutos); // Estado corrigido para array de produtos
   const [digitando, setDigitando] = useState(false); // Estado para saber se o usuário está digitando
 
@@ -79,15 +80,22 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
   const status = pedidoStatus[row?.pedido_status_id as keyof typeof pedidoStatus] || { nome: "Desconhecido", fila: "N/A" };
   const tipo = row?.pedido_tipo_id && pedidoTipos[row?.pedido_tipo_id as keyof typeof pedidoTipos];
 
+  // const handleMedidaLinearChange = (produto: Produto, novaMedidaLinear: number) => {
+  //   setMedidasLineares(prevState => ({
+  //     ...prevState,
+  //     [produto.uid]: novaMedidaLinear,
+  //   }));
+  // };
+
   const atualizarProduto = (produtoAtualizado: Produto) => {
     setProdutos((prevProdutos) =>
       prevProdutos.map((p) => (p.uid === produtoAtualizado.uid ? produtoAtualizado : p))
     );
   };
 
-  const handletrocarMedidaLinear = async (uid: number | null, medidaLinear: number, id: number) => {
+  const handletrocarMedidaLinear = async (uid: number | null, medidasLineares: Record<string, number>, id: number) => {
     try {
-      const response = await trocarMedidaLinear(id, uid, medidaLinear, refetch);
+      const response = await trocarMedidaLinear(id, uid, medidasLineares, refetch);
       if (response) {
         console.log("Medida linear atualizada com sucesso!");
       }
@@ -97,19 +105,21 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
   };
 
   const handleMedidaLinearChange = (produto: Produto, novaMedidaLinear: number) => {
-    // Atualiza o estado local
-    const produtoAtualizado = { ...produto, medida_linear: novaMedidaLinear };
-    atualizarProduto(produtoAtualizado);
+    setMedidasLineares(prevState => ({
+      ...prevState,
+      [String(produto.uid)]: novaMedidaLinear,
+    }));
 
     // Define um timeout para chamar a API após 1 segundo de inatividade
     setDigitando(true);
     setDigitando(false);
-    if (produto.uid && row?.id) {
-      handletrocarMedidaLinear(produto.uid, novaMedidaLinear, row.id);
+
+    if (row?.id !== undefined) {
+      setTimeout(() => {
+        handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id!);
+      }, 2000);
     }
-    if (row?.id) {
-      handletrocarMedidaLinear(null, novaMedidaLinear, row.id);
-    }
+    
   };
 
   return (
@@ -200,10 +210,11 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                             </TableCell>
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center', display: 'flex' }} colSpan={1}>
                               <TextField
+                                key={produto.uid}
                                 type="number"
                                 size="small"
                                 variant="outlined"
-                                value={produto.medida_linear}
+                                value={medidasLineares[String(produto.uid)] || 0}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                   const novaMedidaLinear = Number(e.target.value);
                                   handleMedidaLinearChange(produto, novaMedidaLinear);

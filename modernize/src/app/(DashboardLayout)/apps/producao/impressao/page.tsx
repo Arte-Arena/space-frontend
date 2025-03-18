@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Material, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush } from '@tabler/icons-react';
+import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconNeedleThread } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -247,6 +247,7 @@ const ConfeccaoScreen = () => {
                       11: { nome: 'Impresso', fila: 'I' },
                       12: { nome: 'Em Impressão', fila: 'I' },
                       13: { nome: 'Separação', fila: 'I' },
+                      
                       // 14: { nome: 'Em Transporte', fila: 'E' },
                       // 15: { nome: 'Entregue', fila: 'E' },
                     } as const;
@@ -382,7 +383,6 @@ const ConfeccaoScreen = () => {
                             </select>
                           </TableCell>
 
-
                           <TableCell align='center'>
                             <Tooltip title="Ver Detalhes">
                               <IconButton onClick={() => handleVerDetalhes(row)}>
@@ -404,7 +404,7 @@ const ConfeccaoScreen = () => {
                             </Tooltip>
                             <Tooltip title="Enviar para Confecção!">
                               <IconButton onClick={() => handleEnviarConfeccao(row)}>
-                                <IconDirectionSign />
+                                <IconNeedleThread />
                               </IconButton>
                             </Tooltip>
                           </TableCell>

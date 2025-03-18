@@ -204,8 +204,10 @@ const ConfeccaoScreen = () => {
                         : []
                     );
 
+                    // terminar de ver no backend se esta realmente mudando
                     const getUserNameById = (id: number | null | undefined) => {
-                      return id && usersMap.has(id) ? usersMap.get(id) : "Desconhecido";
+                      return id && usersMap.has(id) ? usersMap.get(id) : row.designer_id;
+                      // return id && usersMap.has(id) ? usersMap.get(id) : "Desconhecido";
                     };
                     const designerNome = getUserNameById(row.designer_id);
 

@@ -22,8 +22,6 @@ interface AssignDesignerDialogProps {
 
 }
 
-
-
 const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
     openDialogDesinger,
     onCloseDialogDesinger,
