@@ -69,7 +69,7 @@ const ArteFinalScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
-  const allowedRoles = [1, 2, 3, 4];
+  const allowedRoles = [1, 2, 3, 4, 7];
   const DesignerRoles = [6, 7];
   const canShowButton = roles.some(role => allowedRoles.includes(role));
   const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));
