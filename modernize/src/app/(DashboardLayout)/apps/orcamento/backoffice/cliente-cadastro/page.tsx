@@ -74,6 +74,40 @@ interface ClienteCadastroForm {
   situacao: string;
 }
 
+interface ViaCEPResponse {
+  cep: string;
+  logradouro: string;
+  complemento: string;
+  bairro: string;
+  localidade: string;
+  uf: string;
+  ibge: string;
+  gia: string;
+  ddd: string;
+  siafi: string;
+  erro?: boolean;
+}
+
+const formatCEP = (cep: string): string => {
+  return cep.replace(/\D/g, '').replace(/(\d{5})(\d)/, '$1-$2');
+};
+
+const fetchAddressByCEP = async (cep: string): Promise<ViaCEPResponse | null> => {
+  try {
+    const cleanCEP = cep.replace(/\D/g, '');
+    if (cleanCEP.length !== 8) return null;
+
+    const response = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`);
+    const data: ViaCEPResponse = await response.json();
+    
+    if (data.erro) return null;
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar CEP:', error);
+    return null;
+  }
+};
+
 const OrcamentoBackofficeScreen: React.FC = () => {
   const searchParams = useSearchParams();
   const navigate = useRouter();
@@ -128,6 +162,10 @@ const OrcamentoBackofficeScreen: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [openSuccessDialog, setOpenSuccessDialog] = useState(false);
   const [openConfirmEditDialog, setOpenConfirmEditDialog] = useState(false);
+  const [isCepLoading, setIsCepLoading] = useState<{[key: string]: boolean}>({
+    cep: false,
+    cep_cobranca: false
+  });
 
   const fetchClientData = async () => {
     try {
@@ -275,6 +313,55 @@ const OrcamentoBackofficeScreen: React.FC = () => {
     const error = validateField(name, value);
     if (error) {
       setErrors(prev => [...prev.filter(e => e.field !== name), error]);
+    }
+  };
+
+  const handleCEPChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, isBilling: boolean = false) => {
+    const { value } = e.target;
+    const formattedCEP = formatCEP(value);
+    const cepField = isBilling ? 'cep_cobranca' : 'cep';
+    
+    setFormData(prev => ({
+      ...prev,
+      [cepField]: formattedCEP
+    }));
+
+    setErrors(prev => prev.filter(error => error.field !== cepField));
+
+    const cleanCEP = formattedCEP.replace(/\D/g, '');
+    if (cleanCEP.length === 8) {
+      setIsCepLoading(prev => ({ ...prev, [cepField]: true }));
+      try {
+        const address = await fetchAddressByCEP(cleanCEP);
+        
+        if (address) {
+          const addressFields = {
+            [isBilling ? 'endereco_cobranca' : 'endereco']: address.logradouro,
+            [isBilling ? 'bairro_cobranca' : 'bairro']: address.bairro,
+            [isBilling ? 'cidade_cobranca' : 'cidade']: address.localidade,
+            [isBilling ? 'uf_cobranca' : 'uf']: address.uf,
+          };
+
+          setFormData(prev => ({
+            ...prev,
+            ...addressFields
+          }));
+
+          setErrors(prev => prev.filter(error => !Object.keys(addressFields).includes(error.field)));
+        } else {
+          setAlert({
+            type: 'error',
+            message: 'CEP não encontrado. Por favor, verifique o CEP informado.'
+          });
+        }
+      } catch (error) {
+        setAlert({
+          type: 'error',
+          message: 'Erro ao buscar o endereço. Por favor, tente novamente.'
+        });
+      } finally {
+        setIsCepLoading(prev => ({ ...prev, [cepField]: false }));
+      }
     }
   };
 
@@ -604,11 +691,16 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                 label="CEP"
                 name="cep"
                 value={formData.cep}
-                onChange={handleInputChange}
+                onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleCEPChange(e)}
                 fullWidth
                 error={!!getFieldError('cep')}
                 helperText={getFieldError('cep')}
                 required
+                InputProps={{
+                  endAdornment: isCepLoading.cep && (
+                    <CircularProgress size={20} color="inherit" />
+                  ),
+                }}
               />
               <CustomTextField
                 label="Endereço"
@@ -700,11 +792,16 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                     label="CEP Cobrança"
                     name="cep_cobranca"
                     value={formData.cep_cobranca}
-                    onChange={handleInputChange}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleCEPChange(e, true)}
                     fullWidth
                     error={!!getFieldError('cep_cobranca')}
                     helperText={getFieldError('cep_cobranca')}
                     required
+                    InputProps={{
+                      endAdornment: isCepLoading.cep_cobranca && (
+                        <CircularProgress size={20} color="inherit" />
+                      ),
+                    }}
                   />
                   <CustomTextField
                     label="Endereço Cobrança"
