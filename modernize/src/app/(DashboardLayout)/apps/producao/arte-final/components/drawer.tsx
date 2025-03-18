@@ -116,7 +116,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
 
     if(row?.id){
       setTimeout(() => {
-        handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id);
+        handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id as number);
       }, 2000);
       
     }
