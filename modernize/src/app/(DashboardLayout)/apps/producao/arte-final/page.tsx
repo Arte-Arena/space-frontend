@@ -43,6 +43,8 @@ import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
 import deletePedidoArteFinal from './components/useDeletePedido';
 import { useThemeMode } from '@/utils/useThemeMode';
+import atribuirDesigner from './components/useDeisgnerJoin';
+import { IconUserPlus } from '@tabler/icons-react';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -69,7 +71,9 @@ const ArteFinalScreen = () => {
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
   const allowedRoles = [1, 2, 3, 4];
+  const DesignerRoles = [6,7];
   const canShowButton = roles.some(role => allowedRoles.includes(role));
+  const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));
 
   const startIndex = paginationModel.page * paginationModel.pageSize;
   const endIndex = startIndex + paginationModel.pageSize;
@@ -168,6 +172,18 @@ const ArteFinalScreen = () => {
     setSelectedRowDesinger(row);
     setOpenDialogDesinger(true);
   };
+  
+  const handleEntrarDesigner = async (id: number | undefined) => {
+    const resposta = await atribuirDesigner(id, refetch);
+    if (resposta) {
+      console.log("Designer adicionado com sucesso!");
+      alert('sucesso');
+    } else {
+      console.log("Falha ao atribuir designer.");
+    }
+  } 
+
+
 
   const handleVerDetalhes = (row: ArteFinal) => {
     setSelectedRowSidePanel(row);
@@ -175,7 +191,7 @@ const ArteFinalScreen = () => {
   };
 
   const handleEnviarImpressora = async (row: ArteFinal) => {
-    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido +' para Impressão?');
+    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Impressão?');
 
     if (confirmar) {
       const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
@@ -191,7 +207,7 @@ const ArteFinalScreen = () => {
       alert('Envio cancelado.');
     }
   };
-  
+
 
   // handles dos selects
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
@@ -378,9 +394,39 @@ const ArteFinalScreen = () => {
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }} align='center'>{designerNome ?? 'Sem Designer'}</TableCell>
+
+
+                          {designerNome !== 'Desconhecido' ? (
+                            <TableCell
+                              sx={{
+                                color: myTheme === "dark" ? "white" : "black", // Branco no modo escuro e preto no claro
+                              }}
+                              align="center"
+                            >
+                              {designerNome}
+                            </TableCell>
+                          ) : (
+                            <TableCell align="center">
+                              {canShowButtonDesigner ? (
+
+                                <Button
+                                sx={{
+                                  backgroundColor: 'transparent',
+                                  borderRadius: '100px',
+                                  border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
+                                  color: myTheme === 'dark' ? 'white' : 'black',
+                                }}
+                                onClick={() => handleEntrarDesigner(row.id)}
+                                >
+                                <IconUserPlus />
+                              </Button>
+                              ) : (
+                                <>
+                                Não Atribuído
+                                </>
+                              )}
+                            </TableCell>
+                          )}
 
                           <TableCell sx={{
                             color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
@@ -572,7 +618,7 @@ const ArteFinalScreen = () => {
             <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} refetch={refetch} />
           )}
           <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
-          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch}/>
+          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
         </>
       </ParentCard>
     </PageContainer>
