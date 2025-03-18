@@ -93,7 +93,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
     );
   };
 
-  const handletrocarMedidaLinear = async (uid: number | null, medidasLineares: Record<string, number>, id: number) => {
+  const handletrocarMedidaLinear = async (uid: number | null, medidasLineares: Record<string, number>, id: number | undefined) => {
     try {
       const response = await trocarMedidaLinear(id, uid, medidasLineares, refetch);
       if (response) {
