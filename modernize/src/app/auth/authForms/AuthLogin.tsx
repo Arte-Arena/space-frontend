@@ -44,7 +44,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
       } else {
         console.log("Erro: Sem acesso ao token de acesso.");
       }
-      
+
       // Verifica o role do usuário
       if (data.user_roles) {
         localStorage.setItem('roles', data.user_roles);
@@ -63,12 +63,17 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
         localStorage.setItem('email', data.user_email);
       } else {
         console.log("Erro: Sem acesso ao email.");
-      
+
       }
       if (data.user_cargos) {
         localStorage.setItem('cargos', data.user_cargos);
       } else {
         console.log("Erro: Sem acesso aos cargos.");
+      }
+      if (data.user_id) {
+        localStorage.setItem('user_id', data.user_id.id);
+      } else {
+        console.log("Erro: Sem acesso ao id.");
       }
 
       router.push('/');
