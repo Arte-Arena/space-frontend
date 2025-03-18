@@ -1,8 +1,14 @@
-const trocarMedidaLinear = async (id: number | undefined, uid: number | null, medidaLinear: number, refetch: () => void): Promise<boolean> => {
+const trocarMedidaLinear = async (id: number | undefined, uid: number | null, medidasLineares: Record<string, number>, refetch: () => void): Promise<boolean> => {
   try {
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) throw new Error("Usuário não autenticado.");
+    const medidaLinear = medidasLineares[String(uid)];
 
+    if (uid === null) {
+      console.error("Erro sem UID na request:");
+      return false;
+    }
+    
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-media-change/${id}`,
       {
@@ -20,8 +26,9 @@ const trocarMedidaLinear = async (id: number | undefined, uid: number | null, me
     return true;
   } catch (error) {
     console.error("Erro ao trocar produto do pedido:", error);
-    return false; 
+    return false;
   }
+
 };
 
 export default trocarMedidaLinear;

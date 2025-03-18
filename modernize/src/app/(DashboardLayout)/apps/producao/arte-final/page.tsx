@@ -71,7 +71,7 @@ const ArteFinalScreen = () => {
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
   const allowedRoles = [1, 2, 3, 4];
-  const DesignerRoles = [6,7];
+  const DesignerRoles = [6, 7];
   const canShowButton = roles.some(role => allowedRoles.includes(role));
   const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));
 
@@ -172,7 +172,7 @@ const ArteFinalScreen = () => {
     setSelectedRowDesinger(row);
     setOpenDialogDesinger(true);
   };
-  
+
   const handleEntrarDesigner = async (id: number | undefined) => {
     const resposta = await atribuirDesigner(id, refetch);
     if (resposta) {
@@ -181,7 +181,7 @@ const ArteFinalScreen = () => {
     } else {
       console.log("Falha ao atribuir designer.");
     }
-  } 
+  }
 
 
 
@@ -394,8 +394,6 @@ const ArteFinalScreen = () => {
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
-
-
                           {designerNome !== 'Desconhecido' ? (
                             <TableCell
                               sx={{
@@ -410,47 +408,75 @@ const ArteFinalScreen = () => {
                               {canShowButtonDesigner ? (
 
                                 <Button
-                                sx={{
-                                  backgroundColor: 'transparent',
-                                  borderRadius: '100px',
-                                  border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
-                                  color: myTheme === 'dark' ? 'white' : 'black',
-                                }}
-                                onClick={() => handleEntrarDesigner(row.id)}
+                                  sx={{
+                                    backgroundColor: 'transparent',
+                                    borderRadius: '100px',
+                                    border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
+                                    color: myTheme === 'dark' ? 'white' : 'black',
+                                  }}
+                                  onClick={() => handleEntrarDesigner(row.id)}
                                 >
-                                <IconUserPlus />
-                              </Button>
+                                  <IconUserPlus />
+                                </Button>
                               ) : (
                                 <>
-                                Não Atribuído
+                                  Não Atribuído
                                 </>
                               )}
                             </TableCell>
                           )}
 
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }} align="center">
-                            <Button
-                              sx={{
-                                background: 'transparent',
-                                color: myTheme === 'dark' ? 'white' : 'black',
-                                borderRadius: '4px',
-                                border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
-                                fontSize: '12px',
-                                whiteSpace: 'nowrap', // Impede que o texto quebre em várias linhas
-                                overflow: 'hidden', // Esconde o texto que ultrapassa o limite do botão
-                                textOverflow: 'ellipsis', // Adiciona "..." ao texto que não cabe
-                                maxWidth: '150px', // Define uma largura máxima para o botão
-                                '&:hover': {
-                                  backgroundColor: 'rgba(13, 12, 12, 0.1)', // Cor neutra ao passar o mouse
-                                  color: theme.palette.text.secondary, // Cor do texto ao passar o mouse
-                                }
-                              }}
-                              onClick={() => handleClickOpenDialogObs(row)}
-                            >
-                              {row.observacoes ?? "Adicionar Observação"}
-                            </Button>
+                          {/*  */}
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            }}
+                            align="center"
+                          >
+                            {row.observacoes ? (
+                              <Button
+                                sx={{
+                                  background: 'transparent',
+                                  color: myTheme === 'dark' ? 'white' : 'black',
+                                  borderRadius: '4px',
+                                  border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
+                                  fontSize: '12px',
+                                  whiteSpace: 'nowrap', // Impede que o texto quebre em várias linhas
+                                  overflow: 'hidden', // Esconde o texto que ultrapassa o limite do botão
+                                  textOverflow: 'ellipsis', // Adiciona "..." ao texto que não cabe
+                                  maxWidth: '150px', // Define uma largura máxima para o botão
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(13, 12, 12, 0.1)', // Cor neutra ao passar o mouse
+                                    color: theme.palette.text.secondary, // Cor do texto ao passar o mouse
+                                  }
+                                }}
+                                onClick={() => handleClickOpenDialogObs(row)}
+                              >
+                                {row.observacoes}
+                              </Button>
+                            ): (
+                              <Button  
+                                sx={{
+                                  // bordinha e texto em gray
+                                  background: 'transparent',
+                                  color: myTheme === 'dark' ? 'white' : 'black',
+                                  borderRadius: '4px',
+                                  border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
+                                  fontSize: '12px',
+                                  whiteSpace: 'nowrap', // Impede que o texto quebre em várias linhas
+                                  overflow: 'hidden', // Esconde o texto que ultrapassa o limite do botão
+                                  textOverflow: 'ellipsis', // Adiciona "..." ao texto que não cabe
+                                  maxWidth: '150px', // Define uma largura máxima para o botão
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(13, 12, 12, 0.1)', // Cor neutra ao passar o mouse
+                                    color: theme.palette.text.secondary, // Cor do texto ao passar o mouse
+                                  }
+                                }}
+                                onClick={() => handleClickOpenDialogObs(row)}
+                              >
+                                Adicionar Observação
+                              </Button>
+                            )}
                           </TableCell>
 
 
@@ -514,11 +540,6 @@ const ArteFinalScreen = () => {
                                 <IconShirt />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Atribuir Designer">
-                              <IconButton onClick={() => handleAtribuirDesigner(row)}>
-                                <IconBrush />
-                              </IconButton>
-                            </Tooltip>
                             <Tooltip title="Enviar para Impressão!">
                               <IconButton onClick={() => handleEnviarImpressora(row)}>
                                 <IconPrinter />
@@ -528,6 +549,11 @@ const ArteFinalScreen = () => {
 
                             {canShowButton && (
                               <>
+                                <Tooltip title="Atribuir Designer">
+                                  <IconButton onClick={() => handleAtribuirDesigner(row)}>
+                                    <IconBrush />
+                                  </IconButton>
+                                </Tooltip>
                                 <Tooltip title="Editar">
                                   <IconButton onClick={() => handleEdit(row)}>
                                     <IconEdit />
