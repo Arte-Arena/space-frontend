@@ -1,14 +1,44 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CircularProgress from '@mui/material/CircularProgress';
-import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button, FormControl, FormControlLabel, RadioGroup, Radio, Checkbox } from '@mui/material';
-import { IconDeviceFloppy } from '@tabler/icons-react';
+import { 
+  Button, 
+  FormControlLabel, 
+  Checkbox,
+  Alert,
+  Snackbar,
+  Stack,
+  Card,
+  CardContent,
+  Typography,
+  Box,
+} from '@mui/material';
+import { IconDeviceFloppy, IconBuilding, IconUser } from '@tabler/icons-react';
+
+const REGEX = {
+  email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+  cpf: /^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/,
+  cnpj: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$|^\d{14}$/,
+  cep: /^\d{5}-?\d{3}$/,
+  phone: /^\(\d{2}\)\s\d{4,5}-\d{4}$|^\d{10,11}$/,
+  onlyNumbers: /^\d+$/,
+  onlyLetters: /^[a-zA-ZÀ-ÿ\s]+$/,
+};
+
+interface ValidationError {
+  field: string;
+  message: string;
+}
+
+interface AlertMessage {
+  type: 'success' | 'error' | 'info' | 'warning';
+  message: string;
+}
 
 interface ClienteCadastroForm {
   tipo_pessoa: 'J' | 'F';
@@ -57,7 +87,7 @@ const OrcamentoBackofficeScreen: React.FC = () => {
     complemento: '',
     bairro: '',
     cidade: '',
-    uf: '', // Inicializando com valor vazio
+    uf: '',
     razao_social: '',
     cnpj: '',
     inscricao_estadual: '',
@@ -67,129 +97,136 @@ const OrcamentoBackofficeScreen: React.FC = () => {
     complemento_cobranca: '',
     bairro_cobranca: '',
     cidade_cobranca: '',
-    uf_cobranca: '', // Inicializando com valor vazio
+    uf_cobranca: '',
     endereco_cobranca_diferente: false,
     orcamento_id: Number(id),
     situacao: "A"
   });
 
-
   const [isTipoPessoaSelected, setIsTipoPessoaSelected] = useState(false);
+  const [errors, setErrors] = useState<ValidationError[]>([]);
+  const [alert, setAlert] = useState<AlertMessage | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // const accessToken = localStorage.getItem('accessToken');
-  // if (!accessToken) {
-  //   throw new Error('Access token is missing');
-  // }
+  const validateField = (name: string, value: string): ValidationError | null => {
+    if (!value || value.trim() === '') {
+      return { field: name, message: `O campo ${name} é obrigatório.` };
+    }
 
-  // const { isFetching, error } = useQuery({
-  //   queryKey: ['clientData'],
-  //   queryFn: () =>
-  //     fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/get-cliente-cadastro?id=${id}`, {
-  //       method: 'GET',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         Authorization: `Bearer ${accessToken}`,
-  //       },
-  //     }).then((res) => res.json()),
-  // });
+    switch (name) {
+      case 'email':
+        if (!REGEX.email.test(value)) {
+          return { field: name, message: 'E-mail inválido.' };
+        }
+        break;
+      case 'cpf':
+        if (!REGEX.cpf.test(value)) {
+          return { field: name, message: 'CPF inválido. Use o formato: 000.000.000-00' };
+        }
+        break;
+      case 'cnpj':
+        if (!REGEX.cnpj.test(value)) {
+          return { field: name, message: 'CNPJ inválido. Use o formato: 00.000.000/0000-00' };
+        }
+        break;
+      case 'celular':
+        if (!REGEX.phone.test(value)) {
+          return { field: name, message: 'Celular inválido. Use o formato: (00) 00000-0000' };
+        }
+        break;
+      case 'cep':
+      case 'cep_cobranca':
+        if (!REGEX.cep.test(value)) {
+          return { field: name, message: 'CEP inválido. Use o formato: 00000-000' };
+        }
+        break;
+      case 'nome':
+      case 'razao_social':
+        if (!REGEX.onlyLetters.test(value)) {
+          return { field: name, message: 'Este campo deve conter apenas letras.' };
+        }
+        break;
+    }
+
+    return null;
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: ValidationError[] = [];
+    
+    const commonFields = ['email', 'celular', 'cep', 'endereco', 'numero', 'bairro', 'cidade', 'uf'];
+    commonFields.forEach(field => {
+      const error = validateField(field, formData[field as keyof ClienteCadastroForm] as string);
+      if (error) newErrors.push(error);
+    });
+
+    if (formData.tipo_pessoa === 'F') {
+      ['nome', 'cpf', 'rg'].forEach(field => {
+        const error = validateField(field, formData[field as keyof ClienteCadastroForm] as string);
+        if (error) newErrors.push(error);
+      });
+    } else {
+      ['razao_social', 'cnpj', 'inscricao_estadual'].forEach(field => {
+        const error = validateField(field, formData[field as keyof ClienteCadastroForm] as string);
+        if (error) newErrors.push(error);
+      });
+    }
+
+    if (formData.endereco_cobranca_diferente) {
+      const billingFields = ['cep_cobranca', 'endereco_cobranca', 'numero_cobranca', 'bairro_cobranca', 'cidade_cobranca', 'uf_cobranca'];
+      billingFields.forEach(field => {
+        const error = validateField(field, formData[field as keyof ClienteCadastroForm] as string);
+        if (error) newErrors.push(error);
+      });
+    }
+
+    setErrors(newErrors);
+    return newErrors.length === 0;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleTipoPessoaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value as 'J' | 'F';
-    setFormData((prev) => ({ ...prev, tipo_pessoa: value }));
-    setIsTipoPessoaSelected(true);
+    
+    setErrors(prev => prev.filter(error => error.field !== name));
+    
+    const error = validateField(name, value);
+    if (error) {
+      setErrors(prev => [...prev.filter(e => e.field !== name), error]);
+    }
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, endereco_cobranca_diferente: e.target.checked }));
+    const checked = e.target.checked;
+    setFormData((prev) => ({
+      ...prev,
+      endereco_cobranca_diferente: checked,
+      ...(checked ? {} : {
+        cep_cobranca: '',
+        endereco_cobranca: '',
+        numero_cobranca: '',
+        complemento_cobranca: '',
+        bairro_cobranca: '',
+        cidade_cobranca: '',
+        uf_cobranca: '',
+      }),
+    }));
+    setErrors(prev => prev.filter(error => !error.field.includes('_cobranca')));
   };
 
   const handleSubmit = async () => {
-
-    // console.log(formData);
-
-    // validação de CNPJ
-    if (formData.tipo_pessoa == 'J') {
-      if (formData.razao_social === "" || formData.razao_social === null || formData.razao_social === undefined) {
-        alert("razao social é um campo obrigatorio.");
-        return;
-      }
-      if (formData.cnpj === "" || formData.cnpj === null || formData.cnpj === undefined) {
-        alert("cnpj é um campo obrigatorio.");
-        return;
-      }
-      if (formData.inscricao_estadual === "" || formData.inscricao_estadual === null || formData.inscricao_estadual === undefined) {
-        alert("inscricao estadual é um campo obrigatorio.");
-        return;
-      }
-    }
-
-    // validação de CPF
-    if (formData.tipo_pessoa == 'F') {
-      if (formData.nome === "" || formData.nome === null || formData.nome === undefined) {
-        alert("nome é um campo obrigatorio.");
-        return;
-      }
-      if (formData.cpf === "" || formData.cpf === null || formData.cpf === undefined) {
-        alert("CPF é um campo obrigatorio.");
-        return;
-      }
-      if (formData.rg === "" || formData.rg === null || formData.rg === undefined) {
-        alert("RG é um campo obrigatorio.");
-        return;
-      }
-    }
-
-    console.log('chegou aqui 1');
-    for (const [key, value] of Object.entries(formData)) {
-      if (value === "" || value === null || value === undefined) {
-        console.log('chegou aqui 2');
-        let mensagem;
+    setIsSubmitting(true);
     
-        if (key === "email" && !/\S+@\S+\.\S+/.test(value)) {
-          alert("E-mail inválido.");
-          return;
-        }
-        console.log('chegou aqui 3');
-    
-        if (key === "email") mensagem = "O campo E-mail é obrigatório.";
-        else if (key === "celular") mensagem = "O campo Celular é obrigatório.";
-        else if (key === "cep") mensagem = "O campo CEP é obrigatório.";
-        else if (key === "endereco") mensagem = "O campo Endereço é obrigatório.";
-        else if (key === "numero") mensagem = "O campo Número é obrigatório.";
-        else if (key === "bairro") mensagem = "O campo Bairro é obrigatório.";
-        else if (key === "cidade") mensagem = "O campo Cidade é obrigatório.";
-        else if (key === "uf") mensagem = "O campo UF é obrigatório.";
-        
-        if (formData.endereco_cobranca_diferente) {
-          if (key === "cep_cobranca") mensagem = "O campo CEP de Cobrança é obrigatório.";
-          else if (key === "endereco_cobranca") mensagem = "O campo Endereço de Cobrança é obrigatório.";
-          else if (key === "numero_cobranca") mensagem = "O campo Número de Cobrança é obrigatório.";
-          else if (key === "bairro_cobranca") mensagem = "O campo Bairro de Cobrança é obrigatório.";
-          else if (key === "cidade_cobranca") mensagem = "O campo Cidade de Cobrança é obrigatório.";
-          else if (key === "uf_cobranca") mensagem = "O campo UF de Cobrança é obrigatório.";
-        }
-    
-        if (mensagem) {
-          alert(mensagem);
-        }
-      }
-    }
-
-    console.log('chegou aqui 5');
-
     try {
-      console.log('chegou aqui 6');
+      if (!validateForm()) {
+        setAlert({
+          type: 'error',
+          message: 'Por favor, corrija os erros no formulário antes de continuar.'
+        });
+        return;
+      }
 
       const formDataWithOrcamentoId = { ...formData, orcamentoId: id };
-
-
-      console.log("Payload enviado:", JSON.stringify(formDataWithOrcamentoId, null, 2));
-
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/cliente-cadastro`, {
         method: 'POST',
@@ -199,39 +236,50 @@ const OrcamentoBackofficeScreen: React.FC = () => {
         body: JSON.stringify(formDataWithOrcamentoId),
       });
 
-      console.log("Status da resposta:", response.status);
       const data = await response.json();
-      console.log("Resposta completa:", data);
 
       if (data.retorno.status === "Erro") {
         const registros = data.retorno.registros;
         const ultimoRegistro = registros[registros.length - 1];
-        if (ultimoRegistro && ultimoRegistro.registro && ultimoRegistro.registro.erros && ultimoRegistro.registro.erros.length > 0) {
+        if (ultimoRegistro?.registro?.erros?.length > 0) {
           const ultimoErro = ultimoRegistro.registro.erros[ultimoRegistro.registro.erros.length - 1];
-          const mensagemErro = ultimoErro.erro;
-          alert('Cliente não salvo! ' + mensagemErro);
-          return
+          setAlert({
+            type: 'error',
+            message: 'Cliente não salvo! ' + ultimoErro.erro
+          });
+          return;
         }
       }
 
       if (response.ok) {
-        alert('Cliente salvo com sucesso!');
+        setAlert({
+          type: 'success',
+          message: 'Cliente salvo com sucesso!'
+        });
         setIsTipoPessoaSelected(false);
-        // levar a pessoa pra uma pagina de sucesso pra ela não se confundir e mandar duas vezes ou mais a requisição.
         navigate.push('/apps/orcamento/backoffice/cliente-cadastro/sucesso');
       } else {
         const errorData = await response.json();
-        console.log(errorData.message)
-        alert(`Erro ao salvar: ${errorData.message}`);
+        setAlert({
+          type: 'error',
+          message: `Erro ao salvar: ${errorData.message}`
+        });
       }
     } catch (error) {
       console.error(error);
-      alert('Ocorreu um erro ao salvar o cliente.');
+      setAlert({
+        type: 'error',
+        message: 'Ocorreu um erro ao salvar o cliente.'
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // if (isFetching) return <CircularProgress />;
-  // if (error) return <p>Ocorreu um erro ao buscar os dados do cliente.</p>;
+  const getFieldError = (fieldName: string): string | undefined => {
+    const error = errors.find(e => e.field === fieldName);
+    return error?.message;
+  };
 
   const estados = [
     'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
@@ -240,17 +288,107 @@ const OrcamentoBackofficeScreen: React.FC = () => {
   return (
     <PageContainer title="Orçamento / Backoffice / Cadastro de Cliente" description="Cadastrar Cliente da Arte Arena">
       <Breadcrumb title="Orçamento / Backoffice / Cadastro de Cliente" subtitle="Cadastrar Cliente da Arte Arena / Backoffice" />
+      
+      <Snackbar
+        open={!!alert}
+        autoHideDuration={6000}
+        onClose={() => setAlert(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={() => setAlert(null)} 
+          severity={alert?.type || 'info'} 
+          sx={{ width: '100%' }}
+        >
+          {alert?.message || ''}
+        </Alert>
+      </Snackbar>
+
       <ParentCard title="Cadastro de Cliente">
-        <>
-          <FormControl component="fieldset">
-            <RadioGroup row aria-label="tipo_pessoa" name="tipo_pessoa" onChange={handleTipoPessoaChange}>
-              <FormControlLabel value="F" control={<Radio />} label="Pessoa Física" />
-              <FormControlLabel value="J" control={<Radio />} label="Pessoa Jurídica" />
-            </RadioGroup>
-          </FormControl>
+        <Stack spacing={3}>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Selecione o tipo de cliente
+            </Typography>
+            <Stack direction="row" spacing={2}>
+              <Card 
+                sx={{ 
+                  width: '100%',
+                  cursor: 'pointer',
+                  border: (theme) => `2px solid ${formData.tipo_pessoa === 'F' ? theme.palette.primary.main : 'transparent'}`,
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                  }
+                }}
+                onClick={() => {
+                  setFormData(prev => ({
+                    ...prev,
+                    tipo_pessoa: 'F',
+                    nome: '',
+                    rg: '',
+                    cpf: '',
+                    razao_social: '',
+                    cnpj: '',
+                    inscricao_estadual: '',
+                  }));
+                  setIsTipoPessoaSelected(true);
+                  setErrors([]);
+                }}
+              >
+                <CardContent>
+                  <Stack spacing={2} alignItems="center">
+                    <IconUser size={40} color={formData.tipo_pessoa === 'F' ? '#1976d2' : '#757575'} />
+                    <Typography variant="h6" color={formData.tipo_pessoa === 'F' ? 'primary' : 'text.secondary'}>
+                      Pessoa Física
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" textAlign="center">
+                      Para clientes individuais, com CPF
+                    </Typography>
+                  </Stack>
+                </CardContent>
+              </Card>
+
+              <Card 
+                sx={{ 
+                  width: '100%',
+                  cursor: 'pointer',
+                  border: (theme) => `2px solid ${formData.tipo_pessoa === 'J' ? theme.palette.primary.main : 'transparent'}`,
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                  }
+                }}
+                onClick={() => {
+                  setFormData(prev => ({
+                    ...prev,
+                    tipo_pessoa: 'J',
+                    nome: '',
+                    rg: '',
+                    cpf: '',
+                    razao_social: '',
+                    cnpj: '',
+                    inscricao_estadual: '',
+                  }));
+                  setIsTipoPessoaSelected(true);
+                  setErrors([]);
+                }}
+              >
+                <CardContent>
+                  <Stack spacing={2} alignItems="center">
+                    <IconBuilding size={40} color={formData.tipo_pessoa === 'J' ? '#1976d2' : '#757575'} />
+                    <Typography variant="h6" color={formData.tipo_pessoa === 'J' ? 'primary' : 'text.secondary'}>
+                      Pessoa Jurídica
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" textAlign="center">
+                      Para empresas, com CNPJ
+                    </Typography>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Stack>
+          </Box>
 
           {isTipoPessoaSelected && (
-            <>
+            <Stack spacing={3}>
               {formData.tipo_pessoa === 'F' && (
                 <>
                   <CustomTextField
@@ -259,8 +397,9 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                     value={formData.nome}
                     onChange={handleInputChange}
                     fullWidth
-                    margin="normal"
-                    variant="outlined"
+                    error={!!getFieldError('nome')}
+                    helperText={getFieldError('nome')}
+                    required
                   />
                   <CustomTextField
                     label="CPF"
@@ -268,8 +407,9 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                     value={formData.cpf}
                     onChange={handleInputChange}
                     fullWidth
-                    margin="normal"
-                    variant="outlined"
+                    error={!!getFieldError('cpf')}
+                    helperText={getFieldError('cpf')}
+                    required
                   />
                   <CustomTextField
                     label="RG"
@@ -277,8 +417,9 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                     value={formData.rg}
                     onChange={handleInputChange}
                     fullWidth
-                    margin="normal"
-                    variant="outlined"
+                    error={!!getFieldError('rg')}
+                    helperText={getFieldError('rg')}
+                    required
                   />
                 </>
               )}
@@ -291,8 +432,9 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                     value={formData.razao_social}
                     onChange={handleInputChange}
                     fullWidth
-                    margin="normal"
-                    variant="outlined"
+                    error={!!getFieldError('razao_social')}
+                    helperText={getFieldError('razao_social')}
+                    required
                   />
                   <CustomTextField
                     label="CNPJ"
@@ -300,8 +442,9 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                     value={formData.cnpj}
                     onChange={handleInputChange}
                     fullWidth
-                    margin="normal"
-                    variant="outlined"
+                    error={!!getFieldError('cnpj')}
+                    helperText={getFieldError('cnpj')}
+                    required
                   />
                   <CustomTextField
                     label="Inscrição Estadual"
@@ -309,8 +452,9 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                     value={formData.inscricao_estadual}
                     onChange={handleInputChange}
                     fullWidth
-                    margin="normal"
-                    variant="outlined"
+                    error={!!getFieldError('inscricao_estadual')}
+                    helperText={getFieldError('inscricao_estadual')}
+                    required
                   />
                 </>
               )}
@@ -321,8 +465,9 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 fullWidth
-                margin="normal"
-                variant="outlined"
+                error={!!getFieldError('email')}
+                helperText={getFieldError('email')}
+                required
               />
               <CustomTextField
                 label="Telefone Celular"
@@ -330,87 +475,93 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                 value={formData.celular}
                 onChange={handleInputChange}
                 fullWidth
-                margin="normal"
-                variant="outlined"
+                error={!!getFieldError('celular')}
+                helperText={getFieldError('celular')}
+                required
               />
 
-              {/* Endereço */}
               <h3>Endereço</h3>
-              <CustomTextField
-                label="CEP"
-                name="cep"
-                value={formData.cep}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                variant="outlined"
-              />
-              <CustomTextField
-                label="Endereço"
-                name="endereco"
-                value={formData.endereco}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                variant="outlined"
-              />
-              <CustomTextField
-                label="Número"
-                name="numero"
-                value={formData.numero}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                variant="outlined"
-              />
-              <CustomTextField
-                label="Complemento"
-                name="complemento"
-                value={formData.complemento}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                variant="outlined"
-              />
-              <CustomTextField
-                label="Bairro"
-                name="bairro"
-                value={formData.bairro}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                variant="outlined"
-              />
-              <CustomTextField
-                label="Cidade"
-                name="cidade"
-                value={formData.cidade}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                variant="outlined"
-              />
-              <CustomTextField
-                name="uf"
-                value={formData.uf || ''} // Garantindo que "AC" não seja selecionado por padrão
-                onChange={handleInputChange}
-                select
-                fullWidth
-                margin="normal"
-                variant="outlined"
-                SelectProps={{
-                  native: true,
-                }}
-              >
-                <option value="">Selecione</option> {/* Opção vazia para evitar seleção inicial do AC */}
-                {estados.map((estado) => (
-                  <option key={estado} value={estado}>
-                    {estado}
-                  </option>
-                ))}
-              </CustomTextField>
+              <Stack spacing={2}>
+                <CustomTextField
+                  label="CEP"
+                  name="cep"
+                  value={formData.cep}
+                  onChange={handleInputChange}
+                  fullWidth
+                  error={!!getFieldError('cep')}
+                  helperText={getFieldError('cep')}
+                  required
+                />
+                <CustomTextField
+                  label="Endereço"
+                  name="endereco"
+                  value={formData.endereco}
+                  onChange={handleInputChange}
+                  fullWidth
+                  error={!!getFieldError('endereco')}
+                  helperText={getFieldError('endereco')}
+                  required
+                />
+                <CustomTextField
+                  label="Número"
+                  name="numero"
+                  value={formData.numero}
+                  onChange={handleInputChange}
+                  fullWidth
+                  error={!!getFieldError('numero')}
+                  helperText={getFieldError('numero')}
+                  required
+                />
+                <CustomTextField
+                  label="Complemento"
+                  name="complemento"
+                  value={formData.complemento}
+                  onChange={handleInputChange}
+                  fullWidth
+                />
+                <CustomTextField
+                  label="Bairro"
+                  name="bairro"
+                  value={formData.bairro}
+                  onChange={handleInputChange}
+                  fullWidth
+                  error={!!getFieldError('bairro')}
+                  helperText={getFieldError('bairro')}
+                  required
+                />
+                <CustomTextField
+                  label="Cidade"
+                  name="cidade"
+                  value={formData.cidade}
+                  onChange={handleInputChange}
+                  fullWidth
+                  error={!!getFieldError('cidade')}
+                  helperText={getFieldError('cidade')}
+                  required
+                />
+                <CustomTextField
+                  label="UF"
+                  name="uf"
+                  value={formData.uf}
+                  onChange={handleInputChange}
+                  select
+                  fullWidth
+                  error={!!getFieldError('uf')}
+                  helperText={getFieldError('uf')}
+                  required
+                  SelectProps={{
+                    native: true,
+                  }}
+                >
+                  <option value="">Selecione</option>
+                  {estados.map((estado) => (
+                    <option key={estado} value={estado}>
+                      {estado}
+                    </option>
+                  ))}
+                </CustomTextField>
+              </Stack>
 
-              {/* Endereço de Cobrança Diferente */}
               <FormControlLabel
                 control={
                   <Checkbox
@@ -426,79 +577,86 @@ const OrcamentoBackofficeScreen: React.FC = () => {
               {formData.endereco_cobranca_diferente && (
                 <>
                   <h3>Endereço de Cobrança</h3>
-                  <CustomTextField
-                    label="CEP Cobrança"
-                    name="cep_cobranca"
-                    value={formData.cep_cobranca}
-                    onChange={handleInputChange}
-                    fullWidth
-                    margin="normal"
-                    variant="outlined"
-                  />
-                  <CustomTextField
-                    label="Endereço Cobrança"
-                    name="endereco_cobranca"
-                    value={formData.endereco_cobranca}
-                    onChange={handleInputChange}
-                    fullWidth
-                    margin="normal"
-                    variant="outlined"
-                  />
-                  <CustomTextField
-                    label="Número Cobrança"
-                    name="numero_cobranca"
-                    value={formData.numero_cobranca}
-                    onChange={handleInputChange}
-                    fullWidth
-                    margin="normal"
-                    variant="outlined"
-                  />
-                  <CustomTextField
-                    label="Complemento Cobrança"
-                    name="complemento_cobranca"
-                    value={formData.complemento_cobranca}
-                    onChange={handleInputChange}
-                    fullWidth
-                    margin="normal"
-                    variant="outlined"
-                  />
-                  <CustomTextField
-                    label="Bairro Cobrança"
-                    name="bairro_cobranca"
-                    value={formData.bairro_cobranca}
-                    onChange={handleInputChange}
-                    fullWidth
-                    margin="normal"
-                    variant="outlined"
-                  />
-                  <CustomTextField
-                    label="Cidade Cobrança"
-                    name="cidade_cobranca"
-                    value={formData.cidade_cobranca}
-                    onChange={handleInputChange}
-                    fullWidth
-                    margin="normal"
-                    variant="outlined"
-                  />
-                  <CustomTextField
-                    name="uf_cobranca"
-                    value={formData.uf_cobranca || ''} // Garantindo que "AC" não seja selecionado por padrão
-                    onChange={handleInputChange}
-                    select
-                    fullWidth
-                    margin="normal"
-                    variant="outlined"
-                    SelectProps={{
-                      native: true,
-                    }}
-                  >
-                    <option value="">Selecione</option> {/* Opção vazia para evitar seleção inicial do AC */}
-                    {estados.map((estado) => (
-                      <option key={estado} value={estado}>
-                        {estado}
-                      </option>
-                    ))}
-                  </CustomTextField>
+                  <Stack spacing={2}>
+                    <CustomTextField
+                      label="CEP Cobrança"
+                      name="cep_cobranca"
+                      value={formData.cep_cobranca}
+                      onChange={handleInputChange}
+                      fullWidth
+                      error={!!getFieldError('cep_cobranca')}
+                      helperText={getFieldError('cep_cobranca')}
+                      required
+                    />
+                    <CustomTextField
+                      label="Endereço Cobrança"
+                      name="endereco_cobranca"
+                      value={formData.endereco_cobranca}
+                      onChange={handleInputChange}
+                      fullWidth
+                      error={!!getFieldError('endereco_cobranca')}
+                      helperText={getFieldError('endereco_cobranca')}
+                      required
+                    />
+                    <CustomTextField
+                      label="Número Cobrança"
+                      name="numero_cobranca"
+                      value={formData.numero_cobranca}
+                      onChange={handleInputChange}
+                      fullWidth
+                      error={!!getFieldError('numero_cobranca')}
+                      helperText={getFieldError('numero_cobranca')}
+                      required
+                    />
+                    <CustomTextField
+                      label="Complemento Cobrança"
+                      name="complemento_cobranca"
+                      value={formData.complemento_cobranca}
+                      onChange={handleInputChange}
+                      fullWidth
+                    />
+                    <CustomTextField
+                      label="Bairro Cobrança"
+                      name="bairro_cobranca"
+                      value={formData.bairro_cobranca}
+                      onChange={handleInputChange}
+                      fullWidth
+                      error={!!getFieldError('bairro_cobranca')}
+                      helperText={getFieldError('bairro_cobranca')}
+                      required
+                    />
+                    <CustomTextField
+                      label="Cidade Cobrança"
+                      name="cidade_cobranca"
+                      value={formData.cidade_cobranca}
+                      onChange={handleInputChange}
+                      fullWidth
+                      error={!!getFieldError('cidade_cobranca')}
+                      helperText={getFieldError('cidade_cobranca')}
+                      required
+                    />
+                    <CustomTextField
+                      label="UF Cobrança"
+                      name="uf_cobranca"
+                      value={formData.uf_cobranca}
+                      onChange={handleInputChange}
+                      select
+                      fullWidth
+                      error={!!getFieldError('uf_cobranca')}
+                      helperText={getFieldError('uf_cobranca')}
+                      required
+                      SelectProps={{
+                        native: true,
+                      }}
+                    >
+                      <option value="">Selecione</option>
+                      {estados.map((estado) => (
+                        <option key={estado} value={estado}>
+                          {estado}
+                        </option>
+                      ))}
+                    </CustomTextField>
+                  </Stack>
                 </>
               )}
 
@@ -507,14 +665,21 @@ const OrcamentoBackofficeScreen: React.FC = () => {
                   color="primary"
                   variant="contained"
                   onClick={handleSubmit}
+                  disabled={isSubmitting || errors.length > 0}
                 >
-                  <IconDeviceFloppy style={{ marginRight: '8px' }} />
-                  Salvar Cliente
+                  {isSubmitting ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    <>
+                      <IconDeviceFloppy style={{ marginRight: '8px' }} />
+                      Salvar Cliente
+                    </>
+                  )}
                 </Button>
               </div>
-            </>
+            </Stack>
           )}
-        </>
+        </Stack>
       </ParentCard>
     </PageContainer>
   );
