@@ -17,6 +17,10 @@ import {
   CardContent,
   Typography,
   Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import { IconDeviceFloppy, IconBuilding, IconUser } from '@tabler/icons-react';
 import { logger } from '@/utils/logger';
@@ -73,7 +77,20 @@ interface ClienteCadastroForm {
 const OrcamentoBackofficeScreen: React.FC = () => {
   const searchParams = useSearchParams();
   const navigate = useRouter();
-  const id = searchParams.get('id') ?? null;
+  const orcamento_id = searchParams.get('id');
+
+  React.useEffect(() => {
+    if (!orcamento_id) {
+      setAlert({
+        type: 'error',
+        message: 'ID do orçamento não fornecido. Redirecionando...'
+      });
+
+      setTimeout(() => {
+        navigate.push('/apps/orcamento/backoffice');
+      }, 3000);
+    }
+  }, [orcamento_id, navigate]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState<ClienteCadastroForm>({
@@ -101,7 +118,7 @@ const OrcamentoBackofficeScreen: React.FC = () => {
     cidade_cobranca: '',
     uf_cobranca: '',
     endereco_cobranca_diferente: false,
-    orcamento_id: Number(id),
+    orcamento_id: Number(orcamento_id),
     situacao: "A"
   });
 
@@ -109,11 +126,13 @@ const OrcamentoBackofficeScreen: React.FC = () => {
   const [alert, setAlert] = useState<AlertMessage | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [openSuccessDialog, setOpenSuccessDialog] = useState(false);
+  const [openConfirmEditDialog, setOpenConfirmEditDialog] = useState(false);
 
   const fetchClientData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/get-cliente-cadastro?id=${id}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/get-cliente-by-orcamento?orcamento_id=${orcamento_id}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -164,12 +183,12 @@ const OrcamentoBackofficeScreen: React.FC = () => {
   };
 
   React.useEffect(() => {
-    if (id) {
+    if (orcamento_id) {
       fetchClientData();
     } else {
       setIsLoading(false);
     }
-  }, [id]);
+  }, [orcamento_id]);
 
   const validateField = (name: string, value: string): ValidationError | null => {
     if (!value || value.trim() === '') {
@@ -278,53 +297,65 @@ const OrcamentoBackofficeScreen: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!validateForm()) {
+      setAlert({
+        type: 'error',
+        message: 'Por favor, corrija os erros no formulário antes de continuar.'
+      });
+      return;
+    }
+
+    if (isEditing) {
+      setOpenConfirmEditDialog(true);
+      return;
+    }
+
+    await saveClient();
+  };
+
+  const saveClient = async () => {
     setIsSubmitting(true);
     
     try {
-      if (!validateForm()) {
-        setAlert({
-          type: 'error',
-          message: 'Por favor, corrija os erros no formulário antes de continuar.'
-        });
-        return;
-      }
+      const url = isEditing
+        ? `${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/cliente-cadastro/${formData.orcamento_id}`
+        : `${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/cliente-cadastro`;
 
-      const formDataWithOrcamentoId = { ...formData, orcamentoId: id };
+      const method = isEditing ? 'PUT' : 'POST';
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/cliente-cadastro`, {
-        method: 'POST',
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formDataWithOrcamentoId),
+        body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-
-      if (data.retorno.status === "Erro") {
-        const registros = data.retorno.registros;
-        const ultimoRegistro = registros[registros.length - 1];
-        if (ultimoRegistro?.registro?.erros?.length > 0) {
-          const ultimoErro = ultimoRegistro.registro.erros[ultimoRegistro.registro.erros.length - 1];
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success === false) {
           setAlert({
             type: 'error',
-            message: 'Cliente não salvo! ' + ultimoErro.erro
+            message: data.message || 'Erro ao salvar o cliente.'
           });
           return;
         }
-      }
 
-      if (response.ok) {
-        setAlert({
-          type: 'success',
-          message: 'Cliente salvo com sucesso!'
-        });
-        navigate.push('/apps/orcamento/backoffice/cliente-cadastro/sucesso');
+        setOpenSuccessDialog(true);
+        setIsEditing(true);
+        
+        if (data.cliente) {
+          setFormData(prev => ({
+            ...prev,
+            ...data.cliente
+          }));
+        }
       } else {
         const errorData = await response.json();
         setAlert({
           type: 'error',
-          message: `Erro ao salvar: ${errorData.message}`
+          message: errorData.message || 'Erro ao salvar o cliente.'
         });
       }
     } catch (error) {
@@ -354,6 +385,21 @@ const OrcamentoBackofficeScreen: React.FC = () => {
           <Stack spacing={2} alignItems="center">
             <CircularProgress size={40} />
             <Typography variant="h6">Carregando dados do cliente...</Typography>
+          </Stack>
+        </Box>
+      </PageContainer>
+    );
+  }
+
+  if (!orcamento_id) {
+    return (
+      <PageContainer>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <Stack spacing={2} alignItems="center">
+            <Typography variant="h6" color="error">
+              ID do orçamento não fornecido. Redirecionando...
+            </Typography>
+            <CircularProgress size={40} />
           </Stack>
         </Box>
       </PageContainer>
@@ -752,6 +798,90 @@ const OrcamentoBackofficeScreen: React.FC = () => {
           </Stack>
         </Stack>
       </ParentCard>
+
+      <Dialog
+        open={openSuccessDialog}
+        onClose={() => setOpenSuccessDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ textAlign: 'center', color: 'success.main' }}>
+          <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <Typography variant="h6" component="span">
+              Cliente {isEditing ? 'Atualizado' : 'Cadastrado'} com Sucesso!
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" align="center" sx={{ mt: 2 }}>
+            Os dados do cliente foram {isEditing ? 'atualizados' : 'salvos'} com sucesso no sistema.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setOpenSuccessDialog(false)}
+          >
+            Continuar Editando
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => navigate.push('/apps/orcamento/backoffice')}
+          >
+            Voltar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openConfirmEditDialog}
+        onClose={() => setOpenConfirmEditDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ textAlign: 'center', color: 'warning.main' }}>
+          <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2L2 7h20L12 2z"/>
+              <path d="M2 17h20v-7H2v7z"/>
+              <path d="M12 22v-5"/>
+            </svg>
+            <Typography variant="h6" component="span">
+              Confirmar Edição
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" align="center" sx={{ mt: 2 }}>
+            Tem certeza de que deseja editar os dados do cliente?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={async () => {
+              setOpenConfirmEditDialog(false);
+              await saveClient();
+            }}
+          >
+            Confirmar
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => setOpenConfirmEditDialog(false)}
+          >
+            Cancelar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </PageContainer>
   );
 };
