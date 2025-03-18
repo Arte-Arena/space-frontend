@@ -613,39 +613,36 @@ const OrcamentoBackofficeScreen = () => {
                         <TableCell>{new Date(row.created_at).toLocaleDateString('pt-BR')}</TableCell>
                         <TableCell>
                           <Stack direction="row" spacing={1}>
-                            <IconButton aria-label="link">
-                              <IconButton
-                                aria-label="link"
-                                onClick={() => {
-                                  setOpenLinkDialog(true);
-                                  handleLinkOrcamento(row.id);
-                                }}
-                              >
-                                <IconUser />
-                              </IconButton>
-                              <Dialog
-                                open={openLinkDialog}
-                                onClose={() => setOpenLinkDialog(false)}
-                              >
-                                <DialogTitle>Link do Orçamento</DialogTitle>
-                                <DialogContent>
-                                  <DialogContentText>
-                                    {linkOrcamento}
-                                  </DialogContentText>
-                                </DialogContent>
-                                <DialogActions>
-                                  <Button
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(linkOrcamento);
-                                      setOpenLinkDialog(false);
-                                    }}
-                                  >
-                                    Copiar Link
-                                  </Button>
-                                </DialogActions>
-                              </Dialog>
-
-                            </IconButton>
+                            <Button 
+                              variant="outlined"
+                              onClick={() => {
+                                setOpenLinkDialog(true);
+                                handleLinkOrcamento(row.id);
+                              }}
+                            >
+                              <IconUser />
+                            </Button>
+                            <Dialog
+                              open={openLinkDialog}
+                              onClose={() => setOpenLinkDialog(false)}
+                            >
+                              <DialogTitle>Link do Orçamento</DialogTitle>
+                              <DialogContent>
+                                <DialogContentText>
+                                  {linkOrcamento}
+                                </DialogContentText>
+                              </DialogContent>
+                              <DialogActions>
+                                <Button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(linkOrcamento);
+                                    setOpenLinkDialog(false);
+                                  }}
+                                >
+                                  Copiar Link
+                                </Button>
+                              </DialogActions>
+                            </Dialog>
                             <Button variant="outlined" onClick={() => {
                               setOpenUniformDialog(true);
                               handleShortlinkUniform(row.id);
