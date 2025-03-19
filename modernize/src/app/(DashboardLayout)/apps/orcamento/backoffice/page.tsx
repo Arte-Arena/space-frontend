@@ -94,6 +94,7 @@ const OrcamentoBackofficeScreen = () => {
   const router = useRouter();
   const [query, setQuery] = useState<string>('');
   const [isAdding, setIsAdding] = useState(false);
+  const [isAddingTiny, setIsAddingTiny] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
@@ -143,7 +144,7 @@ const OrcamentoBackofficeScreen = () => {
   };
 
   const handleNovoPedidoTiny = () => {
-    setIsAdding(true);
+    setIsAddingTiny(true);
     router.push('/apps/producao/arte-final/add-tiny/');
   };
 
@@ -528,7 +529,7 @@ const OrcamentoBackofficeScreen = () => {
               startIcon={isAdding ? <CircularProgress size={20} /> : <IconPlus />}
               sx={{ height: '100%' }}
               onClick={handleNovoPedidoTiny}
-              disabled={isAdding}
+              disabled={isAddingTiny}
             >
               {isAdding ? 'Adicionando...' : 'Adicionar pedido'}
             </Button>
