@@ -14,7 +14,7 @@ import IconButton from '@mui/material/IconButton';
 import { Pagination, Stack, Button, Box, Typography, Collapse } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import { IconSearch, IconCircleCheck, IconCircleCheckFilled } from '@tabler/icons-react';
+import { IconSearch, IconCircleCheck, IconCircleCheckFilled, IconEdit } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -246,6 +246,14 @@ const OrcamentoBuscarScreen = () => {
                                 <IconCircleCheckFilled />
                               </IconButton>
                             </Tooltip>
+                            <Tooltip title="Editar Orçamento">
+                              <IconButton
+                                aria-label="editar orçamento"
+                                onClick={() => router.push(`/apps/orcamento/editar/${row.id}`)}
+                              >
+                                <IconEdit />
+                              </IconButton>
+                            </Tooltip>
                           </Stack>
                         ) : (
                           <Stack direction="row" alignItems={"center"} spacing={1}>
@@ -255,6 +263,14 @@ const OrcamentoBuscarScreen = () => {
                                 onClick={() => handleAprovarOrcamento(row.id)}
                               >
                                 <IconCircleCheck />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Editar Orçamento">
+                              <IconButton
+                                aria-label="editar orçamento"
+                                onClick={() => router.push(`/apps/orcamento/editar/${row.id}`)}
+                              >
+                                <IconEdit />
                               </IconButton>
                             </Tooltip>
                           </Stack>
