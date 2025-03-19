@@ -79,7 +79,7 @@ const ExpediçãoScreen = () => {
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=I`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=E`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -110,22 +110,23 @@ const ExpediçãoScreen = () => {
     console.log("Deletar pedido", row);
   };
 
-  const handleEnviarConfeccao = async (row: ArteFinal) => {
-    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Confecção?');
+  // colocar pra jogar pra reposição
+  // const handleEnviarConfeccao = async (row: ArteFinal) => {
+  //   const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Confecção?');
 
-    if (confirmar) {
-      const sucesso = await trocarStatusPedido(row?.id, 14, refetch);
-      if (sucesso) {
-        // console.log("Pedido enviado com sucesso!");
-        alert('sucesso');
-      } else {
-        console.log("Falha ao enviar pedido.");
-      }
-    } else {
-      console.log("Envio cancelado.");
-      alert('Envio cancelado.');
-    }
-  };
+  //   if (confirmar) {
+  //     const sucesso = await trocarStatusPedido(row?.id, 14, refetch);
+  //     if (sucesso) {
+  //       // console.log("Pedido enviado com sucesso!");
+  //       alert('sucesso');
+  //     } else {
+  //       console.log("Falha ao enviar pedido.");
+  //     }
+  //   } else {
+  //     console.log("Envio cancelado.");
+  //     alert('Envio cancelado.');
+  //   }
+  // };
 
   const handleVerDetalhes = (row: ArteFinal) => {
     setSelectedRowSidePanel(null); // Zera antes de atualizar
@@ -163,12 +164,11 @@ const ExpediçãoScreen = () => {
   };
 
   const pedidoStatus = {
-    8: { nome: 'Pendente', fila: 'I' },
-    9: { nome: 'Processando', fila: 'I' },
-    10: { nome: 'Renderizando', fila: 'I' },
-    11: { nome: 'Impresso', fila: 'I' },
-    12: { nome: 'Em Impressão', fila: 'I' },
-    13: { nome: 'Separação', fila: 'I' },
+    22: { nome: 'Em Separação', fila: 'I' },
+    23: { nome: 'Retirada', fila: 'I' },
+    24: { nome: 'Em Entrega', fila: 'I' },
+    25: { nome: 'Entregue', fila: 'I' },
+    26: { nome: 'Devolução', fila: 'I' },
   } as const;
 
   // Filtro de pedidos
@@ -221,9 +221,9 @@ const ExpediçãoScreen = () => {
   // console.log(designers);
 
   return (
-    <PageContainer title="Produção / Impressão" description="Tela de Produção da Impressão | Arte Arena">
-      <Breadcrumb title="Produção / Impressão" items={BCrumb} />
-      <ParentCard title="Impressão">
+    <PageContainer title="Produção / Expedição" description="Tela de Produção da Expedição | Arte Arena">
+      <Breadcrumb title="Produção / Expedição" items={BCrumb} />
+      <ParentCard title="Expedição">
         <>
           <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
             {/* Campo de Número do Pedido */}
@@ -534,11 +534,11 @@ const ExpediçãoScreen = () => {
                                   <IconBrandTrello />
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title="Enviar para Confecção!">
+                              {/* <Tooltip title="Enviar para Confecção!">
                                 <IconButton onClick={() => handleEnviarConfeccao(row)}>
                                   <IconNeedleThread />
                                 </IconButton>
-                              </Tooltip>
+                              </Tooltip> */}
                             </TableCell>
                           </TableRow>
 
