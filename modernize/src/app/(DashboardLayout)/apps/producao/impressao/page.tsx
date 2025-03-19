@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { ArteFinal, Material, Produto } from './components/types';
+import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
 import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconNeedleThread } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
@@ -235,22 +235,25 @@ const ConfeccaoScreen = () => {
                     } as const;
 
                     const pedidoStatus = {
-                      // 1: { nome: 'Pendente', fila: 'D' },
-                      // 2: { nome: 'Em andamento', fila: 'D' },
-                      // 3: { nome: 'Arte OK', fila: 'D' },
-                      // 4: { nome: 'Em espera', fila: 'D' },
-                      // 5: { nome: 'Cor teste', fila: 'D' },
-
                       8: { nome: 'Pendente', fila: 'I' },
                       9: { nome: 'Processando', fila: 'I' },
                       10: { nome: 'Renderizando', fila: 'I' },
                       11: { nome: 'Impresso', fila: 'I' },
                       12: { nome: 'Em Impressão', fila: 'I' },
                       13: { nome: 'Separação', fila: 'I' },
-                      
-                      // 14: { nome: 'Em Transporte', fila: 'E' },
-                      // 15: { nome: 'Entregue', fila: 'E' },
                     } as const;
+
+                    const pedidoStatusColors: Record<number, string> = {
+                      8: 'rgba(220, 53, 69, 0.49)',
+                      9: 'rgba(213, 121, 0, 0.8)',
+                      10: 'rgba(123, 157, 0, 0.8)',
+                      11: 'rgba(0, 152, 63, 0.65)',
+                      12: 'rgba(0, 146, 136, 0.8)',
+                      13: 'rgba(238, 84, 84, 0.8)',
+                      //   20: 'rgba(20, 175, 0, 0.8)',
+                      //   21: 'rgba(180, 0, 0, 0.8)',
+                      //   22: 'rgba(152, 0, 199, 0.8)',
+                    };
 
                     const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
                     const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
@@ -262,15 +265,6 @@ const ConfeccaoScreen = () => {
                         <TableRow
                           key={row.id}
                           sx={{
-                            backgroundColor: atraso
-                              ? 'rgba(250, 0, 0, 0.8)' // Prioridade máxima
-                              : row.pedido_tipo_id === 2
-                                ? 'rgba(205, 92, 92, 0.8)' // indianred com transparência
-                                : row.pedido_status_id === 2
-                                  ? 'rgba(245, 75, 7, 0.8)' // #f54b07 com transparência
-                                  : row.pedido_status_id === 4
-                                    ? 'rgba(255, 165, 0, 0.8)' // #ffa500 com transparência
-                                    : 'inherit',
                           }}
                         >
 
@@ -343,7 +337,8 @@ const ConfeccaoScreen = () => {
 
                           <TableCell
                             sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                              color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                              backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
                             }}
                             align='center'
                           >
@@ -352,7 +347,13 @@ const ConfeccaoScreen = () => {
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
                           {/* <TableCell align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
-                          <TableCell align='center'>
+                          <TableCell
+                            align='center'
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black', 
+                              backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
+                            }}
+                          >
                             <select
                               style={{
                                 textAlign: 'center',

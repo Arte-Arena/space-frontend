@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { ArteFinal, Material, Produto } from './components/types';
+import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
 import { IconEdit, IconEye, IconTrash, IconShirt, IconBrush } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
@@ -45,6 +45,7 @@ import deletePedidoArteFinal from './components/useDeletePedido';
 import { useThemeMode } from '@/utils/useThemeMode';
 import atribuirDesigner from './components/useDeisgnerJoin';
 import { IconUserPlus } from '@tabler/icons-react';
+import { IconCheck } from '@tabler/icons-react';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -325,16 +326,20 @@ const ArteFinalScreen = () => {
                       3: { nome: 'Arte OK', fila: 'D' },
                       4: { nome: 'Em espera', fila: 'D' },
                       5: { nome: 'Cor teste', fila: 'D' },
-
-                      // 8: { nome: 'Pendente', fila: 'I' },
-                      // 9: { nome: 'Processando', fila: 'I' },
-                      // 10: { nome: 'Renderizando', fila: 'I' },
-                      // 11: { nome: 'Impresso', fila: 'I' },
-                      // 12: { nome: 'Em Impressão', fila: 'I' },
-                      // 13: { nome: 'Separação', fila: 'I' },
-                      // 14: { nome: 'Em Transporte', fila: 'E' },
-                      // 15: { nome: 'Entregue', fila: 'E' },
                     } as const;
+
+                    const pedidoStatusColors: Record<number, string> = {
+                      1: 'rgba(220, 53, 69, 0.49)',
+                      2: 'rgba(213, 121, 0, 0.8)',
+                      3: 'rgba(123, 157, 0, 0.8)',
+                      4: 'rgba(0, 152, 63, 0.65)',
+                      5: 'rgba(0, 146, 136, 0.8)',
+                      // 19: 'rgba(238, 84, 84, 0.8)',
+                      // 20: 'rgba(20, 175, 0, 0.8)',
+                      // 21: 'rgba(180, 0, 0, 0.8)',
+                      // 22: 'rgba(152, 0, 199, 0.8)',
+                    };
+
 
                     const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
                     const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
@@ -347,21 +352,21 @@ const ArteFinalScreen = () => {
                         <TableRow
                           key={row.id}
                           sx={{
-                            backgroundColor: atraso
-                              ? 'rgba(250, 0, 0, 0.8)' // Prioridade máxima
-                              : row.pedido_tipo_id === 2
-                                ? 'rgba(205, 92, 92, 0.8)' // indianred com transparência
-                                : row.pedido_status_id === 2
-                                  ? 'rgba(245, 75, 7, 0.8)' // #f54b07 com transparência
-                                  : row.pedido_status_id === 4
-                                    ? 'rgba(255, 165, 0, 0.8)' // #ffa500 com transparência
-                                    : 'inherit',
                           }}
                         >
 
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }}>{String(row.numero_pedido)}</TableCell>
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => {
+                              navigator.clipboard.writeText(String(row.numero_pedido));
+                              alert(`Número do pedido copiado: ${row.numero_pedido}`);
+                            }}
+                          >
+                            {String(row.numero_pedido)}
+                          </TableCell>
 
                           {/* Nome de produto */}
                           <TableCell sx={{
@@ -445,8 +450,8 @@ const ArteFinalScreen = () => {
                               >
                                 {row.observacoes}
                               </Button>
-                            ): (
-                              <Button  
+                            ) : (
+                              <Button
                                 sx={{
                                   // bordinha e texto em gray
                                   background: 'transparent',
@@ -470,15 +475,15 @@ const ArteFinalScreen = () => {
                             )}
                           </TableCell>
 
-
-
                           <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            color: myTheme === 'dark' ? 'white' : 'black',
+                            backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
                           }} align='center'>{tipo ?? 'null'}</TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
                           <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                            backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
                           }} align='center'>
                             <select
                               style={{
@@ -503,8 +508,8 @@ const ArteFinalScreen = () => {
                               }}
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
-                                <option key={id} value={id}>  {/* O 'id' ainda é uma string */}
-                                  {status.nome}  {status.fila} {/* Exibe o nome do status */}
+                                <option key={id} value={id}>
+                                  {status.nome}
                                 </option>
                               ))}
                             </select>
