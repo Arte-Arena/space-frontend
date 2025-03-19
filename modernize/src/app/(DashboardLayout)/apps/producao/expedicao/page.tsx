@@ -1,9 +1,9 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { ArteFinal, Material, Produto } from './components/types';
+import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
 import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconNeedleThread } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
@@ -30,6 +30,8 @@ import {
   MenuItem,
   SelectChangeEvent,
   useTheme,
+  TextField,
+  Select,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { GridPaginationModel } from '@mui/x-data-grid';
@@ -42,7 +44,7 @@ import DialogObs from './components/observacaoDialog';
 import { useThemeMode } from '@/utils/useThemeMode';
 import { IconDirectionSign } from '@tabler/icons-react';
 
-const ConfeccaoScreen = () => {
+const ExpediçãoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [openDialogObs, setOpenDialogObs] = useState(false);
@@ -51,6 +53,9 @@ const ConfeccaoScreen = () => {
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
+  const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
+  const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
+  const [dateFilter, setDateFilter] = useState<{ start: string; end: string }>({ start: '', end: '' });  // Filtro de data
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 50,
     page: 0,
@@ -63,14 +68,15 @@ const ConfeccaoScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
 
-  const startIndex = paginationModel.page * paginationModel.pageSize;
-  const endIndex = startIndex + paginationModel.pageSize;
-  const paginatedPedidos = allPedidos.slice(startIndex, endIndex);
+  const filters = {
+    numero_pedido: searchNumero,
+    pedido_status_id: statusFilter,
+  };
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=E`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=I`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -143,6 +149,49 @@ const ConfeccaoScreen = () => {
     setOpenDialogObs(true);
   };
 
+  const handleClearFilters = () => {
+    setSearchNumero('');
+    setStatusFilter('');
+    setDateFilter({ start: '', end: '' });
+  };
+
+
+  const pedidoStatus = {
+    8: { nome: 'Pendente', fila: 'I' },
+    9: { nome: 'Processando', fila: 'I' },
+    10: { nome: 'Renderizando', fila: 'I' },
+    11: { nome: 'Impresso', fila: 'I' },
+    12: { nome: 'Em Impressão', fila: 'I' },
+    13: { nome: 'Separação', fila: 'I' },
+  } as const;
+
+  // Filtro de pedidos
+  const filteredPedidos = useMemo(() => {
+    return allPedidos.filter((pedido) => {
+      // Verifica se o número do pedido corresponde ao filtro
+      const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
+
+      // Verifica se o status do pedido corresponde ao filtro
+      const isStatusMatch = !filters.pedido_status_id || pedido.pedido_status_id === Number(filters.pedido_status_id);
+
+      // Filtro de data (data inicial e final)
+      const isDateMatch = (
+        (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
+        (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
+      );
+
+      // Retorna true se todas as condições de filtro forem atendidas
+      return isNumberMatch && isStatusMatch && isDateMatch;
+    });
+  }, [allPedidos, filters, dateFilter]);
+
+  const paginatedPedidos = useMemo(() => {
+    const startIndex = paginationModel.page * paginationModel.pageSize;
+    const endIndex = startIndex + paginationModel.pageSize;
+    return filteredPedidos.slice(startIndex, endIndex);
+  }, [filteredPedidos, paginationModel]);
+
+
   const BCrumb = [
     {
       to: "/",
@@ -170,6 +219,59 @@ const ConfeccaoScreen = () => {
       <Breadcrumb title="Produção / Impressão" items={BCrumb} />
       <ParentCard title="Impressão">
         <>
+          <Grid container spacing={2} sx={{ alignItems: 'start', mb: 2 }}>
+            <Grid item>
+              <TextField
+                label="Número do Pedido"
+                variant="outlined"
+                size="small"
+                value={searchNumero}
+                onChange={(e) => setSearchNumero(e.target.value)}
+              />
+            </Grid>
+            <Grid item>
+              <Select
+                sx={{ paddingX: 1, marginX: 2 }}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                displayEmpty
+                size="small"
+              >
+                <MenuItem value="">Todos os Status</MenuItem>
+                {Object.entries(pedidoStatus).map(([id, status]) => (
+                  <MenuItem key={id} value={id}>
+                    {status.nome}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Grid>
+            <Grid item>
+              <TextField
+                label="Data Inicial"
+                type="date"
+                size="small"
+                value={dateFilter.start}
+                onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item>
+              <TextField
+                label="Data Final"
+                type="date"
+                size="small"
+                value={dateFilter.end}
+                onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item>
+              <Button onClick={handleClearFilters} variant="outlined" size="small">
+                Limpar Filtros
+              </Button>
+            </Grid>
+          </Grid>
+
           {isErrorPedidos ? (
             <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
               <Typography variant="body1" color="error">Erro ao carregar pedidos.</Typography>
@@ -235,26 +337,28 @@ const ConfeccaoScreen = () => {
                     } as const;
 
                     const pedidoStatus = {
-                      // 1: { nome: 'Pendente', fila: 'D' },
-                      // 2: { nome: 'Em andamento', fila: 'D' },
-                      // 3: { nome: 'Arte OK', fila: 'D' },
-                      // 4: { nome: 'Em espera', fila: 'D' },
-                      // 5: { nome: 'Cor teste', fila: 'D' },
-
                       8: { nome: 'Pendente', fila: 'I' },
                       9: { nome: 'Processando', fila: 'I' },
                       10: { nome: 'Renderizando', fila: 'I' },
                       11: { nome: 'Impresso', fila: 'I' },
                       12: { nome: 'Em Impressão', fila: 'I' },
                       13: { nome: 'Separação', fila: 'I' },
-                      
-                      // 14: { nome: 'Em Transporte', fila: 'E' },
-                      // 15: { nome: 'Entregue', fila: 'E' },
                     } as const;
+
+                    const pedidoStatusColors: Record<number, string> = {
+                      8: 'rgba(220, 53, 69, 0.49)',
+                      9: 'rgba(213, 121, 0, 0.8)',
+                      10: 'rgba(123, 157, 0, 0.8)',
+                      11: 'rgba(0, 152, 63, 0.65)',
+                      12: 'rgba(0, 146, 136, 0.8)',
+                      13: 'rgba(238, 84, 84, 0.8)',
+                      //   20: 'rgba(20, 175, 0, 0.8)',
+                      //   21: 'rgba(180, 0, 0, 0.8)',
+                      //   22: 'rgba(152, 0, 199, 0.8)',
+                    };
 
                     const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
                     const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
-
 
                     return (
                       <>
@@ -262,15 +366,6 @@ const ConfeccaoScreen = () => {
                         <TableRow
                           key={row.id}
                           sx={{
-                            backgroundColor: atraso
-                              ? 'rgba(250, 0, 0, 0.8)' // Prioridade máxima
-                              : row.pedido_tipo_id === 2
-                                ? 'rgba(205, 92, 92, 0.8)' // indianred com transparência
-                                : row.pedido_status_id === 2
-                                  ? 'rgba(245, 75, 7, 0.8)' // #f54b07 com transparência
-                                  : row.pedido_status_id === 4
-                                    ? 'rgba(255, 165, 0, 0.8)' // #ffa500 com transparência
-                                    : 'inherit',
                           }}
                         >
 
@@ -343,7 +438,8 @@ const ConfeccaoScreen = () => {
 
                           <TableCell
                             sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                              color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                              backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
                             }}
                             align='center'
                           >
@@ -352,7 +448,13 @@ const ConfeccaoScreen = () => {
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
                           {/* <TableCell align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
-                          <TableCell align='center'>
+                          <TableCell
+                            align='center'
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black',
+                              backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
+                            }}
+                          >
                             <select
                               style={{
                                 textAlign: 'center',
@@ -470,7 +572,7 @@ const ConfeccaoScreen = () => {
               <TablePagination
                 rowsPerPageOptions={[15, 25, 50]}
                 component="div"
-                count={allPedidos.length || 0}
+                count={filteredPedidos.length || 0}
                 rowsPerPage={paginationModel.pageSize}
                 page={paginationModel.page}
                 onPageChange={(event, newPage) => setPaginationModel({ ...paginationModel, page: newPage })}
@@ -487,4 +589,4 @@ const ConfeccaoScreen = () => {
   );
 };
 
-export default ConfeccaoScreen;
+export default ExpediçãoScreen;
