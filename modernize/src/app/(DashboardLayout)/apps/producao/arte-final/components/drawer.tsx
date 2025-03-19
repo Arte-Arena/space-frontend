@@ -132,7 +132,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
       open={openDrawer}
       onClose={onCloseDrawer}
       PaperProps={{
-        sx: { width: "40vw", padding: 2 },
+        sx: { width: "50vw", padding: 2 },
       }}
     >
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={0}>
@@ -192,6 +192,9 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                           Quantidade:
                         </TableCell>
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                          Material:
+                        </TableCell>
+                        <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
                           Medida linear:
                         </TableCell>
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
@@ -211,6 +214,9 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                             </TableCell>
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.quantidade}
+                            </TableCell>
+                            <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
+                              {produto.material}
                             </TableCell>
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center', display: 'flex' }} colSpan={1}>
                               <TextField
