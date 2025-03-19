@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
@@ -30,6 +30,8 @@ import {
   MenuItem,
   SelectChangeEvent,
   useTheme,
+  Select,
+  TextField,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { GridPaginationModel } from '@mui/x-data-grid';
@@ -51,6 +53,9 @@ const ConfeccaoScreen = () => {
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
+  const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
+  const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
+  const [dateFilter, setDateFilter] = useState<{ start: string; end: string }>({ start: '', end: '' });  // Filtro de data
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 50,
     page: 0,
@@ -63,10 +68,10 @@ const ConfeccaoScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
 
-  const startIndex = paginationModel.page * paginationModel.pageSize;
-  const endIndex = startIndex + paginationModel.pageSize;
-  const paginatedPedidos = allPedidos.slice(startIndex, endIndex);
-
+  const filters = {
+    numero_pedido: searchNumero,
+    pedido_status_id: statusFilter,
+  };
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
@@ -100,7 +105,7 @@ const ConfeccaoScreen = () => {
     }, 0)
     : 0;
 
-    const totalPrazoProducao = Array.isArray(allPedidos)
+  const totalPrazoProducao = Array.isArray(allPedidos)
     ? allPedidos.reduce((totalPedido, row) => {
       const listaProdutos: Produto[] = row.lista_produtos
         ? typeof row.lista_produtos === "string"
@@ -167,6 +172,50 @@ const ConfeccaoScreen = () => {
     setOpenDialogObs(true);
   };
 
+  const handleClearFilters = () => {
+    setSearchNumero('');
+    setStatusFilter('');
+    setDateFilter({ start: '', end: '' });
+  };
+
+
+  const pedidoStatus = {
+    14: { nome: 'prensa/clandra', fila: 'C' },
+    15: { nome: 'checagem', fila: 'C' },
+    16: { nome: 'corte/preparaçao', fila: 'C' },
+    17: { nome: 'prateleriera/pendente', fila: 'C' },
+    18: { nome: 'costura/confeccao', fila: 'C' },
+    19: { nome: 'conferencia final', fila: 'C' },
+    20: { nome: 'finalizado', fila: 'C' },
+    21: { nome: 'reposição', fila: 'C' },
+  } as const;
+
+  // Filtro de pedidos
+  const filteredPedidos = useMemo(() => {
+    return allPedidos.filter((pedido) => {
+      // Verifica se o número do pedido corresponde ao filtro
+      const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
+
+      // Verifica se o status do pedido corresponde ao filtro
+      const isStatusMatch = !filters.pedido_status_id || pedido.pedido_status_id === Number(filters.pedido_status_id);
+
+      // Filtro de data (data inicial e final)
+      const isDateMatch = (
+        (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
+        (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
+      );
+
+      // Retorna true se todas as condições de filtro forem atendidas
+      return isNumberMatch && isStatusMatch && isDateMatch;
+    });
+  }, [allPedidos, filters, dateFilter]);
+
+  const paginatedPedidos = useMemo(() => {
+    const startIndex = paginationModel.page * paginationModel.pageSize;
+    const endIndex = startIndex + paginationModel.pageSize;
+    return filteredPedidos.slice(startIndex, endIndex);
+  }, [filteredPedidos, paginationModel]);
+
   const BCrumb = [
     {
       to: "/",
@@ -193,7 +242,7 @@ const ConfeccaoScreen = () => {
     <PageContainer title="Produção / Confecção" description="Tela de Produção da Confecção | Arte Arena">
       <>
         <Breadcrumb title="Produção / Confecção" items={BCrumb} />
-        <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2,}}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2, }}>
           <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
             <span style={{ fontWeight: 'bold' }}>Total Medida Linear:</span> {totalMedidaLinearGlobal} Cm
           </Typography>
@@ -203,6 +252,58 @@ const ConfeccaoScreen = () => {
         </Box>
         <ParentCard title="Confecção">
           <>
+            <Grid container spacing={2} sx={{ alignItems: 'start', mb: 2 }}>
+              <Grid item>
+                <TextField
+                  label="Número do Pedido"
+                  variant="outlined"
+                  size="small"
+                  value={searchNumero}
+                  onChange={(e) => setSearchNumero(e.target.value)}
+                />
+              </Grid>
+              <Grid item>
+                <Select
+                  sx={{ paddingX: 1, marginX: 2 }}
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  displayEmpty
+                  size="small"
+                >
+                  <MenuItem value="">Todos os Status</MenuItem>
+                  {Object.entries(pedidoStatus).map(([id, status]) => (
+                    <MenuItem key={id} value={id}>
+                      {status.nome}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Grid>
+              <Grid item>
+                <TextField
+                  label="Data Inicial"
+                  type="date"
+                  size="small"
+                  value={dateFilter.start}
+                  onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item>
+                <TextField
+                  label="Data Final"
+                  type="date"
+                  size="small"
+                  value={dateFilter.end}
+                  onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item>
+                <Button onClick={handleClearFilters} variant="outlined" size="small">
+                  Limpar Filtros
+                </Button>
+              </Grid>
+            </Grid>
 
             {isErrorPedidos ? (
               <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
@@ -500,7 +601,7 @@ const ConfeccaoScreen = () => {
                 <TablePagination
                   rowsPerPageOptions={[15, 25, 50, 100, 200]}
                   component="div"
-                  count={allPedidos.length || 0}
+                  count={filteredPedidos.length || 0}
                   rowsPerPage={paginationModel.pageSize}
                   page={paginationModel.page}
                   onPageChange={(event, newPage) => setPaginationModel({ ...paginationModel, page: newPage })}
