@@ -34,16 +34,12 @@ interface Produto {
     nome: string;
     esboco: string;
     quantidade: number;
-    material: Material[];
+    material: string;
     medida_linear: number;
     preco: number;
     prazo: number;
 }
 
-interface Material {
-    id: number;
-    descricao: string;
-}
 interface User {
     id: number;
     name: string;
@@ -61,4 +57,4 @@ interface PedidoTipo {
     nome: string;
 }
 
-export type { ApiResponsePedidosArteFinal, ArteFinal, Produto, Material, User, PedidoStatus, PedidoTipo };
+export type { ApiResponsePedidosArteFinal, ArteFinal, Produto, User, PedidoStatus, PedidoTipo };

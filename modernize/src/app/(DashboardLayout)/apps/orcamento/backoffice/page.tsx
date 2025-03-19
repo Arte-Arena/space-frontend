@@ -591,7 +591,7 @@ const OrcamentoBackofficeScreen = () => {
               variant="contained"
               startIcon={isAdding ? <CircularProgress size={20} /> : <IconPlus />}
               sx={{ height: '100%' }}
-              onClick={handleNovoPedidoTiny}
+              onClick={handleNovoPedido}
               disabled={isAddingTiny}
             >
               {isAdding ? 'Adicionando...' : 'Adicionar pedido'}
@@ -600,7 +600,7 @@ const OrcamentoBackofficeScreen = () => {
               variant="contained"
               startIcon={isAdding ? <CircularProgress size={20} /> : <IconPlus />}
               sx={{ height: '100%' }}
-              onClick={handleNovoPedido}
+              onClick={handleNovoPedidoTiny}
               disabled={isAdding}
             >
               {isAdding ? 'Adicionando...' : 'Adicionar pedido (+ Tiny)'}
