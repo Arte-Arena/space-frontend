@@ -32,6 +32,7 @@ import {
   useTheme,
   TextField,
   Select,
+  TextFieldProps,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { GridPaginationModel } from '@mui/x-data-grid';
@@ -43,6 +44,8 @@ import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
 import { useThemeMode } from '@/utils/useThemeMode';
 import { IconDirectionSign } from '@tabler/icons-react';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -55,7 +58,7 @@ const ImpressaoScreen = () => {
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
-  const [dateFilter, setDateFilter] = useState<{ start: string; end: string }>({ start: '', end: '' });  // Filtro de data
+  const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 50,
     page: 0,
@@ -152,9 +155,12 @@ const ImpressaoScreen = () => {
   const handleClearFilters = () => {
     setSearchNumero('');
     setStatusFilter('');
-    setDateFilter({ start: '', end: '' });
+    setDateFilter({ start: null, end: null });
   };
 
+  const handleDateChange = (field: 'start' | 'end') => (newValue: Date | null) => {
+    setDateFilter((prev) => ({ ...prev, [field]: newValue }));
+  }
 
   const pedidoStatus = {
     8: { nome: 'Pendente', fila: 'I' },
@@ -219,7 +225,8 @@ const ImpressaoScreen = () => {
       <Breadcrumb title="Produção / Impressão" items={BCrumb} />
       <ParentCard title="Impressão">
         <>
-          <Grid container spacing={2} sx={{ alignItems: 'start', mb: 2 }}>
+          <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
+            {/* Campo de Número do Pedido */}
             <Grid item>
               <TextField
                 label="Número do Pedido"
@@ -229,9 +236,11 @@ const ImpressaoScreen = () => {
                 onChange={(e) => setSearchNumero(e.target.value)}
               />
             </Grid>
+
+            {/* Select de Status */}
             <Grid item>
               <Select
-                sx={{ paddingX: 1, marginX: 2 }}
+                sx={{ minWidth: '150px' }} // Define uma largura mínima
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 displayEmpty
@@ -245,26 +254,46 @@ const ImpressaoScreen = () => {
                 ))}
               </Select>
             </Grid>
+
+            {/* DatePicker - Data Inicial */}
             <Grid item>
-              <TextField
-                label="Data Inicial"
-                type="date"
-                size="small"
-                value={dateFilter.start}
-                onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="Data Inicial"
+                  value={dateFilter.start}
+                  onChange={handleDateChange('start')}
+                  renderInput={(params: TextFieldProps) => (
+                    <TextField
+                      {...params}
+                      size="small"
+                      sx={{ width: '200px' }} // Define uma largura fixa
+                    />
+                  )}
+                  inputFormat="dd/MM/yyyy"
+                />
+              </LocalizationProvider>
             </Grid>
+
+            {/* DatePicker - Data Final */}
             <Grid item>
-              <TextField
-                label="Data Final"
-                type="date"
-                size="small"
-                value={dateFilter.end}
-                onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="Data Final"
+                  value={dateFilter.end}
+                  onChange={handleDateChange('end')}
+                  renderInput={(params: TextFieldProps) => (
+                    <TextField
+                      {...params}
+                      size="small"
+                      sx={{ width: '200px' }} // Define uma largura fixa
+                    />
+                  )}
+                  inputFormat="dd/MM/yyyy"
+                />
+              </LocalizationProvider>
             </Grid>
+
+            {/* Botão Limpar Filtros */}
             <Grid item>
               <Button onClick={handleClearFilters} variant="outlined" size="small">
                 Limpar Filtros
