@@ -39,6 +39,7 @@ import {
   IconFolder,
   IconTools,
   IconCalendarTime,
+  IconRoad,
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -293,9 +294,15 @@ const getMenuItems = (): MenuitemsType[] => {
         },
         {
           id: uniqueId(),
-          title: "Reposição",
+          title: "Expedição",
+          icon: IconRoad,
+          href: "/apps/producao/expedicao",
+        },
+        {
+          id: uniqueId(),
+          title: "Reposição Adm",
           icon: IconReplace,
-          href: "/apps/reposicao",
+          href: "/apps/producao/reposicao",
         },
         {
           id: uniqueId(),
