@@ -419,7 +419,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
           variant="outlined"
           fullWidth
           readOnly={readOnly}
-          disabled={!initialData}
+          disabled={!initialData && !block_tiny}
           inputProps={{ min: 0 }}
           sx={{
             '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
