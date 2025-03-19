@@ -123,7 +123,7 @@ const OrcamentoBackofficeScreen = () => {
   const [loadingPedido, setLoadingPedido] = useState(false);
   const [copiedRastreio, setCopiedRastreio] = useState(false);
   const [handleMakePedidoLoading, setIsLoadingMakePeido] = useState(false);
-  const [isLoadingBrush, setIsLoadingBrush] = useState<boolean>(false);
+  const [loadingBrushIds, setLoadingBrushIds] = useState<{[key: number]: boolean}>({});
   const [navigateTo, setNavigateTo] = useState<string | null>(null);
   const [clientesConfigurados, setClientesConfigurados] = useState<{[key: number]: boolean}>({});
   const [uniformesConfigurados, setUniformesConfigurados] = useState<{[key: number]: boolean}>({});
@@ -498,7 +498,7 @@ const OrcamentoBackofficeScreen = () => {
   }
 
   const handleBrushClick = async (id: number) => {
-    setIsLoadingBrush(true);
+    setLoadingBrushIds(prev => ({ ...prev, [id]: true }));
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final/from-backoffice/${id}`, {
         method: 'POST',
@@ -521,7 +521,7 @@ const OrcamentoBackofficeScreen = () => {
     } catch (error) {
       logger.error('Erro ao criar pedido:', error);
       alert('Erro ao criar pedido. Por favor, tente novamente.');
-      setIsLoadingBrush(false);
+      setLoadingBrushIds(prev => ({ ...prev, [id]: false }));
     }
   };
 
@@ -746,9 +746,9 @@ const OrcamentoBackofficeScreen = () => {
                             <Button
                               variant="outlined"
                               onClick={() => handleBrushClick(row.id)}
-                              disabled={isLoadingBrush}
+                              disabled={loadingBrushIds[row.id]}
                             >
-                              {isLoadingBrush ? <CircularProgress size={20} /> : <IconBrush />}
+                              {loadingBrushIds[row.id] ? <CircularProgress size={20} /> : <IconBrush />}
                             </Button>
                             <Dialog
                               open={openUniformDialog}
