@@ -223,7 +223,6 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                                   const novaMedidaLinear = Number(e.target.value);
                                   handleMedidaLinearChange(produto, novaMedidaLinear);
                                 }}
-
                                 sx={{
                                   minWidth: '50px',
                                   '& input': {
