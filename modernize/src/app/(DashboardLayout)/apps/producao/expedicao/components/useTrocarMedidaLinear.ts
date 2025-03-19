@@ -3,7 +3,6 @@ const trocarMedidaLinear = async (id: number | undefined, uid: number | null, me
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) throw new Error("Usuário não autenticado.");
     const medidaLinear = medidasLineares[String(uid)];
-    console.log(medidaLinear, medidasLineares);
 
     if (uid === null) {
       console.error("Erro sem UID na request:");

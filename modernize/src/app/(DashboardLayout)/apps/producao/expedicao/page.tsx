@@ -3,9 +3,9 @@ import React, { useEffect, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { ArteFinal, Produto } from './components/types';
+import { ArteFinal, Material, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush } from '@tabler/icons-react';
+import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconNeedleThread } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -33,13 +33,12 @@ import {
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { GridPaginationModel } from '@mui/x-data-grid';
-import { IconPrinter } from '@tabler/icons-react';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
-import DialogObs from './components/observacaoDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import { format } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
+import DialogObs from './components/observacaoDialog';
 import { useThemeMode } from '@/utils/useThemeMode';
 import { IconDirectionSign } from '@tabler/icons-react';
 
@@ -47,9 +46,10 @@ const ConfeccaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [openDialogObs, setOpenDialogObs] = useState(false);
+
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
-  const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
+  const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 50,
@@ -67,11 +67,10 @@ const ConfeccaoScreen = () => {
   const endIndex = startIndex + paginationModel.pageSize;
   const paginatedPedidos = allPedidos.slice(startIndex, endIndex);
 
-
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=C`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=E`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -85,20 +84,6 @@ const ConfeccaoScreen = () => {
       setAllPedidos(dataPedidos.data);
     }
   }, [dataPedidos]);
-
-  // console.log(allPedidos);
-  // total de medidas
-  const totalMedidaLinearGlobal = Array.isArray(paginatedPedidos)
-    ? paginatedPedidos.reduce((totalPedido, row) => {
-      const listaProdutos: Produto[] = row.lista_produtos
-        ? typeof row.lista_produtos === "string"
-          ? JSON.parse(row.lista_produtos)
-          : row.lista_produtos
-        : [];
-
-      return totalPedido + listaProdutos.reduce((acc, produto) => acc + (produto.medida_linear ?? 0), 0);
-    }, 0)
-    : 0;
 
   // handles
   const handleLinkTrello = (row: ArteFinal) => {
@@ -116,27 +101,30 @@ const ConfeccaoScreen = () => {
     console.log("Deletar pedido", row);
   };
 
-  const handleVerDetalhes = (row: ArteFinal) => {
-    setSelectedRowSidePanel(row);
-    setOpenDrawer(true);
-  };
+  const handleEnviarConfeccao = async (row: ArteFinal) => {
+    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Confecção?');
 
-  const handleEnviarEntrega = async (row: ArteFinal) => {
-    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Expedição?');
     if (confirmar) {
-      const sucesso = await trocarStatusPedido(row?.id, 22, refetch);
+      const sucesso = await trocarStatusPedido(row?.id, 14, refetch);
       if (sucesso) {
-        console.log("Pedido enviado com sucesso!");
-        alert('Sucesso');
+        // console.log("Pedido enviado com sucesso!");
+        alert('sucesso');
       } else {
         console.log("Falha ao enviar pedido.");
-        alert('Falha ao enviar pedido.');
       }
     } else {
       console.log("Envio cancelado.");
       alert('Envio cancelado.');
     }
-  }
+  };
+
+  const handleVerDetalhes = (row: ArteFinal) => {
+    setSelectedRowSidePanel(null); // Zera antes de atualizar
+    setTimeout(() => {
+      setSelectedRowSidePanel(row);
+      setOpenDrawer(true);
+    }, 0);
+  };
 
   // handles dos selects
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
@@ -178,12 +166,10 @@ const ConfeccaoScreen = () => {
   // console.log(designers);
 
   return (
-    <PageContainer title="Produção / Confecção" description="Tela de Produção da Confecção | Arte Arena">
-      <Breadcrumb title="Produção / Confecção" items={BCrumb} />
-      <ParentCard title="Confecção">
+    <PageContainer title="Produção / Impressão" description="Tela de Produção da Impressão | Arte Arena">
+      <Breadcrumb title="Produção / Impressão" items={BCrumb} />
+      <ParentCard title="Impressão">
         <>
-          Total: {totalMedidaLinearGlobal}
-
           {isErrorPedidos ? (
             <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
               <Typography variant="body1" color="error">Erro ao carregar pedidos.</Typography>
@@ -227,7 +213,6 @@ const ConfeccaoScreen = () => {
                       atraso = true;
                     }
 
-
                     // definição dos designers
                     const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
                     const usersMap = new Map(
@@ -236,10 +221,8 @@ const ConfeccaoScreen = () => {
                         : []
                     );
 
-                    // terminar de ver no backend se esta realmente mudando
                     const getUserNameById = (id: number | null | undefined) => {
-                      return id && usersMap.has(id) ? usersMap.get(id) : row.designer_id;
-                      // return id && usersMap.has(id) ? usersMap.get(id) : "Desconhecido";
+                      return id && usersMap.has(id) ? usersMap.get(id) : "Desconhecido";
                     };
                     const designerNome = getUserNameById(row.designer_id);
 
@@ -257,36 +240,25 @@ const ConfeccaoScreen = () => {
                       // 3: { nome: 'Arte OK', fila: 'D' },
                       // 4: { nome: 'Em espera', fila: 'D' },
                       // 5: { nome: 'Cor teste', fila: 'D' },
-                      // 6: { nome: 'Em espera', fila: 'D' },
-                      // 7: { nome: 'Em espera', fila: 'D' },
-                      // 8: { nome: 'Pendente', fila: 'I' },
-                      // 9: { nome: 'Processando', fila: 'I' },
-                      // 10: { nome: 'Renderizando', fila: 'I' },
-                      // 11: { nome: 'Impresso', fila: 'I' },
-                      // 12: { nome: 'Em Impressão', fila: 'I' },
-                      // 13: { nome: 'Separação', fila: 'I' },
 
-                      14: { nome: 'prensa/clandra', fila: 'C' },
-                      15: { nome: 'checagem', fila: 'C' },
-                      16: { nome: 'corte/preparaçao', fila: 'C' },
-                      17: { nome: 'prateleriera/pendente', fila: 'C' },
-                      18: { nome: 'costura/confeccao', fila: 'C' },
-                      19: { nome: 'conferencia final', fila: 'C' },
-                      20: { nome: 'finalizado', fila: 'C' },
-                      21: { nome: 'reposição', fila: 'C' },
+                      8: { nome: 'Pendente', fila: 'I' },
+                      9: { nome: 'Processando', fila: 'I' },
+                      10: { nome: 'Renderizando', fila: 'I' },
+                      11: { nome: 'Impresso', fila: 'I' },
+                      12: { nome: 'Em Impressão', fila: 'I' },
+                      13: { nome: 'Separação', fila: 'I' },
+                      
+                      // 14: { nome: 'Em Transporte', fila: 'E' },
+                      // 15: { nome: 'Entregue', fila: 'E' },
                     } as const;
 
                     const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
                     const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
 
-                    const totalMedidaLinearPorPedido = listaProdutos.reduce((acc, produto) => {
-                      return acc + (produto.medida_linear ?? 0);
-                    }, 0);
 
                     return (
                       <>
                         {/* colocar as condições de data e de tipos de status e suas cores */}
-                        {/* total: {totalMedidaLinearPorPedido} */}
                         <TableRow
                           key={row.id}
                           sx={{
@@ -302,14 +274,17 @@ const ConfeccaoScreen = () => {
                           }}
                         >
 
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }}>{String(row.numero_pedido)}</TableCell>
-
-
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }} align='center'>
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            }}
+                          >
+                            {String(row.numero_pedido)}</TableCell>
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            }}
+                            align='center'>
                             {row.lista_produtos?.length > 0
                               ? (
                                 <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
@@ -321,21 +296,29 @@ const ConfeccaoScreen = () => {
                               : 'N/A'}
                           </TableCell>
 
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }} align='center'>
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            }}
+                            align='center'
+                          >
                             {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
-
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }} align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
-
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }} align="center">
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            }}
+                            align='center'
+                          >
+                            {designerNome ?? 'Não Atribuido'}</TableCell>
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            }}
+                            align="center"
+                          >
                             <Button
                               sx={{
                                 background: 'transparent',
@@ -358,16 +341,18 @@ const ConfeccaoScreen = () => {
                             </Button>
                           </TableCell>
 
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }} align='center'>{tipo ?? 'null'}</TableCell>
-
-                          {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
                           <TableCell
                             sx={{
                               color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
                             }}
-                            align='center'>
+                            align='center'
+                          >
+                            {tipo ?? 'null'}
+                          </TableCell>
+
+                          {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
+                          {/* <TableCell align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
+                          <TableCell align='center'>
                             <select
                               style={{
                                 textAlign: 'center',
@@ -391,16 +376,8 @@ const ConfeccaoScreen = () => {
                               }}
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
-                                <option
-                                  key={id}
-                                  value={id}
-                                  style={{
-                                    backgroundColor: myTheme === 'dark' ? 'black' : 'white', // Define um fundo para os options
-                                    color: myTheme === 'dark' ? 'white' : 'black',
-                                  }}
-                                >
-                                  {status.nome}
-                                  {/* {status.fila} */}
+                                <option key={id} value={id}>  {/* O 'id' ainda é uma string */}
+                                  {status.nome}  {/* Exibe o nome do status */}
                                 </option>
                               ))}
                             </select>
@@ -412,6 +389,11 @@ const ConfeccaoScreen = () => {
                                 <IconEye />
                               </IconButton>
                             </Tooltip>
+                            <Tooltip title="Lista de Uniformes">
+                              <IconButton onClick={() => handleListaUniformes(row)}>
+                                <IconShirt />
+                              </IconButton>
+                            </Tooltip>
                             <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
                               <IconButton
                                 onClick={() => handleLinkTrello(row)}
@@ -420,14 +402,9 @@ const ConfeccaoScreen = () => {
                                 <IconBrandTrello />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Lista de Uniformes">
-                              <IconButton onClick={() => handleListaUniformes(row)}>
-                                <IconShirt />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Enviar para Expedição">
-                              <IconButton onClick={() => handleEnviarEntrega(row)}>
-                                <IconDirectionSign />
+                            <Tooltip title="Enviar para Confecção!">
+                              <IconButton onClick={() => handleEnviarConfeccao(row)}>
+                                <IconNeedleThread />
                               </IconButton>
                             </Tooltip>
                           </TableCell>
@@ -491,7 +468,7 @@ const ConfeccaoScreen = () => {
 
               </Table>
               <TablePagination
-                rowsPerPageOptions={[15, 25, 50, 100, 200]}
+                rowsPerPageOptions={[15, 25, 50]}
                 component="div"
                 count={allPedidos.length || 0}
                 rowsPerPage={paginationModel.pageSize}
@@ -501,7 +478,7 @@ const ConfeccaoScreen = () => {
               />
             </TableContainer>
           )}
-          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
+          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
           <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
         </>
       </ParentCard>

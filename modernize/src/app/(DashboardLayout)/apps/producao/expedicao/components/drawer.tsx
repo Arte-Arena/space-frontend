@@ -80,18 +80,6 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
   const status = pedidoStatus[row?.pedido_status_id as keyof typeof pedidoStatus] || { nome: "Desconhecido", fila: "N/A" };
   const tipo = row?.pedido_tipo_id && pedidoTipos[row?.pedido_tipo_id as keyof typeof pedidoTipos];
 
-  // const handleMedidaLinearChange = (produto: Produto, novaMedidaLinear: number) => {
-  //   setMedidasLineares(prevState => ({
-  //     ...prevState,
-  //     [produto.uid]: novaMedidaLinear,
-  //   }));
-  // };
-
-  // const atualizarProduto = (produtoAtualizado: Produto) => {
-  //   setProdutos((prevProdutos) =>
-  //     prevProdutos.map((p) => (p.uid === produtoAtualizado.uid ? produtoAtualizado : p))
-  //   );
-  // };
 
   const handletrocarMedidaLinear = async (uid: number | null, medidasLineares: Record<string, number>, id: number) => {
     try {
@@ -105,25 +93,21 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
   };
 
   const handleMedidaLinearChange = (produto: Produto, novaMedidaLinear: number) => {
-    setProdutos((prevProdutos) =>
-      prevProdutos.map((p) => 
-        p.uid === produto.uid ? { ...p, medida_linear: novaMedidaLinear } : p
-      )
-    );
-
-    const medidasAtualizadas = {
-      ...medidasLineares,
+    setMedidasLineares(prevState => ({
+      ...prevState,
       [String(produto.uid)]: novaMedidaLinear,
-    };
-    setMedidasLineares(medidasAtualizadas);
+    }));
 
     // Define um timeout para chamar a API após 1 segundo de inatividade
     setDigitando(true);
     setDigitando(false);
 
     if (row?.id !== undefined) {
-      handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id);
+      setTimeout(() => {
+        handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id!);
+      }, 2000);
     }
+    
   };
 
   return (
@@ -218,7 +202,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                                 type="number"
                                 size="small"
                                 variant="outlined"
-                                value={medidasLineares[String(produto.uid)] || produto.medida_linear}
+                                value={medidasLineares[String(produto.uid)] || 0}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                   const novaMedidaLinear = Number(e.target.value);
                                   handleMedidaLinearChange(produto, novaMedidaLinear);
@@ -244,13 +228,12 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                                   }
                                 }}
                               />
-                              <Button
-                                onClick={() => handleMedidaLinearChange(produto, produto.medida_linear || medidasLineares[String(produto.uid)])}
+                              {/* <Button
+                                onClick={() => handleMedidaLinearChange(produto, produto.medida_linear || 0)}
                                 sx={{ ml: 1, padding: 0 }}
                               >
-                                <IconCheck size={16} />
-                              </Button>
-                             
+                                <IconCheck size={16}/>
+                              </Button> */}
                             </TableCell>
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.prazo}
