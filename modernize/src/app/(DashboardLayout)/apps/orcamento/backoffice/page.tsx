@@ -125,6 +125,10 @@ const OrcamentoBackofficeScreen = () => {
   const [handleMakePedidoLoading, setIsLoadingMakePeido] = useState(false);
   const [isLoadingBrush, setIsLoadingBrush] = useState<boolean>(false);
   const [navigateTo, setNavigateTo] = useState<string | null>(null);
+  const [clientesConfigurados, setClientesConfigurados] = useState<{[key: number]: boolean}>({});
+  const [uniformesConfigurados, setUniformesConfigurados] = useState<{[key: number]: boolean}>({});
+  const [verificandoCliente, setVerificandoCliente] = useState<{[key: number]: boolean}>({});
+  const [verificandoUniformes, setVerificandoUniformes] = useState<{[key: number]: boolean}>({});
   const theme = useTheme()
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
@@ -195,7 +199,12 @@ const OrcamentoBackofficeScreen = () => {
   });
 
   useEffect(() => {
-    console.log(dataOrcamentos)
+    if (dataOrcamentos && dataOrcamentos.data) {
+      dataOrcamentos.data.forEach((orcamento: Orcamento) => {
+        verificarClienteCadastrado(orcamento.id);
+        verificarUniformesConfigurados(orcamento.id);
+      });
+    }
   }, [dataOrcamentos])
 
 
@@ -328,7 +337,7 @@ const OrcamentoBackofficeScreen = () => {
 
   if (isFetchingOrcamentos) return <CircularProgress />;
   if (errorOrcamentos) return <p>Ocorreu um erro: {errorOrcamentos.message}</p>;
-  if (dataOrcamentos) console.log(dataOrcamentos);
+  if (dataOrcamentos) logger.log(dataOrcamentos);
 
   const handleLinkOrcamento = async (orcamentoId: number) => {
 
@@ -516,6 +525,60 @@ const OrcamentoBackofficeScreen = () => {
     }
   };
 
+  const verificarClienteCadastrado = async (orcamentoId: number) => {
+    setVerificandoCliente(prev => ({ ...prev, [orcamentoId]: true }));
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/get-cliente-by-orcamento?orcamento_id=${orcamentoId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        setClientesConfigurados(prev => ({ ...prev, [orcamentoId]: true }));
+      } else {
+        setClientesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
+      }
+    } catch (error) {
+      logger.error('Erro ao verificar cliente:', error);
+      setClientesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
+    } finally {
+      setVerificandoCliente(prev => ({ ...prev, [orcamentoId]: false }));
+    }
+  };
+
+  const verificarUniformesConfigurados = async (orcamentoId: number) => {
+    setVerificandoUniformes(prev => ({ ...prev, [orcamentoId]: true }));
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${orcamentoId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const temConfiguracao = data.length > 0 && data.some(
+          (uniforme: any) => uniforme.configuracoes && uniforme.configuracoes.length > 0
+        );
+        setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: temConfiguracao }));
+      } else {
+        setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
+      }
+    } catch (error) {
+      logger.error('Erro ao verificar uniformes:', error);
+      setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
+    } finally {
+      setVerificandoUniformes(prev => ({ ...prev, [orcamentoId]: false }));
+    }
+  };
+
   return (
     <PageContainer title="Orçamento / Backoffice" description="Gerenciar Pedidos da Arte Arena">
       <Breadcrumb title="Orçamento / Backoffice" subtitle="Gerenciar Pedidos da Arte Arena / Backoffice" />
@@ -619,8 +682,22 @@ const OrcamentoBackofficeScreen = () => {
                                 setOpenLinkDialog(true);
                                 handleLinkOrcamento(row.id);
                               }}
+                              sx={{ 
+                                position: 'relative',
+                                '&::after': clientesConfigurados[row.id] ? {
+                                  content: '""',
+                                  position: 'absolute',
+                                  top: '5px',
+                                  right: '5px',
+                                  width: '10px',
+                                  height: '10px',
+                                  borderRadius: '50%',
+                                  backgroundColor: 'success.main',
+                                } : {}
+                              }}
+                              disabled={verificandoCliente[row.id]}
                             >
-                              <IconUser />
+                              {verificandoCliente[row.id] ? <CircularProgress size={20} /> : <IconUser />}
                             </Button>
                             <Dialog
                               open={openLinkDialog}
@@ -643,11 +720,28 @@ const OrcamentoBackofficeScreen = () => {
                                 </Button>
                               </DialogActions>
                             </Dialog>
-                            <Button variant="outlined" onClick={() => {
-                              setOpenUniformDialog(true);
-                              handleShortlinkUniform(row.id);
-                            }}>
-                              <IconShirtSport />
+                            <Button 
+                              variant="outlined" 
+                              onClick={() => {
+                                setOpenUniformDialog(true);
+                                handleShortlinkUniform(row.id);
+                              }}
+                              sx={{ 
+                                position: 'relative',
+                                '&::after': uniformesConfigurados[row.id] ? {
+                                  content: '""',
+                                  position: 'absolute',
+                                  top: '5px',
+                                  right: '5px',
+                                  width: '10px',
+                                  height: '10px',
+                                  borderRadius: '50%',
+                                  backgroundColor: 'success.main',
+                                } : {}
+                              }}
+                              disabled={verificandoUniformes[row.id]}
+                            >
+                              {verificandoUniformes[row.id] ? <CircularProgress size={20} /> : <IconShirtSport />}
                             </Button>
                             <Button
                               variant="outlined"
