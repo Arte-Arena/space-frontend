@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
@@ -30,6 +30,8 @@ import {
   MenuItem,
   SelectChangeEvent,
   useTheme,
+  TextField,
+  Select,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { GridPaginationModel } from '@mui/x-data-grid';
@@ -58,6 +60,9 @@ const ArteFinalScreen = () => {
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [rows, setRows] = useState<ArteFinal[]>([]);
+  const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
+  const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
+  const [dateFilter, setDateFilter] = useState<{ start: string; end: string }>({ start: '', end: '' });  // Filtro de data
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 50,
     page: 0,
@@ -75,10 +80,10 @@ const ArteFinalScreen = () => {
   const canShowButton = roles.some(role => allowedRoles.includes(role));
   const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));
 
-  const startIndex = paginationModel.page * paginationModel.pageSize;
-  const endIndex = startIndex + paginationModel.pageSize;
-  const paginatedPedidos = allPedidos.slice(startIndex, endIndex);
-
+  const filters = {
+    numero_pedido: searchNumero,
+    pedido_status_id: statusFilter,
+  };
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
@@ -107,17 +112,12 @@ const ArteFinalScreen = () => {
     }
   }, [openDialogDesinger, refetch]);
 
-  const totalMedidaLinearGlobal = Array.isArray(paginatedPedidos)
-    ? paginatedPedidos.reduce((totalPedido, row) => {
-      const listaProdutos: Produto[] = row.lista_produtos
-        ? typeof row.lista_produtos === "string"
-          ? JSON.parse(row.lista_produtos)
-          : row.lista_produtos
-        : [];
-
-      return totalPedido + listaProdutos.reduce((acc, produto) => acc + (produto.medida_linear ?? 0), 0);
-    }, 0)
-    : 0;
+  // Função para limpar os filtros
+  const handleClearFilters = () => {
+    setSearchNumero('');
+    setStatusFilter('');
+    setDateFilter({ start: '', end: '' });
+  };
 
   const handleEdit = (pedido: ArteFinal) => {
     const pedidoId = String(pedido.id);
@@ -187,8 +187,6 @@ const ArteFinalScreen = () => {
     }
   }
 
-
-
   const handleVerDetalhes = (row: ArteFinal) => {
     setSelectedRowSidePanel(row);
     setOpenDrawer(true);
@@ -212,7 +210,6 @@ const ArteFinalScreen = () => {
     }
   };
 
-
   // handles dos selects
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
     const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
@@ -229,6 +226,52 @@ const ArteFinalScreen = () => {
     setSelectedRowObs(row);
     setOpenDialogObs(true);
   };
+
+  const pedidoStatus = {
+    1: { nome: 'Pendente', fila: 'D' },
+    2: { nome: 'Em andamento', fila: 'D' },
+    3: { nome: 'Arte OK', fila: 'D' },
+    4: { nome: 'Em espera', fila: 'D' },
+    5: { nome: 'Cor teste', fila: 'D' },
+  } as const;
+
+  // Filtro de pedidos
+  const filteredPedidos = useMemo(() => {
+    return allPedidos.filter((pedido) => {
+      // Verifica se o número do pedido corresponde ao filtro
+      const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
+
+      // Verifica se o status do pedido corresponde ao filtro
+      const isStatusMatch = !filters.pedido_status_id || pedido.pedido_status_id === Number(filters.pedido_status_id);
+
+      // Filtro de data (data inicial e final)
+      const isDateMatch = (
+        (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
+        (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
+      );
+
+      // Retorna true se todas as condições de filtro forem atendidas
+      return isNumberMatch && isStatusMatch && isDateMatch;
+    });
+  }, [allPedidos, filters, dateFilter]);
+
+  const paginatedPedidos = useMemo(() => {
+    const startIndex = paginationModel.page * paginationModel.pageSize;
+    const endIndex = startIndex + paginationModel.pageSize;
+    return filteredPedidos.slice(startIndex, endIndex);
+  }, [filteredPedidos, paginationModel]);
+
+  useEffect(() => {
+    console.log('searchNumero mudou:', searchNumero);
+  }, [searchNumero]);
+
+  useEffect(() => {
+    console.log('statusFilter mudou:', statusFilter);
+  }, [statusFilter]);
+
+  useEffect(() => {
+    console.log('Pedidos filtrados mudou:', filteredPedidos);
+  }, [filteredPedidos]);
 
   const BCrumb = [
     {
@@ -257,6 +300,59 @@ const ArteFinalScreen = () => {
       <Breadcrumb title="Produção / Arte - Final" items={BCrumb} />
       <ParentCard title="Arte - Final">
         <>
+          <Grid container spacing={2} sx={{ alignItems: 'start', mb: 2 }}>
+            <Grid item>
+              <TextField
+                label="Número do Pedido"
+                variant="outlined"
+                size="small"
+                value={searchNumero}
+                onChange={(e) => setSearchNumero(e.target.value)}
+              />
+            </Grid>
+            <Grid item>
+              <Select
+                sx={{ paddingX: 1, marginX: 2 }}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                displayEmpty
+                size="small"
+              >
+                <MenuItem value="">Todos os Status</MenuItem>
+                {Object.entries(pedidoStatus).map(([id, status]) => (
+                  <MenuItem key={id} value={id}>
+                    {status.nome}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Grid>
+            <Grid item>
+              <TextField
+                label="Data Inicial"
+                type="date"
+                size="small"
+                value={dateFilter.start}
+                onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item>
+              <TextField
+                label="Data Final"
+                type="date"
+                size="small"
+                value={dateFilter.end}
+                onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item>
+              <Button onClick={handleClearFilters} variant="outlined" size="small">
+                Limpar Filtros
+              </Button>
+            </Grid>
+          </Grid>
+
           {isErrorPedidos ? (
             <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
               <Typography variant="body1" color="error">Erro ao carregar pedidos.</Typography>
@@ -318,14 +414,6 @@ const ArteFinalScreen = () => {
                       3: 'Faturado',
                       4: 'Metade/Metade',
                       5: 'Amostra',
-                    } as const;
-
-                    const pedidoStatus = {
-                      1: { nome: 'Pendente', fila: 'D' },
-                      2: { nome: 'Em andamento', fila: 'D' },
-                      3: { nome: 'Arte OK', fila: 'D' },
-                      4: { nome: 'Em espera', fila: 'D' },
-                      5: { nome: 'Cor teste', fila: 'D' },
                     } as const;
 
                     const pedidoStatusColors: Record<number, string> = {
@@ -628,7 +716,7 @@ const ArteFinalScreen = () => {
               <TablePagination
                 rowsPerPageOptions={[15, 25, 50]}
                 component="div"
-                count={allPedidos.length || 0}
+                count={filteredPedidos.length || 0}
                 rowsPerPage={paginationModel.pageSize}
                 page={paginationModel.page}
                 onPageChange={(event, newPage) => setPaginationModel({ ...paginationModel, page: newPage })}

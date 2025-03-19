@@ -348,6 +348,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
 
     const payload = {
       block_tiny: block_tiny,
+      orcamento_id: initialData?.orcamento_id,
       pedido_id: formData.id,
       estagio: 'D',
       pedido_numero: String(formData.numero_pedido),
