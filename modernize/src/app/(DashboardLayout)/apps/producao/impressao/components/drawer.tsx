@@ -116,7 +116,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
       open={openDrawer}
       onClose={onCloseDrawer}
       PaperProps={{
-        sx: { width: "40vw", padding: 2 },
+        sx: { width: "50vw", padding: 2 },
       }}
     >
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={0}>
@@ -179,7 +179,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                           Material:
                         </TableCell>
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                          Medida linear:
+                          Medida Linear (metros):
                         </TableCell>
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
                           Prazo Producao:
@@ -208,8 +208,8 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                                 type="number"
                                 size="small"
                                 variant="outlined"
-                                value={medidasLineares[String(produto.uid)] || 0}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                value={medidasLineares[String(produto.uid)] || produto.medida_linear}
+                                onBlur={(e: React.FocusEvent<HTMLInputElement & { value: string }>) => {
                                   const novaMedidaLinear = Number(e.target.value);
                                   handleMedidaLinearChange(produto, novaMedidaLinear);
                                 }}
