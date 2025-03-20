@@ -318,8 +318,8 @@ const ImpressaoScreen = () => {
                     {/* <TableCell> </TableCell> */}
                     <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
                     <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Data De Entrega</TableCell>
-                    {/* <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell> */}
                     <TableCell align='center' sx={{ width: '10%' }}>Designer</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Tipo</TableCell>
@@ -404,6 +404,7 @@ const ImpressaoScreen = () => {
                             }}
                           >
                             {String(row.numero_pedido)}</TableCell>
+
                           <TableCell
                             sx={{
                               color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
@@ -419,6 +420,29 @@ const ImpressaoScreen = () => {
                               )
                               : 'N/A'}
                           </TableCell>
+
+                          {/* medida linear */}
+                          <TableCell
+                            sx={{
+                              color: myTheme === "dark" ? "white" : "black", // Branco no modo escuro e preto no claro
+                            }}
+                            align="center"
+                          >
+                            {row.lista_produtos?.length > 0 ? (
+                              <>
+                                <strong>
+                                  {listaProdutos
+                                    .filter((produto) => produto.medida_linear) // Filtra os produtos que possuem medida_linear
+                                    .reduce((acc, produto) => acc + produto.medida_linear, 0) // Soma todas as medidas lineares
+                                  }{" "}
+                                  m
+                                </strong>
+                              </>
+                            ) : (
+                              "N/A"
+                            )}
+                          </TableCell>
+
 
                           <TableCell
                             sx={{
@@ -573,7 +597,7 @@ const ImpressaoScreen = () => {
                                                   {produto.nome}
                                                 </TableCell>
                                                 <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.nome}
+                                                  {produto.material}
                                                 </TableCell>
                                                 <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
                                                   {produto.medida_linear}

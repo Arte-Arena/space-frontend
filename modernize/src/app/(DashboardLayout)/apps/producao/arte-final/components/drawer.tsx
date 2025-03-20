@@ -106,7 +106,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
 
   const handleMedidaLinearChange = (produto: Produto, novaMedidaLinear: number) => {
     setProdutos((prevProdutos) =>
-      prevProdutos.map((p) => 
+      prevProdutos.map((p) =>
         p.uid === produto.uid ? { ...p, medida_linear: novaMedidaLinear } : p
       )
     );
@@ -225,7 +225,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                                 size="small"
                                 variant="outlined"
                                 value={medidasLineares[String(produto.uid)] || produto.medida_linear}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                onBlur={(e: React.FocusEvent<HTMLInputElement & { value: string }>) => {
                                   const novaMedidaLinear = Number(e.target.value);
                                   handleMedidaLinearChange(produto, novaMedidaLinear);
                                 }}
@@ -256,7 +256,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                               >
                                 <IconCheck size={16} />
                               </Button>
-                             
+
                             </TableCell>
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.prazo}
