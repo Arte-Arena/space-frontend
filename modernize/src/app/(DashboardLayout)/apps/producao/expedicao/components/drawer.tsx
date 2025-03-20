@@ -75,11 +75,34 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
     19: { nome: 'conferencia final', fila: 'C' },
     20: { nome: 'finalizado', fila: 'C' },
     21: { nome: 'reposição', fila: 'C' },
-  } as const;
+    22: { nome: 'Em Separação', fila: 'E' },
+    23: { nome: 'Retirada', fila: 'E' },
+    24: { nome: 'Em Entrega', fila: 'E' },
+    25: { nome: 'Entregue', fila: 'E' },
+    26: { nome: 'Devolução', fila: 'E' },
+    } as const;
 
   const status = pedidoStatus[row?.pedido_status_id as keyof typeof pedidoStatus] || { nome: "Desconhecido", fila: "N/A" };
   const tipo = row?.pedido_tipo_id && pedidoTipos[row?.pedido_tipo_id as keyof typeof pedidoTipos];
 
+  let fila: string;
+  switch (status.fila) {
+    case 'D':
+      fila = 'Design';
+      break;
+    case 'I':
+      fila = 'Impressão';
+      break;
+    case 'C':
+      fila = 'Confeccao';
+      break;
+    case 'E':
+      fila = 'Expedicao';
+      break;
+    default:
+      fila = 'N/A';
+      break;
+  }
 
   const handletrocarMedidaLinear = async (uid: number | null, medidasLineares: Record<string, number>, id: number) => {
     try {
@@ -262,7 +285,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
               <strong>Status do Pedido:</strong> <span style={{ fontWeight: 500 }}>{status?.nome}</span>
             </Typography>
             <Typography>
-              <strong>Fila do Pedido:</strong> <span style={{ fontWeight: 500 }}>{status.fila === 'D' ? "Design" : "Impressão"}</span>
+              <strong>Fila do Pedido:</strong> <span style={{ fontWeight: 500 }}>{fila}</span>
             </Typography>
             <Typography>
               <strong>Tipo do Pedido:</strong> <span style={{ fontWeight: 500 }}>{tipo}</span>

@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { ArteFinal, Produto } from './components/types';
+import { ArteFinal, Pedido, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
 import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconNeedleThread } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
@@ -51,7 +51,6 @@ const ExpediçãoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [openDialogObs, setOpenDialogObs] = useState(false);
-
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
@@ -59,6 +58,9 @@ const ExpediçãoScreen = () => {
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
+  const [loadingPedido, setLoadingPedido] = useState<boolean>(false);
+  const [openEntregaDialog, setOpenEntregaDialog] = useState(false);
+  const [selectedOrcamento, setSelectedOrcamento] = useState<Pedido | null>(null);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 50,
     page: 0,
@@ -164,11 +166,11 @@ const ExpediçãoScreen = () => {
   };
 
   const pedidoStatus = {
-    22: { nome: 'Em Separação', fila: 'I' },
-    23: { nome: 'Retirada', fila: 'I' },
-    24: { nome: 'Em Entrega', fila: 'I' },
-    25: { nome: 'Entregue', fila: 'I' },
-    26: { nome: 'Devolução', fila: 'I' },
+    22: { nome: 'Em Separação', fila: 'E' },
+    23: { nome: 'Retirada', fila: 'E' },
+    24: { nome: 'Em Entrega', fila: 'E' },
+    25: { nome: 'Entregue', fila: 'E' },
+    26: { nome: 'Devolução', fila: 'E' },
   } as const;
 
   // Filtro de pedidos
@@ -197,6 +199,39 @@ const ExpediçãoScreen = () => {
     return filteredPedidos.slice(startIndex, endIndex);
   }, [filteredPedidos, paginationModel]);
 
+
+  // coisas da entrega:
+
+  const handleFetchOrcamento = async (id: number | undefined) => {
+    try {
+      setLoadingPedido(true);
+      // trocar pra puxar um orcamento
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedidos/get-pedido-orcamento/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const data = await response.json();
+      setSelectedOrcamento(data);
+      setLoadingPedido(false);
+    } catch (error) {
+      console.error('Error fetching pedido:', error);
+    } finally {
+      setLoadingPedido(false); // Finaliza o loading
+    }
+  };
+
+  const handleOpenDialogEntrega = (id: number) => {
+    console.log('id passado no handle open : ', id)
+    handleFetchOrcamento(id);
+    setOpenEntregaDialog(true);
+  };
+
+  const handleCloseDialogEntrega = () => {
+    setOpenEntregaDialog(false);
+  };
 
   const BCrumb = [
     {
@@ -366,22 +401,14 @@ const ExpediçãoScreen = () => {
                         5: 'Amostra',
                       } as const;
 
-                      const pedidoStatus = {
-                        8: { nome: 'Pendente', fila: 'I' },
-                        9: { nome: 'Processando', fila: 'I' },
-                        10: { nome: 'Renderizando', fila: 'I' },
-                        11: { nome: 'Impresso', fila: 'I' },
-                        12: { nome: 'Em Impressão', fila: 'I' },
-                        13: { nome: 'Separação', fila: 'I' },
-                      } as const;
-
+                      
                       const pedidoStatusColors: Record<number, string> = {
-                        8: 'rgba(220, 53, 69, 0.49)',
-                        9: 'rgba(213, 121, 0, 0.8)',
-                        10: 'rgba(123, 157, 0, 0.8)',
-                        11: 'rgba(0, 152, 63, 0.65)',
-                        12: 'rgba(0, 146, 136, 0.8)',
-                        13: 'rgba(238, 84, 84, 0.8)',
+                        22: 'rgba(220, 53, 69, 0.49)',
+                        23: 'rgba(213, 121, 0, 0.8)',
+                        24: 'rgba(123, 157, 0, 0.8)',
+                        25: 'rgba(0, 152, 63, 0.65)',
+                        26: 'rgba(0, 146, 136, 0.8)',
+                        // 13: 'rgba(238, 84, 84, 0.8)',
                         //   20: 'rgba(20, 175, 0, 0.8)',
                         //   21: 'rgba(180, 0, 0, 0.8)',
                         //   22: 'rgba(152, 0, 199, 0.8)',
