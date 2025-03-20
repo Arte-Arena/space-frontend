@@ -119,8 +119,8 @@ const OrcamentoBackofficeScreen = () => {
   const [showInputPeidosStatus, setShowInputPedidosStatus] = useState(false);
   const [inputValueEntrega, setInputValueEntrega] = useState(selectedPedido?.codigo_rastreamento || '');
   const [hasEntrega, setHasEntrega] = useState(false);
-  const [hasEnvio, setHasEnvio] = useState(false);
-  const [HasRecebimento, setHasRecebimento] = useState(false);
+  // const [hasEnvio, setHasEnvio] = useState(false);
+  // const [HasRecebimento, setHasRecebimento] = useState(false);
   const [loadingPedido, setLoadingPedido] = useState(false);
   const [copiedRastreio, setCopiedRastreio] = useState(false);
   const [handleMakePedidoLoading, setIsLoadingMakePeido] = useState(false);
@@ -592,18 +592,18 @@ const OrcamentoBackofficeScreen = () => {
               startIcon={isAdding ? <CircularProgress size={20} /> : <IconPlus />}
               sx={{ height: '100%' }}
               onClick={handleNovoPedido}
-              disabled={isAddingTiny}
+              disabled={isAdding}
             >
-              {isAdding ? 'Adicionando...' : 'Adicionar pedido'}
+              {isAdding ? 'Adicionando... (apenas Space)' : 'Adicionar pedido (apenas Space)'}
             </Button>
             <Button
               variant="contained"
-              startIcon={isAdding ? <CircularProgress size={20} /> : <IconPlus />}
+              startIcon={isAddingTiny ? <CircularProgress size={20} /> : <IconPlus />}
               sx={{ height: '100%' }}
               onClick={handleNovoPedidoTiny}
-              disabled={isAdding}
+              disabled={isAddingTiny}
             >
-              {isAdding ? 'Adicionando...' : 'Adicionar pedido (+ Tiny)'}
+              {isAddingTiny ? 'Adicionando... (+ Tiny)' : 'Adicionar pedido (+ Tiny)'}
             </Button>
           </Stack>
 

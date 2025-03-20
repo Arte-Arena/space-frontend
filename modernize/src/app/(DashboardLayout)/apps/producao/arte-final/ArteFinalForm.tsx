@@ -74,6 +74,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
   const [openSucesso, setOpenSucesso] = useState(false);
   const [openFracasso, setOpenFracasso] = useState(false);
   const [fadeOut, setFadeOut] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('');
 
   const dataProducts = localStorage.getItem('produtosConsolidadosOrcamento');
   const materiais = localStorage.getItem('materiais');
@@ -343,6 +344,32 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
     e.preventDefault();
     if (formSubmitted) return;
 
+    // Verificações adicionais antes de enviar a requisição
+    if (productsList.length === 0) {
+      setErrorMessage('Por favor, adicione pelo menos um produto à lista.');
+      setOpenFracasso(true);
+      setFadeOut(true); // Optional, para animar a saída do alert
+      setTimeout(() => {
+        setOpenFracasso(false);
+        setFadeOut(false);
+      }, 3000);
+      console.error('Erro: Nenhum produto adicionado à lista.');
+      return;
+    }
+
+    const productsWithEmptySketch = productsList.filter((product) => !product.esboco);
+    if (productsWithEmptySketch.length > 0) {
+      setErrorMessage('Existem produtos sem esboço na lista. Por favor, adicione um esboço para cada produto.');
+      setOpenFracasso(true);
+      setFadeOut(true); // Optional, para animar a saída do alert
+      setTimeout(() => {
+        setOpenFracasso(false);
+        setFadeOut(false);
+      }, 3000);
+      console.error('Erro: Existem produtos sem esboço na lista.');
+      return;
+    }
+
     setFormSubmitted(true);
     setLoadingSubmit(true);
 
@@ -386,7 +413,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
       });
 
       if (!response.ok) {
-        setOpenFracasso(true)
+        setOpenFracasso(true);
         throw new Error('Erro na requisição');
       }
       const data = await response.json();
@@ -403,6 +430,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
   };
 
   return (
+
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4 border rounded-lg shadow-md">
 
       <Box sx={{ mt: 5 }}>
@@ -830,24 +858,9 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
       )}
 
       {openFracasso && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            padding: 2,
-            backgroundColor: 'tranparent',
-            borderRadius: 1,
-            boxShadow: 3,
-            opacity: fadeOut ? 0 : 1, // Opacidade muda para 0 quando fadeOut é true
-            transition: 'opacity 0.5s ease-out', // Transição suave de opacidade
-          }}
-        >
-          <Alert severity="error" onClose={() => setOpenFracasso(false)}>
-            Pedido Não enviado
-          </Alert>
-        </Box>
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {errorMessage || "Produto Não Enviado"}
+        </Alert>
       )}
 
     </form>
