@@ -51,6 +51,7 @@ import { IconUserPlus } from '@tabler/icons-react';
 import { IconCheck } from '@tabler/icons-react';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import getBrazilTime from '@/utils/brazilTime';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -406,16 +407,16 @@ const ArteFinalScreen = () => {
 
                     // definição das datas e atrasos
                     const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
-                    const dataAtual = new Date(); //colocar no getBrazilTime
+                    const dataAtual = getBrazilTime(); //colocar no getBrazilTime
                     let atraso = false;
                     let isHoje = false;
                     if (dataPrevista && dataPrevista < dataAtual) {
                       atraso = true;
                     }
-
                     if (dataPrevista && isSameDay(dataPrevista, dataAtual)) {
                       isHoje = true;
                     }
+                    // tem que usar isso na logica do rastreamento
 
                     // definição dos designers
                     const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
