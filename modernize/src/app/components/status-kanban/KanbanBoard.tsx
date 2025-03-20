@@ -273,6 +273,8 @@ const KanbanBoard: React.FC = () => {
     }
   };
 
+  // O BUG PARECE ESTAR NO APROVADO ARTE FINAL
+  
   return (
     <Box>
       {/*  onDragStart={handleDragStart} */}
