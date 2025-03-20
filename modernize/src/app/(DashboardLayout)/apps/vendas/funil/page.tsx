@@ -5,6 +5,7 @@ import TaskManager from "@/app/components/apps/kanban/TaskManager";
 import { KanbanDataContextProvider } from "@/app/context/kanbancontext/index";
 import BlankCard from "@/app/components/shared/BlankCard";
 import { CardContent } from "@mui/material";
+import KanbanBoard from "@/app/components/status-kanban/KanbanBoard";
 
 const BCrumb = [
   {
@@ -25,11 +26,9 @@ function page() {
     <KanbanDataContextProvider>
       <PageContainer title="Funil de Vendas" description="este é o funil de vendas da Arte Arena">
         <Breadcrumb title="Funil de Vendas" items={BCrumb} />
-        <BlankCard>
-          <CardContent>
-            <TaskManager />
-          </CardContent>
-        </BlankCard>
+        <KanbanBoard>
+          
+        </KanbanBoard>
       </PageContainer>
     </KanbanDataContextProvider>
   );
