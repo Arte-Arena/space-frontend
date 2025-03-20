@@ -2,17 +2,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { Box, Card, CardContent, Typography, useTheme, TextField, Button, InputAdornment, Stack, Dialog, DialogTitle, DialogContentText, DialogContent, DialogActions, FormControlLabel, Checkbox, Select, MenuItem } from "@mui/material";
-import useFetchOrcamentos from "@/utils/useGetAllOrcamentos"; // Importe o hook
+import useFetchOrcamentos from "@/utils/useGetAllOrcamentos"; 
 import { useStatusChangeAprovado, useStatusChangeDesaprovado } from '@/utils/PutStatusOrcamentos';
 import { IconSearch } from "@tabler/icons-react";
 import CustomTextField from "../forms/theme-elements/CustomTextField";
 import useEtapa from "@/utils/useLastStatus";
-// import StatusArray from "./statusArray";
-// vamos fazer tudo de um endpoint só e refazer toda a logica dessa bagaça.
-
-
-
-
 
 interface Etapa {
   id: string;
@@ -138,34 +132,9 @@ const KanbanBoard: React.FC = () => {
     etapa13: { campo: "status_envio_pedido", valor: "enviado" },
   };
   const theme = useTheme();
-  // const [isDragging, setIsDragging] = useState(false); 
-  // const [dialogOpen, setDialogOpen] = useState(false);
-  // const [isAprovar, setIsAprovar] = useState(false);
-  // const [isDesaprovar, setIsDesaprovar] = useState(false);
-  // const [selectedStatus, setSelectedStatus] = useState("Status");
-  // const [dialogData, setDialogData] = useState<{
-  //   statusKey: string;
-  //   rowId: number;
-  //   approvedValue: string;
-  // } | null>(null);
-
-  // busca os tipos de status
-  // const statusOptions = StatusArray || {};
-
-  // const handleDragStart = () => {
-  //   setIsDragging(true);
-  // };
-
-  // const handleDragEnd = () => {
-  //   setIsDragging(false);
-  // };
-
-  // Busca os orçamentos da API
-  // const { data, isLoading, isError, refetch} = useFetchOrcamentos(searchQuery, page);
 
   const { etapas, loading, error } = useEtapa()
 
-  // tem que mudar toda a logica desse campo aqui e pegar da rota do backend de outro arquivo. 
   // Mapeia os orçamentos para as colunas
   useEffect(() => {
     if (etapas && Array.isArray(etapas)) {
@@ -259,45 +228,9 @@ const KanbanBoard: React.FC = () => {
 
   // tenho que pensar em como fazer esse campo, se faço manualmente um card novo clicavel e vai pra pagina de alterar status de backlog
   //  ou se algo que for dropado na coluna dele automaticamente vai pra pagina de alterar o status pro backlog.
-  const handleAprovarArteArena = (rowId: number) => {
-    window.open(`/apps/orcamento/aprovar/${rowId}`, '_blank');
-  };
-
-
-  const handleDesaprovar = async (campo: string, rowId: number) => {
-    try {
-      await useStatusChangeDesaprovado(campo, rowId);
-      // refetch();
-    } catch (err) {
-      console.log(err)
-    }
-  }
-
-
-
-  // const handleOpenDialog = (statusKey: string, rowId: number, approvedValue: string) => {
-  //   setDialogData({ statusKey, rowId, approvedValue });
-  //   setDialogOpen(true);
-  // };
-
-  // const handleCloseDialog = () => {
-  //   setDialogOpen(false);
-  //   setDialogData(null);
-  // };
-
-
-  // const handleAprovarChange = () => {
-  //   setIsAprovar(!isAprovar);
-  //   setIsDesaprovar(false); // Desmarca "Desaprovar" ao selecionar "Aprovar"
-  // };
-
-  // const handleDesaprovarChange = () => {
-  //   setIsDesaprovar(!isDesaprovar);
-  //   setIsAprovar(false); // Desmarca "Aprovar" ao selecionar "Desaprovar"
-  // };
 
   if (loading) return <div>Carregando...</div>;
-  if (error) return <div>Erro ao carregar as etapas: {error.message}</div>;
+  if (error) return <div>Erro ao carregar as etapas: {error}</div>;
 
   // arrumar os campos
   const handleChangeStatus = async (orcamento: Etapa, newColumnId: string) => {
@@ -376,12 +309,6 @@ const KanbanBoard: React.FC = () => {
               ((currentPage[columnId] || 1) - 1) * 10,
               (currentPage[columnId] || 1) * 10
             ) || [];
-
-            // paginação
-            // const handlePageChange = (_: React.ChangeEvent<unknown> | null, newPage: number) => {
-            //   setCurrentPage((prev) => ({ ...prev, [columnId]: newPage }));
-            // refetch(); // Atualiza os dados sempre que a página mudar
-            // };
 
             // console.log("Itens da coluna", columnId, paginatedItems, column);  
             return (
@@ -497,6 +424,7 @@ const KanbanBoard: React.FC = () => {
                         {provided.placeholder}
                       </Box>
 
+                      {/* DIALOG DO CARD (QUANDO PARTAR O CARD ELE ABRE O DIALOG COM AS INFOS) igual o trello*/}
                       {/* <Dialog open={dialogOpen} onClose={handleCloseDialog}>
                     <DialogTitle>Alterar Status #{dialogData?.rowId}</DialogTitle>
                     <DialogContent>
