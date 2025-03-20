@@ -41,7 +41,7 @@ import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import AssignDesignerDialog from './components/designerDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
 import deletePedidoArteFinal from './components/useDeletePedido';
@@ -406,10 +406,15 @@ const ArteFinalScreen = () => {
 
                     // definição das datas e atrasos
                     const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
-                    const dataAtual = new Date();
+                    const dataAtual = new Date(); //colocar no getBrazilTime
                     let atraso = false;
+                    let isHoje = false;
                     if (dataPrevista && dataPrevista < dataAtual) {
                       atraso = true;
+                    }
+
+                    if (dataPrevista && isSameDay(dataPrevista, dataAtual)) {
+                      isHoje = true;
                     }
 
                     // definição dos designers
@@ -489,7 +494,8 @@ const ArteFinalScreen = () => {
                           </TableCell>
 
                           <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                            backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)'
                           }} align='center'>
                             {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
                             {atraso && <span> (Atraso)</span>}
