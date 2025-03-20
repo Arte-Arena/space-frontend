@@ -73,6 +73,22 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
   const status = pedidoStatus[row?.pedido_status_id as keyof typeof pedidoStatus] || { nome: "Desconhecido", fila: "N/A" };
   const tipo = row?.pedido_tipo_id && pedidoTipos[row?.pedido_tipo_id as keyof typeof pedidoTipos];
 
+  let fila: string;
+  switch (status.fila) {
+    case 'D':
+      fila = 'Design';
+      break;
+    case 'I':
+      fila = 'Impressão';
+      break;
+    case 'C':
+      fila = 'Confeccao';
+      break;
+    default:
+      fila = 'N/A';
+      break;
+  }
+
   return (
     <Drawer
       anchor="right" // Abre na lateral direita
@@ -215,7 +231,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
               <strong>Status do Pedido:</strong> <span style={{ fontWeight: 500 }}>{status?.nome}</span>
             </Typography>
             <Typography>
-              <strong>Fila do Pedido:</strong> <span style={{ fontWeight: 500 }}>{status.fila === 'D' ? "Design" : "Impressão"}</span>
+              <strong>Fila do Pedido:</strong> <span style={{ fontWeight: 500 }}>{fila}</span>
             </Typography>
             <Typography>
               <strong>Tipo do Pedido:</strong> <span style={{ fontWeight: 500 }}>{tipo}</span>
