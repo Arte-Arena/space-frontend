@@ -433,12 +433,6 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
 
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4 border rounded-lg shadow-md">
 
-      {openFracasso && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {errorMessage}
-        </Alert>
-      )}
-
       <Box sx={{ mt: 5 }}>
         <CustomTextField
           label="Número do Pedido"
@@ -864,24 +858,9 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
       )}
 
       {openFracasso && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            padding: 2,
-            backgroundColor: 'tranparent',
-            borderRadius: 1,
-            boxShadow: 3,
-            opacity: fadeOut ? 0 : 1, // Opacidade muda para 0 quando fadeOut é true
-            transition: 'opacity 0.5s ease-out', // Transição suave de opacidade
-          }}
-        >
-          <Alert severity="error" onClose={() => setOpenFracasso(false)}>
-            Pedido Não enviado
-          </Alert>
-        </Box>
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {errorMessage || "Produto Não Enviado"}
+        </Alert>
       )}
 
     </form>
