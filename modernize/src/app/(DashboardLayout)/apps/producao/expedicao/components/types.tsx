@@ -23,6 +23,7 @@ interface ArteFinal {
   prioridade?: string | null;
   orcamento_id?: number | null;
   tipo_de_pedido: string;
+  codigo_rastreamento: string;
   created_at: Date;
   updated_at: Date;
 }
