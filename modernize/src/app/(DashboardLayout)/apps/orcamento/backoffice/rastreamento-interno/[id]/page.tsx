@@ -2,15 +2,12 @@
 import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { Container, Typography, Stepper, Step, StepLabel, Box, Paper, TableRow, TableCell, Collapse, Table, TableBody, TableHead } from "@mui/material";
+import { Container, Typography, Stepper, Step, StepLabel, Box, Paper, TableRow, TableCell, Table, TableBody, TableHead } from "@mui/material";
 import { IconCoinFilled, IconHome, IconHomeCheck, IconShoppingCart, IconTruckDelivery, IconTruckLoading } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import useFetchPedidoOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetPedidoOrcamento";
-import useFetchOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetOrcamento";
-import { addDays, format, isAfter, isEqual, isWeekend, parseISO } from "date-fns";
+import { addDays, format, isWeekend,  } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
 
 interface Produto {
   id: number;
@@ -26,74 +23,20 @@ interface Produto {
   updated_at: string | null; // Pode ser null ou uma string
 }
 
-interface Pedido {
-  id: number;
-  orcamento_id: number;
-  user_id: number | null;
-  numero_pedido: string | null;
-  data_prevista: string | null;
-  pedido_status_id: number | null;
-  pedido_tipo_id: number | null;
-  pedido_produto_categoria: string | null;
-  pedido_material: string | null;
-  rolo: string | null;
-  medida_linear: string | null;
-  prioridade: string | null;
-  estagio: string | null;
-  situacao: string | null;
-  designer_id: number | null;
-  observacoes: string | null;
-  url_trello: string | null;
-  created_at: string;
-  updated_at: string;
-  codigo_rastreamento: string | null;
-}
-
-interface Orcamento {
-  id: number;
-  user_id: number;
-  cliente_octa_number: string;
-  nome_cliente: string | null;
-  lista_produtos: string | null;
-  produtos_brinde: string | null;
-  texto_orcamento: string | null;
-  endereco_cep: string;
-  endereco: string;
-  opcao_entrega: string;
-  prazo_opcao_entrega: number;
-  preco_opcao_entrega: number | null;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  brinde: number;
-  tipo_desconto: string;
-  valor_desconto: number;
-  data_antecipa: string;
-  taxa_antecipa: string;
-  total_orcamento: number;
-  prazo_producao: number;
-}
-
 const RastreamentoInternoScreen = () => {
-  // aqui vai ficar a logica das datas de cada coisa, podemos repetir as datas até o separação e transportadora usar o da api de frete.
 
-  const [activeStepData, setActiveStepData] = useState(1); // Define até qual etapa foi concluída
   const params = useParams();
   const id = params.id;
   const parsedId = Array.isArray(id) ? id[0] : id;
 
-  const { pedido, isLoadingPedido, errorPedido, activeStep } = useFetchPedidoOrcamento(parsedId);
-  const { orcamento, isLoadingOrcamento, errorOrcamento } = useFetchOrcamento(parsedId);
+  const { orcamento, pedido, isLoadingPedido, errorPedido, activeStep } = useFetchPedidoOrcamento(parsedId);
 
-  if (isLoadingPedido || isLoadingOrcamento) return <p>Carregando...</p>;
-  if (errorPedido || errorOrcamento) return <p>Erro ao carregar pedido.</p>;
+  if (isLoadingPedido) return <p>Carregando...</p>;
+  if (errorPedido) return <p>Erro ao carregar pedido.</p>;
 
   // é so chamar o objetiro diretamento com "." ou "[]"
   console.dir("Orcamento: " + orcamento);
   console.dir("Pedido: " + pedido);
-
-  const texto = orcamento?.texto_orcamento;
-  console.log(texto);
 
   const listaProdutos = orcamento?.lista_produtos
     ? (typeof orcamento?.lista_produtos === 'string' ? JSON.parse(orcamento?.lista_produtos) : orcamento?.lista_produtos)
@@ -131,31 +74,12 @@ const RastreamentoInternoScreen = () => {
   };
 
   const prazoDias = orcamento?.prazo_producao;
-  // const newDate = new Date()
 
   const newDate = addBusinessDays(createdPedido, prazoDias);
   const dataFormatada = newDate ? format(newDate, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
 
   const newDateTransportadora = prazoDias !== undefined ? addBusinessDays(createdPedido, prazoDias + 1) : null;
   const dataFormatadaTransportadora = newDateTransportadora ? format(newDateTransportadora, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
-
-  const hoje = new Date();
-  // const dataHojeFormatada = format(hoje, 'dd/MM/yyyy', { locale: ptBR });
-
-
-  // colocar o resto da logica de negocio.
-  if (createdAtOrcamento && createdPedido) {
-    const orcamentoEhMaiorQueHoje = isAfter(hoje, createdAtOrcamento) || isEqual(hoje, createdAtOrcamento);
-    const pedidoEhMaiorQueHoje = isAfter(hoje, createdPedido) || isEqual(hoje, createdPedido);
-
-
-    if (orcamentoEhMaiorQueHoje && !pedidoEhMaiorQueHoje) {
-      setActiveStepData(2);
-    }
-    if (pedidoEhMaiorQueHoje && !orcamentoEhMaiorQueHoje) {
-      setActiveStepData(3);
-    }
-  }
 
   console.log(orcamento?.lista_produtos);
   console.log(orcamento?.produtos_brinde);
@@ -181,7 +105,7 @@ const RastreamentoInternoScreen = () => {
     { label: "Pedido realizado", icon: IconShoppingCart, date: dateCreatedOrcamento },
     { label: "Pagamento confirmado", icon: IconCoinFilled, date: dateCreatedPedido },
     { label: "Pedido em Produção", icon: IconTruckLoading, date: "" },
-    { label: "Pedido em Retirada", icon: IconHome, date: "" }, 
+    { label: "Pedido em Retirada", icon: IconHome, date: "" },
     { label: "Pedido Entregue", icon: IconHomeCheck, date: "" },
   ];
 
@@ -222,8 +146,8 @@ const RastreamentoInternoScreen = () => {
             </Typography>
 
             {/* Barra de progresso com as etapas POR DATA*/}
-            {transportadora !== "RETIRADA" && activeStep === 1 &&(
-              <Stepper activeStep={activeStepData} alternativeLabel>
+            {transportadora !== "RETIRADA" && activeStep && (
+              <Stepper activeStep={activeStep} alternativeLabel>
                 {stepsTransportadora.map((step, index) => (
                   <Step key={index}>
                     <StepLabel StepIconComponent={(props) => <CustomStepIcon active={props.active !== undefined ? props.active : false} completed={props.completed !== undefined ? props.completed : false} icon={step.icon} />}>
@@ -237,8 +161,8 @@ const RastreamentoInternoScreen = () => {
               </Stepper>
             )}
 
-            {transportadora === "RETIRADA" && activeStep === 1 && (
-              <Stepper activeStep={activeStepData} alternativeLabel>
+            {transportadora === "RETIRADA" && activeStep && (
+              <Stepper activeStep={activeStep} alternativeLabel>
                 {stepsRetirada.map((step, index) => (
                   <Step key={index}>
                     <StepLabel StepIconComponent={(props) => <CustomStepIcon active={props.active !== undefined ? props.active : false} completed={props.completed !== undefined ? props.completed : false} icon={step.icon} />}>
@@ -252,36 +176,6 @@ const RastreamentoInternoScreen = () => {
               </Stepper>
             )}
 
-            {/* Barra de progresso com as etapas SEM DATA*/}
-            {transportadora !== "RETIRADA" && activeStep !== 1 && (
-              <Stepper activeStep={activeStep} alternativeLabel>
-                {stepsTransportadoraButton.map((step, index) => (
-                  <Step key={index}>
-                    <StepLabel StepIconComponent={(props) => <CustomStepIcon active={props.active !== undefined ? props.active : false} completed={props.completed !== undefined ? props.completed : false} icon={step.icon} />}>
-                      <Typography variant="caption">{step.label}</Typography>
-                      <Typography variant="caption" sx={{ display: "block", fontSize: "0.75rem" }}>
-                        {step.date}
-                      </Typography>
-                    </StepLabel>
-                  </Step>
-                ))}
-              </Stepper>
-            )}
-
-            {transportadora === "RETIRADA" && activeStep !== 1 && (
-              <Stepper activeStep={activeStep} alternativeLabel>
-                {stepsRetiradaButton.map((step, index) => (
-                  <Step key={index}>
-                    <StepLabel StepIconComponent={(props) => <CustomStepIcon active={props.active !== undefined ? props.active : false} completed={props.completed !== undefined ? props.completed : false} icon={step.icon} />}>
-                      <Typography variant="caption">{step.label}</Typography>
-                      <Typography variant="caption" sx={{ display: "block", fontSize: "0.75rem" }}>
-                        {step.date}
-                      </Typography>
-                    </StepLabel>
-                  </Step>
-                ))}
-              </Stepper>
-            )}
 
             {/* Endereço de Entrega */}
             <Box sx={{ mt: 4, textAlign: "left", paddingX: 2 }}>
