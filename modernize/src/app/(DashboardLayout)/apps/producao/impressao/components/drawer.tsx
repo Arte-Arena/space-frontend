@@ -25,9 +25,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
       : row?.lista_produtos
     : [];
 
-  const [medidasLineares, setMedidasLineares] = useState<Record<string, number>>({});
   const [produtos, setProdutos] = useState<Produto[]>(listaProdutos); // Estado corrigido para array de produtos
-  const [digitando, setDigitando] = useState(false); // Estado para saber se o usuário está digitando
 
   useEffect(() => {
     setProdutos(listaProdutos);
@@ -80,35 +78,9 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
   const status = pedidoStatus[row?.pedido_status_id as keyof typeof pedidoStatus] || { nome: "Desconhecido", fila: "N/A" };
   const tipo = row?.pedido_tipo_id && pedidoTipos[row?.pedido_tipo_id as keyof typeof pedidoTipos];
 
-
-  const handletrocarMedidaLinear = async (uid: number | null, medidasLineares: Record<string, number>, id: number) => {
-    try {
-      const response = await trocarMedidaLinear(id, uid, medidasLineares, refetch);
-      if (response) {
-        console.log("Medida linear atualizada com sucesso!");
-      }
-    } catch (error) {
-      console.error("Erro ao atualizar medida linear:", error);
-    }
-  };
-
-  const handleMedidaLinearChange = (produto: Produto, novaMedidaLinear: number) => {
-    setMedidasLineares(prevState => ({
-      ...prevState,
-      [String(produto.uid)]: novaMedidaLinear,
-    }));
-
-    // Define um timeout para chamar a API após 1 segundo de inatividade
-    setDigitando(true);
-    setDigitando(false);
-
-    if (row?.id !== undefined) {
-      setTimeout(() => {
-        handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id!);
-      }, 2000);
-    }
-
-  };
+  const totalMedidaLinear = listaProdutos.reduce((total, produto) => {
+    return total + (produto.medida_linear || 0);
+  }, 0);
 
   return (
     <Drawer
@@ -203,7 +175,11 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                               {produto.material}
                             </TableCell>
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
-                              {produto.medida_linear} Metros
+                              {produto.medida_linear && (
+                                <>
+                                  {produto.medida_linear}
+                                </>
+                              )}
                             </TableCell>
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.prazo}
@@ -213,6 +189,20 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                       ) : (
                         <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
                       )}
+
+                      {totalMedidaLinear && (
+                        <Box
+                          sx={{
+                            alignItems: 'start',
+                            pt: 2
+                          }}
+                        >
+                          <Typography sx={{ fontWeight: 700, fontSize: 15 }}>
+                            Total das Medidas Lineares {totalMedidaLinear}
+                          </Typography>
+                        </Box>
+                      )}
+                      {/* total de medida linear */}
                     </TableBody>
                   </TableCell>
                 </TableRow>

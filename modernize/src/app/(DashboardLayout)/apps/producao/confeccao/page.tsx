@@ -109,18 +109,6 @@ const ConfeccaoScreen = () => {
     }, 0)
     : 0;
 
-  const totalPrazoProducao = Array.isArray(allPedidos)
-    ? allPedidos.reduce((totalPedido, row) => {
-      const listaProdutos: Produto[] = row.lista_produtos
-        ? typeof row.lista_produtos === "string"
-          ? JSON.parse(row.lista_produtos)
-          : row.lista_produtos
-        : [];
-
-      return totalPedido + listaProdutos.reduce((acc, produto) => acc + (produto.prazo ?? 0), 0);
-    }, 0)
-    : 0;
-
   // handles
   const handleLinkTrello = (row: ArteFinal) => {
     if (row.url_trello) {
@@ -251,11 +239,9 @@ const ConfeccaoScreen = () => {
         <Breadcrumb title="Produção / Confecção" items={BCrumb} />
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2, }}>
           <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
-            <span style={{ fontWeight: 'bold' }}>Total Medida Linear:</span> {totalMedidaLinearGlobal} Cm
+            <span style={{ fontWeight: 'bold' }}>Total Medida Linear:</span> {totalMedidaLinearGlobal} Metros
           </Typography>
-          <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
-            <span style={{ fontWeight: 'bold' }}>Total Prazo de Produção:</span> {totalPrazoProducao} Dias
-          </Typography>
+          {/* quantidade total de pedidos | quantidade de pedidos por dia (mostrando a data) */}
         </Box>
         <ParentCard title="Confecção">
           <>

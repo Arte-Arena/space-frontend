@@ -293,6 +293,12 @@ const ArteFinalScreen = () => {
   return (
     <PageContainer title="Produção / Arte - Final" description="Tela de Produção da Arte - Final | Arte Arena">
       <Breadcrumb title="Produção / Arte - Final" items={BCrumb} />
+      <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2, }}>
+        <Typography sx={{fontSize: '18px', fontWeight: '600'}}>
+          Total de {allPedidos.length} Pedidos 
+          {/* {filteredPedidos.length} Filtrados */}
+        </Typography>
+      </Box>
       <ParentCard title="Arte - Final">
         <>
           <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
@@ -473,7 +479,7 @@ const ArteFinalScreen = () => {
                             }}
                             onClick={() => {
                               navigator.clipboard.writeText(String(row.numero_pedido));
-                              alert(`Número do pedido copiado: ${row.numero_pedido}`);
+                              // colocar um alert bunitinho de copiado
                             }}
                           >
                             {String(row.numero_pedido)}
