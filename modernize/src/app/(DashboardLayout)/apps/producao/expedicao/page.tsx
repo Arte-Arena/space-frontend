@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Pedido, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconNeedleThread } from '@tabler/icons-react';
+import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconNeedleThread, IconTruckDelivery } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -47,6 +47,7 @@ import { IconDirectionSign } from '@tabler/icons-react';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import getBrazilTime from '@/utils/brazilTime';
+import DialogExp from './components/expedicaoDialog';
 
 const ExpediçãoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -55,12 +56,13 @@ const ExpediçãoScreen = () => {
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
+  const [selectedRowExp, setSelectedRowExp] = useState<ArteFinal | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
   const [loadingPedido, setLoadingPedido] = useState<boolean>(false);
-  const [openEntregaDialog, setOpenEntregaDialog] = useState(false);
+  const [openDialogExp, setOpenDialogExp] = useState(false);
   const [selectedOrcamento, setSelectedOrcamento] = useState<Pedido | null>(null);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 50,
@@ -202,36 +204,9 @@ const ExpediçãoScreen = () => {
 
 
   // coisas da entrega:
-
-  const handleFetchOrcamento = async (id: number | undefined) => {
-    try {
-      setLoadingPedido(true);
-      // trocar pra puxar um orcamento
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedidos/get-pedido-orcamento/${id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const data = await response.json();
-      setSelectedOrcamento(data);
-      setLoadingPedido(false);
-    } catch (error) {
-      console.error('Error fetching pedido:', error);
-    } finally {
-      setLoadingPedido(false); // Finaliza o loading
-    }
-  };
-
-  const handleOpenDialogEntrega = (id: number) => {
-    console.log('id passado no handle open : ', id)
-    handleFetchOrcamento(id);
-    setOpenEntregaDialog(true);
-  };
-
-  const handleCloseDialogEntrega = () => {
-    setOpenEntregaDialog(false);
+  const handleOpenDialogEntrega = (row: ArteFinal) => {
+    setSelectedRowExp(row);
+    setOpenDialogExp(true);
   };
 
   const BCrumb = [
@@ -558,6 +533,14 @@ const ExpediçãoScreen = () => {
                                   <IconBrandTrello />
                                 </IconButton>
                               </Tooltip>
+                              <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
+                                <IconButton
+                                  onClick={() => handleOpenDialogEntrega(row)}
+                                  disabled={row.url_trello === null}
+                                >
+                                  <IconTruckDelivery />
+                                </IconButton>
+                              </Tooltip>
                               {/* <Tooltip title="Enviar para Confecção!">
                                 <IconButton onClick={() => handleEnviarConfeccao(row)}>
                                   <IconNeedleThread />
@@ -637,6 +620,7 @@ const ExpediçãoScreen = () => {
           }
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
           <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
+          <DialogExp openDialogExp={openDialogExp} onCloseDialogExp={() => setOpenDialogExp(false)} row={selectedRowExp} refetch={refetch} />
         </>
       </ParentCard >
     </PageContainer >
