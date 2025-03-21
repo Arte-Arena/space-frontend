@@ -2,11 +2,11 @@
 import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { Container, Typography, Stepper, Step, StepLabel, Box, Paper, TableRow, TableCell, Table, TableBody, TableHead } from "@mui/material";
+import { Container, Typography, Stepper, Step, StepLabel, Box, Paper, TableRow, TableCell, Table, TableBody, TableHead, CircularProgress } from "@mui/material";
 import { IconCoinFilled, IconHome, IconHomeCheck, IconShoppingCart, IconTruckDelivery, IconTruckLoading } from "@tabler/icons-react";
 import { useParams } from "next/navigation";
 import useFetchPedidoOrcamento from "@/app/(DashboardLayout)/apps/orcamento/backoffice/components/useGetPedidoOrcamento";
-import { addDays, format, isWeekend,  } from "date-fns";
+import { addDays, format, isWeekend, } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface Produto {
@@ -33,6 +33,13 @@ const RastreamentoInternoScreen = () => {
 
   if (isLoadingPedido) return <p>Carregando...</p>;
   if (errorPedido) return <p>Erro ao carregar pedido.</p>;
+
+  if (activeStep === null) {
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
+  }
+  
 
   // é so chamar o objetiro diretamento com "." ou "[]"
   console.dir("Orcamento: " + orcamento);
@@ -145,8 +152,18 @@ const RastreamentoInternoScreen = () => {
               Olá, Seu pedido está a caminho!.
             </Typography>
 
-            {/* Barra de progresso com as etapas POR DATA*/}
-            {transportadora !== "RETIRADA" && activeStep && (
+            {activeStep === null && (
+              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mt: 4 }}>
+              <Typography variant="body2" sx={{ mt: 2, textAlign: "center" }}>
+                <CircularProgress />
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 2, textAlign: "center" }}>
+                Carregando...
+              </Typography>
+              </Box>
+            )}
+
+            {activeStep !== null && transportadora !== "RETIRADA" && (
               <Stepper activeStep={activeStep} alternativeLabel>
                 {stepsTransportadora.map((step, index) => (
                   <Step key={index}>
@@ -161,7 +178,7 @@ const RastreamentoInternoScreen = () => {
               </Stepper>
             )}
 
-            {transportadora === "RETIRADA" && activeStep && (
+            {activeStep !== null && transportadora === "RETIRADA" && (
               <Stepper activeStep={activeStep} alternativeLabel>
                 {stepsRetirada.map((step, index) => (
                   <Step key={index}>
@@ -175,7 +192,6 @@ const RastreamentoInternoScreen = () => {
                 ))}
               </Stepper>
             )}
-
 
             {/* Endereço de Entrega */}
             <Box sx={{ mt: 4, textAlign: "left", paddingX: 2 }}>

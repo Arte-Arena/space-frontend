@@ -1,5 +1,5 @@
 import getBrazilTime from "@/utils/brazilTime";
-import { isAfter, isEqual } from "date-fns";
+import { addDays, isAfter, isEqual, isWeekend } from "date-fns";
 import { useState, useEffect, useMemo } from "react";
 
 interface Orcamento {
@@ -57,6 +57,23 @@ const useFetchPedidoOrcamento = (id: number | string) => {
   const [errorPedido, setError] = useState<Error | null>(null);
   const [activeStep, setActiveStep] = useState<number | null>(null);
 
+  const addBusinessDays = (date: Date | number | null, daysToAdd: number | undefined): Date | number | null => {
+    if (!date) return null; // Se a data for nula, retorne null imediatamente
+
+    let count = 0;
+    let newDate = date;
+
+    if (daysToAdd === undefined) return null;
+
+    while (count < daysToAdd) {
+      newDate = addDays(newDate, 1);
+      if (!isWeekend(newDate)) {
+        count++;
+      }
+    }
+
+    return newDate;
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -87,25 +104,43 @@ const useFetchPedidoOrcamento = (id: number | string) => {
         setPedido(json.pedido);
         setOrcamento(json.orcamento);
 
+
+        const prazoDias = orcamento?.prazo_producao;
         const createdAtOrcamento = orcamento?.created_at ? new Date(orcamento.created_at) : null;
         const createdPedido = pedido?.created_at ? new Date(pedido.created_at) : null;
+        const DatePrazo = addBusinessDays(createdPedido, prazoDias);
+        const DateTransportadora = prazoDias !== undefined ? addBusinessDays(createdPedido, prazoDias + 1) : null;
         const hoje = getBrazilTime();
+        console.log(createdAtOrcamento,"X",createdPedido,"X",DatePrazo,"X",DateTransportadora,"X",hoje)
+
 
         if (createdAtOrcamento && (isAfter(hoje, createdAtOrcamento) || isEqual(hoje, createdAtOrcamento))) {
-          setActiveStep(2);
+          setActiveStep(0);
         }
-        
+
         if (createdPedido && (isAfter(hoje, createdPedido) || isEqual(hoje, createdPedido))) {
-          setActiveStep(3);
+          setActiveStep(1);
         }
+
+        if (DatePrazo && (isAfter(hoje, DatePrazo) || isEqual(hoje, DatePrazo))) {
+          setActiveStep(1);
+        }
+
+        if (DateTransportadora && (isAfter(hoje, DateTransportadora) || isEqual(hoje, DateTransportadora))) {
+          setActiveStep(1);
+        }
+        // tem que colocar pelo prazo aqui também!
 
         if (json.pedido.pedido_status_id === 24 || json.pedido.pedido_status_id === 23) {
           setActiveStep(3);
-          if (json.pedido.pedido_status_id === 25) {
+          console.log(json.pedido.pedido_status_id)
         }
+
+        if (json.pedido.pedido_status_id === 25) {
           setActiveStep(4);
+          console.log(json.pedido.pedido_status_id)
         }
-        
+
       } catch (err) {
         setError(err as Error);
       } finally {
