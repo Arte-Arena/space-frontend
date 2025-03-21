@@ -105,9 +105,9 @@ const useFetchPedidoOrcamento = (id: number | string) => {
         setOrcamento(json.orcamento);
 
 
-        const prazoDias = orcamento?.prazo_producao;
-        const createdAtOrcamento = orcamento?.created_at ? new Date(orcamento.created_at) : null;
-        const createdPedido = pedido?.created_at ? new Date(pedido.created_at) : null;
+        const prazoDias = json.orcamento.prazo_producao;
+        const createdAtOrcamento = json.orcamento.created_at ? new Date(json.orcamento.created_at) : null;
+        const createdPedido = json.pedido?.created_at ? new Date(json.pedido.created_at) : null;
         const DatePrazo = addBusinessDays(createdPedido, prazoDias);
         const DateTransportadora = prazoDias !== undefined ? addBusinessDays(createdPedido, prazoDias + 1) : null;
         const hoje = getBrazilTime();
@@ -123,11 +123,11 @@ const useFetchPedidoOrcamento = (id: number | string) => {
         }
 
         if (DatePrazo && (isAfter(hoje, DatePrazo) || isEqual(hoje, DatePrazo))) {
-          setActiveStep(1);
+          setActiveStep(2);
         }
 
         if (DateTransportadora && (isAfter(hoje, DateTransportadora) || isEqual(hoje, DateTransportadora))) {
-          setActiveStep(1);
+          setActiveStep(3);
         }
         // tem que colocar pelo prazo aqui também!
 
