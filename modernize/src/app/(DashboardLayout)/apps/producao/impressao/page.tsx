@@ -39,13 +39,14 @@ import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
 import { useThemeMode } from '@/utils/useThemeMode';
 import { IconDirectionSign } from '@tabler/icons-react';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import getBrazilTime from '@/utils/brazilTime';
 
 const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -335,13 +336,16 @@ const ImpressaoScreen = () => {
                         : row.lista_produtos
                       : [];
 
-                    // tem que definir se as datas são maiores ou não e assim definir se vai ficar vermelho ou não
                     // definição das datas e atrasos
                     const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
-                    const dataAtual = new Date();
+                    const dataAtual = getBrazilTime(); //colocar no getBrazilTime
                     let atraso = false;
+                    let isHoje = false;
                     if (dataPrevista && dataPrevista < dataAtual) {
                       atraso = true;
+                    }
+                    if (dataPrevista && isSameDay(dataPrevista, dataAtual)) {
+                      isHoje = true;
                     }
 
                     // definição dos designers
@@ -443,13 +447,10 @@ const ImpressaoScreen = () => {
                             )}
                           </TableCell>
 
-
-                          <TableCell
-                            sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                            }}
-                            align='center'
-                          >
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                            backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)'
+                          }} align='center'>
                             {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
@@ -489,15 +490,10 @@ const ImpressaoScreen = () => {
                             </Button>
                           </TableCell>
 
-                          <TableCell
-                            sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
-                              backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
-                            }}
-                            align='center'
-                          >
-                            {tipo ?? 'null'}
-                          </TableCell>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black',
+                            backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
+                          }} align='center'>{tipo ?? 'null'}</TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
                           {/* <TableCell align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}

@@ -16,7 +16,7 @@ import {
   useTheme,
   CircularProgress,
 } from "@mui/material";
-import { ArteFinal, Pedido } from "./types";
+import { ArteFinal } from "./types";
 import { useRouter } from 'next/navigation';
 import useAprovarPedidoStatus from './useAprovarPedidoStatus';
 import { IconLink, IconTruckDelivery } from "@tabler/icons-react";
@@ -27,8 +27,6 @@ interface DialogExpProps {
   openDialogExp: boolean;
   onCloseDialogExp: () => void;
   row: ArteFinal | null;
-  loadingPedido: boolean;
-  selectedPedido: Pedido;
   refetch: () => void;
 }
 
@@ -36,8 +34,6 @@ const DialogExp: React.FC<DialogExpProps> = ({
   openDialogExp,
   onCloseDialogExp,
   row,
-  loadingPedido,
-  selectedPedido,
   refetch
 }) => {
   //handles consts e etc
@@ -48,9 +44,9 @@ const DialogExp: React.FC<DialogExpProps> = ({
   const [copiedRastreio, setCopiedRastreio] = useState(false);
   const [handleMakePedidoLoading, setIsLoadingMakePeido] = useState(false);
   const [showInput, setShowInput] = useState(false);
-  const [inputValueEntrega, setInputValueEntrega] = useState(selectedPedido?.codigo_rastreamento || '');
+  const [inputValueEntrega, setInputValueEntrega] = useState(row?.codigo_rastreamento || '');
 
-
+  console.log("row: " , row)
   const theme = useTheme()
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -59,7 +55,7 @@ const DialogExp: React.FC<DialogExpProps> = ({
 
   const handleSubmmitEntrega = (inputValueEntrega: string) => {
     fetch(
-      `${process.env.NEXT_PUBLIC_API}/api/pedidos/pedido-codigo-rastreamento/`, 
+      `${process.env.NEXT_PUBLIC_API}/api/pedidos/pedido-codigo-rastreamento/`, // Corrigir a URL e fazer rota no backend, 
       {
         method: 'PUT',
         headers: {
@@ -87,17 +83,17 @@ const DialogExp: React.FC<DialogExpProps> = ({
         console.error(error.message);
         alert(error.message);
       });
-    };
-    
-    const handleOpenRastreamentoInterno = (id: string | number | undefined) => {
-      const link = window.location.origin + '/apps/orcamento/backoffice/rastreamento-interno/' + id;
-      window.open(link, "_blank");
-    }
+  };
+
+  const handleOpenRastreamentoInterno = (id: string | number | undefined) => {
+    const link = window.location.origin + '/apps/producao/expedicao/rastreamento-interno/' + id;
+    window.open(link, "_blank");
+  }
 
   const handleOpenRastreamentoCliente = (id: string | number | undefined) => {
-    // window.location.href = '/apps/orcamento/rastreamento-cliente/' + id;
+    // window.location.href = '/apps/producao/expedicao-cliente/' + id;
 
-    const textToCopy = window.location.origin + "/apps/orcamento/backoffice/rastreamento-cliente/" + id;
+    const textToCopy = window.location.origin + "/apps/producao/expedicao/rastreamento-cliente/" + id;
 
     navigator.clipboard.writeText(textToCopy)
       .then(() => {
@@ -124,102 +120,94 @@ const DialogExp: React.FC<DialogExpProps> = ({
     // setHasRecebimento(true);
   }
 
-
   return (
     <Dialog open={openDialogExp} onClose={onCloseDialogExp}>
-      {loadingPedido ? (
+      <>
+        <DialogTitle>Pedido N° {row?.numero_pedido?.toString()}</DialogTitle>
         <DialogContent>
-          {/* Indicador de loading */}
-          <CircularProgress />
-        </DialogContent>
-      ) : (
-        <>
-          <DialogTitle>Pedido N° {row?.numero_pedido?.toString()}</DialogTitle>
-          <DialogContent>
-            <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
-              <DialogContentText>Página do rastreio</DialogContentText>
+          <Stack direction="column" spacing={2} justifyContent="center" sx={{ mt: 2 }}>
+            <DialogContentText>Página do rastreio</DialogContentText>
+            <Button
+              variant="contained"
+              color="info"
+              // disabled={!hasEntrega}
+              onClick={() => handleOpenRastreamentoInterno(row?.id ?? 0)}
+            >
+              Página do rastreio <IconTruckDelivery style={{ marginLeft: '5px' }} />
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              // disabled={!hasEntrega}
+              sx={{ color: theme.palette.text.primary }}
+              onClick={() => handleOpenRastreamentoCliente(row?.orcamento_id ?? 0)}
+            >
+              Link do rastreio <IconLink style={{ marginLeft: '5px' }} />
+            </Button>
+          </Stack>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={showInput}
+                onChange={(event) => setShowInput(event.target.checked)}
+              />
+            }
+            label="Adicionar Código de rastreio"
+          />
+          {showInput && (
+            <Stack spacing={2} sx={{ mt: 2 }}>
+              <TextField
+                label="Código de Rastreamento"
+                value={inputValueEntrega}
+                onChange={(event) => setInputValueEntrega(event.target.value)}
+              />
               <Button
                 variant="contained"
-                color="info"
-                // disabled={!hasEntrega}
-                onClick={() => handleOpenRastreamentoInterno(row?.orcamento_id ?? 0)}
+                color="primary"
+                disabled={hasEntrega}
+                onClick={() => handleSubmmitEntrega(inputValueEntrega)}
               >
-                Página do rastreio <IconTruckDelivery style={{ marginLeft: '5px' }} />
+                Enviar
+              </Button>
+            </Stack>
+          )}
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={showInputPeidosStatus}
+                onChange={(event) => setShowInputPedidosStatus(event.target.checked)}
+              />
+            }
+            label="Aprovar envio ou recebimento do pedido"
+          />
+          {showInputPeidosStatus && (
+            <Stack spacing={2} sx={{ mt: 2 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                disabled={row?.pedido_status_id == 14 || row?.pedido_status_id == 15}
+                onClick={() => handleAprovaEnvio(row?.id)}
+              >
+                Aprovar envio do pedido à transportadora
               </Button>
               <Button
                 variant="contained"
                 color="primary"
-                // disabled={!hasEntrega}
-                sx={{ color: theme.palette.text.primary }}
-                onClick={() => handleOpenRastreamentoCliente(row?.orcamento_id ?? 0)}
+                disabled={row?.pedido_status_id == 15}
+                onClick={() => handleAprovaRecebimento(row?.id)}
               >
-                Link do rastreio <IconLink style={{ marginLeft: '5px' }} />
+                Aprovar recebimento do pedido pelo cliente
               </Button>
             </Stack>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={showInput}
-                  onChange={(event) => setShowInput(event.target.checked)}
-                />
-              }
-              label="Adicionar Código de rastreio"
-            />
-            {showInput && (
-              <Stack spacing={2} sx={{ mt: 2 }}>
-                <TextField
-                  label="Código de Rastreamento"
-                  value={inputValueEntrega}
-                  onChange={(event) => setInputValueEntrega(event.target.value)}
-                />
-                <Button
-                  variant="contained"
-                  color="primary"
-                  disabled={hasEntrega}
-                  onClick={() => handleSubmmitEntrega(inputValueEntrega)}
-                >
-                  Enviar
-                </Button>
-              </Stack>
-            )}
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={showInputPeidosStatus}
-                  onChange={(event) => setShowInputPedidosStatus(event.target.checked)}
-                />
-              }
-              label="Aprovar envio ou recebimento do pedido"
-            />
-            {showInputPeidosStatus && (
-              <Stack spacing={2} sx={{ mt: 2 }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  disabled={row?.pedido_status_id == 14 || row?.pedido_status_id == 15}
-                  onClick={() => handleAprovaEnvio(row?.id)}
-                >
-                  Aprovar envio do pedido à transportadora
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  disabled={row?.pedido_status_id == 15}
-                  onClick={() => handleAprovaRecebimento(row?.id)}
-                >
-                  Aprovar recebimento do pedido pelo cliente
-                </Button>
-              </Stack>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={onCloseDialogExp} color="primary">
-              Fechar
-            </Button>
-          </DialogActions>
-        </>
-      )}
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onCloseDialogExp} color="primary">
+            Fechar
+          </Button>
+        </DialogActions>
+      </>
     </Dialog>
   )
 }

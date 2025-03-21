@@ -104,7 +104,6 @@ const useFetchPedidoOrcamento = (id: number | string) => {
         setPedido(json.pedido);
         setOrcamento(json.orcamento);
 
-
         const prazoDias = orcamento?.prazo_producao;
         const createdAtOrcamento = orcamento?.created_at ? new Date(orcamento.created_at) : null;
         const createdPedido = pedido?.created_at ? new Date(pedido.created_at) : null;

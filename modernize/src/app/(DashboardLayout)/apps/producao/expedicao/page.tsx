@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Pedido, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconNeedleThread } from '@tabler/icons-react';
+import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconNeedleThread, IconTruckDelivery } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -39,13 +39,15 @@ import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
 import { useThemeMode } from '@/utils/useThemeMode';
 import { IconDirectionSign } from '@tabler/icons-react';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import getBrazilTime from '@/utils/brazilTime';
+import DialogExp from './components/expedicaoDialog';
 
 const ExpediçãoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -54,12 +56,13 @@ const ExpediçãoScreen = () => {
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
+  const [selectedRowExp, setSelectedRowExp] = useState<ArteFinal | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
   const [loadingPedido, setLoadingPedido] = useState<boolean>(false);
-  const [openEntregaDialog, setOpenEntregaDialog] = useState(false);
+  const [openDialogExp, setOpenDialogExp] = useState(false);
   const [selectedOrcamento, setSelectedOrcamento] = useState<Pedido | null>(null);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 50,
@@ -201,36 +204,9 @@ const ExpediçãoScreen = () => {
 
 
   // coisas da entrega:
-
-  const handleFetchOrcamento = async (id: number | undefined) => {
-    try {
-      setLoadingPedido(true);
-      // trocar pra puxar um orcamento
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedidos/get-pedido-orcamento/${id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const data = await response.json();
-      setSelectedOrcamento(data);
-      setLoadingPedido(false);
-    } catch (error) {
-      console.error('Error fetching pedido:', error);
-    } finally {
-      setLoadingPedido(false); // Finaliza o loading
-    }
-  };
-
-  const handleOpenDialogEntrega = (id: number) => {
-    console.log('id passado no handle open : ', id)
-    handleFetchOrcamento(id);
-    setOpenEntregaDialog(true);
-  };
-
-  const handleCloseDialogEntrega = () => {
-    setOpenEntregaDialog(false);
+  const handleOpenDialogEntrega = (row: ArteFinal) => {
+    setSelectedRowExp(row);
+    setOpenDialogExp(true);
   };
 
   const BCrumb = [
@@ -371,13 +347,16 @@ const ExpediçãoScreen = () => {
                           : row.lista_produtos
                         : [];
 
-                      // tem que definir se as datas são maiores ou não e assim definir se vai ficar vermelho ou não
                       // definição das datas e atrasos
                       const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
-                      const dataAtual = new Date();
+                      const dataAtual = getBrazilTime(); //colocar no getBrazilTime
                       let atraso = false;
+                      let isHoje = false;
                       if (dataPrevista && dataPrevista < dataAtual) {
                         atraso = true;
+                      }
+                      if (dataPrevista && isSameDay(dataPrevista, dataAtual)) {
+                        isHoje = true;
                       }
 
                       // definição dos designers
@@ -401,7 +380,7 @@ const ExpediçãoScreen = () => {
                         5: 'Amostra',
                       } as const;
 
-                      
+
                       const pedidoStatusColors: Record<number, string> = {
                         22: 'rgba(220, 53, 69, 0.49)',
                         23: 'rgba(213, 121, 0, 0.8)',
@@ -448,12 +427,10 @@ const ExpediçãoScreen = () => {
                                 : 'N/A'}
                             </TableCell>
 
-                            <TableCell
-                              sx={{
-                                color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                              }}
-                              align='center'
-                            >
+                            <TableCell sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                              backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)'
+                            }} align='center'>
                               {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
                               {atraso && <span> (Atraso)</span>}
                             </TableCell>
@@ -493,15 +470,10 @@ const ExpediçãoScreen = () => {
                               </Button>
                             </TableCell>
 
-                            <TableCell
-                              sx={{
-                                color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
-                                backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
-                              }}
-                              align='center'
-                            >
-                              {tipo ?? 'null'}
-                            </TableCell>
+                            <TableCell sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black',
+                              backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
+                            }} align='center'>{tipo ?? 'null'}</TableCell>
 
                             {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
                             {/* <TableCell align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
@@ -559,6 +531,14 @@ const ExpediçãoScreen = () => {
                                   disabled={row.url_trello === null}
                                 >
                                   <IconBrandTrello />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
+                                <IconButton
+                                  onClick={() => handleOpenDialogEntrega(row)}
+                                  disabled={row.url_trello === null}
+                                >
+                                  <IconTruckDelivery />
                                 </IconButton>
                               </Tooltip>
                               {/* <Tooltip title="Enviar para Confecção!">
@@ -640,6 +620,7 @@ const ExpediçãoScreen = () => {
           }
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
           <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
+          <DialogExp openDialogExp={openDialogExp} onCloseDialogExp={() => setOpenDialogExp(false)} row={selectedRowExp} refetch={refetch} />
         </>
       </ParentCard >
     </PageContainer >

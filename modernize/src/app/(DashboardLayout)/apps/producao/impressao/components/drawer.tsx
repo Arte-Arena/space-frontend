@@ -107,7 +107,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
         handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id!);
       }, 2000);
     }
-    
+
   };
 
   return (
@@ -164,7 +164,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
             <Table size="small" aria-label="detalhes">
               <TableBody>
                 <TableRow>
-                  <TableCell sx={{ border: 'none' }} colSpan={4}>
+                  <TableCell sx={{ border: 'none' }} colSpan={6}>
                     <strong>Lista de Produtos</strong>
                     <TableHead>
                       <TableRow>
@@ -179,7 +179,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                           Material:
                         </TableCell>
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                          Medida Linear (metros):
+                          Medida Linear:
                         </TableCell>
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
                           Prazo Producao:
@@ -202,44 +202,8 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.material}
                             </TableCell>
-                            <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center', display: 'flex' }} colSpan={1}>
-                              <TextField
-                                key={produto.uid}
-                                type="number"
-                                size="small"
-                                variant="outlined"
-                                value={medidasLineares[String(produto.uid)] || produto.medida_linear}
-                                onBlur={(e: React.FocusEvent<HTMLInputElement & { value: string }>) => {
-                                  const novaMedidaLinear = Number(e.target.value);
-                                  handleMedidaLinearChange(produto, novaMedidaLinear);
-                                }}
-                                sx={{
-                                  minWidth: '50px',
-                                  '& input': {
-                                    fontSize: '14px',
-                                  },
-                                  '& input[type=number]': {
-                                    MozAppearance: 'textfield',
-                                    WebkitAppearance: 'textfield',
-                                  },
-                                  '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
-                                    WebkitAppearance: 'none',
-                                    margin: 0,
-                                  }
-                                }}
-                                InputProps={{
-                                  inputProps: {
-                                    min: 0,
-                                    step: 'any',
-                                  }
-                                }}
-                              />
-                              {/* <Button
-                                onClick={() => handleMedidaLinearChange(produto, produto.medida_linear || 0)}
-                                sx={{ ml: 1, padding: 0 }}
-                              >
-                                <IconCheck size={16}/>
-                              </Button> */}
+                            <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
+                              {produto.medida_linear} Metros
                             </TableCell>
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.prazo}
