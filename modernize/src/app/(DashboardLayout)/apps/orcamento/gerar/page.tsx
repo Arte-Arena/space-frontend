@@ -1422,7 +1422,7 @@ Orçamento válido somente hoje.
   };
 
   useEffect(() => {
-    if (clientId && productsList && cep && address && shippingOption && prazoProducao && prazoFrete) {
+    if (clientId && productsList && shippingOption && prazoProducao && prazoFrete) {
       salvarOrcamento();
     }
   }, [orçamentoTexto]);
