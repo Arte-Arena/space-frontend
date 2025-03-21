@@ -23,6 +23,7 @@ interface Orcamento {
   taxa_antecipa: string;
   total_orcamento: number;
   prazo_producao: number;
+  prev_entrega: string;
 }
 
 

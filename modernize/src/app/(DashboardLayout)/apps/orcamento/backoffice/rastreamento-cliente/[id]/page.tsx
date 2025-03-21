@@ -49,10 +49,13 @@ const RastreamentoClienteScreen = () => {
 
   const createdAtOrcamento = orcamento?.created_at ? new Date(orcamento.created_at) : null;
   const createdPedido = pedido?.created_at ? new Date(pedido.created_at) : null;
+  const previsaoEntrega = orcamento?.prev_entrega ? new Date(orcamento.prev_entrega) : null;
   const transportadora = orcamento?.opcao_entrega;
 
   const dateCreatedOrcamento = createdAtOrcamento ? format(createdAtOrcamento, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
   const dateCreatedPedido = createdPedido ? format(createdPedido, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
+  const datePrevisaoEntrega = previsaoEntrega ? format(previsaoEntrega, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
+
 
   const addBusinessDays = (date: Date | number | null, daysToAdd: number | undefined): Date | number | null => {
     if (!date) return null; // Se a data for nula, retorne null imediatamente
@@ -80,6 +83,32 @@ const RastreamentoClienteScreen = () => {
   const newDateTransportadora = prazoDias !== undefined ? addBusinessDays(createdPedido, prazoDias + 1) : null;
   const dataFormatadaTransportadora = newDateTransportadora ? format(newDateTransportadora, 'dd/MM/yyyy', { locale: ptBR }) : 'Data não disponível';
 
+
+  const hoje = new Date();
+  // const dataHojeFormatada = format(hoje, 'dd/MM/yyyy', { locale: ptBR });
+
+
+  // colocar o resto da logica de negocio.
+  if (createdAtOrcamento && createdPedido) {
+    const orcamentoEhMaiorQueHoje = isAfter(hoje, createdAtOrcamento) || isEqual(hoje, createdAtOrcamento);
+    const pedidoEhMaiorQueHoje = isAfter(hoje, createdPedido) || isEqual(hoje, createdPedido);
+
+
+    if (orcamentoEhMaiorQueHoje && !pedidoEhMaiorQueHoje) {
+      setActiveStepData(2);
+    }
+    if (pedidoEhMaiorQueHoje && !orcamentoEhMaiorQueHoje) {
+      setActiveStepData(3);
+    }
+  }
+
+  if(previsaoEntrega !== null){
+    const previsaoEhMaiorQueHoje = isAfter(hoje, previsaoEntrega) || isEqual(hoje, previsaoEntrega);
+    if(previsaoEhMaiorQueHoje){
+      setActiveStepData(4);
+    }
+  }
+
   console.log(orcamento?.lista_produtos);
   console.log(orcamento?.produtos_brinde);
 
@@ -89,7 +118,7 @@ const RastreamentoClienteScreen = () => {
     { label: "Pedido em Produção", icon: IconTruckLoading, date: dataFormatada },
     // proxima data tem que ser na api da transportadora
     { label: "Pedido na transportadora", icon: IconTruckDelivery, date: dataFormatadaTransportadora }, //dataFormatadaTransportadora
-    { label: "Pedido entregue", icon: IconHomeCheck, date: "" },
+    { label: "Pedido entregue", icon: IconHomeCheck, date: datePrevisaoEntrega },
   ];
 
   const stepsRetirada = [
@@ -97,7 +126,7 @@ const RastreamentoClienteScreen = () => {
     { label: "Pagamento confirmado", icon: IconCoinFilled, date: dateCreatedPedido },
     { label: "Pedido em Produção", icon: IconTruckLoading, date: dataFormatada },
     { label: "Pedido esperando retirada", icon: IconHome, date: dataFormatadaTransportadora }, //dataFormatadaTransportadora
-    { label: "Pedido entregue", icon: IconHomeCheck, date: "" },
+    { label: "Pedido entregue", icon: IconHomeCheck, date: datePrevisaoEntrega },
   ];
 
   const stepsRetiradaButton = [
