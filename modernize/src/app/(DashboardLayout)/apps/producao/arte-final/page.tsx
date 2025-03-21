@@ -52,6 +52,7 @@ import { IconCheck } from '@tabler/icons-react';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import getBrazilTime from '@/utils/brazilTime';
+import { DateTime } from 'luxon';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -293,6 +294,12 @@ const ArteFinalScreen = () => {
   return (
     <PageContainer title="Produção / Arte - Final" description="Tela de Produção da Arte - Final | Arte Arena">
       <Breadcrumb title="Produção / Arte - Final" items={BCrumb} />
+      <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2, }}>
+        <Typography sx={{ fontSize: '18px', fontWeight: '600' }}>
+          Total de {allPedidos.length} Pedidos
+          {/* {filteredPedidos.length} Filtrados */}
+        </Typography>
+      </Box>
       <ParentCard title="Arte - Final">
         <>
           <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
@@ -473,7 +480,7 @@ const ArteFinalScreen = () => {
                             }}
                             onClick={() => {
                               navigator.clipboard.writeText(String(row.numero_pedido));
-                              alert(`Número do pedido copiado: ${row.numero_pedido}`);
+                              // colocar um alert bunitinho de copiado
                             }}
                           >
                             {String(row.numero_pedido)}
@@ -494,11 +501,18 @@ const ArteFinalScreen = () => {
                               : 'N/A'}
                           </TableCell>
 
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
-                            backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)'
-                          }} align='center'>
-                            {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
+                          <TableCell
+                            sx={{
+                              color: myTheme === 'dark' ? 'white' : 'black',
+                              backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)',
+                            }}
+                            align="center"
+                          >
+                            {row?.data_prevista
+                              ? DateTime.fromISO(new Date(row.data_prevista).toISOString(), { zone: "utc" })
+                                .setZone("America/Sao_Paulo")
+                                .toFormat("dd/MM/yyyy")
+                              : "Data inválida"}
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 

@@ -95,6 +95,30 @@ const ImpressaoScreen = () => {
     }
   }, [dataPedidos]);
 
+  const totalMedidaLinearGlobal = Array.isArray(allPedidos)
+    ? allPedidos.reduce((totalPedido, row) => {
+      const listaProdutos: Produto[] = row.lista_produtos
+        ? typeof row.lista_produtos === "string"
+          ? JSON.parse(row.lista_produtos)
+          : row.lista_produtos
+        : [];
+
+      return totalPedido + listaProdutos.reduce((acc, produto) => acc + (produto.medida_linear ?? 0), 0);
+    }, 0)
+    : 0;
+
+  const totalPrazoProducao = Array.isArray(allPedidos)
+    ? allPedidos.reduce((totalPedido, row) => {
+      const listaProdutos: Produto[] = row.lista_produtos
+        ? typeof row.lista_produtos === "string"
+          ? JSON.parse(row.lista_produtos)
+          : row.lista_produtos
+        : [];
+
+      return totalPedido + listaProdutos.reduce((acc, produto) => acc + (produto.prazo ?? 0), 0);
+    }, 0)
+    : 0;
+
   // handles
   const handleLinkTrello = (row: ArteFinal) => {
     if (row.url_trello) {
@@ -224,6 +248,17 @@ const ImpressaoScreen = () => {
   return (
     <PageContainer title="Produção / Impressão" description="Tela de Produção da Impressão | Arte Arena">
       <Breadcrumb title="Produção / Impressão" items={BCrumb} />
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2, }}>
+        <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
+          <span style={{ fontWeight: 'bold' }}>Total Medida Linear:</span> {totalMedidaLinearGlobal} Metros
+        </Typography>
+        <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
+        <span style={{ fontWeight: 'bold' }}>Total De: </span> {allPedidos.length} Pedidos: 
+          {/* {filteredPedidos.length} Filtrados */}
+        </Typography>
+        {/* next step */}
+        {/* quantidade de pedidos por dia (mostrando a data) | quantidade de metros por dia  (mostrando a data) */}
+      </Box>
       <ParentCard title="Impressão">
         <>
           <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
