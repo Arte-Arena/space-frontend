@@ -253,7 +253,6 @@ const ConfeccaoScreen = () => {
                   <TableRow>
                     <TableCell align="center"><strong>Data Entrega</strong></TableCell>
                     <TableCell align="center"><strong>Quantidade de Pedidos</strong></TableCell>
-                    <TableCell align="center"><strong>Medida Linear Total</strong></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -268,7 +267,6 @@ const ConfeccaoScreen = () => {
                       <TableRow key={data}>
                         <TableCell align="center">{dataFormatada}</TableCell>
                         <TableCell align="center">{quantidade_pedidos}</TableCell>
-                        <TableCell align="center">{total_medida_linear}</TableCell>
                       </TableRow>
                     );
                   })}
