@@ -129,12 +129,19 @@ const ArteFinalScreen = () => {
   };
 
   const handleDelete = async (row: ArteFinal) => {
-    const sucesso = await deletePedidoArteFinal(row?.id, refetch);
-    if (sucesso) {
-      console.log("Pedido deletado com sucesso!");
-      alert('sucesso');
+    const confirmar = window.confirm('Deseja excluir o pedido N° ' + row.numero_pedido);
+    if (confirmar) {
+      const sucesso = await deletePedidoArteFinal(row?.id, refetch);
+      if (sucesso) {
+        console.log("Pedido deletado com sucesso!");
+        alert('sucesso');
+      } else {
+        alert('Falha ao excluir pedido.');
+        console.log("Falha ao excluir pedido.");
+      }
     } else {
-      console.log("Falha ao excluir pedido.");
+      console.log("Envio cancelado.");
+      alert('Envio cancelado.');
     }
   };
 
