@@ -69,7 +69,7 @@ const ArteFinalScreen = () => {
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    pageSize: 50,
+    pageSize: 100,
     page: 0,
   });
 
@@ -764,7 +764,7 @@ const ArteFinalScreen = () => {
 
               </Table >
               <TablePagination
-                rowsPerPageOptions={[15, 25, 50]}
+                rowsPerPageOptions={[15, 25, 50, 100, 200]}
                 component="div"
                 count={filteredPedidos.length || 0}
                 rowsPerPage={paginationModel.pageSize}
