@@ -47,6 +47,8 @@ import { IconDirectionSign } from '@tabler/icons-react';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import getBrazilTime from '@/utils/brazilTime';
+import useFetchPedidoPorData from './components/useGetPedidoPorData';
+import { DateTime } from 'luxon';
 
 const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -60,6 +62,7 @@ const ImpressaoScreen = () => {
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
+  const [open, setOpen] = useState(false);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 50,
     page: 0,
@@ -89,6 +92,10 @@ const ImpressaoScreen = () => {
       }).then((res) => res.json()),
   });
 
+  const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("I");
+  console.log(errorPedido);
+  console.log(porDia);
+
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) { // Verificação adicional
       setAllPedidos(dataPedidos.data);
@@ -104,18 +111,6 @@ const ImpressaoScreen = () => {
         : [];
 
       return totalPedido + listaProdutos.reduce((acc, produto) => acc + (produto.medida_linear ?? 0), 0);
-    }, 0)
-    : 0;
-
-  const totalPrazoProducao = Array.isArray(allPedidos)
-    ? allPedidos.reduce((totalPedido, row) => {
-      const listaProdutos: Produto[] = row.lista_produtos
-        ? typeof row.lista_produtos === "string"
-          ? JSON.parse(row.lista_produtos)
-          : row.lista_produtos
-        : [];
-
-      return totalPedido + listaProdutos.reduce((acc, produto) => acc + (produto.prazo ?? 0), 0);
     }, 0)
     : 0;
 
@@ -187,6 +182,10 @@ const ImpressaoScreen = () => {
     setDateFilter((prev) => ({ ...prev, [field]: newValue }));
   }
 
+  const handleToggle = () => {
+    setOpen(!open);
+  };
+
   const pedidoStatus = {
     8: { nome: 'Pendente', fila: 'I' },
     9: { nome: 'Processando', fila: 'I' },
@@ -253,11 +252,48 @@ const ImpressaoScreen = () => {
           <span style={{ fontWeight: 'bold' }}>Total Medida Linear:</span> {totalMedidaLinearGlobal} Metros
         </Typography>
         <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
-        <span style={{ fontWeight: 'bold' }}>Total De: </span> {allPedidos.length} Pedidos: 
+          <span style={{ fontWeight: 'bold' }}>Total De: </span> {allPedidos.length} Pedidos:
           {/* {filteredPedidos.length} Filtrados */}
         </Typography>
-        {/* next step */}
         {/* quantidade de pedidos por dia (mostrando a data) | quantidade de metros por dia  (mostrando a data) */}
+        <Typography variant="body1" sx={{ fontWeight: 500, alignItems: 'center' }}>
+          <span style={{ fontWeight: 'bold', fontSize: 16 }}>Por Dia: </span>
+          <Button onClick={handleToggle} variant="outlined" size='small' sx={{ mb: 0, padding: 1, height: '16px', width: "auto"}}>
+            {open ? "Ocultar Pedidos" : "Mostrar Pedidos"}
+          </Button>
+        </Typography>
+
+        <Collapse in={open}>
+          <TableContainer component={Paper} sx={{ maxWidth: 600, margin: 'auto', mt: 4, boxShadow: 3 }}>
+            <Typography variant="h6" align="center" sx={{ mt: 2 }}>📅 Pedidos por Data</Typography>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell align="center"><strong>Data Entrega</strong></TableCell>
+                  <TableCell align="center"><strong>Quantidade de Pedidos</strong></TableCell>
+                  <TableCell align="center"><strong>Medida Linear Total</strong></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {porDia && Object.entries(porDia.dados_por_data).map(([data, valores]) => {
+                  const { quantidade_pedidos, total_medida_linear } = valores as { quantidade_pedidos: number; total_medida_linear: number };
+
+                  // Formata a data para "DD/MM/YYYY"
+                  const dataObjeto = DateTime.fromFormat(data, "yyyy-MM-dd HH:mm:ss");
+                  const dataFormatada = dataObjeto.toFormat("dd/MM/yyyy");
+
+                  return (
+                    <TableRow key={data}>
+                      <TableCell align="center">{dataFormatada}</TableCell>
+                      <TableCell align="center">{quantidade_pedidos}</TableCell>
+                      <TableCell align="center">{total_medida_linear}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Collapse>
       </Box>
       <ParentCard title="Impressão">
         <>
