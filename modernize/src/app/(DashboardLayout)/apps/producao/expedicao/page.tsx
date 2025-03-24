@@ -618,7 +618,7 @@ const ExpediçãoScreen = () => {
               </TableContainer>
             )
           }
-          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
+          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
           <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
           <DialogExp openDialogExp={openDialogExp} onCloseDialogExp={() => setOpenDialogExp(false)} row={selectedRowExp} refetch={refetch} />
         </>
