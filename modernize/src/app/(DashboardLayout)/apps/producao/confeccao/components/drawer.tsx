@@ -11,7 +11,6 @@ interface SidePanelProps {
   onCloseDrawer: () => void;
 }
 
-
 const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer }) => {
   // console.log('ROW DRAWER: ', row);
   const designers = localStorage.getItem('designers');

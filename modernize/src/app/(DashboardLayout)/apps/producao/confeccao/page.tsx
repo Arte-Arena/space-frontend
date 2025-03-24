@@ -228,7 +228,7 @@ const ConfeccaoScreen = () => {
         <Breadcrumb title="Produção / Confecção" items={BCrumb} />
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2, }}>
           <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
-            <span style={{ fontWeight: 'bold' }}>Total Medida Linear:</span> 
+            {/* <span style={{ fontWeight: 'bold' }}> TOTAL DE LOREM IPSUM </span>  */}
           </Typography>
           {/* quantidade total de pedidos | quantidade de pedidos por dia (mostrando a data) */}
         </Box>
