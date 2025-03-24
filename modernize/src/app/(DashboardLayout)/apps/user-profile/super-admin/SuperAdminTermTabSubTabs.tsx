@@ -16,11 +16,35 @@ const SuperAdminTermTabSubTabs = () => {
     setDiasMenos(value);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     console.log(`Reduzindo ${diasMenos} dias das datas de produção.`);
     // Aqui você pode fazer uma chamada à API ou atualizar o estado global.
+    // url: /super-admin/update-dias-antecipa
+    try {
 
-    
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) throw new Error("Usuário não autenticado.");
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API}/api/super-admin/update-dias-antecipa`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            dias: diasMenos
+          }),
+        }
+      );
+
+      // if (res) console.log(res);
+      console.log('sucesso!')
+
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -39,12 +63,12 @@ const SuperAdminTermTabSubTabs = () => {
           Ajustar Redução de Dias na Produção
         </Typography>
 
-        <Typography variant="subtitle2" sx={{ color: 'text.secondary', textAlign: 'center', mb:0 }}>
+        <Typography variant="subtitle2" sx={{ color: 'text.secondary', textAlign: 'center', mb: 0 }}>
           Apenas para as telas de
         </Typography>
 
-        <Typography variant="subtitle2" sx={{ color: 'text.secondary', textAlign: 'center', mb:4, fontWeight: 'bold' }}>
-          Arte-Final | Impressão | Confecção 
+        <Typography variant="subtitle2" sx={{ color: 'text.secondary', textAlign: 'center', mb: 4, fontWeight: 'bold' }}>
+          Arte-Final | Impressão | Confecção
         </Typography>
 
 
