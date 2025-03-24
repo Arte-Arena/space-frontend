@@ -17,6 +17,7 @@ interface SidePanelProps {
 
 const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, refetch }) => {
   const designers = localStorage.getItem('designers');
+  const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
   const theme = useThemeMode();
 
   const listaProdutos: Produto[] = row?.lista_produtos
@@ -25,10 +26,23 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
       : row?.lista_produtos
     : [];
 
-  const [produtos, setProdutos] = useState<Produto[]>(listaProdutos); // Estado corrigido para array de produtos
+  const [medidasLineares, setMedidasLineares] = useState<Record<string, number>>({});
+  const [produtos, setProdutos] = useState<Produto[]>(listaProdutos);
+  const [digitando, setDigitando] = useState(false);
+  const DesignerRoles = [6, 7];
+  const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));
+
 
   useEffect(() => {
     setProdutos(listaProdutos);
+    // Inicializa o estado das medidas lineares com os valores dos produtos
+    const medidasIniciais: Record<string, number> = {};
+    listaProdutos.forEach((produto) => {
+      if (produto.uid && produto.medida_linear !== undefined) {
+        medidasIniciais[String(produto.uid)] = produto.medida_linear;
+      }
+    });
+    setMedidasLineares(medidasIniciais);
   }, [row]);
 
   const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
@@ -78,9 +92,33 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
   const status = pedidoStatus[row?.pedido_status_id as keyof typeof pedidoStatus] || { nome: "Desconhecido", fila: "N/A" };
   const tipo = row?.pedido_tipo_id && pedidoTipos[row?.pedido_tipo_id as keyof typeof pedidoTipos];
 
-  const totalMedidaLinear = listaProdutos.reduce((total, produto) => {
-    return total + (produto.medida_linear || 0);
-  }, 0);
+  const handletrocarMedidaLinear = async (uid: number | null, medidasLineares: Record<string, number>, id: number) => {
+    try {
+      const response = await trocarMedidaLinear(id, uid, medidasLineares, refetch);
+      if (response) {
+        console.log("Medida linear atualizada com sucesso!");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar medida linear:", error);
+    }
+  };
+
+  const handleMedidaLinearChange = (produto: Produto, novaMedidaLinear: number) => {
+    // Atualiza o estado das medidas lineares
+    setMedidasLineares((prevState) => ({
+      ...prevState,
+      [String(produto.uid)]: novaMedidaLinear,
+    }));
+
+    // Atualiza o estado dos produtos
+    setProdutos((prevProdutos) =>
+      prevProdutos.map((p) =>
+        p.uid === produto.uid ? { ...p, medida_linear: novaMedidaLinear } : p
+      )
+    );
+
+
+  };
 
   return (
     <Drawer
@@ -136,7 +174,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
             <Table size="small" aria-label="detalhes">
               <TableBody>
                 <TableRow>
-                  <TableCell sx={{ border: 'none' }} colSpan={6}>
+                  <TableCell sx={{ border: 'none' }} colSpan={4}>
                     <strong>Lista de Produtos</strong>
                     <TableHead>
                       <TableRow>
@@ -151,7 +189,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                           Material:
                         </TableCell>
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                          Medida Linear:
+                          Medida linear:
                         </TableCell>
                         <TableCell component="th" scope="row" sx={{ fontSize: '12px', fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
                           Prazo Producao:
@@ -174,13 +212,67 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.material}
                             </TableCell>
-                            <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
-                              {produto.medida_linear && (
-                                <>
-                                  {produto.medida_linear}
-                                </>
-                              )}
-                            </TableCell>
+                            {canShowButtonDesigner ? (
+                              <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center', display: 'flex' }} colSpan={1}>
+                                <TextField
+                                  key={produto.uid}
+                                  type="number"
+                                  size="small"
+                                  variant="outlined"
+                                  value={medidasLineares[String(produto.uid)] || produto.medida_linear}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const novaMedidaLinear = Number(e.target.value);
+                                    handleMedidaLinearChange(produto, novaMedidaLinear);
+                                  }}
+                                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault(); // Evita comportamento padrão do Enter em formulários
+                                      const inputElement = e.target as HTMLInputElement;
+                                      const novaMedidaLinear = Number(inputElement.value);
+                                      handleMedidaLinearChange(produto, novaMedidaLinear);
+                                      if (row?.id !== undefined) {
+                                        handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id);
+                                      }
+                                    }
+                                  }}
+                                  sx={{
+                                    minWidth: '50px',
+                                    '& input': {
+                                      fontSize: '14px',
+                                    },
+                                    '& input[type=number]': {
+                                      MozAppearance: 'textfield',
+                                      WebkitAppearance: 'textfield',
+                                    },
+                                    '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
+                                      WebkitAppearance: 'none',
+                                      margin: 0,
+                                    }
+                                  }}
+                                  InputProps={{
+                                    inputProps: {
+                                      min: 0,
+                                      step: 'any',
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  onClick={() => {
+                                    if (row?.id !== undefined) {
+                                      handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id);
+                                    }
+                                  }}
+                                  sx={{ ml: 1, padding: 0 }}
+                                >
+                                  <IconCheck size={16} />
+                                </Button>
+                              </TableCell>
+                            ) : (
+                              <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                {produto.medida_linear}
+                              </TableCell>
+                            )}
+
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.prazo}
                             </TableCell>
@@ -189,20 +281,6 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                       ) : (
                         <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
                       )}
-
-                      {totalMedidaLinear && (
-                        <Box
-                          sx={{
-                            alignItems: 'start',
-                            pt: 2
-                          }}
-                        >
-                          <Typography sx={{ fontWeight: 700, fontSize: 15 }}>
-                            Total das Medidas Lineares {totalMedidaLinear}
-                          </Typography>
-                        </Box>
-                      )}
-                      {/* total de medida linear */}
                     </TableBody>
                   </TableCell>
                 </TableRow>

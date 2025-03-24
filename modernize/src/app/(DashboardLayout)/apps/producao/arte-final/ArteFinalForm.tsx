@@ -52,8 +52,8 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
     rolo: "",
     url_trello: "",
     designer_id: 0,
-    pedido_status_id: 0,
-    pedido_tipo_id: 0,
+    pedido_status_id: 1,
+    pedido_tipo_id: 1,
     vendedor_id: 0,
     created_at: new Date(),
     updated_at: new Date(),
@@ -430,9 +430,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
   };
 
   return (
-
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4 border rounded-lg shadow-md">
-
       <Box sx={{ mt: 5 }}>
         <CustomTextField
           label="Número do Pedido"
@@ -759,7 +757,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
         />
       </Box>
 
-      <FormControl sx={{ mt: 5, width: '100%' }}>
+      {/* <FormControl sx={{ mt: 5, width: '100%' }}>
         <InputLabel id="designer_pedido">Designer</InputLabel>
         <CustomSelect
           label="Designer"
@@ -791,7 +789,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
             </MenuItem>
           ))}
         </CustomSelect>
-      </FormControl>
+      </FormControl> */}
 
       <FormControl sx={{ mt: 5, width: '100%' }}>
         <InputLabel>Tipo de Pedido</InputLabel>
