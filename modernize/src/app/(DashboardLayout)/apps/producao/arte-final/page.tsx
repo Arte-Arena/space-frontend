@@ -80,8 +80,10 @@ const ArteFinalScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
-  const allowedRoles = [1, 2, 3, 4, 7]; // colocar backoffice
-  const DesignerRoles = [6, 7];
+  const allowedRoles = [1, 2, 4, 7]; // colocar backoffice
+  const DesignerRoles = [6];
+  const DesignerCoordanateRole = [7];
+  const canShowButtonAtribuirDesigner = roles.some(role => DesignerCoordanateRole.includes(role));
   const canShowButton = roles.some(role => allowedRoles.includes(role));
   const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));
 
@@ -535,7 +537,6 @@ const ArteFinalScreen = () => {
                           ) : (
                             <TableCell align="center">
                               {canShowButtonDesigner ? (
-
                                 <Button
                                   sx={{
                                     backgroundColor: 'transparent',
@@ -674,15 +675,19 @@ const ArteFinalScreen = () => {
                                 <IconPrinter />
                               </IconButton>
                             </Tooltip>
-                            {/* validar a role do user 3,4,1*/}
 
+                            {/* validar a role do user 6*/}
+                            {canShowButtonAtribuirDesigner && (
+                              <Tooltip title="Atribuir Designer">
+                                <IconButton onClick={() => handleAtribuirDesigner(row)}>
+                                  <IconBrush />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+
+                            {/* validar a role do user 2,4,1*/}
                             {canShowButton && (
                               <>
-                                <Tooltip title="Atribuir Designer">
-                                  <IconButton onClick={() => handleAtribuirDesigner(row)}>
-                                    <IconBrush />
-                                  </IconButton>
-                                </Tooltip>
                                 <Tooltip title="Editar">
                                   <IconButton onClick={() => handleEdit(row)}>
                                     <IconEdit />
