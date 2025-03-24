@@ -65,7 +65,7 @@ const ExpediçãoScreen = () => {
   const [openDialogExp, setOpenDialogExp] = useState(false);
   const [selectedOrcamento, setSelectedOrcamento] = useState<Pedido | null>(null);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    pageSize: 50,
+    pageSize: 100,
     page: 0,
   });
 
@@ -607,7 +607,7 @@ const ExpediçãoScreen = () => {
 
                 </Table>
                 <TablePagination
-                  rowsPerPageOptions={[15, 25, 50]}
+                  rowsPerPageOptions={[15, 25, 50, 100, 200]}
                   component="div"
                   count={filteredPedidos.length || 0}
                   rowsPerPage={paginationModel.pageSize}

@@ -64,7 +64,7 @@ const ImpressaoScreen = () => {
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
   const [open, setOpen] = useState(false);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    pageSize: 50,
+    pageSize: 100,
     page: 0,
   });
 
@@ -690,7 +690,7 @@ const ImpressaoScreen = () => {
 
               </Table>
               <TablePagination
-                rowsPerPageOptions={[15, 25, 50]}
+                rowsPerPageOptions={[15, 25, 50, 100, 200]}
                 component="div"
                 count={filteredPedidos.length || 0}
                 rowsPerPage={paginationModel.pageSize}

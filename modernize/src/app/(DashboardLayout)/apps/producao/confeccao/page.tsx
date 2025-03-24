@@ -64,7 +64,7 @@ const ConfeccaoScreen = () => {
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
   const [open, setOpen] = useState(false);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    pageSize: 50,
+    pageSize: 100,
     page: 0,
   });
 
