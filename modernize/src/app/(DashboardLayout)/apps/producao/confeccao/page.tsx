@@ -97,17 +97,6 @@ const ConfeccaoScreen = () => {
 
   // console.log(allPedidos);
   // total de medidas
-  const totalMedidaLinearGlobal = Array.isArray(allPedidos)
-    ? allPedidos.reduce((totalPedido, row) => {
-      const listaProdutos: Produto[] = row.lista_produtos
-        ? typeof row.lista_produtos === "string"
-          ? JSON.parse(row.lista_produtos)
-          : row.lista_produtos
-        : [];
-
-      return totalPedido + listaProdutos.reduce((acc, produto) => acc + (produto.medida_linear ?? 0), 0);
-    }, 0)
-    : 0;
 
   // handles
   const handleLinkTrello = (row: ArteFinal) => {
@@ -239,7 +228,7 @@ const ConfeccaoScreen = () => {
         <Breadcrumb title="Produção / Confecção" items={BCrumb} />
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2, }}>
           <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
-            <span style={{ fontWeight: 'bold' }}>Total Medida Linear:</span> {totalMedidaLinearGlobal} Metros
+            <span style={{ fontWeight: 'bold' }}>Total Medida Linear:</span> 
           </Typography>
           {/* quantidade total de pedidos | quantidade de pedidos por dia (mostrando a data) */}
         </Box>
