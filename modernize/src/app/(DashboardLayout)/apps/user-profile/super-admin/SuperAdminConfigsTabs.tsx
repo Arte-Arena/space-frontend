@@ -14,11 +14,11 @@ import SuperAdminCostsTab from "./SuperAdminCostsTab";
 import SuperAdminBackupTab from "./SuperAdminBackupTab";
 
 const SUPERADMIN_TAB = [
-  { value: "1", icon: <IconUser width={20} height={20} />, label: "Gerenciar Usuários" },
-  { value: "2", icon: <IconShieldHalfFilled width={20} height={20} />, label: "Gerenciar Permissões" },
+  { value: "1", icon: <IconUser width={20} height={20} />, label: "Usuários" },
+  { value: "2", icon: <IconShieldHalfFilled width={20} height={20} />, label: "Permissões" },
   { value: "3", icon: <IconCoins width={20} height={20} />, label: "Custos" },
   { value: "4", icon: <IconBrandDaysCounter width={20} height={20} />, label: "Prazos" },
-  { value: "4", icon: <IconDatabaseExport width={20} height={20} />, label: "Monitorar Backups" },
+  { value: "4", icon: <IconDatabaseExport width={20} height={20} />, label: "Backups" },
 ];
 
 const SuperAdminConfigsTabs = () => {
