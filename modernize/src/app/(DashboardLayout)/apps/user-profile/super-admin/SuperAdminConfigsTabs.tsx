@@ -12,13 +12,14 @@ import SuperAdminUsersTab from "./SuperAdminUsersTab";
 import SuperAdminPermissionsTab from "./SuperAdminPermissionsTab";
 import SuperAdminCostsTab from "./SuperAdminCostsTab";
 import SuperAdminBackupTab from "./SuperAdminBackupTab";
+import SuperAdminTermTab from "./SuperAdminTermTab";
 
 const SUPERADMIN_TAB = [
   { value: "1", icon: <IconUser width={20} height={20} />, label: "Usuários" },
   { value: "2", icon: <IconShieldHalfFilled width={20} height={20} />, label: "Permissões" },
   { value: "3", icon: <IconCoins width={20} height={20} />, label: "Custos" },
   { value: "4", icon: <IconBrandDaysCounter width={20} height={20} />, label: "Prazos" },
-  { value: "4", icon: <IconDatabaseExport width={20} height={20} />, label: "Backups" },
+  { value: "5", icon: <IconDatabaseExport width={20} height={20} />, label: "Backups" },
 ];
 
 const SuperAdminConfigsTabs = () => {
@@ -58,7 +59,8 @@ const SuperAdminConfigsTabs = () => {
                   {panel.value === "1" && <div><SuperAdminUsersTab /></div>}
                   {panel.value === "2" && <div><SuperAdminPermissionsTab /></div>}
                   {panel.value === "3" && <div><SuperAdminCostsTab /></div>}
-                  {panel.value === "4" && <div><SuperAdminBackupTab /></div>}
+                  {panel.value === "4" && <div><SuperAdminTermTab /></div>}
+                  {panel.value === "5" && <div><SuperAdminBackupTab /></div>}
                 </div>
               </TabPanel>
             ))}
