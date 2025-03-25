@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from "react";
-import { Drawer, Box, Typography, IconButton, Card, CardContent, Divider, Table, TableBody, TableRow, TableCell, TableHead, TextField, Button } from "@mui/material";
+import { Drawer, Box, Typography, IconButton, Card, CardContent, Divider, Table, TableBody, TableRow, TableCell, TableHead, TextField, Button, Snackbar, Alert, AlertProps } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { ArteFinal, Produto } from "./types";
 import { format } from "date-fns";
@@ -27,7 +27,15 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
 
   const [medidasLineares, setMedidasLineares] = useState<Record<string, number>>({});
   const [produtos, setProdutos] = useState<Produto[]>(listaProdutos);
-  const [digitando, setDigitando] = useState(false);
+  const [snackbar, setSnackbar] = React.useState<{
+    open: boolean;
+    message: string;
+    severity: AlertProps['severity'];
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   useEffect(() => {
     setProdutos(listaProdutos);
@@ -88,32 +96,49 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
   const status = pedidoStatus[row?.pedido_status_id as keyof typeof pedidoStatus] || { nome: "Desconhecido", fila: "N/A" };
   const tipo = row?.pedido_tipo_id && pedidoTipos[row?.pedido_tipo_id as keyof typeof pedidoTipos];
 
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+
   const handletrocarMedidaLinear = async (uid: number | null, medidasLineares: Record<string, number>, id: number) => {
     try {
       const response = await trocarMedidaLinear(id, uid, medidasLineares, refetch);
       if (response) {
         console.log("Medida linear atualizada com sucesso!");
+        setSnackbar({
+          open: true,
+          message: '✅ Medida Linear atualizada com sucesso!',
+          severity: 'success'
+        });
       }
     } catch (error) {
       console.error("Erro ao atualizar medida linear:", error);
+      setSnackbar({
+        open: true,
+        message: `❌ ${error instanceof Error ? error.message : 'Ocorreu um erro inesperado'}`,
+        severity: 'error'
+      });
     }
   };
 
   const handleMedidaLinearChange = (produto: Produto, novaMedidaLinear: number) => {
+    // Garante que o produto tenha um UID válido
+    const produtoAtualizado = { ...produto, uid: produto.uid ?? produto.id };
+  
     // Atualiza o estado das medidas lineares
     setMedidasLineares((prevState) => ({
       ...prevState,
-      [String(produto.uid)]: novaMedidaLinear,
+      [String(produtoAtualizado.uid)]: novaMedidaLinear,
     }));
-
+  
     // Atualiza o estado dos produtos
     setProdutos((prevProdutos) =>
       prevProdutos.map((p) =>
-        p.uid === produto.uid ? { ...p, medida_linear: novaMedidaLinear } : p
+        p.uid === produtoAtualizado.uid ? { ...p, medida_linear: novaMedidaLinear } : p
       )
     );
-
-
   };
 
   return (
@@ -226,7 +251,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                                     const novaMedidaLinear = Number(inputElement.value);
                                     handleMedidaLinearChange(produto, novaMedidaLinear);
                                     if (row?.id !== undefined) {
-                                      handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id);
+                                      handletrocarMedidaLinear(produto.uid ?? produto.id, medidasLineares, row.id);
                                     }
                                   }
                                 }}
@@ -255,7 +280,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                               <Button
                                 onClick={() => {
                                   if (row?.id !== undefined) {
-                                    handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id);
+                                    handletrocarMedidaLinear(produto.uid ?? produto.id, medidasLineares, row.id);
                                   }
                                 }}
                                 sx={{ ml: 1, padding: 0 }}
@@ -320,6 +345,44 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
           </CardContent>
         </Card>
       </Box>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        sx={{
+          '& .MuiPaper-root': {
+            borderRadius: '12px',
+            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.15)',
+            backdropFilter: 'blur(4px)',
+            backgroundColor: snackbar.severity === 'success'
+              ? 'rgba(46, 125, 50, 0.9)'
+              : 'rgba(211, 47, 47, 0.9)'
+          }
+        }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          variant="filled"
+          icon={false}
+          sx={{
+            width: '100%',
+            alignItems: 'center',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            color: 'common.white',
+            '& .MuiAlert-message': {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Drawer >
   );
 };
