@@ -109,7 +109,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
         console.log("Medida linear atualizada com sucesso!");
         setSnackbar({
           open: true,
-          message: '✅ Dias de antecipação atualizados com sucesso!',
+          message: '✅ Medida Linear atualizada com sucesso!',
           severity: 'success'
         });
       }

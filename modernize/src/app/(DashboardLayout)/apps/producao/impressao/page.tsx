@@ -258,7 +258,7 @@ const ImpressaoScreen = () => {
         {/* quantidade de pedidos por dia (mostrando a data) | quantidade de metros por dia  (mostrando a data) */}
         <Typography variant="body1" sx={{ fontWeight: 500, alignItems: 'center' }}>
           <span style={{ fontWeight: 'bold', fontSize: 16 }}>Por Dia: </span>
-          <Button onClick={handleToggle} variant="outlined" size='small' sx={{ mb: 0, padding: 1, height: '16px', width: "auto"}}>
+          <Button onClick={handleToggle} variant="outlined" size='small' sx={{ mb: 0, padding: 1, height: '16px', width: "auto" }}>
             {open ? "Ocultar Pedidos" : "Mostrar Pedidos"}
           </Button>
         </Typography>
@@ -396,7 +396,7 @@ const ImpressaoScreen = () => {
                     <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Tipo</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Status</TableCell>
-                    <TableCell align='center' sx={{ width: '20%' }}>Ações</TableCell>
+                    <TableCell align='center' sx={{ width: '25%' }}>Ações</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -532,39 +532,50 @@ const ImpressaoScreen = () => {
                             }}
                             align='center'
                           >
-                            {designerNome ?? 'Não Atribuido'}</TableCell>
+                            {designerNome ?? 'Não Atribuido'}
+                          </TableCell>
+
                           <TableCell
                             sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                              color: myTheme === 'dark' ? 'white' : 'black'
                             }}
                             align="center"
                           >
-                            <Button
-                              sx={{
-                                background: 'transparent',
-                                color: myTheme === 'dark' ? 'white' : 'black',
-                                borderRadius: '4px',
-                                border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
-                                fontSize: '12px',
-                                whiteSpace: 'nowrap', // Impede que o texto quebre em várias linhas
-                                overflow: 'hidden', // Esconde o texto que ultrapassa o limite do botão
-                                textOverflow: 'ellipsis', // Adiciona "..." ao texto que não cabe
-                                maxWidth: '150px', // Define uma largura máxima para o botão
-                                '&:hover': {
-                                  backgroundColor: 'rgba(13, 12, 12, 0.1)', // Cor neutra ao passar o mouse
-                                  color: theme.palette.text.secondary, // Cor do texto ao passar o mouse
-                                }
-                              }}
-                              onClick={() => handleClickOpenDialogObs(row)}
-                            >
-                              {row.observacoes ?? "Adicionar Observação"}
-                            </Button>
+                            <Tooltip title={row.observacoes ?? "Adicionar Observações"} placement='top'>
+                              <Button
+                                sx={{
+                                  background: 'transparent',
+                                  color: myTheme === 'dark' ? 'white' : 'black',
+                                  borderRadius: '4px',
+                                  border: row.observacoes
+                                    ? 'none'
+                                    : (myTheme === 'dark' ? '1px solid white' : '1px solid black'),
+                                  fontSize: '12px',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  maxWidth: '150px',
+                                  display: 'flex', // Torna o botão um flex container
+                                  justifyContent: row.observacoes ? 'flex-start' : 'center', // Alinha o conteúdo à esquerda se tiver observação, senão centraliza
+                                  alignItems: 'center', // Centraliza verticalmente
+                                  textTransform: 'none', // Mantém o texto sem transformação (evita tudo maiúsculo)
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(13, 12, 12, 0.1)',
+                                    color: theme.palette.text.secondary,
+                                  }
+                                }}
+                                onClick={() => handleClickOpenDialogObs(row)}
+                              >
+                                {row.observacoes ?? "Adicionar Observação"}
+                              </Button>
+                            </Tooltip>
                           </TableCell>
+
 
                           <TableCell sx={{
                             color: myTheme === 'dark' ? 'white' : 'black',
                             backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
-                          }} align='center'>{tipo ?? 'null'}</TableCell>
+                          }} align='center'>{tipo ?? '-'}</TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
                           {/* <TableCell align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
@@ -631,58 +642,6 @@ const ImpressaoScreen = () => {
                             </Tooltip>
                           </TableCell>
                         </TableRow>
-
-                        <TableRow>
-                          {/* colSpan deve ter o mesmo número que o número de cabeçalhos da tabela, no caso 16 */}
-                          <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
-                            <Collapse in={openRow[row.id ?? 0]} timeout="auto" unmountOnExit>
-                              <Box margin={1}>
-                                <Table size="small" aria-label="detalhes">
-                                  <TableBody>
-                                    <TableRow>
-                                      <TableCell sx={{ border: 'none' }} colSpan={16}>
-                                        <strong>Lista de Produtos</strong>
-                                        <TableHead>
-                                          <TableRow>
-                                            <TableCell></TableCell>
-                                            <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                              Tipo:
-                                            </TableCell>
-                                            <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                              Material:
-                                            </TableCell>
-                                            <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                              Medida linear:
-                                            </TableCell>
-                                          </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                          {listaProdutos.length > 0 ? (
-                                            listaProdutos.map((produto: Produto, index: number) => (
-                                              <TableRow key={produto.id || index}>
-                                                <TableCell sx={{ fontWeight: 'bold', padding: '8px' }} colSpan={1}>
-                                                  {produto.nome}
-                                                </TableCell>
-                                                <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.material}
-                                                </TableCell>
-                                                <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.medida_linear}
-                                                </TableCell>
-                                              </TableRow>
-                                            ))
-                                          ) : (
-                                            <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
-                                          )}
-                                        </TableBody>
-                                      </TableCell>
-                                    </TableRow>
-                                  </TableBody>
-                                </Table>
-                              </Box>
-                            </Collapse>
-                          </TableCell>
-                        </TableRow>
                       </>
                     );
                   })}
@@ -704,7 +663,7 @@ const ImpressaoScreen = () => {
           <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
         </>
       </ParentCard>
-    </PageContainer>
+    </PageContainer >
 
   );
 };
