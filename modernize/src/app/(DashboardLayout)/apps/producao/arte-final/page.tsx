@@ -275,13 +275,6 @@ const ArteFinalScreen = () => {
         severity: 'error'
       });
     }
-    if (!row.lista_produtos) {
-      return setSnackbar({
-        open: true,
-        message: `${'Previsão de Entrega do pedido precisa ser atribuido antes de enviar para Impressão'}`,
-        severity: 'error'
-      });
-    }
     if (!row.numero_pedido) {
       return setSnackbar({
         open: true,
@@ -289,7 +282,13 @@ const ArteFinalScreen = () => {
         severity: 'error'
       });
     }
-
+    if (!row.lista_produtos || row.lista_produtos.some(produto => !produto.medida_linear)) {
+      return setSnackbar({
+        open: true,
+        message: `${'Todos os produtos precisam ter a medida linear preenchida antes de enviar para Impressão'}`,
+        severity: 'error'
+      });
+    }
 
     if (confirmar) {
       const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
