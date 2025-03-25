@@ -247,27 +247,49 @@ const ArteFinalScreen = () => {
     const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Impressão?');
 
     // validações
-    if (row.designer_id === null) {
+    if (!row.designer_id) {
       return setSnackbar({
         open: true,
         message: `${'Designer precisa ser atribuido antes de enviar para Impressão'}`,
         severity: 'error'
       });
     }
-    if (row.url_trello === null) {
+    if (!row.pedido_tipo_id) {
       return setSnackbar({
         open: true,
-        message: `${'Url do trello precisa ser atribuida antes de enviar para Impressão'}`,
+        message: `${'Tipo deopedido precisa ser atribuido antes de enviar para Impressão'}`,
         severity: 'error'
       });
     }
-    if (row.vendedor_id === null) {
+    if (!row.pedido_status_id) {
       return setSnackbar({
         open: true,
-        message: `${'Um Vendedor precisa ser atribuido antes de enviar para Impressão'}`,
+        message: `${'Status do pedido precisa ser atribuido antes de enviar para Impressão'}`,
         severity: 'error'
       });
     }
+    if (!row.data_prevista) {
+      return setSnackbar({
+        open: true,
+        message: `${'Previsão de Entrega do pedido precisa ser atribuido antes de enviar para Impressão'}`,
+        severity: 'error'
+      });
+    }
+    if (!row.lista_produtos) {
+      return setSnackbar({
+        open: true,
+        message: `${'Previsão de Entrega do pedido precisa ser atribuido antes de enviar para Impressão'}`,
+        severity: 'error'
+      });
+    }
+    if (!row.numero_pedido) {
+      return setSnackbar({
+        open: true,
+        message: `${'Previsão de Entrega do pedido precisa ser atribuido antes de enviar para Impressão'}`,
+        severity: 'error'
+      });
+    }
+
 
     if (confirmar) {
       const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
