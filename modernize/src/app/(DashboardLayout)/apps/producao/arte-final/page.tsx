@@ -33,6 +33,9 @@ import {
   TextField,
   Select,
   TextFieldProps,
+  Snackbar,
+  AlertProps,
+  Alert,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { GridPaginationModel } from '@mui/x-data-grid';
@@ -71,6 +74,15 @@ const ArteFinalScreen = () => {
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 100,
     page: 0,
+  });
+  const [snackbar, setSnackbar] = React.useState<{
+    open: boolean;
+    message: string;
+    severity: AlertProps['severity'];
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
   });
 
   const router = useRouter();
@@ -130,20 +142,36 @@ const ArteFinalScreen = () => {
     router.push(`/apps/producao/arte-final/edit/${pedido.id}/`);
   };
 
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   const handleDelete = async (row: ArteFinal) => {
     const confirmar = window.confirm('Deseja excluir o pedido N° ' + row.numero_pedido);
     if (confirmar) {
       const sucesso = await deletePedidoArteFinal(row?.id, refetch);
       if (sucesso) {
         console.log("Pedido deletado com sucesso!");
-        alert('sucesso');
+        setSnackbar({
+          open: true,
+          message: `✅ ${'Sucesso!'}`,
+          severity: 'success'
+        });
       } else {
-        alert('Falha ao excluir pedido.');
+        setSnackbar({
+          open: true,
+          message: `${'Falha ao excluir pedido'}`,
+          severity: 'error'
+        });
         console.log("Falha ao excluir pedido.");
       }
     } else {
       console.log("Envio cancelado.");
-      alert('Envio cancelado.');
+      setSnackbar({
+        open: true,
+        message: `${'Envio Cancelado'}`,
+        severity: 'info'
+      });
     }
   };
 
@@ -151,7 +179,11 @@ const ArteFinalScreen = () => {
     if (row.url_trello) {
       window.open(row.url_trello, '_blank');
     } else {
-      alert('URL do Trello não disponível');
+      setSnackbar({
+        open: true,
+        message: `${'URL do Trello não disponível'}`,
+        severity: 'warning'
+      });
       console.warn('URL do Trello não disponível');
     }
   };
@@ -171,11 +203,19 @@ const ArteFinalScreen = () => {
         router.push(data.redirect);
       } else {
         console.error('Erro ao verificar uniformes:', data.error);
-        alert('Erro ao verificar uniformes: ' + data.error);
+        setSnackbar({
+          open: true,
+          message: `${'Erro ao verificar uniformes: ' + data.error}`,
+          severity: 'error'
+        });
       }
     } catch (error) {
       console.error('Erro ao verificar uniformes:', error);
-      alert('Erro ao verificar uniformes');
+      setSnackbar({
+        open: true,
+        message: `${'Erro ao verificar uniformes'}`,
+        severity: 'error'
+      });
     }
   };
 
@@ -188,7 +228,11 @@ const ArteFinalScreen = () => {
     const resposta = await atribuirDesigner(id, refetch);
     if (resposta) {
       console.log("Designer adicionado com sucesso!");
-      alert('sucesso');
+      setSnackbar({
+        open: true,
+        message: '✅ Sucesso!',
+        severity: 'success'
+      });
     } else {
       console.log("Falha ao atribuir designer.");
     }
@@ -202,18 +246,53 @@ const ArteFinalScreen = () => {
   const handleEnviarImpressora = async (row: ArteFinal) => {
     const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Impressão?');
 
+    // validações
+    if (row.designer_id === null) {
+      return setSnackbar({
+        open: true,
+        message: `${'Designer precisa ser atribuido antes de enviar para Impressão'}`,
+        severity: 'error'
+      });
+    }
+    if (row.url_trello === null) {
+      return setSnackbar({
+        open: true,
+        message: `${'Url do trello precisa ser atribuida antes de enviar para Impressão'}`,
+        severity: 'error'
+      });
+    }
+    if (row.vendedor_id === null) {
+      return setSnackbar({
+        open: true,
+        message: `${'Um Vendedor precisa ser atribuido antes de enviar para Impressão'}`,
+        severity: 'error'
+      });
+    }
+
     if (confirmar) {
       const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
       if (sucesso) {
         console.log("Pedido enviado com sucesso!");
-        alert('Sucesso');
+        setSnackbar({
+          open: true,
+          message: '✅ Sucesso!',
+          severity: 'success'
+        });
       } else {
         console.log("Falha ao enviar pedido.");
-        alert('Falha ao enviar pedido.');
+        setSnackbar({
+          open: true,
+          message: `${'Falha ao enviar pedido.'}`,
+          severity: 'error'
+        });
       }
     } else {
       console.log("Envio cancelado.");
-      alert('Envio cancelado.');
+      setSnackbar({
+        open: true,
+        message: `${'Envio cancelado.'}`,
+        severity: 'error'
+      });
     }
   };
 
@@ -222,9 +301,18 @@ const ArteFinalScreen = () => {
     const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
-      alert('sucesso');
+      setSnackbar({
+        open: true,
+        message: `✅ ${'Sucesso!'}`,
+        severity: 'success'
+      });
     } else {
-      console.log("Falha ao enviar pedido.");
+      console.log("Falha ao trocar status.");
+      setSnackbar({
+        open: true,
+        message: `${'Status não atualizado.'}`,
+        severity: 'warning'
+      });
     }
   }
 
@@ -762,6 +850,44 @@ const ArteFinalScreen = () => {
           )}
           <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
+
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={6000}
+            onClose={handleCloseSnackbar}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            sx={{
+              '& .MuiPaper-root': {
+                borderRadius: '12px',
+                boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.15)',
+                backdropFilter: 'blur(4px)',
+                backgroundColor: snackbar.severity === 'success'
+                  ? 'rgba(46, 125, 50, 0.9)'
+                  : 'rgba(211, 47, 47, 0.9)'
+              }
+            }}
+          >
+            <Alert
+              onClose={handleCloseSnackbar}
+              severity={snackbar.severity}
+              variant="filled"
+              icon={false}
+              sx={{
+                width: '100%',
+                alignItems: 'center',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: 'common.white',
+                '& .MuiAlert-message': {
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }
+              }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
         </>
       </ParentCard>
     </PageContainer>

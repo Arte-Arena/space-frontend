@@ -33,6 +33,9 @@ import {
   Select,
   TextField,
   TextFieldProps,
+  AlertProps,
+  Alert,
+  Snackbar,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { GridPaginationModel } from '@mui/x-data-grid';
@@ -66,6 +69,15 @@ const ConfeccaoScreen = () => {
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 100,
     page: 0,
+  });
+  const [snackbar, setSnackbar] = React.useState<{
+    open: boolean;
+    message: string;
+    severity: AlertProps['severity'];
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
   });
 
   const router = useRouter();
@@ -106,19 +118,53 @@ const ConfeccaoScreen = () => {
   // total de medidas
 
   // handles
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   const handleLinkTrello = (row: ArteFinal) => {
     if (row.url_trello) {
       window.open(row.url_trello, '_blank');
     } else {
-      alert('URL do Trello não disponível');
+      setSnackbar({
+        open: true,
+        message: `${'URL do Trello não disponível'}`,
+        severity: 'warning'
+      });
       console.warn('URL do Trello não disponível');
     }
   };
 
-  const handleListaUniformes = (row: ArteFinal) => {
-    // provavelmente tem que ver validar se existe uma lista de uniformes nesse pedido
-    // unica forma atualmente é pelo 'ocamento_id'
-    console.log("Deletar pedido", row);
+  const handleListaUniformes = async (row: ArteFinal) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final/${row.id}/verificar-uniformes`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        router.push(data.redirect);
+      } else {
+        console.error('Erro ao verificar uniformes:', data.error);
+        setSnackbar({
+          open: true,
+          message: `${'Erro ao verificar uniformes: ' + data.error}`,
+          severity: 'error'
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao verificar uniformes:', error);
+      setSnackbar({
+        open: true,
+        message: `${'Erro ao verificar uniformes'}`,
+        severity: 'error'
+      });
+    }
   };
 
   const handleVerDetalhes = (row: ArteFinal) => {
@@ -131,15 +177,25 @@ const ConfeccaoScreen = () => {
     if (confirmar) {
       const sucesso = await trocarStatusPedido(row?.id, 22, refetch);
       if (sucesso) {
-        console.log("Pedido enviado com sucesso!");
-        alert('Sucesso');
+        setSnackbar({
+          open: true,
+          message: '✅ Sucesso!',
+          severity: 'success'
+        });
       } else {
-        console.log("Falha ao enviar pedido.");
-        alert('Falha ao enviar pedido.');
+        setSnackbar({
+          open: true,
+          message: `${'Falha ao enviar pedido.'}`,
+          severity: 'error'
+        });
       }
     } else {
       console.log("Envio cancelado.");
-      alert('Envio cancelado.');
+      setSnackbar({
+        open: true,
+        message: `${'Envio cancelado.'}`,
+        severity: 'error'
+      });
     }
   }
 
@@ -148,9 +204,18 @@ const ConfeccaoScreen = () => {
     const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
-      alert('sucesso');
+      setSnackbar({
+        open: true,
+        message: `✅ ${'Sucesso!'}`,
+        severity: 'success'
+      });
     } else {
-      console.log("Falha ao enviar pedido.");
+      console.log("Falha ao trocar status.");
+      setSnackbar({
+        open: true,
+        message: `${'Status não atualizado.'}`,
+        severity: 'warning'
+      });
     }
   }
 
@@ -486,7 +551,6 @@ const ConfeccaoScreen = () => {
                               {atraso && <span> (Atraso)</span>}
                             </TableCell>
 
-
                             <TableCell sx={{
                               color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
                             }} align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
@@ -603,58 +667,6 @@ const ConfeccaoScreen = () => {
                               </Tooltip>
                             </TableCell>
                           </TableRow>
-
-                          <TableRow>
-                            {/* colSpan deve ter o mesmo número que o número de cabeçalhos da tabela, no caso 16 */}
-                            <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
-                              <Collapse in={openRow[row.id ?? 0]} timeout="auto" unmountOnExit>
-                                <Box margin={1}>
-                                  <Table size="small" aria-label="detalhes">
-                                    <TableBody>
-                                      <TableRow>
-                                        <TableCell sx={{ border: 'none' }} colSpan={16}>
-                                          <strong>Lista de Produtos</strong>
-                                          <TableHead>
-                                            <TableRow>
-                                              <TableCell></TableCell>
-                                              <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                                Tipo:
-                                              </TableCell>
-                                              <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                                Material:
-                                              </TableCell>
-                                              <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                                Medida linear:
-                                              </TableCell>
-                                            </TableRow>
-                                          </TableHead>
-                                          <TableBody>
-                                            {listaProdutos.length > 0 ? (
-                                              listaProdutos.map((produto: Produto, index: number) => (
-                                                <TableRow key={produto.id || index}>
-                                                  <TableCell sx={{ fontWeight: 'bold', padding: '8px' }} colSpan={1}>
-                                                    {produto.nome}
-                                                  </TableCell>
-                                                  <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                    {produto.nome}
-                                                  </TableCell>
-                                                  <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                    {produto.medida_linear}
-                                                  </TableCell>
-                                                </TableRow>
-                                              ))
-                                            ) : (
-                                              <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
-                                            )}
-                                          </TableBody>
-                                        </TableCell>
-                                      </TableRow>
-                                    </TableBody>
-                                  </Table>
-                                </Box>
-                              </Collapse>
-                            </TableCell>
-                          </TableRow>
                         </>
                       );
                     })}
@@ -674,6 +686,44 @@ const ConfeccaoScreen = () => {
             )}
             <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
             <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
+
+            <Snackbar
+              open={snackbar.open}
+              autoHideDuration={6000}
+              onClose={handleCloseSnackbar}
+              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+              sx={{
+                '& .MuiPaper-root': {
+                  borderRadius: '12px',
+                  boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.15)',
+                  backdropFilter: 'blur(4px)',
+                  backgroundColor: snackbar.severity === 'success'
+                    ? 'rgba(46, 125, 50, 0.9)'
+                    : 'rgba(211, 47, 47, 0.9)'
+                }
+              }}
+            >
+              <Alert
+                onClose={handleCloseSnackbar}
+                severity={snackbar.severity}
+                variant="filled"
+                icon={false}
+                sx={{
+                  width: '100%',
+                  alignItems: 'center',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: 'common.white',
+                  '& .MuiAlert-message': {
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                  }
+                }}
+              >
+                {snackbar.message}
+              </Alert>
+            </Snackbar>
           </>
         </ParentCard>
       </>

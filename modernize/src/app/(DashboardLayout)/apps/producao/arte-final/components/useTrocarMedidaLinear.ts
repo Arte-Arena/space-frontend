@@ -3,7 +3,6 @@ const trocarMedidaLinear = async (id: number | undefined, uid: number | null, me
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) throw new Error("Usuário não autenticado.");
     const medidaLinear = medidasLineares[String(uid)];
-    // const uid = medidasLineares[Number()];
     console.log(medidaLinear, medidasLineares);
     console.log(medidaLinear, uid);
 
@@ -11,7 +10,7 @@ const trocarMedidaLinear = async (id: number | undefined, uid: number | null, me
       console.error("Erro sem UID na request:", uid);
       return false;
     }
-    
+
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-media-change/${id}`,
       {

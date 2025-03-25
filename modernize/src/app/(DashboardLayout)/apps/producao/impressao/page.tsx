@@ -33,6 +33,9 @@ import {
   TextField,
   Select,
   TextFieldProps,
+  AlertProps,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { GridPaginationModel } from '@mui/x-data-grid';
@@ -66,6 +69,15 @@ const ImpressaoScreen = () => {
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 100,
     page: 0,
+  });
+  const [snackbar, setSnackbar] = React.useState<{
+    open: boolean;
+    message: string;
+    severity: AlertProps['severity'];
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
   });
 
   const router = useRouter();
@@ -115,19 +127,53 @@ const ImpressaoScreen = () => {
     : 0;
 
   // handles
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   const handleLinkTrello = (row: ArteFinal) => {
     if (row.url_trello) {
       window.open(row.url_trello, '_blank');
     } else {
-      alert('URL do Trello não disponível');
+      setSnackbar({
+        open: true,
+        message: `${'URL do Trello não disponível'}`,
+        severity: 'warning'
+      });
       console.warn('URL do Trello não disponível');
     }
   };
 
-  const handleListaUniformes = (row: ArteFinal) => {
-    // provavelmente tem que ver validar se existe uma lista de uniformes nesse pedido
-    // unica forma atualmente é pelo 'ocamento_id'
-    console.log("Deletar pedido", row);
+  const handleListaUniformes = async (row: ArteFinal) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final/${row.id}/verificar-uniformes`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        router.push(data.redirect);
+      } else {
+        console.error('Erro ao verificar uniformes:', data.error);
+        setSnackbar({
+          open: true,
+          message: `${'Erro ao verificar uniformes: ' + data.error}`,
+          severity: 'error'
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao verificar uniformes:', error);
+      setSnackbar({
+        open: true,
+        message: `${'Erro ao verificar uniformes'}`,
+        severity: 'error'
+      });
+    }
   };
 
   const handleEnviarConfeccao = async (row: ArteFinal) => {
@@ -136,14 +182,25 @@ const ImpressaoScreen = () => {
     if (confirmar) {
       const sucesso = await trocarStatusPedido(row?.id, 14, refetch);
       if (sucesso) {
-        // console.log("Pedido enviado com sucesso!");
-        alert('sucesso');
+        setSnackbar({
+          open: true,
+          message: '✅ Sucesso!',
+          severity: 'success'
+        });
       } else {
-        console.log("Falha ao enviar pedido.");
+        setSnackbar({
+          open: true,
+          message: `${'Falha ao enviar pedido.'}`,
+          severity: 'error'
+        });
       }
     } else {
       console.log("Envio cancelado.");
-      alert('Envio cancelado.');
+      setSnackbar({
+        open: true,
+        message: `${'Envio cancelado.'}`,
+        severity: 'error'
+      });
     }
   };
 
@@ -160,9 +217,18 @@ const ImpressaoScreen = () => {
     const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
-      alert('sucesso');
+      setSnackbar({
+        open: true,
+        message: `✅ ${'Sucesso!'}`,
+        severity: 'success'
+      });
     } else {
-      console.log("Falha ao enviar pedido.");
+      console.log("Falha ao trocar status.");
+      setSnackbar({
+        open: true,
+        message: `${'Status não atualizado.'}`,
+        severity: 'warning'
+      });
     }
   }
 
@@ -249,7 +315,7 @@ const ImpressaoScreen = () => {
       <Breadcrumb title="Produção / Impressão" items={BCrumb} />
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2, }}>
         <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
-          <span style={{ fontWeight: 'bold' }}>Total Medida Linear:</span> {totalMedidaLinearGlobal} Metros
+          <span style={{ fontWeight: 'bold' }}>Total Medida Linear:</span> {totalMedidaLinearGlobal.toFixed(2)} Metros
         </Typography>
         <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
           <span style={{ fontWeight: 'bold' }}>Total De: </span> {allPedidos.length} Pedidos:
@@ -286,7 +352,7 @@ const ImpressaoScreen = () => {
                     <TableRow key={data}>
                       <TableCell align="center">{dataFormatada}</TableCell>
                       <TableCell align="center">{quantidade_pedidos}</TableCell>
-                      <TableCell align="center">{total_medida_linear}</TableCell>
+                      <TableCell align="center">{total_medida_linear.toFixed(2)}</TableCell>
                     </TableRow>
                   );
                 })}
@@ -571,7 +637,6 @@ const ImpressaoScreen = () => {
                             </Tooltip>
                           </TableCell>
 
-
                           <TableCell sx={{
                             color: myTheme === 'dark' ? 'white' : 'black',
                             backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
@@ -661,6 +726,44 @@ const ImpressaoScreen = () => {
           )}
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
           <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
+
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={6000}
+            onClose={handleCloseSnackbar}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            sx={{
+              '& .MuiPaper-root': {
+                borderRadius: '12px',
+                boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.15)',
+                backdropFilter: 'blur(4px)',
+                backgroundColor: snackbar.severity === 'success'
+                  ? 'rgba(46, 125, 50, 0.9)'
+                  : 'rgba(211, 47, 47, 0.9)'
+              }
+            }}
+          >
+            <Alert
+              onClose={handleCloseSnackbar}
+              severity={snackbar.severity}
+              variant="filled"
+              icon={false}
+              sx={{
+                width: '100%',
+                alignItems: 'center',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: 'common.white',
+                '& .MuiAlert-message': {
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }
+              }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
         </>
       </ParentCard>
     </PageContainer >
