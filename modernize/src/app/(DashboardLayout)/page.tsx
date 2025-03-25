@@ -35,12 +35,14 @@ export default function Dashboard() {
         {/* Primeira linha: Um gráfico maior */}
         <Grid container spacing={2}>
 
+          {/* 1° em linha */}
           <Grid item xs={12} md={7}>
             <Box sx={{ border: '1px solid #394457', padding: 2, height: '85%' }}>
               <VendasRelatoriosOrcamentosPorDataComponent />
             </Box>
           </Grid>
 
+          {/* 2° em pizza */}
           <Grid item xs={12} md={5}>
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '85%', border: '1px solid #394457', padding: 2 }}>
               <VendasRelatoriosOrcamentosPorStatusComponent />
@@ -53,9 +55,9 @@ export default function Dashboard() {
 
           {/* Segunda linha: Três gráficos menores */}
           <Grid item xs={12} md={12}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-around' }}>
-                <ValorTotalPedidosComponent />  
-              </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-around' }}>
+              <ValorTotalPedidosComponent />
+            </Box>
             {/* <VendasRelatoriosOrcamentosPorStatusComponent /> */}
           </Grid>
 

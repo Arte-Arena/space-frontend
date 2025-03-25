@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import PageContainer from "@/app/components/container/PageContainer";
 import { Select, MenuItem, FormControl, InputLabel, SelectChangeEvent } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
 import ApexPedidosTotal from "@/app/components/charts/TotalPedidos";
 import ParentCard from "@/app/components/shared/ParentCard";
 import { useTheme } from '@mui/material/styles';
@@ -13,13 +12,6 @@ interface Pedidos {
   orcamento_id: number;
   created_at: string;
 }
-
-const BCrumb = [
-  { to: "/", title: "Home" },
-  { to: '/apps/vendas/', title: "Vendas" },
-  { to: '/apps/vendas/relatorios/', title: "Relatórios de Vendas" },
-  { to: '/apps/vendas/relatorios/orcamentos', title: "Orçamentos" },
-];
 
 const ValorTotalPedidosComponent = () => {
   const [dados, setDados] = useState<Pedidos[]>([]);
@@ -33,36 +25,41 @@ const ValorTotalPedidosComponent = () => {
     console.error('Access token is missing');
   }
 
-  // Fetch da API usando react-query
-  const { data, isFetching, error } = useQuery({
-    queryKey: ['quantidadeOrcamentosData'],
-    queryFn: async () => {
+  useEffect(() => {
+    const fetchData = async () => {
       if (!accessToken) {
-        throw new Error('Token de acesso não disponível');
+        return console.log('Token de acesso não disponível');
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API}/api/vendas/pedido-total`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API}/api/vendas/pedido-total`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
 
-      if (!res.ok) {
-        throw new Error("Erro ao buscar dados");
-      }
+        if (!res.ok) {
+          return console.log('erro:', res)
+        }
 
-      return res.json();
-    },
-    enabled: !!accessToken, // Só executa a query se houver token
-  });
+        const data = await res.json();
+        setDados(data);
+        // console.log('dados:', data);
+      } catch (error) {
+        console.log(error);
+      } 
+    };
+
+    fetchData();
+  }, [accessToken]);
 
   useEffect(() => {
-    if (data) {
-      setDados(data);
+    if (dados) {
+      setDados(dados);
     }
-  }, [data]);
+  }, [dados]);
 
   const handleTipoGraficoChange = (event: SelectChangeEvent<string>) => {
     setTipoGrafico(event.target.value); // Altera o tipo de gráfico
