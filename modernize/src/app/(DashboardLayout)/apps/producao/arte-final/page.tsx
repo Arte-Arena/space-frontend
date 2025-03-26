@@ -68,6 +68,7 @@ const ArteFinalScreen = () => {
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [rows, setRows] = useState<ArteFinal[]>([]);
+  const [observacao, setObservacao] = useState("");
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
@@ -344,6 +345,16 @@ const ArteFinalScreen = () => {
     setOpenDialogObs(true);
   };
 
+  const handleChangeObservacoes = (event: React.ChangeEvent<HTMLInputElement>, row: ArteFinal) => {
+    setObservacao(event.target.value);
+
+  };
+
+  // Envia a observação para o backend e desativa o modo edição
+  const handleSalvarObservacao = () => {
+    // handleEnviarObs(row.id, observacao);
+  };
+
   const pedidoStatus = {
     1: { nome: 'Pendente', fila: 'D' },
     2: { nome: 'Em andamento', fila: 'D' },
@@ -515,7 +526,6 @@ const ArteFinalScreen = () => {
                     <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
                     <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Previsão de Entrega</TableCell>
-                    {/* <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell> */}
                     <TableCell align='center' sx={{ width: '10%' }}>Designer</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
                     <TableCell align='center' sx={{ width: '10%' }}>Tipo</TableCell>
@@ -631,7 +641,7 @@ const ArteFinalScreen = () => {
                               ? DateTime.fromISO(new Date(row.data_prevista).toISOString(), { zone: "utc" })
                                 .setZone("America/Sao_Paulo")
                                 .toFormat("dd/MM/yyyy")
-                              : "Data inválida"}
+                              : " "}
                             {atraso && <span> (Atraso)</span>}
                           </TableCell>
 
@@ -701,6 +711,37 @@ const ArteFinalScreen = () => {
                               </Button>
                             </Tooltip>
                           </TableCell>
+
+                          {/* <TableCell
+                            sx={{
+                              color: myTheme === "dark" ? "white" : "black",
+                              textAlign: "center",
+                            }}
+                          >
+                            {row?.observacoes ? (
+                              <Tooltip title={row.observacoes ?? "Adicionar Observações"} placement="top">
+                                <span
+                                  onClick={() => handleClickOpenDialogObs(row)}
+                                  style={{
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  {row?.observacoes ?? "Adicionar Observação"}
+                                </span>
+                                {/* onClick={() => (row.observacoes ? handleClickOpenDialogObs(row) : 'setEditando(true)')} */}
+                              {/* </Tooltip>
+                            ) : (
+                              <TextField
+                                value={observacao}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => { handleChangeObservacoes(e, row) }}
+                                autoFocus
+                                onBlur={handleSalvarObservacao} // Salva ao perder o foco
+                                onKeyDown={(e) => e.key === "Enter" && handleSalvarObservacao()} // Salva ao pressionar Enter
+                                variant="standard"
+                                fullWidth
+                              />
+                            )}
+                          </TableCell> */}
 
                           <TableCell sx={{
                             color: myTheme === 'dark' ? 'white' : 'black',
