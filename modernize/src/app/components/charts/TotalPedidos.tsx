@@ -20,6 +20,7 @@ interface ApexOrcamentosProps {
 const ApexPedidosTotal: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos, tipoGrafico }) => {
   const theme = useTheme();
   const primary = theme.palette.primary.main;
+  const secondary = theme.palette.secondary.main;
 
   // Função para converter valores monetários em número
   const parseValor = (valor: string | number): number => {
@@ -62,7 +63,19 @@ const ApexPedidosTotal: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos, tipo
       foreColor: "#adb0bb",
       toolbar: { show: false },
     },
-    colors: ['#0b73e5'],
+    colors: [secondary],
+    fill: {
+      type: "gradient",
+      gradient: {
+        shade: "dark",
+        gradientToColors: [primary],
+        shadeIntensity: 1,
+        type: "vertical",
+        opacityFrom: 1,
+        opacityTo: 0.3,
+        stops: [0, 200],
+      },
+    },
     stroke: {
       width: tipoGrafico === "linha" ? 2 : 0,
       curve: 'smooth',
@@ -78,7 +91,7 @@ const ApexPedidosTotal: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos, tipo
     tooltip: {
       theme: 'dark',
     },
-    grid: { show: true, borderColor: theme.palette.divider }, 
+    grid: { show: true, borderColor: theme.palette.divider },
   };
 
   // Definir os dados do gráfico

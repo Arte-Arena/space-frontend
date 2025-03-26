@@ -14,8 +14,9 @@ const ApexOrcamentosMes: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos }) =
   const categories = totalOrcamentos.map(item => item.date);
   const seriesData = totalOrcamentos.map(item => item.count);
 
-    const theme = useTheme();
+  const theme = useTheme();
   const primary = theme.palette.primary.main;
+  const secondary = theme.palette.secondary.main;
 
   // Opções do gráfico
   const options: ApexCharts.ApexOptions = {
@@ -38,27 +39,25 @@ const ApexOrcamentosMes: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos }) =
       categories: categories, // Datas
       title: {
         text: 'Data',
-        // style: { fontSize: '14px', fontWeight: 'bold', color: '#FFFFFF' },
       },
       labels: {
-        // style: { fontSize: '12px', fontWeight: 'normal', colors: '#FFFFFF' },
       },
     },
     fill: {
       type: "gradient",
       gradient: {
         shade: "dark",
-        gradientToColors: [primary],
+        gradientToColors: [secondary],
         shadeIntensity: 1,
-        type: "horizontal",
+        type: "vertical",
         opacityFrom: 1,
-        opacityTo: 0.9,
-        stops: [0, 100, 100, 100],
+        opacityTo: 0.3,
+        stops: [0, 100],
       },
     },
     markers: {
       size: 4,
-      colors: [primary],
+      colors: [secondary],
       strokeWidth: 2,
 
       hover: {
@@ -68,28 +67,25 @@ const ApexOrcamentosMes: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos }) =
     yaxis: {
       title: {
         text: 'Número de Orçamentos',
-        // style: { fontSize: '14px', fontWeight: 'bold', color: '#FFFFFF' },
       },
       labels: {
-        // style: { fontSize: '12px', fontWeight: 'normal', colors: '#FFFFFF' },
       },
     },
     title: {
       text: 'Orçamentos no Mês',
       align: 'center',
-      // style: { fontSize: '18px', fontWeight: 'bold', color: '#FFFFFF' },
     },
     legend: {
       labels: {
-        // style: { colors: '#FFFFFF', fontSize: '14px' },
+        colors: [primary],
       },
     },
     tooltip: {
       theme: 'dark',
-      // style: { fontSize: '14px', fontFamily: 'Arial', color: '#FFFFFF' },
     },
     grid: {
-      show: false,
+      show: true,
+      borderColor: theme.palette.divider,
     },
   };
 
@@ -97,21 +93,14 @@ const ApexOrcamentosMes: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos }) =
   const series = [{ name: 'Orçamentos', data: seriesData }];
 
   return (
-    // <div style={{ backgroundColor: '#2A3447',
-    //   padding: '20px',
-    //   borderRadius: '10px',
-    //   textAlign: 'center',
-    //   border: '1px solid #3A4557', // Cor levemente mais clara que o fundo
-    //   margin: '20px 0' }}>
-    <div> 
+    <div>
       <Chart
         options={options}
         series={series}
         type="line"
         height="auto"
         width={"100%"}
-      />      
-      {/* <ReactApexChart options={options} series={series} type="line" height={350} /> */}
+      />
     </div>
   );
 };
