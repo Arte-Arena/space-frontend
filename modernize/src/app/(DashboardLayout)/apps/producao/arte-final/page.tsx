@@ -56,6 +56,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import getBrazilTime from '@/utils/brazilTime';
 import { DateTime } from 'luxon';
+import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -751,14 +752,14 @@ const ArteFinalScreen = () => {
                                 </Typography>
                               </Tooltip>
                             ) : (
-                              <TextField
+                              <CustomTextField
                                 value={observacoes[row?.id ?? 0] || ""}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleObservacaoChange(String(row?.id), e.target.value)}
                                 autoFocus
-                                onBlur={(e) => handleEnviarObservacao(String(row?.id))} // Salva ao perder o foco
-                                onKeyDown={(e) => e.key === "Enter" && handleEnviarObservacao(String(row?.id))} // Salva ao pressionar Enter
-                                variant="standard"
-                                fullWidth
+                                onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleEnviarObservacao(String(row?.id))} // Salva ao perder o foco
+                                onKeyDown={(e: { key: string; }) => e.key === "Enter" && handleEnviarObservacao(String(row?.id))} // Salva ao pressionar Enter
+                                // variant="standard"
+                                fullWidth 
                               />
                             )}
                           </TableCell>
