@@ -157,6 +157,8 @@ const OrcamentoEditarScreen = () => {
                   <TableCell>ID</TableCell>
                   <TableCell>Número do Cliente</TableCell>
                   <TableCell>Data de Criação</TableCell>
+                  <TableCell>Vendedor</TableCell>
+                  <TableCell>Valor</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Ações</TableCell>
                 </TableRow>
@@ -219,6 +221,8 @@ const OrcamentoEditarScreen = () => {
                       </TableCell>
                       <TableCell>{row.cliente_octa_number}</TableCell>
                       <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>{row.user_id}</TableCell>
+                      <TableCell>{row.total_orcamento}</TableCell>
                       <TableCell>
                         {row.status === "aprovado" ? (
                           <Stack direction="row" alignItems="center" spacing={1}>
