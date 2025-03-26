@@ -30,7 +30,6 @@ const REGEX = {
   cpf: /^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/,
   cnpj: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$|^\d{14}$/,
   cep: /^\d{5}-?\d{3}$/,
-  phone: /^\(\d{2}\)\s\d{4,5}-\d{4}$|^\d{10,11}$/,
   onlyNumbers: /^\d+$/,
   onlyLetters: /^[a-zA-ZÀ-ÿ\s]+$/,
 };
@@ -247,11 +246,6 @@ const OrcamentoBackofficeScreen: React.FC = () => {
       case 'cnpj':
         if (!REGEX.cnpj.test(value)) {
           return { field: name, message: 'CNPJ inválido. Use o formato: 00.000.000/0000-00' };
-        }
-        break;
-      case 'celular':
-        if (!REGEX.phone.test(value)) {
-          return { field: name, message: 'Celular inválido. Use o formato: (00) 00000-0000' };
         }
         break;
       case 'cep':
