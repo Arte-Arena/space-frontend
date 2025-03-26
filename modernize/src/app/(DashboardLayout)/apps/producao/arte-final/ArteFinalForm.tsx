@@ -65,8 +65,6 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
   const [selectedProduct, setSelectedProduct] = useState<Produto | null>(null);
   const [countProduct, setCountProduct] = useState<number | null>(0);
   const [allMaterials, setAllMaterials] = useState<string[]>([]);
-  const [allDesigners, setAllDesigners] = useState<User[]>([]);
-  const [allStatusPedido, setAllStatusPedido] = useState<PedidoStatus[]>([]);
   const [allTiposDePedido, setAllTiposDePedido] = useState<PedidoTipo[]>([]);
   const [allVendedores, setAllVendedores] = useState<User[]>([]);
   const [loadingSubmit, setLoadingSubmit] = useState<boolean>(false);
@@ -78,8 +76,6 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
 
   const dataProducts = localStorage.getItem('produtosConsolidadosOrcamento');
   const materiais = localStorage.getItem('materiais');
-  const designers = localStorage.getItem('designers');
-  const statusPedidos = localStorage.getItem('pedidosStatus');
   const tiposPedidos = localStorage.getItem('pedidosTipos');
   const vendedores = localStorage.getItem('vendedores');
 
@@ -154,24 +150,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
     } else {
       console.warn('Os dados de materiais não foram encontrados.');
     }
-  }, [designers]);
-
-  useEffect(() => {
-    if (designers) {
-      try {
-        const designersArray = JSON.parse(designers);
-        if (Array.isArray(designersArray)) {
-          setAllDesigners(designersArray);
-        } else {
-          console.error('Dados inválidos recebidos de designers:', designersArray);
-        }
-      } catch (error) {
-        console.error('Erro ao analisar JSON de designers:', error);
-      }
-    } else {
-      console.warn('Os dados de designers não foram encontrados.');
-    }
-  }, [designers]);
+  }, [materiais]);
 
   useEffect(() => {
     if (vendedores) {
@@ -191,17 +170,6 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
   }, [vendedores]);
 
   useEffect(() => {
-    if (statusPedidos) {
-      try {
-        const statusPedidosArray = JSON.parse(statusPedidos);
-        setAllStatusPedido(statusPedidosArray);
-      } catch (error) {
-        console.error('Erro ao analisar statusPedidos:', error);
-      }
-    }
-  }, [statusPedidos]);
-
-  useEffect(() => {
     if (tiposPedidos) {
       try {
         const tiposPedidosArray = JSON.parse(tiposPedidos);
@@ -217,9 +185,8 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
       setFormData((prev) => ({ ...prev, ...initialData }));
 
       if (initialData.lista_produtos && Array.isArray(initialData.lista_produtos) && initialData.lista_produtos.length > 0) {
-        const initialProductsList = initialData.lista_produtos.map((product, index) => ({
+        const initialProductsList = initialData.lista_produtos.map((product) => ({
           ...product,
-          uid: Number(`${product.id}${index}`),
           esboco: product.esboco || "",
         }));
         setProductsList(initialProductsList);
@@ -257,6 +224,10 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
       setCountProduct(newCountProduct);
     }
   }
+
+  useEffect(() => {
+    console.log("productsList:", productsList);
+  }, [productsList]);
 
   const removerProduto = (productToRemove: Produto) => {
     const updatedProductsList = productsList.filter((product) => product.uid !== productToRemove.uid);
