@@ -101,6 +101,15 @@ const OrcamentoBuscarScreen = () => {
     { id: number; name: string; email: string; email_verified_at: string | null; created_at: string; updated_at: string }[]
   >([]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedVendedores = localStorage.getItem('vendedores');
+      if (storedVendedores) {
+        setVendedores(JSON.parse(storedVendedores));
+      }
+    }
+  }, []);
+
   const mode = useThemeMode();
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
@@ -142,15 +151,6 @@ const OrcamentoBuscarScreen = () => {
 
   if (isFetching) return <CircularProgress />;
   if (error) return <p>Ocorreu um erro: {error.message}</p>;
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedVendedores = localStorage.getItem('vendedores');
-      if (storedVendedores) {
-        setVendedores(JSON.parse(storedVendedores));
-      }
-    }
-  }, []);
 
   return (
     <PageContainer title="Orçamento / Buscar" description="Buscar Orçamento da Arte Arena">
