@@ -56,6 +56,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import getBrazilTime from '@/utils/brazilTime';
 import { DateTime } from 'luxon';
+import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -68,7 +69,7 @@ const ArteFinalScreen = () => {
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [rows, setRows] = useState<ArteFinal[]>([]);
-  const [observacao, setObservacao] = useState("");
+  const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
@@ -123,6 +124,21 @@ const ArteFinalScreen = () => {
       console.log(dataPedidos);
     }
   }, [dataPedidos]);
+
+
+  // Inicializa o estado apenas uma vez
+  useEffect(() => {
+    const inicializarObservacoes = paginatedPedidos.reduce((acc, row) => {
+      acc[row?.id ?? 0] = row.observacoes || "";
+      return acc;
+    }, {} as { [key: string]: string });
+
+    setObservacoes(inicializarObservacoes);
+  }, [allPedidos]);
+
+  const handleObservacaoChange = (id: string, novaObservacao: string) => {
+    setObservacoes((prev) => ({ ...prev, [id]: novaObservacao }));
+  };
 
   console.log(allPedidos);
 
@@ -345,15 +361,45 @@ const ArteFinalScreen = () => {
     setOpenDialogObs(true);
   };
 
-  const handleChangeObservacoes = (event: React.ChangeEvent<HTMLInputElement>, row: ArteFinal) => {
-    setObservacao(event.target.value);
+  const handleEnviarObservacao = async (id: string) => {
+    if (!id) {
+      console.error("ID do pedido não encontrado");
+      return;
+    }
 
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      console.error("Usuário não autenticado");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-obs-change/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ observacoes: observacoes[id] }), // Envia apenas a observação específica do ID
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erro ao salvar observação");
+      }
+
+      const data = await response.json();
+      console.log("Observação salva com sucesso:", data);
+
+      refetch(); // Atualiza os dados da página
+      router.refresh();
+    } catch (error) {
+      console.error("Erro ao salvar observação:", error);
+    }
   };
 
-  // Envia a observação para o backend e desativa o modo edição
-  const handleSalvarObservacao = () => {
-    // handleEnviarObs(row.id, observacao);
-  };
 
   const pedidoStatus = {
     1: { nome: 'Pendente', fila: 'D' },
@@ -678,70 +724,45 @@ const ArteFinalScreen = () => {
 
                           <TableCell
                             sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black'
-                            }}
-                            align="center"
-                          >
-                            <Tooltip title={row.observacoes ?? "Adicionar Observações"} placement='top'>
-                              <Button
-                                sx={{
-                                  background: 'transparent',
-                                  color: myTheme === 'dark' ? 'white' : 'black',
-                                  borderRadius: '4px',
-                                  border: row.observacoes
-                                    ? 'none'
-                                    : (myTheme === 'dark' ? '1px solid white' : '1px solid black'),
-                                  fontSize: '12px',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  maxWidth: '150px',
-                                  display: 'flex', // Torna o botão um flex container
-                                  justifyContent: row.observacoes ? 'flex-start' : 'center', // Alinha o conteúdo à esquerda se tiver observação, senão centraliza
-                                  alignItems: 'center', // Centraliza verticalmente
-                                  textTransform: 'none', // Mantém o texto sem transformação (evita tudo maiúsculo)
-                                  '&:hover': {
-                                    backgroundColor: 'rgba(13, 12, 12, 0.1)',
-                                    color: theme.palette.text.secondary,
-                                  }
-                                }}
-                                onClick={() => handleClickOpenDialogObs(row)}
-                              >
-                                {row.observacoes ?? "Adicionar Observação"}
-                              </Button>
-                            </Tooltip>
-                          </TableCell>
-
-                          {/* <TableCell
-                            sx={{
                               color: myTheme === "dark" ? "white" : "black",
                               textAlign: "center",
                             }}
                           >
                             {row?.observacoes ? (
-                              <Tooltip title={row.observacoes ?? "Adicionar Observações"} placement="top">
-                                <span
+                              <Tooltip title={"Adicionar Observação?"} placement="top">
+                                <Typography
                                   onClick={() => handleClickOpenDialogObs(row)}
-                                  style={{
-                                    cursor: 'pointer',
+                                  sx={{
+                                    cursor: "pointer",
+                                    fontSize: "14px",
+                                    fontWeight: row.observacoes ? "500" : "regular",
+                                    color: myTheme === "dark" ? "white" : "black",
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    maxWidth: "200px", // Ajuste conforme necessário
+                                    display: "inline-block",
+                                    "&:hover": {
+                                      fontWeight: "bold",
+                                      color: myTheme === "dark" ? "#bdbdbd" : "#555",
+                                    },
                                   }}
                                 >
-                                  {row?.observacoes ?? "Adicionar Observação"}
-                                </span>
-                                {/* onClick={() => (row.observacoes ? handleClickOpenDialogObs(row) : 'setEditando(true)')} */}
-                              {/* </Tooltip>
+                                  {row?.observacoes ?? observacoes[row.id ?? 0]}
+                                </Typography>
+                              </Tooltip>
                             ) : (
-                              <TextField
-                                value={observacao}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => { handleChangeObservacoes(e, row) }}
+                              <CustomTextField
+                                value={observacoes[row?.id ?? 0] || ""}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleObservacaoChange(String(row?.id), e.target.value)}
                                 autoFocus
-                                onBlur={handleSalvarObservacao} // Salva ao perder o foco
-                                onKeyDown={(e) => e.key === "Enter" && handleSalvarObservacao()} // Salva ao pressionar Enter
-                                variant="standard"
-                                fullWidth
+                                onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleEnviarObservacao(String(row?.id))} // Salva ao perder o foco
+                                onKeyDown={(e: { key: string; }) => e.key === "Enter" && handleEnviarObservacao(String(row?.id))} // Salva ao pressionar Enter
+                                // variant="standard"
+                                fullWidth 
                               />
                             )}
-                          </TableCell> */}
+                          </TableCell>
 
                           <TableCell sx={{
                             color: myTheme === 'dark' ? 'white' : 'black',

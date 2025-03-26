@@ -84,7 +84,7 @@ const DialogObs: React.FC<DialogObsProps> = ({
         </FormControl>
         {row?.observacoes && (
           <Box>
-            <Typography sx={{fontSize: '16px', marginBottom: '1rem'}}>
+            <Typography sx={{ fontSize: '16px', marginBottom: '1rem' }}>
               Observação antiga
             </Typography>
             <Typography
