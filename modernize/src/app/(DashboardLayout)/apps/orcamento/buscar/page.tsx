@@ -1,5 +1,6 @@
 'use client';
-import React, { useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
@@ -73,6 +74,7 @@ interface Orcamento {
 }
 
 const useFetchOrcamentos = (searchQuery: string, page: number) => {
+
   const accessToken = typeof window !== "undefined" ? localStorage.getItem('accessToken') : null;
 
   return useQuery({
@@ -85,17 +87,9 @@ const useFetchOrcamentos = (searchQuery: string, page: number) => {
           Authorization: `Bearer ${accessToken}`,
         },
       }).then((res) => res.json()),
+    enabled: typeof window !== 'undefined',
   });
 };
-
-const vendedores = JSON.parse(localStorage.getItem('vendedores') || '[]') as {
-  id: number;
-  name: string;
-  email: string;
-  email_verified_at: string | null;
-  created_at: string;
-  updated_at: string;
-}[];
 
 const OrcamentoBuscarScreen = () => {
   const router = useRouter();
@@ -103,13 +97,16 @@ const OrcamentoBuscarScreen = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
+  const [vendedores, setVendedores] = useState<
+    { id: number; name: string; email: string; email_verified_at: string | null; created_at: string; updated_at: string }[]
+  >([]);
+
   const mode = useThemeMode();
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
   const regexPrazo = /Prazo de Produção:\s*(\d{1,3})\s*dias úteis/;
   const regexEntrega = /Previsão de Entrega:\s*([\d]{1,2} de [a-zA-Z]+ de \d{4})\s?\(([^)]+)\)/;
   const regexBrinde = /Brinde:\s*\d+\s*un\s*[\w\s]*\s*R\$\s*\d{1,3}(?:,\d{2})*\s*\(R\$\s*\d{1,3}(?:,\d{2})*\)/;
-
 
   // busca os dados
   const { isFetching, error, data } = useFetchOrcamentos(searchQuery, page);
@@ -145,6 +142,15 @@ const OrcamentoBuscarScreen = () => {
 
   if (isFetching) return <CircularProgress />;
   if (error) return <p>Ocorreu um erro: {error.message}</p>;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedVendedores = localStorage.getItem('vendedores');
+      if (storedVendedores) {
+        setVendedores(JSON.parse(storedVendedores));
+      }
+    }
+  }, []);
 
   return (
     <PageContainer title="Orçamento / Buscar" description="Buscar Orçamento da Arte Arena">
