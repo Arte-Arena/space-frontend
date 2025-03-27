@@ -286,12 +286,23 @@ const OrcamentoBackofficeScreen = () => {
         body: JSON.stringify(orcamentoFormated),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch (jsonError: any) {
+        console.error("Erro ao parsear resposta JSON:", responseText);
+        alert(`Erro ao processar resposta do servidor: ${jsonError.message}`);
+        setIsLoadingMakePeido(false);
+        return;
+      }
+
       setIsLoadingMakePeido(false);
 
       // Verifique o status dentro de data.retorno
       if (data.retorno && data.retorno.status === "Erro") {
-        const registro = data.retorno.registros.registro; // considerando que é um objeto
+        const registro = data.retorno.registros?.registro;
         if (registro && registro.erros && registro.erros.length > 0) {
           const ultimoErro = registro.erros[registro.erros.length - 1];
           const mensagemErro = ultimoErro.erro;
@@ -303,15 +314,14 @@ const OrcamentoBackofficeScreen = () => {
       if (response.ok) {
         alert('Pedido N°' + orcamento.id + ' salvo com sucesso!');
       } else {
-        // Já temos os dados em "data", então não precisamos chamar response.json() novamente.
-        console.log(data.message);
-        alert(`Erro ao salvar: ${data.message}`);
+        console.log(data.message || "Erro desconhecido");
+        alert(`Erro ao salvar: ${data.message || "Erro desconhecido"}`);
       }
 
       refetch();
     } catch (error) {
       console.error("Erro na requisição:", error);
-      alert("Ocorreu um erro ao processar o pedido. Produto Pai Invalido.");
+      alert("Ocorreu um erro ao processar o pedido. Verifique o console para mais detalhes.");
       setIsLoadingMakePeido(false);
       refetch();
     }
