@@ -206,30 +206,6 @@ const BackgroundUpdater = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  useEffect(() => {
-    const accessToken = localStorage.getItem('accessToken');
-    const fetchDataPedidoArteFinal = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=D`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const pedidosArteFinal = await response.json();
-        localStorage.setItem('pedidosArteFinal', JSON.stringify(pedidosArteFinal));
-      } catch (error) {
-        console.error('Erro ao buscar dados:', error);
-      }
-    };
-
-    fetchDataPedidoArteFinal();
-
-    const intervalId = setInterval(fetchDataPedidoArteFinal, 30000);
-    return () => clearInterval(intervalId);
-  }, []);
-
 
   return null;
 }

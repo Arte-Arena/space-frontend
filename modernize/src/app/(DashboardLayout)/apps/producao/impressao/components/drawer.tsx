@@ -12,9 +12,10 @@ interface SidePanelProps {
   row: ArteFinal | null;
   openDrawer: boolean;
   onCloseDrawer: () => void;
+  refetch: () => void;
 }
 
-const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer }) => {
+const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, refetch }) => {
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
   const theme = useThemeMode();
@@ -105,7 +106,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
 
   const handletrocarMedidaLinear = async (uid: number | null, medidasLineares: Record<string, number>, id: number) => {
     try {
-      const response = await trocarMedidaLinear(id, uid, medidasLineares);
+      const response = await trocarMedidaLinear(id, uid, medidasLineares, refetch);
       if (response) {
         console.log("Medida linear atualizada com sucesso!");
         setSnackbar({

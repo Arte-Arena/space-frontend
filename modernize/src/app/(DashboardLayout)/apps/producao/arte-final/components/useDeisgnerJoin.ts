@@ -1,4 +1,4 @@
-const atribuirDesigner = async (id: number | undefined): Promise<boolean> => {
+const atribuirDesigner = async (id: number | undefined, refetch: () => void): Promise<boolean> => {
   try {
     const accessToken = localStorage.getItem("accessToken");
     const user_id = localStorage.getItem("user_id");
@@ -17,6 +17,7 @@ const atribuirDesigner = async (id: number | undefined): Promise<boolean> => {
     );
 
     if (!res.ok) throw new Error("Erro ao alterar o designer do pedido.");
+    refetch();
     return true;
   } catch (error) {
     console.error("Erro ao trocar designer do pedido:", error);

@@ -1,4 +1,4 @@
-const trocarMedidaLinear = async (id: number | undefined, uid: number | null, medidasLineares: Record<string, number>): Promise<boolean> => {
+const trocarMedidaLinear = async (id: number | undefined, uid: number | null, medidasLineares: Record<string, number>, refetch: () => void): Promise<boolean> => {
   try {
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) throw new Error("Usuário não autenticado.");
@@ -22,6 +22,7 @@ const trocarMedidaLinear = async (id: number | undefined, uid: number | null, me
     );
 
     if (!res.ok) throw new Error("Erro ao alterar o prduto do pedido.");
+    refetch();
     return true;
   } catch (error) {
     console.error("Erro ao trocar produto do pedido:", error);
