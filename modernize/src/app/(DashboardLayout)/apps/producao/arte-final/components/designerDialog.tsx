@@ -18,15 +18,12 @@ interface AssignDesignerDialogProps {
     openDialogDesinger: boolean;
     onCloseDialogDesinger: () => void;
     row: ArteFinal | null;
-    refetch: () => void;
-
 }
 
 const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
     openDialogDesinger,
     onCloseDialogDesinger,
-    row,
-    refetch
+    row
 }) => {
     const [selectedDesigner, setSelectedDesigner] = useState<string | null>(null);
     const router = useRouter();
@@ -67,7 +64,6 @@ const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
             })
             .then(data => {
                 console.log('Designer atribuído com sucesso:', data);
-                refetch();
                 router.refresh();  // Atualiza os dados da página
             })
             .catch(error => {

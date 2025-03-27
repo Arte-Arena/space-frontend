@@ -106,47 +106,57 @@ const ArteFinalScreen = () => {
     pedido_status_id: statusFilter,
   };
 
-  const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
-    queryKey: ['pedidos'],
-    queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=D`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      }).then((res) => res.json()),
-  });
+  // const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos } = useQuery<ApiResponsePedidosArteFinal>({
+  //   queryKey: ['pedidos'],
+  //   queryFn: () =>
+  //     fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=D`, {
+  //       method: 'GET',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${accessToken}`,
+  //       },
+  //     }).then((res) => res.json()),
+  // }); 
+
+  const pedidosArteFinal = localStorage.getItem('pedidosArteFinal') ? JSON.parse(localStorage.getItem('pedidosArteFinal') as string) : { pedidosArteFinal: [] };
+  const pedidosTodos = pedidosArteFinal.data;
+
+  // useEffect(() => {
+  //   setAllPedidos(pedidosArteFinal.data);
+  // }, [pedidosArteFinal])
 
   useEffect(() => {
-    if (dataPedidos && dataPedidos.data) { // Verificação adicional
-      setAllPedidos(dataPedidos.data);
-      console.log(dataPedidos);
-    }
-  }, [dataPedidos]);
+    console.log('all pedidos:', pedidosTodos)
+  }, [pedidosTodos])
+  // useEffect(() => {
+  //   if (dataPedidos && dataPedidos.data) { // Verificação adicional
+  //     setAllPedidos(dataPedidos.data);
+  //     console.log(dataPedidos);
+  //   }
+  // }, [dataPedidos]);
 
 
   // Inicializa o estado apenas uma vez
-  useEffect(() => {
-    const inicializarObservacoes = paginatedPedidos.reduce((acc, row) => {
-      acc[row?.id ?? 0] = row.observacoes || "";
-      return acc;
-    }, {} as { [key: string]: string });
+  // useEffect(() => {
+  //   const inicializarObservacoes = paginatedPedidos.reduce((acc: any, row: any) => {
+  //     acc[row?.id ?? 0] = row.observacoes || "";
+  //     return acc;
+  //   }, {} as { [key: string]: string });
 
-    setObservacoes(inicializarObservacoes);
-  }, [allPedidos]);
+  //   setObservacoes(inicializarObservacoes);
+  // }, [pedidosTodos]);
 
-  const handleObservacaoChange = (id: string, novaObservacao: string) => {
-    setObservacoes((prev) => ({ ...prev, [id]: novaObservacao }));
-  };
+  // const handleObservacaoChange = (id: string, novaObservacao: string) => {
+  //   setObservacoes((prev) => ({ ...prev, [id]: novaObservacao }));
+  // };
 
-  console.log(allPedidos);
+  // console.log(allPedidos);
 
   useEffect(() => {
     if (!openDialogDesinger) {
-      refetch(); // Chama refetch quando o dialog é fechado
+      // Chama refetch quando o dialog é fechado
     }
-  }, [openDialogDesinger, refetch]);
+  }, [openDialogDesinger,]);
 
   const handleEdit = (pedido: ArteFinal) => {
     const pedidoId = String(pedido.id);
@@ -166,9 +176,9 @@ const ArteFinalScreen = () => {
   const handleDelete = async (row: ArteFinal) => {
     const confirmar = window.confirm('Deseja excluir o pedido N° ' + row.numero_pedido);
     if (confirmar) {
-      const sucesso = await deletePedidoArteFinal(row?.id, refetch);
+      const sucesso = await deletePedidoArteFinal(row?.id);
       if (sucesso) {
-        console.log("Pedido deletado com sucesso!");
+        // console.log("Pedido deletado com sucesso!");
         setSnackbar({
           open: true,
           message: `✅ ${'Sucesso!'}`,
@@ -180,7 +190,7 @@ const ArteFinalScreen = () => {
           message: `${'Falha ao excluir pedido'}`,
           severity: 'error'
         });
-        console.log("Falha ao excluir pedido.");
+        // console.log("Falha ao excluir pedido.");
       }
     } else {
       console.log("Envio cancelado.");
@@ -242,7 +252,7 @@ const ArteFinalScreen = () => {
   };
 
   const handleEntrarDesigner = async (id: number | undefined) => {
-    const resposta = await atribuirDesigner(id, refetch);
+    const resposta = await atribuirDesigner(id);
     if (resposta) {
       console.log("Designer adicionado com sucesso!");
       setSnackbar({
@@ -309,7 +319,7 @@ const ArteFinalScreen = () => {
 
 
     if (confirmar) {
-      const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
+      const sucesso = await trocarStatusPedido(row?.id, 8,);
       if (sucesso) {
         console.log("Pedido enviado com sucesso!");
         setSnackbar({
@@ -337,7 +347,7 @@ const ArteFinalScreen = () => {
 
   // handles dos selects
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
-    const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
+    const sucesso = await trocarStatusPedido(row?.id, status_id,);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
       setSnackbar({
@@ -361,43 +371,49 @@ const ArteFinalScreen = () => {
     setOpenDialogObs(true);
   };
 
-  const handleEnviarObservacao = async (id: string) => {
-    if (!id) {
-      console.error("ID do pedido não encontrado");
+  const handleEnviarObservacao = async (row: ArteFinal) => {
+
+    if (row.id) {
+      console.log("Onblur", row.id);
       return;
     }
 
-    const accessToken = localStorage.getItem("accessToken");
-    if (!accessToken) {
-      console.error("Usuário não autenticado");
-      return;
-    }
+    // if (!id) {
+    //   console.error("ID do pedido não encontrado");
+    //   return;
+    // }
 
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-obs-change/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ observacoes: observacoes[id] }), // Envia apenas a observação específica do ID
-        }
-      );
+    // const accessToken = localStorage.getItem("accessToken");
+    // if (!accessToken) {
+    //   console.error("Usuário não autenticado");
+    //   return;
+    // }
 
-      if (!response.ok) {
-        throw new Error("Erro ao salvar observação");
-      }
+    // try {
+    //   const response = await fetch(
+    //     `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-obs-change/${id}`,
+    //     {
+    //       method: "PUT",
+    //       headers: {
+    //         "Content-Type": "application/json",
+    //         Authorization: `Bearer ${accessToken}`,
+    //       },
+    //       body: JSON.stringify({ observacoes: observacoes[id] }), // Envia apenas a observação específica do ID
+    //     }
+    //   );
 
-      const data = await response.json();
-      console.log("Observação salva com sucesso:", data);
+    //   if (!response.ok) {
+    //     throw new Error("Erro ao salvar observação");
+    //   }
 
-      refetch(); // Atualiza os dados da página
-      router.refresh();
-    } catch (error) {
-      console.error("Erro ao salvar observação:", error);
-    }
+    //   const data = await response.json();
+    //   console.log("Observação salva com sucesso:", data);
+
+    //   // Atualiza os dados da página
+    //   router.refresh();
+    // } catch (error) {
+    //   console.error("Erro ao salvar observação:", error);
+    // }
   };
 
 
@@ -411,7 +427,7 @@ const ArteFinalScreen = () => {
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
-    return allPedidos.filter((pedido) => {
+    return pedidosTodos.filter((pedido: ArteFinal) => {
       // Verifica se o número do pedido corresponde ao filtro
       const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
 
@@ -427,7 +443,7 @@ const ArteFinalScreen = () => {
       // Retorna true se todas as condições de filtro forem atendidas
       return isNumberMatch && isStatusMatch && isDateMatch;
     });
-  }, [allPedidos, filters, dateFilter]);
+  }, [pedidosTodos, filters, dateFilter]);
 
   const paginatedPedidos = useMemo(() => {
     const startIndex = paginationModel.page * paginationModel.pageSize;
@@ -461,10 +477,10 @@ const ArteFinalScreen = () => {
   ];
 
   useEffect(() => {
-    console.log("📌 Estado atualizado - selectedRowIdSidePanel:", selectedRowSidePanel);
+    // console.log("📌 Estado atualizado - selectedRowIdSidePanel:", selectedRowSidePanel);
   }, [selectedRowSidePanel]);
 
-  // console.log(allPedidos);
+  // console.log(pedidosTodos);
   // console.log(designers);
 
   return (
@@ -472,7 +488,7 @@ const ArteFinalScreen = () => {
       <Breadcrumb title="Produção / Arte - Final" items={BCrumb} />
       <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2, }}>
         <Typography sx={{ fontSize: '18px', fontWeight: '600' }}>
-          Total de {allPedidos.length} Pedidos
+          Total de {pedidosTodos.length} Pedidos
           {/* {filteredPedidos.length} Filtrados */}
         </Typography>
       </Box>
@@ -554,386 +570,386 @@ const ArteFinalScreen = () => {
             </Grid>
           </Grid>
 
-          {isErrorPedidos ? (
-            <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
-              <Typography variant="body1" color="error">Erro ao carregar pedidos.</Typography>
-            </Stack>
-          ) : isLoadingPedidos ? (
-            <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
-              <CircularProgress />
-              <Typography variant="body1" sx={{ mt: 1 }}>Carregando pedidos...</Typography>
-            </Stack>
-          ) : (
-            <TableContainer component={Paper}>
-              <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
-                <TableHead>
-                  <TableRow>
-                    {/* <TableCell> </TableCell> */}
-                    <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
-                    <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Previsão de Entrega</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Designer</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Tipo</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Status</TableCell>
-                    <TableCell align='center' sx={{ width: '20%' }}>Ações</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Array.isArray(paginatedPedidos) && paginatedPedidos.map((row) => {
-                    const listaProdutos: Produto[] = row.lista_produtos
-                      ? typeof row.lista_produtos === 'string'
-                        ? JSON.parse(row.lista_produtos)
-                        : row.lista_produtos
-                      : [];
+          {/* {isErrorPedidos ? (
+              <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
+                <Typography variant="body1" color="error">Erro ao carregar pedidos.</Typography>
+              </Stack>
+            ) : isLoadingPedidos ? (
+              <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
+                <CircularProgress />
+                <Typography variant="body1" sx={{ mt: 1 }}>Carregando pedidos...</Typography>
+              </Stack>
+            ) : ( */}
+          <TableContainer component={Paper}>
+            <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
+              <TableHead>
+                <TableRow>
+                  {/* <TableCell> </TableCell> */}
+                  <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
+                  <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
+                  <TableCell align='center' sx={{ width: '10%' }}>Previsão de Entrega</TableCell>
+                  <TableCell align='center' sx={{ width: '10%' }}>Designer</TableCell>
+                  <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
+                  <TableCell align='center' sx={{ width: '10%' }}>Tipo</TableCell>
+                  <TableCell align='center' sx={{ width: '10%' }}>Status</TableCell>
+                  <TableCell align='center' sx={{ width: '20%' }}>Ações</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {Array.isArray(paginatedPedidos) && paginatedPedidos.map((row) => {
+                  const listaProdutos: Produto[] = row.lista_produtos
+                    ? typeof row.lista_produtos === 'string'
+                      ? JSON.parse(row.lista_produtos)
+                      : row.lista_produtos
+                    : [];
 
-                    // definição das datas e atrasos
-                    const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
-                    const dataAtual = getBrazilTime(); //colocar no getBrazilTime
-                    let atraso = false;
-                    let isHoje = false;
-                    if (dataPrevista && dataPrevista < dataAtual) {
-                      atraso = true;
-                    }
-                    if (dataPrevista && isSameDay(dataPrevista, dataAtual)) {
-                      isHoje = true;
-                    }
-                    // tem que usar isso na logica do rastreamento
+                  // definição das datas e atrasos
+                  const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
+                  const dataAtual = getBrazilTime(); //colocar no getBrazilTime
+                  let atraso = false;
+                  let isHoje = false;
+                  if (dataPrevista && dataPrevista < dataAtual) {
+                    atraso = true;
+                  }
+                  if (dataPrevista && isSameDay(dataPrevista, dataAtual)) {
+                    isHoje = true;
+                  }
+                  // tem que usar isso na logica do rastreamento
 
-                    // definição dos designers
-                    const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
-                    const usersMap = new Map(
-                      Array.isArray(parsedDesigners)
-                        ? parsedDesigners.map(designer => [designer.id, designer.name])
-                        : []
-                    );
+                  // definição dos designers
+                  const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
+                  const usersMap = new Map(
+                    Array.isArray(parsedDesigners)
+                      ? parsedDesigners.map(designer => [designer.id, designer.name])
+                      : []
+                  );
 
-                    const getUserNameById = (id: number | null | undefined) => {
-                      return id && usersMap.has(id) ? usersMap.get(id) : "Desconhecido";
-                    };
-                    const designerNome = getUserNameById(row.designer_id);
+                  const getUserNameById = (id: number | null | undefined) => {
+                    return id && usersMap.has(id) ? usersMap.get(id) : "Desconhecido";
+                  };
+                  const designerNome = getUserNameById(row.designer_id);
 
-                    const pedidoTipos = {
-                      1: 'Prazo normal',
-                      2: 'Antecipação',
-                      3: 'Faturado',
-                      4: 'Metade/Metade',
-                      5: 'Amostra',
-                    } as const;
+                  const pedidoTipos = {
+                    1: 'Prazo normal',
+                    2: 'Antecipação',
+                    3: 'Faturado',
+                    4: 'Metade/Metade',
+                    5: 'Amostra',
+                  } as const;
 
-                    const pedidoStatusColors: Record<number, string> = {
-                      1: 'rgba(220, 53, 69, 0.49)',
-                      2: 'rgba(213, 121, 0, 0.8)',
-                      3: 'rgba(123, 157, 0, 0.8)',
-                      4: 'rgba(0, 152, 63, 0.65)',
-                      5: 'rgba(0, 146, 136, 0.8)',
-                      // 19: 'rgba(238, 84, 84, 0.8)',
-                      // 20: 'rgba(20, 175, 0, 0.8)',
-                      // 21: 'rgba(180, 0, 0, 0.8)',
-                      // 22: 'rgba(152, 0, 199, 0.8)',
-                    };
-
-
-                    const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
-                    const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
+                  const pedidoStatusColors: Record<number, string> = {
+                    1: 'rgba(220, 53, 69, 0.49)',
+                    2: 'rgba(213, 121, 0, 0.8)',
+                    3: 'rgba(123, 157, 0, 0.8)',
+                    4: 'rgba(0, 152, 63, 0.65)',
+                    5: 'rgba(0, 146, 136, 0.8)',
+                    // 19: 'rgba(238, 84, 84, 0.8)',
+                    // 20: 'rgba(20, 175, 0, 0.8)',
+                    // 21: 'rgba(180, 0, 0, 0.8)',
+                    // 22: 'rgba(152, 0, 199, 0.8)',
+                  };
 
 
-                    return (
-                      <>
-                        {/* colocar as condições de data e de tipos de status e suas cores */}
-                        {/* teste usar a theme   */}
-                        <TableRow
-                          key={row.id}
+                  const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
+                  const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
+
+
+                  return (
+                    <>
+                      {/* colocar as condições de data e de tipos de status e suas cores */}
+                      {/* teste usar a theme   */}
+                      <TableRow
+                        key={row.id}
+                        sx={{
+                        }}
+                      >
+
+                        <TableCell
                           sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => {
+                            navigator.clipboard.writeText(String(row.numero_pedido));
+                            // colocar um alert bunitinho de copiado
                           }}
                         >
+                          {String(row.numero_pedido)}
+                        </TableCell>
 
+                        {/* Nome de produto */}
+                        <TableCell sx={{
+                          color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                        }} align='center'>
+                          {row.lista_produtos?.length > 0
+                            ? (
+                              <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
+                                {listaProdutos.map((produto, index) => (
+                                  <li key={index}>{produto.nome}</li> // Cada produto em uma nova linha
+                                ))}
+                              </ul>
+                            )
+                            : 'N/A'}
+                        </TableCell>
+
+                        <TableCell
+                          sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black',
+                            backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)',
+                          }}
+                          align="center"
+                        >
+                          {row?.data_prevista
+                            ? DateTime.fromISO(new Date(row.data_prevista).toISOString(), { zone: "utc" })
+                              .setZone("America/Sao_Paulo")
+                              .toFormat("dd/MM/yyyy")
+                            : " "}
+                          {atraso && <span> (Atraso)</span>}
+                        </TableCell>
+
+                        {designerNome !== 'Desconhecido' ? (
                           <TableCell
                             sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
-                              cursor: 'pointer',
-                            }}
-                            onClick={() => {
-                              navigator.clipboard.writeText(String(row.numero_pedido));
-                              // colocar um alert bunitinho de copiado
-                            }}
-                          >
-                            {String(row.numero_pedido)}
-                          </TableCell>
-
-                          {/* Nome de produto */}
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }} align='center'>
-                            {row.lista_produtos?.length > 0
-                              ? (
-                                <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
-                                  {listaProdutos.map((produto, index) => (
-                                    <li key={index}>{produto.nome}</li> // Cada produto em uma nova linha
-                                  ))}
-                                </ul>
-                              )
-                              : 'N/A'}
-                          </TableCell>
-
-                          <TableCell
-                            sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black',
-                              backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)',
+                              color: myTheme === "dark" ? "white" : "black", // Branco no modo escuro e preto no claro
                             }}
                             align="center"
                           >
-                            {row?.data_prevista
-                              ? DateTime.fromISO(new Date(row.data_prevista).toISOString(), { zone: "utc" })
-                                .setZone("America/Sao_Paulo")
-                                .toFormat("dd/MM/yyyy")
-                              : " "}
-                            {atraso && <span> (Atraso)</span>}
+                            {designerNome}
                           </TableCell>
-
-                          {designerNome !== 'Desconhecido' ? (
-                            <TableCell
-                              sx={{
-                                color: myTheme === "dark" ? "white" : "black", // Branco no modo escuro e preto no claro
-                              }}
-                              align="center"
-                            >
-                              {designerNome}
-                            </TableCell>
-                          ) : (
-                            <TableCell align="center">
-                              {canShowButtonDesigner ? (
-                                <Button
-                                  sx={{
-                                    backgroundColor: 'transparent',
-                                    borderRadius: '100px',
-                                    border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
-                                    color: myTheme === 'dark' ? 'white' : 'black',
-                                  }}
-                                  onClick={() => handleEntrarDesigner(row.id)}
-                                >
-                                  <IconUserPlus />
-                                </Button>
-                              ) : (
-                                <>
-                                  Não Atribuído
-                                </>
-                              )}
-                            </TableCell>
-                          )}
-
-                          <TableCell
-                            sx={{
-                              color: myTheme === "dark" ? "white" : "black",
-                              textAlign: "center",
-                            }}
-                          >
-                            {row?.observacoes ? (
-                              <Tooltip title={"Adicionar Observação?"} placement="top">
-                                <Typography
-                                  onClick={() => handleClickOpenDialogObs(row)}
-                                  sx={{
-                                    cursor: "pointer",
-                                    fontSize: "14px",
-                                    fontWeight: row.observacoes ? "500" : "regular",
-                                    color: myTheme === "dark" ? "white" : "black",
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    maxWidth: "200px", // Ajuste conforme necessário
-                                    display: "inline-block",
-                                    "&:hover": {
-                                      fontWeight: "bold",
-                                      color: myTheme === "dark" ? "#bdbdbd" : "#555",
-                                    },
-                                  }}
-                                >
-                                  {row?.observacoes ?? observacoes[row.id ?? 0]}
-                                </Typography>
-                              </Tooltip>
-                            ) : (
-                              <CustomTextField
-                                value={observacoes[row?.id ?? 0] || ""}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleObservacaoChange(String(row?.id), e.target.value)}
-                                autoFocus
-                                onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleEnviarObservacao(String(row?.id))} // Salva ao perder o foco
-                                onKeyDown={(e: { key: string; }) => e.key === "Enter" && handleEnviarObservacao(String(row?.id))} // Salva ao pressionar Enter
-                                // variant="standard"
-                                fullWidth 
-                              />
-                            )}
-                          </TableCell>
-
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black',
-                            backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
-                          }} align='center'>{tipo ?? '-'}</TableCell>
-
-                          {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
-                            backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
-                          }} align='center'>
-                            <select
-                              style={{
-                                textAlign: 'center',
-                                padding: '0px',
-                                fontSize: '12px',
-                                borderRadius: '4px',
-                                border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
-                                backgroundColor: 'transparent',
-                                color: myTheme === 'dark' ? 'white' : 'black',
-                                appearance: 'none',
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none',
-                                cursor: 'pointer',
-                                width: 'auto',
-                                boxSizing: 'border-box',  // Para garantir que o padding não quebre a largura
-                              }}
-                              value={String(row.pedido_status_id)} // O valor precisa ser uma string
-                              onChange={(event) => {
-                                const newStatus = event.target.value;  // O valor será do tipo string
-                                handleStatusChange(row, Number(newStatus)); // Converte para número antes de passar para a função
-                              }}
-                            >
-                              {Object.entries(pedidoStatus).map(([id, status]) => (
-                                <option key={id} value={id}>
-                                  {status.nome}
-                                </option>
-                              ))}
-                            </select>
-                          </TableCell>
-
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }} align='center'>
-                            <Tooltip title="Ver Detalhes">
-                              <IconButton onClick={() => handleVerDetalhes(row)}>
-                                <IconEye />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
-                              <IconButton
-                                onClick={() => handleLinkTrello(row)}
-                                disabled={row.url_trello === null}
+                        ) : (
+                          <TableCell align="center">
+                            {canShowButtonDesigner ? (
+                              <Button
+                                sx={{
+                                  backgroundColor: 'transparent',
+                                  borderRadius: '100px',
+                                  border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
+                                  color: myTheme === 'dark' ? 'white' : 'black',
+                                }}
+                                onClick={() => handleEntrarDesigner(row.id)}
                               >
-                                <IconBrandTrello />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Lista de Uniformes">
-                              <IconButton onClick={() => handleListaUniformes(row)}>
-                                <IconShirt />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Enviar para Impressão!">
-                              <IconButton onClick={() => handleEnviarImpressora(row)}>
-                                <IconPrinter />
-                              </IconButton>
-                            </Tooltip>
-
-                            {/* validar a role do user 6*/}
-                            {canShowButtonAtribuirDesigner && (
-                              <Tooltip title="Atribuir Designer">
-                                <IconButton onClick={() => handleAtribuirDesigner(row)}>
-                                  <IconBrush />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-
-                            {/* validar a role do user 2,4,1*/}
-                            {canShowButton && (
+                                <IconUserPlus />
+                              </Button>
+                            ) : (
                               <>
-                                <Tooltip title="Editar">
-                                  <IconButton onClick={() => handleEdit(row)}>
-                                    <IconEdit />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Excluir">
-                                  <IconButton onClick={() => handleDelete(row)}>
-                                    <IconTrash />
-                                  </IconButton>
-                                </Tooltip>
+                                Não Atribuído
                               </>
                             )}
                           </TableCell>
-                        </TableRow>
+                        )}
 
-                        <TableRow>
-                          {/* colSpan deve ter o mesmo número que o número de cabeçalhos da tabela, no caso 16 */}
-                          <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
-                            <Collapse in={openRow[row.id ?? 0]} timeout="auto" unmountOnExit>
-                              <Box margin={1}>
-                                <Table size="small" aria-label="detalhes">
-                                  <TableBody>
-                                    <TableRow>
-                                      <TableCell sx={{ border: 'none' }} colSpan={16}>
-                                        <strong>Lista de Produtos</strong>
-                                        <TableHead>
-                                          <TableRow>
-                                            <TableCell></TableCell>
-                                            <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                              Tipo:
-                                            </TableCell>
-                                            <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                              Material:
-                                            </TableCell>
-                                            <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                              Medida linear:
-                                            </TableCell>
-                                          </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                          {listaProdutos.length > 0 ? (
-                                            listaProdutos.map((produto: Produto, index: number) => (
-                                              <TableRow key={produto.id || index}>
-                                                <TableCell sx={{ fontWeight: 'bold', padding: '8px' }} colSpan={1}>
-                                                  {produto.nome}
-                                                </TableCell>
-                                                <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.nome}
-                                                </TableCell>
-                                                {/* <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.materiais.map((material: Material) => material.material).join(', ')} 
-                                                </TableCell> */}
-                                                <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.medida_linear}
-                                                </TableCell>
-                                              </TableRow>
-                                            ))
-                                          ) : (
-                                            <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
-                                          )}
-                                        </TableBody>
-                                      </TableCell>
-                                    </TableRow>
-                                  </TableBody>
-                                </Table>
-                              </Box>
-                            </Collapse>
-                          </TableCell>
-                        </TableRow>
-                      </>
-                    );
-                  })}
-                </TableBody>
+                        <TableCell
+                          sx={{
+                            color: myTheme === "dark" ? "white" : "black",
+                            textAlign: "center",
+                          }}
+                        >
+                          {row?.observacoes ? (
+                            <Tooltip title={"Adicionar Observação?"} placement="top">
+                              <Typography
+                                onClick={() => handleClickOpenDialogObs(row)}
+                                sx={{
+                                  cursor: "pointer",
+                                  fontSize: "14px",
+                                  fontWeight: row.observacoes ? "500" : "regular",
+                                  color: myTheme === "dark" ? "white" : "black",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  maxWidth: "200px", // Ajuste conforme necessário
+                                  display: "inline-block",
+                                  "&:hover": {
+                                    fontWeight: "bold",
+                                    color: myTheme === "dark" ? "#bdbdbd" : "#555",
+                                  },
+                                }}
+                              >
+                                {row?.observacoes ?? observacoes[row.id ?? 0]}
+                              </Typography>
+                            </Tooltip>
+                          ) : (
+                            <CustomTextField
+                              value={observacoes[row?.id ?? 0] || ""}
+                              // onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleObservacaoChange(String(row?.id), e.target.value)}
+                              autoFocus
+                              // onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleEnviarObservacao(row)} // Salva ao perder o foco
+                              onKeyDown={(e: { key: string; }) => e.key === "Enter" && handleEnviarObservacao(row)} // Salva ao pressionar Enter
+                              // variant="standard"
+                              fullWidth
+                            />
+                          )}
+                        </TableCell>
 
-              </Table >
-              <TablePagination
-                rowsPerPageOptions={[15, 25, 50, 100, 200]}
-                component="div"
-                count={filteredPedidos.length || 0}
-                rowsPerPage={paginationModel.pageSize}
-                page={paginationModel.page}
-                onPageChange={(event, newPage) => setPaginationModel({ ...paginationModel, page: newPage })}
-                onRowsPerPageChange={(event) => setPaginationModel({ ...paginationModel, pageSize: parseInt(event.target.value, 10), page: 0 })}
-              />
-            </TableContainer>
-          )}
+                        <TableCell sx={{
+                          color: myTheme === 'dark' ? 'white' : 'black',
+                          backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
+                        }} align='center'>{tipo ?? '-'}</TableCell>
+
+                        {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
+                        <TableCell sx={{
+                          color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                          backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
+                        }} align='center'>
+                          <select
+                            style={{
+                              textAlign: 'center',
+                              padding: '0px',
+                              fontSize: '12px',
+                              borderRadius: '4px',
+                              border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
+                              backgroundColor: 'transparent',
+                              color: myTheme === 'dark' ? 'white' : 'black',
+                              appearance: 'none',
+                              WebkitAppearance: 'none',
+                              MozAppearance: 'none',
+                              cursor: 'pointer',
+                              width: 'auto',
+                              boxSizing: 'border-box',  // Para garantir que o padding não quebre a largura
+                            }}
+                            value={String(row.pedido_status_id)} // O valor precisa ser uma string
+                            onChange={(event) => {
+                              const newStatus = event.target.value;  // O valor será do tipo string
+                              handleStatusChange(row, Number(newStatus)); // Converte para número antes de passar para a função
+                            }}
+                          >
+                            {Object.entries(pedidoStatus).map(([id, status]) => (
+                              <option key={id} value={id}>
+                                {status.nome}
+                              </option>
+                            ))}
+                          </select>
+                        </TableCell>
+
+                        <TableCell sx={{
+                          color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                        }} align='center'>
+                          <Tooltip title="Ver Detalhes">
+                            <IconButton onClick={() => handleVerDetalhes(row)}>
+                              <IconEye />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
+                            <IconButton
+                              onClick={() => handleLinkTrello(row)}
+                              disabled={row.url_trello === null}
+                            >
+                              <IconBrandTrello />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Lista de Uniformes">
+                            <IconButton onClick={() => handleListaUniformes(row)}>
+                              <IconShirt />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Enviar para Impressão!">
+                            <IconButton onClick={() => handleEnviarImpressora(row)}>
+                              <IconPrinter />
+                            </IconButton>
+                          </Tooltip>
+
+                          {/* validar a role do user 6*/}
+                          {canShowButtonAtribuirDesigner && (
+                            <Tooltip title="Atribuir Designer">
+                              <IconButton onClick={() => handleAtribuirDesigner(row)}>
+                                <IconBrush />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+
+                          {/* validar a role do user 2,4,1*/}
+                          {canShowButton && (
+                            <>
+                              <Tooltip title="Editar">
+                                <IconButton onClick={() => handleEdit(row)}>
+                                  <IconEdit />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Excluir">
+                                <IconButton onClick={() => handleDelete(row)}>
+                                  <IconTrash />
+                                </IconButton>
+                              </Tooltip>
+                            </>
+                          )}
+                        </TableCell>
+                      </TableRow>
+
+                      <TableRow>
+                        {/* colSpan deve ter o mesmo número que o número de cabeçalhos da tabela, no caso 16 */}
+                        <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
+                          <Collapse in={openRow[row.id ?? 0]} timeout="auto" unmountOnExit>
+                            <Box margin={1}>
+                              <Table size="small" aria-label="detalhes">
+                                <TableBody>
+                                  <TableRow>
+                                    <TableCell sx={{ border: 'none' }} colSpan={16}>
+                                      <strong>Lista de Produtos</strong>
+                                      <TableHead>
+                                        <TableRow>
+                                          <TableCell></TableCell>
+                                          <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                            Tipo:
+                                          </TableCell>
+                                          <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                            Material:
+                                          </TableCell>
+                                          <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
+                                            Medida linear:
+                                          </TableCell>
+                                        </TableRow>
+                                      </TableHead>
+                                      <TableBody>
+                                        {listaProdutos.length > 0 ? (
+                                          listaProdutos.map((produto: Produto, index: number) => (
+                                            <TableRow key={produto.id || index}>
+                                              <TableCell sx={{ fontWeight: 'bold', padding: '8px' }} colSpan={1}>
+                                                {produto.nome}
+                                              </TableCell>
+                                              <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                                {produto.nome}
+                                              </TableCell>
+                                              {/* <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                                    {produto.materiais.map((material: Material) => material.material).join(', ')} 
+                                                  </TableCell> */}
+                                              <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
+                                                {produto.medida_linear}
+                                              </TableCell>
+                                            </TableRow>
+                                          ))
+                                        ) : (
+                                          <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
+                                        )}
+                                      </TableBody>
+                                    </TableCell>
+                                  </TableRow>
+                                </TableBody>
+                              </Table>
+                            </Box>
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    </>
+                  );
+                })}
+              </TableBody>
+
+            </Table >
+            <TablePagination
+              rowsPerPageOptions={[15, 25, 50, 100, 200]}
+              component="div"
+              count={filteredPedidos.length || 0}
+              rowsPerPage={paginationModel.pageSize}
+              page={paginationModel.page}
+              onPageChange={(event, newPage) => setPaginationModel({ ...paginationModel, page: newPage })}
+              onRowsPerPageChange={(event) => setPaginationModel({ ...paginationModel, pageSize: parseInt(event.target.value, 10), page: 0 })}
+            />
+          </TableContainer>
+          {/* )} */}
           {selectedRowDesinger !== null && (
-            <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} refetch={refetch} />
+            <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} />
           )}
-          <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
-          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
+          <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} />
+          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
 
           <Snackbar
             open={snackbar.open}

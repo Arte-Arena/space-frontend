@@ -255,6 +255,9 @@ const OrcamentoBackofficeScreen = () => {
   const handleMakePedido = async (orcamento: Orcamento) => {
     setIsLoadingMakePeido(true);
 
+    // tem que saber se tem um id orcamento igual ao da row no pedido arte final
+    
+
     const orcamentoFormated = {
       id: orcamento.id,
       id_vendedor: orcamento.user_id,
