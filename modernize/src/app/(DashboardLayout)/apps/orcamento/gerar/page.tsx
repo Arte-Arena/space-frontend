@@ -1367,6 +1367,9 @@ Orçamento válido somente hoje.
   }
 
   const salvarOrcamento = async () => {
+
+    const previsaoEntregaString = previsaoEntrega ? previsaoEntrega.toFormat('yyyy-MM-dd') : null;
+    
     const dataBody = {
       cliente_octa_number: clientId,
       nome_cliente: clientId,
@@ -1398,7 +1401,7 @@ Orçamento válido somente hoje.
           : (totalProductsValue ?? 0) + (shippingOption !== 'RETIRADA' ? precoFrete ?? 0 : 0),
       brinde: checkedBrinde,
       produtos_brinde: JSON.stringify(productsBrindeList),
-      previsaoEntrega,
+      prev_entrega: previsaoEntregaString,
     };
 
     try {
