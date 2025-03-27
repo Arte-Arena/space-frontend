@@ -22,6 +22,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { IconTruckDelivery } from '@tabler/icons-react';
 import useAprovarPedidoStatus from './components/useAprovarPedidoStatus';
 import { logger } from '@/utils/logger';
+import useFetchPedidoArteFinal from './components/usePedidoExists';
 
 interface Pedidos {
   id: number;
@@ -124,12 +125,12 @@ const OrcamentoBackofficeScreen = () => {
   const [loadingPedido, setLoadingPedido] = useState(false);
   const [copiedRastreio, setCopiedRastreio] = useState(false);
   const [handleMakePedidoLoading, setIsLoadingMakePeido] = useState(false);
-  const [loadingBrushIds, setLoadingBrushIds] = useState<{[key: number]: boolean}>({});
+  const [loadingBrushIds, setLoadingBrushIds] = useState<{ [key: number]: boolean }>({});
   const [navigateTo, setNavigateTo] = useState<string | null>(null);
-  const [clientesConfigurados, setClientesConfigurados] = useState<{[key: number]: boolean}>({});
-  const [uniformesConfigurados, setUniformesConfigurados] = useState<{[key: number]: boolean}>({});
-  const [verificandoCliente, setVerificandoCliente] = useState<{[key: number]: boolean}>({});
-  const [verificandoUniformes, setVerificandoUniformes] = useState<{[key: number]: boolean}>({});
+  const [clientesConfigurados, setClientesConfigurados] = useState<{ [key: number]: boolean }>({});
+  const [uniformesConfigurados, setUniformesConfigurados] = useState<{ [key: number]: boolean }>({});
+  const [verificandoCliente, setVerificandoCliente] = useState<{ [key: number]: boolean }>({});
+  const [verificandoUniformes, setVerificandoUniformes] = useState<{ [key: number]: boolean }>({});
   const theme = useTheme()
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
@@ -254,66 +255,76 @@ const OrcamentoBackofficeScreen = () => {
 
   const handleMakePedido = async (orcamento: Orcamento) => {
     setIsLoadingMakePeido(true);
+    const { response, errorPedido } = useFetchPedidoArteFinal(orcamento.id);
 
-    const orcamentoFormated = {
-      id: orcamento.id,
-      id_vendedor: orcamento.user_id,
-      cliente_codigo: orcamento.cliente_octa_number,
-      nome_cliente: orcamento.nome_cliente,
-      lista_produtos: orcamento.lista_produtos,
-      produtos_brinde: orcamento.produtos_brinde,
-      brinde: orcamento.brinde,
-      texto_orcamento: orcamento.texto_orcamento,
-      cep: orcamento.endereco_cep,
-      endereco: orcamento.endereco,
-      transportadora: orcamento.opcao_entrega,
-      data_pedido: orcamento.created_at,
-      updated_at: orcamento.updated_at,
-      tipo_desconto: orcamento.tipo_desconto,
-      valor_desconto: orcamento.valor_desconto,
-      data_antecipa: orcamento.data_antecipa,
-      taxa_antecipa: orcamento.taxa_antecipa,
-      total_orcamento: orcamento.total_orcamento,
-    };
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/pedido-cadastro`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(orcamentoFormated),
-      });
-
-      const data = await response.json();
+    if (errorPedido || !response) {
+      alert('Pedido não salvo! ' + errorPedido?.message || "não existe pedido para este orcamento");
+      console.error('Error:', errorPedido || "não existe pedido para este orcamento");
       setIsLoadingMakePeido(false);
+      return;
+    }
 
-      // Verifique o status dentro de data.retorno
-      if (data.retorno && data.retorno.status === "Erro") {
-        const registro = data.retorno.registros.registro; // considerando que é um objeto
-        if (registro && registro.erros && registro.erros.length > 0) {
-          const ultimoErro = registro.erros[registro.erros.length - 1];
-          const mensagemErro = ultimoErro.erro;
-          alert('Pedido não salvo! ' + mensagemErro);
-          return;
+    if (response) {
+      const orcamentoFormated = {
+        id: orcamento.id,
+        id_vendedor: orcamento.user_id,
+        cliente_codigo: orcamento.cliente_octa_number,
+        nome_cliente: orcamento.nome_cliente,
+        lista_produtos: orcamento.lista_produtos,
+        produtos_brinde: orcamento.produtos_brinde,
+        brinde: orcamento.brinde,
+        texto_orcamento: orcamento.texto_orcamento,
+        cep: orcamento.endereco_cep,
+        endereco: orcamento.endereco,
+        transportadora: orcamento.opcao_entrega,
+        data_pedido: orcamento.created_at,
+        updated_at: orcamento.updated_at,
+        tipo_desconto: orcamento.tipo_desconto,
+        valor_desconto: orcamento.valor_desconto,
+        data_antecipa: orcamento.data_antecipa,
+        taxa_antecipa: orcamento.taxa_antecipa,
+        total_orcamento: orcamento.total_orcamento,
+      };
+
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/pedido-cadastro`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(orcamentoFormated),
+        });
+
+        const data = await response.json();
+        setIsLoadingMakePeido(false);
+
+        // Verifique o status dentro de data.retorno
+        if (data.retorno && data.retorno.status === "Erro") {
+          const registro = data.retorno.registros.registro; // considerando que é um objeto
+          if (registro && registro.erros && registro.erros.length > 0) {
+            const ultimoErro = registro.erros[registro.erros.length - 1];
+            const mensagemErro = ultimoErro.erro;
+            alert('Pedido não salvo! ' + mensagemErro);
+            return;
+          }
         }
-      }
 
-      if (response.ok) {
-        alert('Pedido N°' + orcamento.id + ' salvo com sucesso!');
-      } else {
-        // Já temos os dados em "data", então não precisamos chamar response.json() novamente.
-        console.log(data.message);
-        alert(`Erro ao salvar: ${data.message}`);
-      }
+        if (response.ok) {
+          alert('Pedido N°' + orcamento.id + ' salvo com sucesso!');
+        } else {
+          // Já temos os dados em "data", então não precisamos chamar response.json() novamente.
+          console.log(data.message);
+          alert(`Erro ao salvar: ${data.message}`);
+        }
 
-      refetch();
-    } catch (error) {
-      console.error("Erro na requisição:", error);
-      alert("Ocorreu um erro ao processar o pedido. Produto Pai Invalido.");
-      setIsLoadingMakePeido(false);
-      refetch();
+        refetch();
+      } catch (error) {
+        console.error("Erro na requisição:", error);
+        alert("Ocorreu um erro ao processar o pedido. Produto Pai Invalido.");
+        setIsLoadingMakePeido(false);
+        refetch();
+      }
     }
   };
 
@@ -528,7 +539,7 @@ const OrcamentoBackofficeScreen = () => {
 
   const verificarClienteCadastrado = async (orcamentoId: number) => {
     setVerificandoCliente(prev => ({ ...prev, [orcamentoId]: true }));
-    
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/get-cliente-by-orcamento?orcamento_id=${orcamentoId}`, {
         method: 'GET',
@@ -553,7 +564,7 @@ const OrcamentoBackofficeScreen = () => {
 
   const verificarUniformesConfigurados = async (orcamentoId: number) => {
     setVerificandoUniformes(prev => ({ ...prev, [orcamentoId]: true }));
-    
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${orcamentoId}`, {
         method: 'GET',
@@ -677,13 +688,13 @@ const OrcamentoBackofficeScreen = () => {
                         <TableCell>{new Date(row.created_at).toLocaleDateString('pt-BR')}</TableCell>
                         <TableCell>
                           <Stack direction="row" spacing={1}>
-                            <Button 
+                            <Button
                               variant="outlined"
                               onClick={() => {
                                 setOpenLinkDialog(true);
                                 handleLinkOrcamento(row.id);
                               }}
-                              sx={{ 
+                              sx={{
                                 position: 'relative',
                                 '&::after': clientesConfigurados[row.id] ? {
                                   content: '""',
@@ -721,13 +732,13 @@ const OrcamentoBackofficeScreen = () => {
                                 </Button>
                               </DialogActions>
                             </Dialog>
-                            <Button 
-                              variant="outlined" 
+                            <Button
+                              variant="outlined"
                               onClick={() => {
                                 setOpenUniformDialog(true);
                                 handleShortlinkUniform(row.id);
                               }}
-                              sx={{ 
+                              sx={{
                                 position: 'relative',
                                 '&::after': uniformesConfigurados[row.id] ? {
                                   content: '""',
