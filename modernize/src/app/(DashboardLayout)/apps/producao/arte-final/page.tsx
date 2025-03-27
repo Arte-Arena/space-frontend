@@ -752,12 +752,15 @@ const ArteFinalScreen = () => {
                                 </Typography>
                               </Tooltip>
                             ) : (
-                              <CustomTextField
-                                value={observacoes[row?.id ?? 0] || ""}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleObservacaoChange(String(row?.id), e.target.value)}
-                                onKeyDown={(e: { key: string; }) => e.key === "Enter" && handleEnviarObservacao(String(row?.id))} // Salva ao pressionar Enter
-                                fullWidth 
-                              />
+                              <>
+                                <CustomTextField
+                                  value={observacoes[row?.id ?? 0] || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleObservacaoChange(String(row?.id), e.target.value)}
+                                  onKeyDown={(e: { key: string; }) => e.key === "Enter" && handleEnviarObservacao(String(row?.id))} // Salva ao pressionar Enter
+                                  fullWidth
+                                />
+                                <Typography variant="caption">Pressione Enter para confirmar</Typography>
+                              </>
                             )}
                           </TableCell>
 
