@@ -22,7 +22,6 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { IconTruckDelivery } from '@tabler/icons-react';
 import useAprovarPedidoStatus from './components/useAprovarPedidoStatus';
 import { logger } from '@/utils/logger';
-import useFetchPedidoArteFinal from './components/usePedidoExists';
 
 interface Pedidos {
   id: number;
@@ -255,76 +254,92 @@ const OrcamentoBackofficeScreen = () => {
 
   const handleMakePedido = async (orcamento: Orcamento) => {
     setIsLoadingMakePeido(true);
-    const { response, errorPedido } = useFetchPedidoArteFinal(orcamento.id);
-
-    if (errorPedido || !response) {
-      alert('Pedido não salvo! ' + errorPedido?.message || "não existe pedido para este orcamento");
-      console.error('Error:', errorPedido || "não existe pedido para este orcamento");
-      setIsLoadingMakePeido(false);
-      return;
-    }
-
-    if (response) {
-      const orcamentoFormated = {
-        id: orcamento.id,
-        id_vendedor: orcamento.user_id,
-        cliente_codigo: orcamento.cliente_octa_number,
-        nome_cliente: orcamento.nome_cliente,
-        lista_produtos: orcamento.lista_produtos,
-        produtos_brinde: orcamento.produtos_brinde,
-        brinde: orcamento.brinde,
-        texto_orcamento: orcamento.texto_orcamento,
-        cep: orcamento.endereco_cep,
-        endereco: orcamento.endereco,
-        transportadora: orcamento.opcao_entrega,
-        data_pedido: orcamento.created_at,
-        updated_at: orcamento.updated_at,
-        tipo_desconto: orcamento.tipo_desconto,
-        valor_desconto: orcamento.valor_desconto,
-        data_antecipa: orcamento.data_antecipa,
-        taxa_antecipa: orcamento.taxa_antecipa,
-        total_orcamento: orcamento.total_orcamento,
-      };
-
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/pedido-cadastro`, {
-          method: 'POST',
+    
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final-by-orcamento/${orcamento.id}`,
+        {
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify(orcamentoFormated),
-        });
-
-        const data = await response.json();
-        setIsLoadingMakePeido(false);
-
-        // Verifique o status dentro de data.retorno
-        if (data.retorno && data.retorno.status === "Erro") {
-          const registro = data.retorno.registros.registro; // considerando que é um objeto
-          if (registro && registro.erros && registro.erros.length > 0) {
-            const ultimoErro = registro.erros[registro.erros.length - 1];
-            const mensagemErro = ultimoErro.erro;
-            alert('Pedido não salvo! ' + mensagemErro);
-            return;
-          }
         }
-
-        if (response.ok) {
-          alert('Pedido N°' + orcamento.id + ' salvo com sucesso!');
-        } else {
-          // Já temos os dados em "data", então não precisamos chamar response.json() novamente.
-          console.log(data.message);
-          alert(`Erro ao salvar: ${data.message}`);
-        }
-
-        refetch();
-      } catch (error) {
-        console.error("Erro na requisição:", error);
-        alert("Ocorreu um erro ao processar o pedido. Produto Pai Invalido.");
+      );
+      
+      // colocar um snackbar
+      if (!res.ok) {
+        alert('Pedido não salvo! ' + "\nnão existe pedido para este orcamento" + "\n\nEnvie as informações pelo pincel primeiro!");
+        console.error('Error:', res);
         setIsLoadingMakePeido(false);
-        refetch();
       }
+
+      if (res.ok) {
+        console.log(res)
+        const orcamentoFormated = {
+          id: orcamento.id,
+          id_vendedor: orcamento.user_id,
+          cliente_codigo: orcamento.cliente_octa_number,
+          nome_cliente: orcamento.nome_cliente,
+          lista_produtos: orcamento.lista_produtos,
+          produtos_brinde: orcamento.produtos_brinde,
+          brinde: orcamento.brinde,
+          texto_orcamento: orcamento.texto_orcamento,
+          cep: orcamento.endereco_cep,
+          endereco: orcamento.endereco,
+          transportadora: orcamento.opcao_entrega,
+          data_pedido: orcamento.created_at,
+          updated_at: orcamento.updated_at,
+          tipo_desconto: orcamento.tipo_desconto,
+          valor_desconto: orcamento.valor_desconto,
+          data_antecipa: orcamento.data_antecipa,
+          taxa_antecipa: orcamento.taxa_antecipa,
+          total_orcamento: orcamento.total_orcamento,
+        };
+
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/pedido-cadastro`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(orcamentoFormated),
+          });
+
+          const data = await response.json();
+          setIsLoadingMakePeido(false);
+
+          // Verifique o status dentro de data.retorno
+          if (data.retorno && data.retorno.status === "Erro") {
+            const registro = data.retorno.registros.registro; // considerando que é um objeto
+            if (registro && registro.erros && registro.erros.length > 0) {
+              const ultimoErro = registro.erros[registro.erros.length - 1];
+              const mensagemErro = ultimoErro.erro;
+              alert('Pedido não salvo! ' + mensagemErro);
+              return;
+            }
+          }
+
+          if (response.ok) {
+            alert('Pedido N°' + orcamento.id + ' salvo com sucesso!');
+          } else {
+            // Já temos os dados em "data", então não precisamos chamar response.json() novamente.
+            console.log(data.message);
+            alert(`Erro ao salvar: ${data.message}`);
+          }
+
+          refetch();
+        } catch (error) {
+          console.error("Erro na requisição:", error);
+          alert("Ocorreu um erro ao processar o pedido. Produto Pai Invalido.");
+          setIsLoadingMakePeido(false);
+          refetch();
+        }
+
+      }
+    } catch (error) {
+      return console.error('Error fetching pedido arte final:', error);
     }
   };
 
@@ -526,6 +541,7 @@ const OrcamentoBackofficeScreen = () => {
 
       const data = await response.json();
       if (data.pedido && data.pedido.id) {
+        console.log(data)
         setNavigateTo(`/apps/producao/arte-final/edit/${data.pedido.id}?block_tiny=${data.blockTiny}`);
       } else {
         throw new Error('Invalid response data');
@@ -664,7 +680,7 @@ const OrcamentoBackofficeScreen = () => {
                   const texto = row.texto_orcamento;
                   const frete = texto?.match(regexFrete);
                   const prazo = texto?.match(regexPrazo);
-                  console.log(prazo)
+                  // console.log(prazo)
                   const entrega = texto?.match(regexEntrega);
                   const brinde = texto?.match(regexBrinde);
 
