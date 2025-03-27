@@ -68,8 +68,8 @@ const ArteFinalScreen = () => {
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
-  const [rows, setRows] = useState<ArteFinal[]>([]);
-  const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
+  const [value, setValue] = useState<string | null>(null);
+  const [observacoes, setObservacoes] = useState<{ [key: number]: string }>({});
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
@@ -126,8 +126,9 @@ const ArteFinalScreen = () => {
   // }, [pedidosArteFinal])
 
   useEffect(() => {
-    console.log('all pedidos:', pedidosTodos)
+    // console.log('all pedidos:', pedidosTodos)
   }, [pedidosTodos])
+
   // useEffect(() => {
   //   if (dataPedidos && dataPedidos.data) { // Verificação adicional
   //     setAllPedidos(dataPedidos.data);
@@ -371,12 +372,27 @@ const ArteFinalScreen = () => {
     setOpenDialogObs(true);
   };
 
-  const handleEnviarObservacao = async (row: ArteFinal) => {
+  // Função para lidar com o evento de pressionar a tecla Enter
+  const handleChangeObs = (id: string, value: string) => {
+    setObservacoes((prevObservacoes) => ({
+      ...prevObservacoes,  // Mantém as observações anteriores
+      [id]: value,         // Atualiza ou adiciona a observação para o id específico
+    }));
+  };
 
-    if (row.id) {
-      console.log("Onblur", row.id);
+  const handleEnviarObservacao = async (id: number, obs: string) => {
+
+    if (id) {
+      console.log("onEnter", id);
+      console.log("Obs:", obs);
+      // setObservacoes((prevObservacoes) => ({
+      //   ...prevObservacoes,
+      //   [id]: "",  // Limpa a observação do pedido
+      // }));
       return;
     }
+
+
 
     // if (!id) {
     //   console.error("ID do pedido não encontrado");
@@ -769,12 +785,10 @@ const ArteFinalScreen = () => {
                             </Tooltip>
                           ) : (
                             <CustomTextField
-                              value={observacoes[row?.id ?? 0] || ""}
-                              // onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleObservacaoChange(String(row?.id), e.target.value)}
+                              value={observacoes[row?.id ?? 0] ?? value}
                               autoFocus
-                              // onBlur={(e: React.FocusEvent<HTMLInputElement>) => handleEnviarObservacao(row)} // Salva ao perder o foco
-                              onKeyDown={(e: { key: string; }) => e.key === "Enter" && handleEnviarObservacao(row)} // Salva ao pressionar Enter
-                              // variant="standard"
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChangeObs(row.id, e.target.value)}  // Atualiza a observação para o pedido específico
+                              onKeyDown={(e: { key: string; }) => e.key === "Enter" && handleEnviarObservacao(row.id, observacoes[row?.id ?? 0]  ?? "")} // Salva ao pressionar Enter
                               fullWidth
                             />
                           )}
