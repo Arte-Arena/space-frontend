@@ -6,7 +6,6 @@ import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
 import { IconEdit, IconEye, IconTrash, IconShirt, IconBrush } from '@tabler/icons-react';
-import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
   Grid,
@@ -21,14 +20,10 @@ import {
   TableRow,
   Paper,
   TablePagination,
-  TableSortLabel,
   IconButton,
   Collapse,
   Box,
-  FormControl,
-  InputLabel,
   MenuItem,
-  SelectChangeEvent,
   useTheme,
   TextField,
   Select,
@@ -44,14 +39,13 @@ import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import AssignDesignerDialog from './components/designerDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
-import { format, isSameDay } from 'date-fns';
+import { isSameDay } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
 import deletePedidoArteFinal from './components/useDeletePedido';
 import { useThemeMode } from '@/utils/useThemeMode';
 import atribuirDesigner from './components/useDeisgnerJoin';
 import { IconUserPlus } from '@tabler/icons-react';
-import { IconCheck } from '@tabler/icons-react';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import getBrazilTime from '@/utils/brazilTime';
@@ -68,7 +62,9 @@ const ArteFinalScreen = () => {
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
-  const [rows, setRows] = useState<ArteFinal[]>([]);
+  const [dataPedidos, setDataPedidos] = useState<ApiResponsePedidosArteFinal | null>(null);
+  const [isLoadingPedidos, setIsLoadingPedidos] = useState<boolean>(false);
+  const [isErrorPedidos, setIsErrorPedidos] = useState<boolean>(false);
   const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
@@ -105,18 +101,29 @@ const ArteFinalScreen = () => {
     numero_pedido: searchNumero,
     pedido_status_id: statusFilter,
   };
+  const handleArteFinal = async () => {
+    await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=D`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setDataPedidos(data);
+        setIsLoadingPedidos(false);
+      })
+      .catch(() => {
+        setIsErrorPedidos(true);
+        setIsLoadingPedidos(false);
+      });
+  }
 
-  const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
-    queryKey: ['pedidos'],
-    queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=D`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      }).then((res) => res.json()),
-  });
+  useEffect(() => {
+    setIsLoadingPedidos(true);
+    handleArteFinal();
+  }, [accessToken]);
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) { // Verificação adicional
@@ -142,11 +149,11 @@ const ArteFinalScreen = () => {
 
   // console.log(allPedidos);
 
-  useEffect(() => {
-    if (!openDialogDesinger) {
-      refetch(); // Chama refetch quando o dialog é fechado
-    }
-  }, [openDialogDesinger, refetch]);
+  // useEffect(() => {
+  //   if (!openDialogDesinger) {
+  //     refetch(); // Chama refetch quando o dialog é fechado
+  //   }
+  // }, [openDialogDesinger, refetch]);
 
   const handleEdit = (pedido: ArteFinal) => {
     const pedidoId = String(pedido.id);
@@ -166,7 +173,7 @@ const ArteFinalScreen = () => {
   const handleDelete = async (row: ArteFinal) => {
     const confirmar = window.confirm('Deseja excluir o pedido N° ' + row.numero_pedido);
     if (confirmar) {
-      const sucesso = await deletePedidoArteFinal(row?.id, refetch);
+      const sucesso = await deletePedidoArteFinal(row?.id);
       if (sucesso) {
         console.log("Pedido deletado com sucesso!");
         setSnackbar({
@@ -242,7 +249,7 @@ const ArteFinalScreen = () => {
   };
 
   const handleEntrarDesigner = async (id: number | undefined) => {
-    const resposta = await atribuirDesigner(id, refetch);
+    const resposta = await atribuirDesigner(id);
     if (resposta) {
       console.log("Designer adicionado com sucesso!");
       setSnackbar({
@@ -309,7 +316,7 @@ const ArteFinalScreen = () => {
 
 
     if (confirmar) {
-      const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
+      const sucesso = await trocarStatusPedido(row?.id, 8);
       if (sucesso) {
         console.log("Pedido enviado com sucesso!");
         setSnackbar({
@@ -337,7 +344,7 @@ const ArteFinalScreen = () => {
 
   // handles dos selects
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
-    const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
+    const sucesso = await trocarStatusPedido(row?.id, status_id);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
       setSnackbar({
@@ -392,13 +399,28 @@ const ArteFinalScreen = () => {
 
       const data = await response.json();
       console.log("Observação salva com sucesso:", data);
+      setSnackbar({
+        open: true,
+        message: `✅ ${'Observação salva com sucesso. \nAtualize a tabela'}`,
+        severity:'success',
+      });
 
-      refetch(); // Atualiza os dados da página
+      // Atualiza os dados da página
+
     } catch (error) {
       console.error("Erro ao salvar observação:", error);
+      setSnackbar({
+        open: true,
+        message: `✅ ${'Erro ao salvar Observação.'}`,
+        severity:'error',
+      });
     }
   };
 
+  const handleRefresh = () => {
+    setIsLoadingPedidos(true);
+    handleArteFinal();
+  }
 
   const pedidoStatus = {
     1: { nome: 'Pendente', fila: 'D' },
@@ -549,6 +571,17 @@ const ArteFinalScreen = () => {
             <Grid item>
               <Button onClick={handleClearFilters} variant="outlined" size="small">
                 Limpar Filtros
+              </Button>
+            </Grid>
+            {/* dar refresh na pagina */}
+            <Grid item >
+              <Button onClick={handleRefresh} variant="outlined" size="small">
+                Atualizar Tabela
+              </Button>
+            </Grid>
+            <Grid item sx={{ position: 'fixed', bottom: 80, right: 5 }} >
+              <Button onClick={handleRefresh} variant="contained" size="small">
+                Atualizar Tabela
               </Button>
             </Grid>
           </Grid>
@@ -929,10 +962,10 @@ const ArteFinalScreen = () => {
             </TableContainer>
           )}
           {selectedRowDesinger !== null && (
-            <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} refetch={refetch} />
+            <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} />
           )}
-          <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
-          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
+          <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} />
+          <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
 
           <Snackbar
             open={snackbar.open}

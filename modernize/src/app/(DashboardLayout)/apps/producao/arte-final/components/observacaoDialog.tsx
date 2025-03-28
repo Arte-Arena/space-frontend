@@ -17,15 +17,12 @@ interface DialogObsProps {
   openDialogObs: boolean;
   onCloseDialogObs: () => void;
   row: ArteFinal | null;
-  refetch: () => void;
-
 }
 
 const DialogObs: React.FC<DialogObsProps> = ({
   openDialogObs,
   onCloseDialogObs,
-  row,
-  refetch
+  row
 }) => {
   const [observacoes, setObservacoes] = useState<string | null>(null);
   const router = useRouter();
@@ -59,7 +56,7 @@ const DialogObs: React.FC<DialogObsProps> = ({
       })
       .then(data => {
         console.log('Designer atribuído com sucesso:', data);
-        refetch();
+        
       })
       .catch(error => {
         console.error('Erro:', error);

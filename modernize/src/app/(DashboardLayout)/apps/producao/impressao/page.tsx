@@ -57,7 +57,9 @@ const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [openDialogObs, setOpenDialogObs] = useState(false);
-
+  const [dataPedidos, setDataPedidos] = useState<ApiResponsePedidosArteFinal | null>(null);
+  const [isLoadingPedidos, setIsLoadingPedidos] = useState<boolean>(false);
+  const [isErrorPedidos, setIsErrorPedidos] = useState<boolean>(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
@@ -92,17 +94,29 @@ const ImpressaoScreen = () => {
     pedido_status_id: statusFilter,
   };
 
-  const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
-    queryKey: ['pedidos'],
-    queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=I`, {
+  const refetch = async () => {
+      await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=I`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
-      }).then((res) => res.json()),
-  });
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setDataPedidos(data);
+          setIsLoadingPedidos(false);
+        })
+        .catch(() => {
+          setIsErrorPedidos(true);
+          setIsLoadingPedidos(false);
+        });
+    }
+  
+    useEffect(() => {
+      setIsLoadingPedidos(true);
+      refetch();  
+    }, [accessToken]);
 
   const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("I");
   console.log(errorPedido);
