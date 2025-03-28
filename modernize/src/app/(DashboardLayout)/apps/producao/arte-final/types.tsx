@@ -2,7 +2,7 @@
 interface ArteFinal {
   id?: number;
   user_id?: number | null;
-  numero_pedido: Number | undefined;
+  numero_pedido?: Number | null;
   data_prevista: Date | null;
   prazo_arte_final: Number;
   prazo_confeccao: Number;
