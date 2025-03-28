@@ -121,7 +121,7 @@ const ArteFinalScreen = () => {
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) { // Verificação adicional
       setAllPedidos(dataPedidos.data);
-      console.log(dataPedidos);
+      // console.log(dataPedidos);
     }
   }, [dataPedidos]);
 
@@ -140,7 +140,7 @@ const ArteFinalScreen = () => {
     setObservacoes((prev) => ({ ...prev, [id]: novaObservacao }));
   };
 
-  console.log(allPedidos);
+  // console.log(allPedidos);
 
   useEffect(() => {
     if (!openDialogDesinger) {
@@ -394,7 +394,6 @@ const ArteFinalScreen = () => {
       console.log("Observação salva com sucesso:", data);
 
       refetch(); // Atualiza os dados da página
-      router.refresh();
     } catch (error) {
       console.error("Erro ao salvar observação:", error);
     }
