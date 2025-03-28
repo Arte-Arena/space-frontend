@@ -68,7 +68,6 @@ const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
             .then(data => {
                 console.log('Designer atribuído com sucesso:', data);
                 refetch();
-                router.refresh();  // Atualiza os dados da página
             })
             .catch(error => {
                 console.error('Erro:', error);

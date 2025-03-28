@@ -225,9 +225,9 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
     }
   }
 
-  useEffect(() => {
-    console.log("productsList:", productsList);
-  }, [productsList]);
+  // useEffect(() => {
+  //   console.log("productsList:", productsList);
+  // }, [productsList]);
 
   const removerProduto = (productToRemove: Produto) => {
     const updatedProductsList = productsList.filter((product) => product.uid !== productToRemove.uid);
