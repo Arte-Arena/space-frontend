@@ -142,6 +142,60 @@ const OrcamentoBackofficeScreen = () => {
     throw new Error('Access token is missing');
   }
 
+  const verificarClienteCadastrado = async (orcamentoId: number) => {
+    setVerificandoCliente(prev => ({ ...prev, [orcamentoId]: true }));
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/get-cliente-by-orcamento?orcamento_id=${orcamentoId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        setClientesConfigurados(prev => ({ ...prev, [orcamentoId]: true }));
+      } else {
+        setClientesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
+      }
+    } catch (error) {
+      logger.error('Erro ao verificar cliente:', error);
+      setClientesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
+    } finally {
+      setVerificandoCliente(prev => ({ ...prev, [orcamentoId]: false }));
+    }
+  };
+
+  const verificarUniformesConfigurados = async (orcamentoId: number) => {
+    setVerificandoUniformes(prev => ({ ...prev, [orcamentoId]: true }));
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${orcamentoId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const temConfiguracao = data.length > 0 && data.some(
+          (uniforme: any) => uniforme.configuracoes && uniforme.configuracoes.length > 0
+        );
+        setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: temConfiguracao }));
+      } else {
+        setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
+      }
+    } catch (error) {
+      logger.error('Erro ao verificar uniformes:', error);
+      setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
+    } finally {
+      setVerificandoUniformes(prev => ({ ...prev, [orcamentoId]: false }));
+    }
+  };
+
   const handleNovoPedido = () => {
     setIsAdding(true);
     router.push('/apps/producao/arte-final/add/');
@@ -551,61 +605,7 @@ const OrcamentoBackofficeScreen = () => {
       setLoadingBrushIds(prev => ({ ...prev, [id]: false }));
     }
   };
-
-  const verificarClienteCadastrado = async (orcamentoId: number) => {
-    setVerificandoCliente(prev => ({ ...prev, [orcamentoId]: true }));
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/get-cliente-by-orcamento?orcamento_id=${orcamentoId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (response.ok) {
-        setClientesConfigurados(prev => ({ ...prev, [orcamentoId]: true }));
-      } else {
-        setClientesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
-      }
-    } catch (error) {
-      logger.error('Erro ao verificar cliente:', error);
-      setClientesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
-    } finally {
-      setVerificandoCliente(prev => ({ ...prev, [orcamentoId]: false }));
-    }
-  };
-
-  const verificarUniformesConfigurados = async (orcamentoId: number) => {
-    setVerificandoUniformes(prev => ({ ...prev, [orcamentoId]: true }));
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${orcamentoId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const temConfiguracao = data.length > 0 && data.some(
-          (uniforme: any) => uniforme.configuracoes && uniforme.configuracoes.length > 0
-        );
-        setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: temConfiguracao }));
-      } else {
-        setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
-      }
-    } catch (error) {
-      logger.error('Erro ao verificar uniformes:', error);
-      setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
-    } finally {
-      setVerificandoUniformes(prev => ({ ...prev, [orcamentoId]: false }));
-    }
-  };
-
+ 
   return (
     <PageContainer title="Orçamento / Backoffice" description="Gerenciar Pedidos da Arte Arena">
       <Breadcrumb title="Orçamento / Backoffice" subtitle="Gerenciar Pedidos da Arte Arena / Backoffice" />

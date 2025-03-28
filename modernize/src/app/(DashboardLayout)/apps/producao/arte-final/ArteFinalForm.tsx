@@ -7,7 +7,7 @@ import getBrazilTime from "@/utils/brazilTime";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { format, subDays } from 'date-fns';
+import { subDays } from 'date-fns';
 import {
   Box,
   Button,
@@ -43,7 +43,7 @@ interface ArteFinalFormProps {
 export default function ArteFinalForm({ initialData, onSubmit, readOnly = false, block_tiny = false }: ArteFinalFormProps) {
   const [formData, setFormData] = useState<ArteFinal>({
     id: 0,
-    numero_pedido: 0,
+    numero_pedido: null,
     data_prevista: null,
     prazo_arte_final: 0,
     prazo_confeccao: 0,
@@ -225,9 +225,9 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
     }
   }
 
-  useEffect(() => {
-    console.log("productsList:", productsList);
-  }, [productsList]);
+  // useEffect(() => {
+  //   console.log("productsList:", productsList);
+  // }, [productsList]);
 
   const removerProduto = (productToRemove: Produto) => {
     const updatedProductsList = productsList.filter((product) => product.uid !== productToRemove.uid);
@@ -349,7 +349,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
       orcamento_id: initialData?.orcamento_id,
       pedido_id: formData.id,
       estagio: 'D',
-      pedido_numero: String(formData.numero_pedido),
+      pedido_numero: formData.numero_pedido,
       data_prevista: formData.data_prevista,
       prazo_arte_final: '',
       prazo_confeccao: '',
@@ -407,13 +407,12 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
           label="Número do Pedido"
           type="number"
           name="numero_pedido"
-          value={formData.numero_pedido}
+          value={ String(formData.numero_pedido)}
           onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const { name, value } = e.target;
             const newValue = Math.max(0, parseFloat(value));
             setFormData((prev) => ({ ...prev, [name]: newValue.toString() }));
           }}
-          placeholder="Numero do pedido"
           variant="outlined"
           fullWidth
           readOnly={readOnly}
@@ -828,7 +827,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
 
       {openFracasso && (
         <Alert severity="error" sx={{ mt: 2 }}>
-          {errorMessage || "Produto Não Enviado"}
+          {errorMessage || "Pedido Não Enviado"}
         </Alert>
       )}
 
