@@ -47,6 +47,9 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
 
   let resource: string;
   switch (true) {
+    case !block_tiny && block_brush:
+      resource = "add-with-tiny";
+      break;
     case block_tiny && block_brush:
       resource = "add-block-tiny-block-brush";
       break;
@@ -435,7 +438,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
           variant="outlined"
           fullWidth
           readOnly={readOnly}
-          disabled={!initialData && !block_tiny}
+          disabled={(!initialData && !block_tiny) || (initialData && block_tiny)}
           inputProps={{ min: 0 }}
           sx={{
             '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {

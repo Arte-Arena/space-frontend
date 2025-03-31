@@ -21,7 +21,7 @@ export default function ProdutosPacotesUniformesAddScreen() {
     },
     {
       to: "/apps/producao/arte-final/add",
-      title: "Adicionar Pedido - Arte Final",
+      title: "Adicionar Pedido (+ Tiny) - Arte Final",
     },
   ];
 
@@ -31,7 +31,7 @@ export default function ProdutosPacotesUniformesAddScreen() {
       <ParentCard title="Arte Final">
         <>
           <h2 className="text-xl font-bold">Adicionar Novo Pedido com Arte Final (+ Tiny)</h2>
-          <ArteFinalForm/>
+          <ArteFinalForm block_tiny={false} block_brush={true}/>
         </>
       </ParentCard>
     </PageContainer>

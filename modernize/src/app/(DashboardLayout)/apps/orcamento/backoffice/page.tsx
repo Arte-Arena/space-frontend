@@ -119,20 +119,22 @@ const OrcamentoBackofficeScreen = () => {
   const [openEntregaDialog, setOpenEntregaDialog] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState<Pedidos | null>(null);
   const [showInput, setShowInput] = useState(false);
-  const [showInputPeidosStatus, setShowInputPedidosStatus] = useState(false);
+  const [showInputPedidosStatus, setShowInputPedidosStatus] = useState(false);
   const [inputValueEntrega, setInputValueEntrega] = useState(selectedPedido?.codigo_rastreamento || '');
   const [hasEntrega, setHasEntrega] = useState(false);
-  // const [hasEnvio, setHasEnvio] = useState(false);
-  // const [HasRecebimento, setHasRecebimento] = useState(false);
   const [loadingPedido, setLoadingPedido] = useState(false);
   const [copiedRastreio, setCopiedRastreio] = useState(false);
-  const [handleMakePedidoLoading, setIsLoadingMakePeido] = useState(false);
+  const [isLoadingConfirmaPedido, setIsLoadingConfirmaPedido] = useState(false);
   const [loadingBrushIds, setLoadingBrushIds] = useState<{ [key: number]: boolean }>({});
   const [navigateTo, setNavigateTo] = useState<string | null>(null);
   const [clientesConfigurados, setClientesConfigurados] = useState<{ [key: number]: boolean }>({});
   const [uniformesConfigurados, setUniformesConfigurados] = useState<{ [key: number]: boolean }>({});
   const [verificandoCliente, setVerificandoCliente] = useState<{ [key: number]: boolean }>({});
   const [verificandoUniformes, setVerificandoUniformes] = useState<{ [key: number]: boolean }>({});
+  const [arteFinalConfigurados, setArteFinalConfigurados] = useState<{ [key: number]: boolean }>({});
+  const [verificandoArteFinal, setVerificandoArteFinal] = useState<{ [key: number]: boolean }>({});
+
+
   const theme = useTheme()
 
   const regexFrete = /Frete:\s*R\$\s?(\d{1,3}(?:\.\d{3})*,\d{2})\s?\(([^)]+)\)/;
@@ -199,6 +201,33 @@ const OrcamentoBackofficeScreen = () => {
     }
   };
 
+  const verificarPedidoArteFinal = async (orcamentoId: number) => {
+    setVerificandoArteFinal(prev => ({ ...prev, [orcamentoId]: true }));
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedidos/get-pedido-arte-final-orcamento/${orcamentoId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const temConfiguracao = data;
+        setArteFinalConfigurados(prev => ({ ...prev, [orcamentoId]: temConfiguracao }));
+      } else {
+        setArteFinalConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
+      }
+    } catch (error) {
+      logger.error('Erro ao verificar pedidos:', error);
+      setArteFinalConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
+    } finally {
+      setVerificandoArteFinal(prev => ({ ...prev, [orcamentoId]: false }));
+    }
+  };
+
   const handleNovoPedido = () => {
     setIsAdding(true);
     router.push('/apps/producao/arte-final/add/block-tiny-block-brush');
@@ -207,7 +236,7 @@ const OrcamentoBackofficeScreen = () => {
   const handleImportPedido = async () => {
     try {
       setIsImporting(true);
-      
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/import-pedido-from-tiny`, {
         method: 'POST',
         headers: {
@@ -218,17 +247,17 @@ const OrcamentoBackofficeScreen = () => {
           numero_pedido: numeroPedido
         }),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         logger.error('Erro ao importar pedido:', errorData);
         return;
       }
-      
+
       setOpenDialogaImportPedido(false);
       const responseData = await response.json();
       router.push(`/apps/producao/arte-final/edit/${responseData.id}`);
-      
+
     } catch (error) {
       logger.error('Erro na requisição:', error);
       alert('Erro ao importar pedido.');
@@ -239,7 +268,7 @@ const OrcamentoBackofficeScreen = () => {
 
   const handleNovoPedidoTiny = () => {
     setIsAddingTiny(true);
-    router.push('/apps/producao/arte-final/add-tiny/');
+    router.push('/apps/producao/arte-final/add/with-tiny/');
   };
 
   const handleFetchPedido = async (id: number | undefined) => {
@@ -294,6 +323,7 @@ const OrcamentoBackofficeScreen = () => {
       dataOrcamentos.data.forEach((orcamento: Orcamento) => {
         verificarClienteCadastrado(orcamento.id);
         verificarUniformesConfigurados(orcamento.id);
+        verificarPedidoArteFinal(orcamento.id);
       });
     }
   }, [dataOrcamentos])
@@ -343,94 +373,68 @@ const OrcamentoBackofficeScreen = () => {
   };
 
   const handleMakePedido = async (orcamento: Orcamento) => {
-    setIsLoadingMakePeido(true);
+    setIsLoadingConfirmaPedido(true);
+
+    const orcamentoFormated = {
+      id: orcamento.id,
+      id_vendedor: orcamento.user_id,
+      cliente_codigo: orcamento.cliente_octa_number,
+      nome_cliente: orcamento.nome_cliente,
+      lista_produtos: orcamento.lista_produtos,
+      produtos_brinde: orcamento.produtos_brinde,
+      brinde: orcamento.brinde,
+      texto_orcamento: orcamento.texto_orcamento,
+      cep: orcamento.endereco_cep,
+      endereco: orcamento.endereco,
+      transportadora: orcamento.opcao_entrega,
+      data_pedido: orcamento.created_at,
+      updated_at: orcamento.updated_at,
+      tipo_desconto: orcamento.tipo_desconto,
+      valor_desconto: orcamento.valor_desconto,
+      data_antecipa: orcamento.data_antecipa,
+      taxa_antecipa: orcamento.taxa_antecipa,
+      total_orcamento: orcamento.total_orcamento,
+    };
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final-by-orcamento/${orcamento.id}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/update-arte-final-com-orcamento/${orcamentoFormated.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(orcamentoFormated),
+      });
 
-      // colocar um snackbar
-      if (!res.ok) {
-        alert('Pedido não salvo! ' + "\nnão existe pedido para este orcamento" + "\n\nEnvie as informações pelo pincel primeiro!");
-        console.error('Error:', res);
-        setIsLoadingMakePeido(false);
+      const data = await response.json();
+      setIsLoadingConfirmaPedido(false);
+
+      if (data.retorno && data.retorno.status === "Erro") {
+        const registro = data.retorno.registros.registro; // considerando que é um objeto
+        if (registro && registro.erros && registro.erros.length > 0) {
+          const ultimoErro = registro.erros[registro.erros.length - 1];
+          const mensagemErro = ultimoErro.erro;
+          alert('Pedido não salvo! ' + mensagemErro);
+          return;
+        }
       }
 
-      if (res.ok) {
-        console.log(res)
-        const orcamentoFormated = {
-          id: orcamento.id,
-          id_vendedor: orcamento.user_id,
-          cliente_codigo: orcamento.cliente_octa_number,
-          nome_cliente: orcamento.nome_cliente,
-          lista_produtos: orcamento.lista_produtos,
-          produtos_brinde: orcamento.produtos_brinde,
-          brinde: orcamento.brinde,
-          texto_orcamento: orcamento.texto_orcamento,
-          cep: orcamento.endereco_cep,
-          endereco: orcamento.endereco,
-          transportadora: orcamento.opcao_entrega,
-          data_pedido: orcamento.created_at,
-          updated_at: orcamento.updated_at,
-          tipo_desconto: orcamento.tipo_desconto,
-          valor_desconto: orcamento.valor_desconto,
-          data_antecipa: orcamento.data_antecipa,
-          taxa_antecipa: orcamento.taxa_antecipa,
-          total_orcamento: orcamento.total_orcamento,
-        };
-
-        try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/pedido-cadastro`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify(orcamentoFormated),
-          });
-
-          const data = await response.json();
-          setIsLoadingMakePeido(false);
-
-          // Verifique o status dentro de data.retorno
-          if (data.retorno && data.retorno.status === "Erro") {
-            const registro = data.retorno.registros.registro; // considerando que é um objeto
-            if (registro && registro.erros && registro.erros.length > 0) {
-              const ultimoErro = registro.erros[registro.erros.length - 1];
-              const mensagemErro = ultimoErro.erro;
-              alert('Pedido não salvo! ' + mensagemErro);
-              return;
-            }
-          }
-
-          if (response.ok) {
-            alert('Pedido N°' + orcamento.id + ' salvo com sucesso!');
-          } else {
-            // Já temos os dados em "data", então não precisamos chamar response.json() novamente.
-            console.log(data.message);
-            alert(`Erro ao salvar: ${data.message}`);
-          }
-
-          refetch();
-        } catch (error) {
-          console.error("Erro na requisição:", error);
-          alert("Ocorreu um erro ao processar o pedido. Produto Pai Invalido.");
-          setIsLoadingMakePeido(false);
-          refetch();
-        }
-
+      if (response.ok) {
+        alert('Pedido N°' + orcamento.id + ' salvo com sucesso!');
+      } else {
+        // Já temos os dados em "data", então não precisamos chamar response.json() novamente.
+        console.log(data.message);
+        alert(`Erro ao salvar: ${data.message}`);
       }
+
+      refetch();
     } catch (error) {
-      return console.error('Error fetching pedido arte final:', error);
+      console.error("Erro na requisição:", error);
+      alert("Ocorreu um erro ao processar o pedido. Produto Pai Invalido.");
+      setIsLoadingConfirmaPedido(false);
+      refetch();
     }
+
   };
 
   const handleSearch = () => {
@@ -698,8 +702,8 @@ const OrcamentoBackofficeScreen = () => {
               </DialogContent>
               <DialogActions>
                 <Button onClick={() => setOpenDialogaImportPedido(false)}>Cancelar</Button>
-                <Button 
-                  autoFocus 
+                <Button
+                  autoFocus
                   disabled={numeroPedido.length !== 5}
                   onClick={handleImportPedido}
                 >
@@ -860,6 +864,19 @@ const OrcamentoBackofficeScreen = () => {
                               variant="outlined"
                               onClick={() => handleBrushClick(row.id)}
                               disabled={loadingBrushIds[row.id]}
+                              sx={{
+                                position: 'relative',
+                                '&::after': arteFinalConfigurados[row.id] ? {
+                                  content: '""',
+                                  position: 'absolute',
+                                  top: '5px',
+                                  right: '5px',
+                                  width: '10px',
+                                  height: '10px',
+                                  borderRadius: '50%',
+                                  backgroundColor: 'success.main',
+                                } : {}
+                              }}
                             >
                               {loadingBrushIds[row.id] ? <CircularProgress size={20} /> : <IconBrush />}
                             </Button>
@@ -1031,9 +1048,9 @@ const OrcamentoBackofficeScreen = () => {
                               variant="contained"
                               color="primary"
                               onClick={() => handleMakePedido(row)}
-                              disabled={hasPedidos}
+                              disabled={!arteFinalConfigurados[row.id]}
                             >
-                              {handleMakePedidoLoading ? <CircularProgress /> : <IconCheck />}
+                              {isLoadingConfirmaPedido ? <CircularProgress /> : <IconCheck />}
                             </Button>
 
                             {/* botão para abrir o dialog de pegar o codigo de rastreio */}
@@ -1340,13 +1357,13 @@ const OrcamentoBackofficeScreen = () => {
                   <FormControlLabel
                     control={
                       <Checkbox
-                        checked={showInputPeidosStatus}
+                        checked={showInputPedidosStatus}
                         onChange={(event) => setShowInputPedidosStatus(event.target.checked)}
                       />
                     }
                     label="Aprovar envio ou recebimento do pedido"
                   />
-                  {showInputPeidosStatus && (
+                  {showInputPedidosStatus && (
                     <Stack spacing={2} sx={{ mt: 2 }}>
                       <Button
                         variant="contained"
