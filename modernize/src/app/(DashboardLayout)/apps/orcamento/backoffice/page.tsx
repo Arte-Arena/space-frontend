@@ -226,7 +226,8 @@ const OrcamentoBackofficeScreen = () => {
       }
       
       setOpenDialogaImportPedido(false);
-      router.push(`/apps/producao/arte-final/edit/${numeroPedido}`);
+      const responseData = await response.json();
+      router.push(`/apps/producao/arte-final/edit/${responseData.id}`);
       
     } catch (error) {
       logger.error('Erro na requisição:', error);
