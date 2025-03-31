@@ -4,7 +4,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import ArteFinalForm from "@/app/(DashboardLayout)/apps/producao/arte-final/ArteFinalForm";
 
-export default function ArteFinalAddPedidoBlockTinyBlockBrushScreen() {
+export default function ArteFinalAddPedidoImportFromTinyScreen() {
 
   const BCrumb = [
     {
@@ -21,7 +21,7 @@ export default function ArteFinalAddPedidoBlockTinyBlockBrushScreen() {
     },
     {
       to: "/apps/producao/arte-final/add",
-      title: "Adicionar Pedido (apenas space) - Arte Final",
+      title: "Adicionar Pedido (importar do Tiny) - Arte Final",
     },
   ];
 

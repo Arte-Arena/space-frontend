@@ -94,6 +94,9 @@ const OrcamentoBackofficeScreen = () => {
   const router = useRouter();
   const [query, setQuery] = useState<string>('');
   const [isAdding, setIsAdding] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [openDialogaImportPedido, setOpenDialogaImportPedido] = useState(false);
+  const [numeroPedido, setNumeroPedido] = useState('');
   const [isAddingTiny, setIsAddingTiny] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
@@ -144,7 +147,7 @@ const OrcamentoBackofficeScreen = () => {
 
   const verificarClienteCadastrado = async (orcamentoId: number) => {
     setVerificandoCliente(prev => ({ ...prev, [orcamentoId]: true }));
-    
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/get-cliente-by-orcamento?orcamento_id=${orcamentoId}`, {
         method: 'GET',
@@ -169,7 +172,7 @@ const OrcamentoBackofficeScreen = () => {
 
   const verificarUniformesConfigurados = async (orcamentoId: number) => {
     setVerificandoUniformes(prev => ({ ...prev, [orcamentoId]: true }));
-    
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${orcamentoId}`, {
         method: 'GET',
@@ -199,6 +202,38 @@ const OrcamentoBackofficeScreen = () => {
   const handleNovoPedido = () => {
     setIsAdding(true);
     router.push('/apps/producao/arte-final/add/block-tiny-block-brush');
+  };
+
+  const handleImportPedido = async () => {
+    try {
+      setIsImporting(true);
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/import-pedido-from-tiny`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          numero_pedido: numeroPedido
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        logger.error('Erro ao importar pedido:', errorData);
+        return;
+      }
+      
+      setOpenDialogaImportPedido(false);
+      router.push(`/apps/producao/arte-final/edit/${numeroPedido}`);
+      
+    } catch (error) {
+      logger.error('Erro na requisição:', error);
+      alert('Erro ao importar pedido.');
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   const handleNovoPedidoTiny = () => {
@@ -605,7 +640,7 @@ const OrcamentoBackofficeScreen = () => {
       setLoadingBrushIds(prev => ({ ...prev, [id]: false }));
     }
   };
- 
+
   return (
     <PageContainer title="Orçamento / Backoffice" description="Gerenciar Pedidos da Arte Arena">
       <Breadcrumb title="Orçamento / Backoffice" subtitle="Gerenciar Pedidos da Arte Arena / Backoffice" />
@@ -620,8 +655,58 @@ const OrcamentoBackofficeScreen = () => {
               onClick={handleNovoPedido}
               disabled={isAdding}
             >
-              {isAdding ? 'Adicionando... (apenas Space)' : 'Adicionar pedido (apenas Space)'}
+              {isAdding ? 'Adicionando (apenas Space)...' : 'Adicionar pedido (apenas Space)'}
             </Button>
+            <Button
+              variant="contained"
+              startIcon={isImporting ? <CircularProgress size={20} /> : <IconPlus />}
+              sx={{ height: '100%' }}
+              onClick={() => setOpenDialogaImportPedido(true)}
+              disabled={isImporting}
+            >
+              {isImporting ? 'Importando pedido do Tiny...' : 'Importar pedido do Tiny'}
+            </Button>
+
+            <Dialog
+              open={openDialogaImportPedido}
+              onClose={() => {
+                setOpenDialogaImportPedido(false);
+                setNumeroPedido('');
+              }}
+              aria-labelledby="alert-dialog-title"
+              aria-describedby="alert-dialog-description"
+            >
+              <DialogTitle id="alert-dialog-title">
+                {"Importar pedido do Tiny"}
+              </DialogTitle>
+              <DialogContent>
+                <DialogContentText id="alert-dialog-description">
+                  <CustomTextField
+                    required
+                    label="Número do Pedido (Tiny)"
+                    variant="outlined"
+                    fullWidth
+                    value={numeroPedido}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                      const value = event.target.value.replace(/\D/g, '').slice(0, 5);
+                      setNumeroPedido(value);
+                    }}
+                    inputProps={{ maxLength: 5 }}
+                  />
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setOpenDialogaImportPedido(false)}>Cancelar</Button>
+                <Button 
+                  autoFocus 
+                  disabled={numeroPedido.length !== 5}
+                  onClick={handleImportPedido}
+                >
+                  Importar
+                </Button>
+              </DialogActions>
+            </Dialog>
+
             <Button
               variant="contained"
               startIcon={isAddingTiny ? <CircularProgress size={20} /> : <IconPlus />}
@@ -664,7 +749,7 @@ const OrcamentoBackofficeScreen = () => {
                 <TableRow>
                   <TableCell></TableCell>
                   <TableCell>ID do Orçamento</TableCell>
-                  <TableCell>ID do Pedido</TableCell>
+                  <TableCell>Número do Pedido (Tiny)</TableCell>
                   <TableCell>Número do Cliente</TableCell>
                   <TableCell>Data de Criação</TableCell>
                   <TableCell>Ações</TableCell>
