@@ -198,7 +198,7 @@ const OrcamentoBackofficeScreen = () => {
 
   const handleNovoPedido = () => {
     setIsAdding(true);
-    router.push('/apps/producao/arte-final/add/');
+    router.push('/apps/producao/arte-final/add/block-tiny-block-brush');
   };
 
   const handleNovoPedidoTiny = () => {

@@ -38,9 +38,28 @@ interface ArteFinalFormProps {
   onSubmit?: (data: ArteFinal) => void;
   readOnly?: boolean;
   block_tiny?: boolean;
+  block_brush?: boolean;
 }
 
-export default function ArteFinalForm({ initialData, onSubmit, readOnly = false, block_tiny = false }: ArteFinalFormProps) {
+
+
+export default function ArteFinalForm({ initialData, onSubmit, readOnly = false, block_tiny = false, block_brush = false }: ArteFinalFormProps) {
+
+  let resource: string;
+  switch (true) {
+    case block_tiny && block_brush:
+      resource = "add-block-tiny-block-brush";
+      break;
+    case block_tiny && !block_brush:
+      resource = "add-with-tiny-block-brush";
+      break;
+    case block_tiny:
+      resource = "add-block-tiny";
+      break;
+    default:
+      resource = "add";
+  }
+
   const [formData, setFormData] = useState<ArteFinal>({
     id: 0,
     numero_pedido: null,
@@ -374,8 +393,8 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
     };
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final`, {
-        method: 'PUT',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/${resource}`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`

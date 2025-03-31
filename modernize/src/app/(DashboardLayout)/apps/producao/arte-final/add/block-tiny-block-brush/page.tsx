@@ -31,7 +31,7 @@ export default function ProdutosPacotesUniformesAddScreen() {
       <ParentCard title="Arte Final">
         <>
           <h2 className="text-xl font-bold">Adicionar Novo Pedido com Arte Final (apenas Space)</h2>
-          <ArteFinalForm block_tiny={true}/>
+          <ArteFinalForm block_tiny={true} block_brush={true}/>
         </>
       </ParentCard>
     </PageContainer>
