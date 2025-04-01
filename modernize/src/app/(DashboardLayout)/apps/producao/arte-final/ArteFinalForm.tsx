@@ -50,11 +50,11 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
     case !block_tiny && block_brush:
       resource = "add-with-tiny";
       break;
-    case block_tiny && block_brush:
-      resource = "add-block-tiny-block-brush";
-      break;
     case block_tiny && !block_brush:
-      resource = "add-with-tiny-block-brush";
+      resource = "edit-block-tiny-with-brush";
+      break;
+    case block_tiny && block_brush:
+      resource = "edit-block-tiny-block-brush";
       break;
     case block_tiny:
       resource = "add-block-tiny";
@@ -429,7 +429,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
           label="Número do Pedido"
           type="number"
           name="numero_pedido"
-          value={ String(formData.numero_pedido)}
+          value={String(formData.numero_pedido)}
           onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             const { name, value } = e.target;
             const newValue = Math.max(0, parseFloat(value));

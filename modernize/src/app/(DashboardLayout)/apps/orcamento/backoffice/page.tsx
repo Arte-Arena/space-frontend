@@ -82,6 +82,7 @@ interface Orcamento {
   data_antecipa: string;
   taxa_antecipa: string;
   total_orcamento: number;
+  prev_entrega: Date;
   pedidos: Pedidos[];
 }
 
@@ -757,6 +758,7 @@ const OrcamentoBackofficeScreen = () => {
                   <TableCell>Número do Pedido (Tiny)</TableCell>
                   <TableCell>Número do Cliente</TableCell>
                   <TableCell>Data de Criação</TableCell>
+                  <TableCell>Previsão de Entrega</TableCell>
                   <TableCell>Ações</TableCell>
                 </TableRow>
               </TableHead>
@@ -791,6 +793,7 @@ const OrcamentoBackofficeScreen = () => {
                         <TableCell>{hasPedidos ? row.pedidos[0].numero_pedido : '-'}</TableCell>
                         <TableCell>{row.cliente_octa_number}</TableCell>
                         <TableCell>{new Date(row.created_at).toLocaleDateString('pt-BR')}</TableCell>
+                        <TableCell>{new Date(row.prev_entrega).toLocaleDateString('pt-BR')}</TableCell>
                         <TableCell>
                           <Stack direction="row" spacing={1}>
                             <Button
@@ -1047,10 +1050,14 @@ const OrcamentoBackofficeScreen = () => {
                             <Button
                               variant="contained"
                               color="primary"
-                              onClick={() => handleMakePedido(row)}
+                              sx={{
+                                backgroundColor: arteFinalConfigurados[row.id] ? 'success.light' : undefined,
+                                cursor: arteFinalConfigurados[row.id] ? 'default' : 'pointer',
+                              }}
+                              onClick={arteFinalConfigurados[row.id] ? undefined : () => handleMakePedido(row)}
                               disabled={!arteFinalConfigurados[row.id]}
                             >
-                              {isLoadingConfirmaPedido ? <CircularProgress /> : <IconCheck />}
+                              {isLoadingConfirmaPedido ? <CircularProgress size={24} /> : <IconCheck />}
                             </Button>
 
                             {/* botão para abrir o dialog de pegar o codigo de rastreio */}
