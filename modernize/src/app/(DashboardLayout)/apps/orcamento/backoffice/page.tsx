@@ -429,7 +429,7 @@ const OrcamentoBackofficeScreen = () => {
       setIsLoadingConfirmaPedido(false);
 
       if (data.retorno && data.retorno.status === "Erro") {
-        const registro = data.retorno.registros.registro; // considerando que é um objeto
+        const registro = data.retorno.registros.registro;
         if (registro && registro.erros && registro.erros.length > 0) {
           const ultimoErro = registro.erros[registro.erros.length - 1];
           const mensagemErro = ultimoErro.erro;
@@ -449,7 +449,7 @@ const OrcamentoBackofficeScreen = () => {
       refetch();
     } catch (error) {
       console.error("Erro na requisição:", error);
-      alert("Ocorreu um erro ao processar o pedido. Produto Pai Invalido.");
+      alert("Ocorreu um erro ao processar o pedido: " + error);
       setIsLoadingConfirmaPedido(false);
       refetch();
     }
@@ -457,8 +457,8 @@ const OrcamentoBackofficeScreen = () => {
   };
 
   const handleSearch = () => {
-    setSearchQuery(query); // Atualiza a busca
-    setPage(1); // Reseta para a primeira página ao realizar uma nova busca
+    setSearchQuery(query);
+    setPage(1);
   };
 
   const handleSearchKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
