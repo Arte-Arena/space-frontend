@@ -41,8 +41,6 @@ interface ArteFinalFormProps {
   block_brush?: boolean;
 }
 
-
-
 export default function ArteFinalForm({ initialData, onSubmit, readOnly = false, block_tiny = false, block_brush = false }: ArteFinalFormProps) {
 
   let resource: string;
@@ -100,7 +98,6 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
   const materiais = localStorage.getItem('materiais');
   const tiposPedidos = localStorage.getItem('pedidosTipos');
   const vendedores = localStorage.getItem('vendedores');
-
 
   useEffect(() => {
     if (openSucesso === true) {
@@ -247,10 +244,6 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
     }
   }
 
-  // useEffect(() => {
-  //   console.log("productsList:", productsList);
-  // }, [productsList]);
-
   const removerProduto = (productToRemove: Produto) => {
     const updatedProductsList = productsList.filter((product) => product.uid !== productToRemove.uid);
     setProductsList(updatedProductsList);
@@ -375,7 +368,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
       data_prevista: formData.data_prevista,
       prazo_arte_final: '',
       prazo_confeccao: '',
-      pedido_observacoes: formData.observacoes,
+      observacoes: formData.observacoes,
       pedido_rolo: formData.rolo,
       pedido_designer_id: formData.designer_id,
       pedido_status_id: formData.pedido_status_id,
@@ -397,7 +390,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/${resource}`, {
-        method: 'POST',
+        method: initialData ? 'PATCH' : 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`
@@ -748,40 +741,6 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
           readOnly={readOnly}
         />
       </Box>
-
-      {/* <FormControl sx={{ mt: 5, width: '100%' }}>
-        <InputLabel id="designer_pedido">Designer</InputLabel>
-        <CustomSelect
-          label="Designer"
-          name="designer"
-          value={formData.designer_id}
-          onChange={(e: SelectChangeEvent<number>) => handleSelectChange(e, 'designer_id')}
-          fullWidth
-          readOnly={readOnly}
-        >
-          {allDesigners.map((designer) => (
-            <MenuItem key={designer.id} value={designer.id}>
-              <ListItemText primary={designer.name} />
-            </MenuItem>
-          ))}
-        </CustomSelect>
-      </FormControl>
-
-      <FormControl sx={{ mt: 5, width: '100%' }}>
-        <InputLabel>Status</InputLabel>
-        <CustomSelect
-          value={String(formData.pedido_status_id)}
-          onChange={(e: SelectChangeEvent<string>) => handleSelectChange(e, 'pedido_status_id')}
-          fullWidth
-          readOnly={readOnly}
-        >
-          {allStatusPedido.map((status) => (
-            <MenuItem key={status.id} value={status.id}>
-              {`${status.fila === 'D' ? 'Design' : 'Impressão'} - ${status.nome}`}
-            </MenuItem>
-          ))}
-        </CustomSelect>
-      </FormControl> */}
 
       <FormControl sx={{ mt: 5, width: '100%' }}>
         <InputLabel>Tipo de Pedido</InputLabel>

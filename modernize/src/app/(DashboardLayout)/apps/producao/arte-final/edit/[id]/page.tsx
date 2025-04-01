@@ -12,7 +12,9 @@ export default function EditArteFinalScreen() {
   const params = useParams();
   const pedidoId = params.id;
   const url = new URL(window.location.href);
+
   const block_tiny = url.searchParams.get('block_tiny') === 'true';
+  const block_brush = !block_tiny;
 
   const [pedidoArteFinal, setPedidoArteFinal] = useState<ArteFinal | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +80,7 @@ export default function EditArteFinalScreen() {
       <ParentCard title="Arte Final">
         <>
           <h2 className="text-xl font-bold">Detalhes do Produto</h2>
-          <ArteFinalForm initialData={pedidoArteFinal} block_tiny={block_tiny} />
+          <ArteFinalForm initialData={pedidoArteFinal} block_tiny={block_tiny} block_brush={block_brush}/>
         </>
       </ParentCard>
     </PageContainer>
