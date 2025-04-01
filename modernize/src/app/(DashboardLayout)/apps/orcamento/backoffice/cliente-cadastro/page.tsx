@@ -27,11 +27,6 @@ import { logger } from '@/utils/logger';
 
 const REGEX = {
   email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-  cpf: /^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/,
-  cnpj: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$|^\d{14}$/,
-  cep: /^\d{5}-?\d{3}$/,
-  onlyNumbers: /^\d+$/,
-  onlyLetters: /^[a-zA-ZÀ-ÿ\s]+$/,
 };
 
 interface ValidationError {
@@ -227,37 +222,43 @@ const OrcamentoBackofficeScreen: React.FC = () => {
     }
   }, [orcamento_id]);
 
+  const FIELD_NAMES = {
+    nome: 'Nome',
+    rg: 'RG',
+    cpf: 'CPF',
+    email: 'E-mail',
+    celular: 'Telefone Celular',
+    cep: 'CEP',
+    endereco: 'Endereço',
+    numero: 'Número',
+    complemento: 'Complemento',
+    bairro: 'Bairro',
+    cidade: 'Cidade',
+    uf: 'UF',
+    razao_social: 'Razão Social',
+    cnpj: 'CNPJ',
+    inscricao_estadual: 'Inscrição Estadual',
+    cep_cobranca: 'CEP de Cobrança',
+    endereco_cobranca: 'Endereço de Cobrança',
+    numero_cobranca: 'Número de Cobrança',
+    complemento_cobranca: 'Complemento de Cobrança',
+    bairro_cobranca: 'Bairro de Cobrança',
+    cidade_cobranca: 'Cidade de Cobrança',
+    uf_cobranca: 'UF de Cobrança'
+  };
+
   const validateField = (name: string, value: string): ValidationError | null => {
     if (!value || value.trim() === '') {
-      return { field: name, message: `O campo ${name} é obrigatório.` };
+      return { 
+        field: name, 
+        message: `O campo ${FIELD_NAMES[name as keyof typeof FIELD_NAMES] || name} é obrigatório.` 
+      };
     }
 
     switch (name) {
       case 'email':
         if (!REGEX.email.test(value)) {
           return { field: name, message: 'E-mail inválido.' };
-        }
-        break;
-      case 'cpf':
-        if (!REGEX.cpf.test(value)) {
-          return { field: name, message: 'CPF inválido. Use o formato: 000.000.000-00' };
-        }
-        break;
-      case 'cnpj':
-        if (!REGEX.cnpj.test(value)) {
-          return { field: name, message: 'CNPJ inválido. Use o formato: 00.000.000/0000-00' };
-        }
-        break;
-      case 'cep':
-      case 'cep_cobranca':
-        if (!REGEX.cep.test(value)) {
-          return { field: name, message: 'CEP inválido. Use o formato: 00000-000' };
-        }
-        break;
-      case 'nome':
-      case 'razao_social':
-        if (!REGEX.onlyLetters.test(value)) {
-          return { field: name, message: 'Este campo deve conter apenas letras.' };
         }
         break;
     }
