@@ -21,14 +21,10 @@ import {
   TableRow,
   Paper,
   TablePagination,
-  TableSortLabel,
   IconButton,
   Collapse,
   Box,
-  FormControl,
-  InputLabel,
   MenuItem,
-  SelectChangeEvent,
   useTheme,
   TextField,
   Select,
@@ -44,14 +40,13 @@ import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import AssignDesignerDialog from './components/designerDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
-import { format, isSameDay } from 'date-fns';
+import { isSameDay } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
 import deletePedidoArteFinal from './components/useDeletePedido';
 import { useThemeMode } from '@/utils/useThemeMode';
 import atribuirDesigner from './components/useDeisgnerJoin';
 import { IconUserPlus } from '@tabler/icons-react';
-import { IconCheck } from '@tabler/icons-react';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import getBrazilTime from '@/utils/brazilTime';
@@ -68,11 +63,10 @@ const ArteFinalScreen = () => {
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
-  const [rows, setRows] = useState<ArteFinal[]>([]);
   const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
-  const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
-  const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
-  const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
+  const [searchNumero, setSearchNumero] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 100,
     page: 0,
@@ -88,13 +82,12 @@ const ArteFinalScreen = () => {
   });
 
   const router = useRouter();
-  const theme = useTheme()
   const myTheme = useThemeMode()
 
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
-  const allowedRoles = [1, 2, 4, 7, 10]; // colocar backoffice
+  const allowedRoles = [1, 2, 3, 4, 7, 10];
   const DesignerRoles = [6];
   const DesignerCoordanateRole = [7];
   const canShowButtonAtribuirDesigner = roles.some(role => DesignerCoordanateRole.includes(role));

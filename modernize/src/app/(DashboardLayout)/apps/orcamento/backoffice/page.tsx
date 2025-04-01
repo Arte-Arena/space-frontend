@@ -134,6 +134,8 @@ const OrcamentoBackofficeScreen = () => {
   const [verificandoUniformes, setVerificandoUniformes] = useState<{ [key: number]: boolean }>({});
   const [arteFinalConfigurados, setArteFinalConfigurados] = useState<{ [key: number]: boolean }>({});
   const [verificandoArteFinal, setVerificandoArteFinal] = useState<{ [key: number]: boolean }>({});
+  const [confirmacaoArteFinalConfigurados, setConfirmacaoArteFinalConfigurados] = useState<{ [key: number]: boolean }>({});
+
 
 
   const theme = useTheme()
@@ -228,6 +230,15 @@ const OrcamentoBackofficeScreen = () => {
       setVerificandoArteFinal(prev => ({ ...prev, [orcamentoId]: false }));
     }
   };
+
+const verificarConfirmacaoPedidoArteFinal = async (orcamentoId: number, numero_pedido: number | null) => {
+    if (!numero_pedido) {
+      setConfirmacaoArteFinalConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
+      return;
+    } else {
+      setConfirmacaoArteFinalConfigurados(prev => ({ ...prev, [orcamentoId]: true }));
+    }
+}
 
   const handleNovoPedido = () => {
     setIsAdding(true);
@@ -325,6 +336,7 @@ const OrcamentoBackofficeScreen = () => {
         verificarClienteCadastrado(orcamento.id);
         verificarUniformesConfigurados(orcamento.id);
         verificarPedidoArteFinal(orcamento.id);
+        verificarConfirmacaoPedidoArteFinal(orcamento.id, Number(orcamento.pedidos[0]?.numero_pedido) ?? false);
       });
     }
   }, [dataOrcamentos])
@@ -636,7 +648,7 @@ const OrcamentoBackofficeScreen = () => {
 
       const data = await response.json();
       if (data.pedido && data.pedido.id) {
-        setNavigateTo(`/apps/producao/arte-final/edit/${data.pedido.id}?block_tiny=${data.blockTiny}`);
+        setNavigateTo(`/apps/producao/arte-final/edit/${data.pedido.id}`);
       } else {
         throw new Error('Invalid response data');
       }
@@ -1051,8 +1063,14 @@ const OrcamentoBackofficeScreen = () => {
                               variant="contained"
                               color="primary"
                               sx={{
-                                backgroundColor: arteFinalConfigurados[row.id] ? 'success.light' : undefined,
-                                cursor: arteFinalConfigurados[row.id] ? 'default' : 'pointer',
+                                backgroundColor: confirmacaoArteFinalConfigurados[row.id] ? 'success.light' : undefined,
+                                cursor: confirmacaoArteFinalConfigurados[row.id] ? 'default' : 'pointer',
+                                ...(!confirmacaoArteFinalConfigurados[row.id] ? {} : {
+                                  pointerEvents: 'none',
+                                  ':hover': {
+                                    backgroundColor: 'unset',
+                                  },
+                                }),
                               }}
                               onClick={arteFinalConfigurados[row.id] ? undefined : () => handleMakePedido(row)}
                               disabled={!arteFinalConfigurados[row.id]}

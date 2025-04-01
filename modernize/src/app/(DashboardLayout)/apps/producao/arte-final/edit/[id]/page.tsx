@@ -11,10 +11,9 @@ import { useParams } from 'next/navigation';
 export default function EditArteFinalScreen() {
   const params = useParams();
   const pedidoId = params.id;
-  const url = new URL(window.location.href);
 
-  const block_tiny = url.searchParams.get('block_tiny') === 'true';
-  const block_brush = !block_tiny;
+  const block_tiny = true;
+  const block_brush = false;
 
   const [pedidoArteFinal, setPedidoArteFinal] = useState<ArteFinal | null>(null);
   const [error, setError] = useState<string | null>(null);
