@@ -231,14 +231,14 @@ const OrcamentoBackofficeScreen = () => {
     }
   };
 
-const verificarConfirmacaoPedidoArteFinal = async (orcamentoId: number, numero_pedido: number | null) => {
+  const verificarConfirmacaoPedidoArteFinal = async (orcamentoId: number, numero_pedido: number | null) => {
     if (!numero_pedido) {
       setConfirmacaoArteFinalConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
       return;
     } else {
       setConfirmacaoArteFinalConfigurados(prev => ({ ...prev, [orcamentoId]: true }));
     }
-}
+  }
 
   const handleNovoPedido = () => {
     setIsAdding(true);
@@ -386,6 +386,12 @@ const verificarConfirmacaoPedidoArteFinal = async (orcamentoId: number, numero_p
   };
 
   const handleMakePedido = async (orcamento: Orcamento) => {
+    const confirmar = window.confirm('Deseja confirmar o pedido N° ' + orcamento.id);
+
+    if (!confirmar) {
+      return;
+    }
+
     setIsLoadingConfirmaPedido(true);
 
     const orcamentoFormated = {
@@ -783,7 +789,7 @@ const verificarConfirmacaoPedidoArteFinal = async (orcamentoId: number, numero_p
                   const texto = row.texto_orcamento;
                   const frete = texto?.match(regexFrete);
                   const prazo = texto?.match(regexPrazo);
-                  console.log(prazo)
+                  // console.log(prazo)
                   const entrega = texto?.match(regexEntrega);
                   const brinde = texto?.match(regexBrinde);
 
@@ -1065,19 +1071,14 @@ const verificarConfirmacaoPedidoArteFinal = async (orcamentoId: number, numero_p
                               sx={{
                                 backgroundColor: confirmacaoArteFinalConfigurados[row.id] ? 'success.light' : undefined,
                                 cursor: confirmacaoArteFinalConfigurados[row.id] ? 'default' : 'pointer',
-                                ...(!confirmacaoArteFinalConfigurados[row.id] ? {} : {
-                                  pointerEvents: 'none',
-                                  ':hover': {
-                                    backgroundColor: 'unset',
-                                  },
-                                }),
+                                pointerEvents: confirmacaoArteFinalConfigurados[row.id] ? 'none' : 'auto', // Impede cliques quando verde
+                                ':hover': confirmacaoArteFinalConfigurados[row.id] ? { backgroundColor: 'unset' } : {},
                               }}
-                              onClick={arteFinalConfigurados[row.id] ? undefined : () => handleMakePedido(row)}
+                              onClick={(!confirmacaoArteFinalConfigurados[row.id] && arteFinalConfigurados[row.id]) ? () => handleMakePedido(row) : undefined}
                               disabled={!arteFinalConfigurados[row.id]}
                             >
                               {isLoadingConfirmaPedido ? <CircularProgress size={24} /> : <IconCheck />}
                             </Button>
-
                             {/* botão para abrir o dialog de pegar o codigo de rastreio */}
                             <Button color="primary" variant="contained" onClick={() => handleOpenDialogEntrega(row.id)} disabled={!hasPedidos}>
                               <IconTruckDelivery />
