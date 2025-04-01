@@ -416,7 +416,7 @@ const OrcamentoBackofficeScreen = () => {
     };
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/update-arte-final-com-orcamento/${orcamentoFormated.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/update-arte-final-com-orcamento`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
