@@ -7,7 +7,7 @@ const atribuirDesigner = async (id: number | undefined, refetch: () => void): Pr
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-designer-change/${id}`,
       {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
