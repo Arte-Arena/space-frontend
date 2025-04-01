@@ -52,7 +52,7 @@ const AssignDesignerDialog: React.FC<AssignDesignerDialogProps> = ({
         }
 
         fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-designer-change/${row.id}`, {
-            method: 'PUT',
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${accessToken}`,
