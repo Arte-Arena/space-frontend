@@ -1,12 +1,16 @@
 'use client';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { useThemeMode } from '@/utils/useThemeMode';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { ArteFinal, Produto } from './components/types';
-import CircularProgress from '@mui/material/CircularProgress';
-import { IconEdit, IconEye, IconTrash, IconShirt, IconBrush } from '@tabler/icons-react';
-import { useQuery } from '@tanstack/react-query';
+import { isSameDay } from 'date-fns';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import getBrazilTime from '@/utils/brazilTime';
+import { DateTime } from 'luxon';
 import {
   Typography,
   Grid,
@@ -25,7 +29,6 @@ import {
   Collapse,
   Box,
   MenuItem,
-  useTheme,
   TextField,
   Select,
   TextFieldProps,
@@ -33,25 +36,18 @@ import {
   AlertProps,
   Alert,
 } from "@mui/material";
-import { useRouter } from 'next/navigation';
+import { IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconPrinter, IconBrandTrello, IconUserPlus } from '@tabler/icons-react';
+import CircularProgress from '@mui/material/CircularProgress';
+import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import { GridPaginationModel } from '@mui/x-data-grid';
-import { IconPrinter } from '@tabler/icons-react';
-import { IconBrandTrello } from '@tabler/icons-react';
+import { ArteFinal, Produto } from './components/types';
 import SidePanel from './components/drawer';
 import AssignDesignerDialog from './components/designerDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
-import { isSameDay } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
 import deletePedidoArteFinal from './components/useDeletePedido';
-import { useThemeMode } from '@/utils/useThemeMode';
 import atribuirDesigner from './components/useDeisgnerJoin';
-import { IconUserPlus } from '@tabler/icons-react';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
-import getBrazilTime from '@/utils/brazilTime';
-import { DateTime } from 'luxon';
-import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -87,9 +83,11 @@ const ArteFinalScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
+
   const allowedRoles = [1, 2, 3, 4, 7, 10];
   const DesignerRoles = [6];
   const DesignerCoordanateRole = [7];
+
   const canShowButtonAtribuirDesigner = roles.some(role => DesignerCoordanateRole.includes(role));
   const canShowButton = roles.some(role => allowedRoles.includes(role));
   const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));
@@ -112,20 +110,16 @@ const ArteFinalScreen = () => {
   });
 
   useEffect(() => {
-    if (dataPedidos && dataPedidos.data) { // Verificação adicional
+    if (dataPedidos && dataPedidos.data) {
       setAllPedidos(dataPedidos.data);
-      // console.log(dataPedidos);
     }
   }, [dataPedidos]);
 
-
-  // Inicializa o estado apenas uma vez
   useEffect(() => {
     const inicializarObservacoes = paginatedPedidos.reduce((acc, row) => {
       acc[row?.id ?? 0] = row.observacoes || "";
       return acc;
     }, {} as { [key: string]: string });
-
     setObservacoes(inicializarObservacoes);
   }, [allPedidos]);
 
@@ -133,11 +127,10 @@ const ArteFinalScreen = () => {
     setObservacoes((prev) => ({ ...prev, [id]: novaObservacao }));
   };
 
-  // console.log(allPedidos);
-
+  // isso vai ser mudado
   useEffect(() => {
     if (!openDialogDesinger) {
-      refetch(); // Chama refetch quando o dialog é fechado
+      refetch();
     }
   }, [openDialogDesinger, refetch]);
 
@@ -197,6 +190,8 @@ const ArteFinalScreen = () => {
       console.warn('URL do Trello não disponível');
     }
   };
+
+  // não está funcionando
   const handleListaUniformes = async (row: ArteFinal) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final/${row.id}/verificar-uniformes`, {
@@ -206,9 +201,7 @@ const ArteFinalScreen = () => {
           'Authorization': `Bearer ${accessToken}`,
         },
       });
-
       const data = await response.json();
-
       if (response.ok) {
         router.push(data.redirect);
       } else {
@@ -255,8 +248,6 @@ const ArteFinalScreen = () => {
 
   const handleEnviarImpressora = async (row: ArteFinal) => {
     const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Impressão?');
-
-    // validações
     if (!row.designer_id) {
       return setSnackbar({
         open: true,
@@ -300,7 +291,6 @@ const ArteFinalScreen = () => {
       });
     }
 
-
     if (confirmar) {
       const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
       if (sucesso) {
@@ -328,7 +318,6 @@ const ArteFinalScreen = () => {
     }
   };
 
-  // handles dos selects
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
     const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
     if (sucesso) {
@@ -349,7 +338,6 @@ const ArteFinalScreen = () => {
   }
 
   const handleClickOpenDialogObs = async (row: ArteFinal) => {
-    // abre o dialog e passa a row
     setSelectedRowObs(row);
     setOpenDialogObs(true);
   };
@@ -370,12 +358,12 @@ const ArteFinalScreen = () => {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-obs-change/${id}`,
         {
-          method: "PUT",
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ observacoes: observacoes[id] }), // Envia apenas a observação específica do ID
+          body: JSON.stringify({ observacoes: observacoes[id] }),
         }
       );
 
@@ -386,12 +374,11 @@ const ArteFinalScreen = () => {
       const data = await response.json();
       console.log("Observação salva com sucesso:", data);
 
-      refetch(); // Atualiza os dados da página
+      refetch();
     } catch (error) {
       console.error("Erro ao salvar observação:", error);
     }
   };
-
 
   const pedidoStatus = {
     1: { nome: 'Pendente', fila: 'D' },
@@ -401,22 +388,14 @@ const ArteFinalScreen = () => {
     5: { nome: 'Cor teste', fila: 'D' },
   } as const;
 
-  // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
-      // Verifica se o número do pedido corresponde ao filtro
       const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
-
-      // Verifica se o status do pedido corresponde ao filtro
       const isStatusMatch = !filters.pedido_status_id || pedido.pedido_status_id === Number(filters.pedido_status_id);
-
-      // Filtro de data (data inicial e final)
       const isDateMatch = (
         (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
         (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
       );
-
-      // Retorna true se todas as condições de filtro forem atendidas
       return isNumberMatch && isStatusMatch && isDateMatch;
     });
   }, [allPedidos, filters, dateFilter]);
