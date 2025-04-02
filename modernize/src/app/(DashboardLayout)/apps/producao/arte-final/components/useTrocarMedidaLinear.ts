@@ -14,7 +14,7 @@ const trocarMedidaLinear = async (id: number | undefined, uid: number | null, me
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-media-change/${id}`,
       {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
