@@ -51,6 +51,9 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
     case block_tiny && !block_brush:
       resource = "edit-block-tiny-with-brush";
       break;
+    case block_tiny && block_brush && !initialData:
+      resource = "add-block-tiny-block-brush";
+      break;
     case block_tiny && block_brush:
       resource = "edit-block-tiny-block-brush";
       break;

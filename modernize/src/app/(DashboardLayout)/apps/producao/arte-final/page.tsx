@@ -2,7 +2,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-// import { useThemeMode } from '@/utils/useThemeMode';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
@@ -27,7 +26,6 @@ import {
   Paper,
   TablePagination,
   IconButton,
-  Collapse,
   Box,
   MenuItem,
   TextField,
@@ -50,7 +48,6 @@ import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
 import deletePedidoArteFinal from './components/useDeletePedido';
 import atribuirDesigner from './components/useDeisgnerJoin';
-import { green } from '@mui/material/colors';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -61,7 +58,6 @@ const ArteFinalScreen = () => {
   const [selectedRowDesinger, setSelectedRowDesinger] = useState<ArteFinal | null>(null);
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
-  const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
   const [searchNumero, setSearchNumero] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -126,8 +122,18 @@ const ArteFinalScreen = () => {
     setObservacoes(inicializarObservacoes);
   }, [allPedidos]);
 
+  // const handleObservacaoChange = (id: string, novaObservacao: string) => {
+  //   console.log('novaObservacao: ', novaObservacao);
+  //   setObservacoes((prev) => ({ ...prev, [id]: novaObservacao }));
+  // };
+
   const handleObservacaoChange = (id: string, novaObservacao: string) => {
-    setObservacoes((prev) => ({ ...prev, [id]: novaObservacao }));
+    console.log('novaObservacao: ', novaObservacao);
+    setObservacoes((prev) => {
+      const novoEstado = { ...prev, [id]: novaObservacao };
+      console.log('Novo estado:', novoEstado);
+      return novoEstado;
+    });
   };
 
   // isso vai ser mudado
@@ -424,6 +430,16 @@ const ArteFinalScreen = () => {
     setDateFilter((prev) => ({ ...prev, [field]: newValue }));
   }
 
+  function formatarDataSegura(dataISOString: string): string {
+    const dataUTC = DateTime.fromISO(dataISOString, { zone: 'utc' });
+    const dataFormatada = dataUTC.toFormat('dd/MM/yyyy');
+    return dataFormatada;
+  }
+
+  const zerarHorario = (data: Date): Date => {
+    return new Date(data.getFullYear(), data.getMonth(), data.getDate());
+  };
+
   const BCrumb = [
     {
       to: "/",
@@ -495,30 +511,10 @@ const ArteFinalScreen = () => {
                   renderInput={(params: TextFieldProps) => (
                     <CustomTextField
                       {...params}
+                      error={false}
                       size="small"
                       sx={{
                         width: '200px',
-                        '& .MuiOutlinedInput-root': {
-                          '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: 'gray',
-                          },
-                          borderColor: 'gray',
-                          '& fieldset': {
-                            borderColor: 'gray',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'gray',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'gray',
-                          },
-                        },
-                        '& .MuiInputLabel-root': {
-                          color: (theme: any) => theme.palette.mode === 'dark' ? 'gray' : 'black',
-                        },
-                        '& .MuiInputLabel-root.Mui-focused': {
-                          color: (theme: any) => theme.palette.mode === 'dark' ? 'gray' : 'black',
-                        },
                       }}
                     />
                   )}
@@ -536,30 +532,10 @@ const ArteFinalScreen = () => {
                   renderInput={(params: TextFieldProps) => (
                     <CustomTextField
                       {...params}
+                      error={false}
                       size="small"
                       sx={{
-                        width: '200px',
-                        '& .MuiOutlinedInput-root': {
-                          '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: 'gray',
-                          },
-                          borderColor: 'gray',
-                          '& fieldset': {
-                            borderColor: 'gray',
-                          },
-                          '&:hover fieldset': {
-                            borderColor: 'gray',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: 'gray',
-                          },
-                        },
-                        '& .MuiInputLabel-root': {
-                          color: (theme: any) => theme.palette.mode === 'dark' ? 'gray' : 'black',
-                        },
-                        '& .MuiInputLabel-root.Mui-focused': {
-                          color: (theme: any) => theme.palette.mode === 'dark' ? 'gray' : 'black',
-                        },
+                        width: '200px'
                       }}
                     />
                   )}
@@ -568,7 +544,6 @@ const ArteFinalScreen = () => {
               </LocalizationProvider>
             </Grid>
 
-            {/* Botão Limpar Filtros */}
             <Grid item>
               <Button onClick={handleClearFilters} variant="outlined" size="small">
                 Limpar Filtros
@@ -590,15 +565,14 @@ const ArteFinalScreen = () => {
               <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
                 <TableHead>
                   <TableRow>
-                    {/* <TableCell> </TableCell> */}
-                    <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
-                    <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Previsão de Entrega</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Designer</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Tipo</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Status</TableCell>
-                    <TableCell align='center' sx={{ width: '20%' }}>Ações</TableCell>
+                    <TableCell align='center' sx={{ width: '2%' }}>N° Pedido</TableCell>
+                    <TableCell align='center' sx={{ width: '35%' }}>Produtos</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>Previsão de Entrega</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>Designer</TableCell>
+                    <TableCell align='center' sx={{ width: '20%' }}>Observação</TableCell>
+                    <TableCell align='center' sx={{ width: '7%' }}>Tipo</TableCell>
+                    <TableCell align='center' sx={{ width: '3%' }}>Status</TableCell>
+                    <TableCell align='center' sx={{ width: '13%' }}>Ações</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -609,21 +583,28 @@ const ArteFinalScreen = () => {
                         : row.lista_produtos
                       : [];
 
-                    // definição das datas e atrasos
-                    const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
-                    const dataAtual = getBrazilTime(); //colocar no getBrazilTime
+                    const dataPrevistaSegura = formatarDataSegura(String(row?.data_prevista));
+
+                    const dataPrevista = row?.data_prevista ? dataPrevistaSegura : null;
+
+                    const dataAtual = formatarDataSegura(zerarHorario(getBrazilTime()).toISOString());
+
+                    // console.log('dataAtual: ', row.numero_pedido, dataAtual)
+
                     let atraso = false;
                     let isHoje = false;
+
+                    // console.log('dataPrevista: ', row.numero_pedido, row?.data_prevista, formatarDataSegura(String(row?.data_prevista)), dataPrevista, dataAtual)
+
                     if (dataPrevista && dataPrevista < dataAtual) {
                       atraso = true;
                     }
-                    if (dataPrevista && isSameDay(dataPrevista, dataAtual)) {
+
+                    if (dataPrevista && dataPrevista === dataAtual) {
                       isHoje = true;
                     }
-                    // tem que usar isso na logica do rastreamento
-
-                    // definição dos designers
                     const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
+
                     const usersMap = new Map(
                       Array.isArray(parsedDesigners)
                         ? parsedDesigners.map(designer => [designer.id, designer.name])
@@ -649,27 +630,18 @@ const ArteFinalScreen = () => {
                       3: 'rgba(123, 157, 0, 0.8)',
                       4: 'rgba(0, 152, 63, 0.65)',
                       5: 'rgba(0, 146, 136, 0.8)',
-                      // 19: 'rgba(238, 84, 84, 0.8)',
-                      // 20: 'rgba(20, 175, 0, 0.8)',
-                      // 21: 'rgba(180, 0, 0, 0.8)',
-                      // 22: 'rgba(152, 0, 199, 0.8)',
                     };
-
 
                     const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
                     const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
 
-
                     return (
                       <>
-                        {/* colocar as condições de data e de tipos de status e suas cores */}
-                        {/* teste usar a theme   */}
                         <TableRow
                           key={row.id}
                           sx={{
                           }}
                         >
-
                           <TableCell
                             sx={{
                               color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
@@ -688,19 +660,26 @@ const ArteFinalScreen = () => {
                             {String(row.numero_pedido)}
                           </TableCell>
 
-                          {/* Nome de produto */}
                           <TableCell sx={{
                             color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                          }} align='center'>
-                            {row.lista_produtos?.length > 0
-                              ? (
-                                <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
-                                  {listaProdutos.map((produto, index) => (
-                                    <li key={index}>{produto.nome}</li> // Cada produto em uma nova linha
-                                  ))}
-                                </ul>
-                              )
-                              : 'N/A'}
+                          }} align='left'>
+                            <Box
+                              sx={{
+                                maxHeight: 80,
+                                overflowY: 'auto',
+                                padding: '12px'
+                              }}
+                            >
+                              {row.lista_produtos?.length > 0
+                                ? (
+                                  <ul style={{ listStyleType: 'disc', padding: 0, margin: 0 }}>
+                                    {listaProdutos.map((produto, index) => (
+                                      <li key={index}>{produto.nome} ({produto.quantidade})</li>
+                                    ))}
+                                  </ul>
+                                )
+                                : 'N/A'}
+                            </Box>
                           </TableCell>
 
                           <TableCell
@@ -710,12 +689,7 @@ const ArteFinalScreen = () => {
                             }}
                             align="center"
                           >
-                            {row?.data_prevista
-                              ? DateTime.fromISO(new Date(row.data_prevista).toISOString(), { zone: "utc" })
-                                .setZone("America/Sao_Paulo")
-                                .toFormat("dd/MM/yyyy")
-                              : " "}
-                            {atraso && <span> (Atraso)</span>}
+                            {formatarDataSegura(String(row.data_prevista))}
                           </TableCell>
 
                           {designerNome !== 'Desconhecido' ? (
@@ -749,47 +723,21 @@ const ArteFinalScreen = () => {
                             </TableCell>
                           )}
 
-                          <TableCell
-                            sx={{
-                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                              textAlign: "center",
-                            }}
-                          >
-                            {row?.observacoes ? (
-                              <Tooltip title={"Adicionar Observação?"} placement="top">
-                                <Typography
-                                  onClick={() => handleClickOpenDialogObs(row)}
-                                  sx={{
-                                    cursor: "pointer",
-                                    fontSize: "14px",
-                                    fontWeight: row.observacoes ? "500" : "regular",
-                                    color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    maxWidth: "200px", // Ajuste conforme necessário
-                                    display: "inline-block",
-                                    "&:hover": {
-                                      fontWeight: "bold",
-                                      color: (theme: any) => theme.palette.mode === 'dark' ? '#bdbdbd' : '#555',
-                                    },
-                                  }}
-                                >
-                                  {row?.observacoes ?? observacoes[row.id ?? 0]}
-                                </Typography>
-                              </Tooltip>
-                            ) : (
-                              <>
-                                <CustomTextField
-                                  value={observacoes[row?.id ?? 0] || ""}
-                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleObservacaoChange(String(row?.id), e.target.value)}
-                                  onKeyDown={(e: { key: string; }) => e.key === "Enter" && handleEnviarObservacao(String(row?.id))} // Salva ao pressionar Enter
-                                  fullWidth
-                                />
-                                <Typography variant="caption">Pressione Enter para confirmar</Typography>
-                              </>
-                            )}
-                          </TableCell>
+                          <Tooltip title={row?.observacoes ? row.observacoes : "Adicionar Observação"} placement="left">
+                            <TableCell
+                              sx={{
+                                color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                                textAlign: "left",
+                              }}
+                            >
+                              <CustomTextField
+                                value={observacoes[String(row?.id)]}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleObservacaoChange(String(row?.id), e.target.value)}
+                                onKeyDown={(e: { key: string; }) => e.key === "Enter" && handleEnviarObservacao(String(row?.id))}
+                                fullWidth
+                              />
+                            </TableCell>
+                          </Tooltip>
 
                           <TableCell sx={{
                             color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
@@ -803,37 +751,36 @@ const ArteFinalScreen = () => {
                           }} align='center'>
                             <CustomSelect
                               style={{
+                                height: '30px',
                                 textAlign: 'center',
                                 padding: '0px',
                                 fontSize: '12px',
                                 borderRadius: '4px',
-                                // border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
                                 backgroundColor: 'transparent',
-                                // color: myTheme === 'dark' ? 'white' : 'black',
                                 appearance: 'none',
                                 WebkitAppearance: 'none',
                                 MozAppearance: 'none',
                                 cursor: 'pointer',
-                                width: 'auto',
+                                width: '100%',
                                 boxSizing: 'border-box',  // Para garantir que o padding não quebre a largura
                               }}
 
                               value={String(row.pedido_status_id)} // O valor precisa ser uma string
-                              onChange={(event) => {
+                              onChange={(event: { target: { value: any; }; }) => {
                                 const newStatus = event.target.value;  // O valor será do tipo string
                                 handleStatusChange(row, Number(newStatus)); // Converte para número antes de passar para a função
                               }}
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
-                                <option key={id} value={id}>
+                                <MenuItem key={id} value={id}>
                                   {status.nome}
-                                </option>
+                                </MenuItem>
                               ))}
                             </CustomSelect>
                           </TableCell>
 
                           <TableCell sx={{
-                            // color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                           }} align='center'>
                             <Tooltip title="Ver Detalhes">
                               <IconButton onClick={() => handleVerDetalhes(row)}>
@@ -883,61 +830,6 @@ const ArteFinalScreen = () => {
                                 </Tooltip>
                               </>
                             )}
-                          </TableCell>
-                        </TableRow>
-
-                        <TableRow>
-                          {/* colSpan deve ter o mesmo número que o número de cabeçalhos da tabela, no caso 16 */}
-                          <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
-                            <Collapse in={openRow[row.id ?? 0]} timeout="auto" unmountOnExit>
-                              <Box margin={1}>
-                                <Table size="small" aria-label="detalhes">
-                                  <TableBody>
-                                    <TableRow>
-                                      <TableCell sx={{ border: 'none' }} colSpan={16}>
-                                        <strong>Lista de Produtos</strong>
-                                        <TableHead>
-                                          <TableRow>
-                                            <TableCell></TableCell>
-                                            <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                              Tipo:
-                                            </TableCell>
-                                            <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                              Material:
-                                            </TableCell>
-                                            <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                              Medida linear:
-                                            </TableCell>
-                                          </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                          {listaProdutos.length > 0 ? (
-                                            listaProdutos.map((produto: Produto, index: number) => (
-                                              <TableRow key={produto.id || index}>
-                                                <TableCell sx={{ fontWeight: 'bold', padding: '8px' }} colSpan={1}>
-                                                  {produto.nome}
-                                                </TableCell>
-                                                <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.nome}
-                                                </TableCell>
-                                                {/* <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.materiais.map((material: Material) => material.material).join(', ')} 
-                                                </TableCell> */}
-                                                <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.medida_linear}
-                                                </TableCell>
-                                              </TableRow>
-                                            ))
-                                          ) : (
-                                            <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
-                                          )}
-                                        </TableBody>
-                                      </TableCell>
-                                    </TableRow>
-                                  </TableBody>
-                                </Table>
-                              </Box>
-                            </Collapse>
                           </TableCell>
                         </TableRow>
                       </>
