@@ -2,13 +2,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { useThemeMode } from '@/utils/useThemeMode';
+// import { useThemeMode } from '@/utils/useThemeMode';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { isSameDay } from 'date-fns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import getBrazilTime from '@/utils/brazilTime';
 import { DateTime } from 'luxon';
 import {
@@ -34,11 +35,12 @@ import {
   TextFieldProps,
   Snackbar,
   AlertProps,
-  Alert,
+  Alert
 } from "@mui/material";
 import { IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconPrinter, IconBrandTrello, IconUserPlus } from '@tabler/icons-react';
 import CircularProgress from '@mui/material/CircularProgress';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
+import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import { GridPaginationModel } from '@mui/x-data-grid';
 import { ArteFinal, Produto } from './components/types';
 import SidePanel from './components/drawer';
@@ -48,6 +50,7 @@ import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
 import deletePedidoArteFinal from './components/useDeletePedido';
 import atribuirDesigner from './components/useDeisgnerJoin';
+import { green } from '@mui/material/colors';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -78,7 +81,7 @@ const ArteFinalScreen = () => {
   });
 
   const router = useRouter();
-  const myTheme = useThemeMode()
+  // const myTheme = useThemeMode()
 
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
@@ -372,6 +375,11 @@ const ArteFinalScreen = () => {
       }
 
       const data = await response.json();
+      setSnackbar({
+        open: true,
+        message: `${'Observação salva com sucesso.'}`,
+        severity: 'success'
+      });
       console.log("Observação salva com sucesso:", data);
 
       refetch();
@@ -426,14 +434,14 @@ const ArteFinalScreen = () => {
       title: "produção",
     },
     {
-      to: "/apps/produção/pedidos",
-      title: "Pedidos",
+      to: "/apps/produção/arte-final",
+      title: "Pedidos com Arte Final",
     },
   ];
 
-  useEffect(() => {
-    console.log("📌 Estado atualizado - selectedRowIdSidePanel:", selectedRowSidePanel);
-  }, [selectedRowSidePanel]);
+  // useEffect(() => {
+  //   console.log("📌 Estado atualizado - selectedRowIdSidePanel:", selectedRowSidePanel);
+  // }, [selectedRowSidePanel]);
 
   // console.log(allPedidos);
   // console.log(designers);
@@ -441,10 +449,9 @@ const ArteFinalScreen = () => {
   return (
     <PageContainer title="Produção / Arte - Final" description="Tela de Produção da Arte - Final | Arte Arena">
       <Breadcrumb title="Produção / Arte - Final" items={BCrumb} />
-      <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2, }}>
-        <Typography sx={{ fontSize: '18px', fontWeight: '600' }}>
-          Total de {allPedidos.length} Pedidos
-          {/* {filteredPedidos.length} Filtrados */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2, p: 2, border: '1px solid #ddd', borderRadius: 1, }}>
+        <Typography sx={{ fontSize: '14px', fontWeight: '600' }}>
+          Total de Pedidos: <strong>{allPedidos.length}</strong>.
         </Typography>
       </Box>
       <ParentCard title="Arte - Final">
@@ -479,7 +486,6 @@ const ArteFinalScreen = () => {
               </Select>
             </Grid>
 
-            {/* DatePicker - Data Inicial */}
             <Grid item>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
@@ -487,10 +493,33 @@ const ArteFinalScreen = () => {
                   value={dateFilter.start}
                   onChange={handleDateChange('start')}
                   renderInput={(params: TextFieldProps) => (
-                    <TextField
+                    <CustomTextField
                       {...params}
                       size="small"
-                      sx={{ width: '200px' }} // Define uma largura fixa
+                      sx={{
+                        width: '200px',
+                        '& .MuiOutlinedInput-root': {
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'gray',
+                          },
+                          borderColor: 'gray',
+                          '& fieldset': {
+                            borderColor: 'gray',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: 'gray',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: 'gray',
+                          },
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: (theme: any) => theme.palette.mode === 'dark' ? 'gray' : 'black',
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: (theme: any) => theme.palette.mode === 'dark' ? 'gray' : 'black',
+                        },
+                      }}
                     />
                   )}
                   inputFormat="dd/MM/yyyy"
@@ -498,7 +527,6 @@ const ArteFinalScreen = () => {
               </LocalizationProvider>
             </Grid>
 
-            {/* DatePicker - Data Final */}
             <Grid item>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
@@ -506,10 +534,33 @@ const ArteFinalScreen = () => {
                   value={dateFilter.end}
                   onChange={handleDateChange('end')}
                   renderInput={(params: TextFieldProps) => (
-                    <TextField
+                    <CustomTextField
                       {...params}
                       size="small"
-                      sx={{ width: '200px' }} // Define uma largura fixa
+                      sx={{
+                        width: '200px',
+                        '& .MuiOutlinedInput-root': {
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'gray',
+                          },
+                          borderColor: 'gray',
+                          '& fieldset': {
+                            borderColor: 'gray',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: 'gray',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: 'gray',
+                          },
+                        },
+                        '& .MuiInputLabel-root': {
+                          color: (theme: any) => theme.palette.mode === 'dark' ? 'gray' : 'black',
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                          color: (theme: any) => theme.palette.mode === 'dark' ? 'gray' : 'black',
+                        },
+                      }}
                     />
                   )}
                   inputFormat="dd/MM/yyyy"
@@ -621,12 +672,17 @@ const ArteFinalScreen = () => {
 
                           <TableCell
                             sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                               cursor: 'pointer',
                             }}
                             onClick={() => {
                               navigator.clipboard.writeText(String(row.numero_pedido));
-                              // colocar um alert bunitinho de copiado
+                              setSnackbar({
+                                open: true,
+                                message: `✅ Número do Pedido ${row.numero_pedido} copiado com sucesso!`,
+                                severity: 'success'
+                              });
+
                             }}
                           >
                             {String(row.numero_pedido)}
@@ -634,7 +690,7 @@ const ArteFinalScreen = () => {
 
                           {/* Nome de produto */}
                           <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                           }} align='center'>
                             {row.lista_produtos?.length > 0
                               ? (
@@ -649,7 +705,7 @@ const ArteFinalScreen = () => {
 
                           <TableCell
                             sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black',
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                               backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)',
                             }}
                             align="center"
@@ -665,7 +721,7 @@ const ArteFinalScreen = () => {
                           {designerNome !== 'Desconhecido' ? (
                             <TableCell
                               sx={{
-                                color: myTheme === "dark" ? "white" : "black", // Branco no modo escuro e preto no claro
+                                color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                               }}
                               align="center"
                             >
@@ -678,8 +734,8 @@ const ArteFinalScreen = () => {
                                   sx={{
                                     backgroundColor: 'transparent',
                                     borderRadius: '100px',
-                                    border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
-                                    color: myTheme === 'dark' ? 'white' : 'black',
+                                    border: (theme: any) => theme.palette.mode === 'dark' ? '1px solid white' : '1px solid black',
+                                    color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                                   }}
                                   onClick={() => handleEntrarDesigner(row.id)}
                                 >
@@ -695,7 +751,7 @@ const ArteFinalScreen = () => {
 
                           <TableCell
                             sx={{
-                              color: myTheme === "dark" ? "white" : "black",
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                               textAlign: "center",
                             }}
                           >
@@ -707,7 +763,7 @@ const ArteFinalScreen = () => {
                                     cursor: "pointer",
                                     fontSize: "14px",
                                     fontWeight: row.observacoes ? "500" : "regular",
-                                    color: myTheme === "dark" ? "white" : "black",
+                                    color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                                     whiteSpace: "nowrap",
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
@@ -715,7 +771,7 @@ const ArteFinalScreen = () => {
                                     display: "inline-block",
                                     "&:hover": {
                                       fontWeight: "bold",
-                                      color: myTheme === "dark" ? "#bdbdbd" : "#555",
+                                      color: (theme: any) => theme.palette.mode === 'dark' ? '#bdbdbd' : '#555',
                                     },
                                   }}
                                 >
@@ -736,24 +792,24 @@ const ArteFinalScreen = () => {
                           </TableCell>
 
                           <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black',
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                             backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
                           }} align='center'>{tipo ?? '-'}</TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
                           <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                             backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
                           }} align='center'>
-                            <select
+                            <CustomSelect
                               style={{
                                 textAlign: 'center',
                                 padding: '0px',
                                 fontSize: '12px',
                                 borderRadius: '4px',
-                                border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
+                                // border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
                                 backgroundColor: 'transparent',
-                                color: myTheme === 'dark' ? 'white' : 'black',
+                                // color: myTheme === 'dark' ? 'white' : 'black',
                                 appearance: 'none',
                                 WebkitAppearance: 'none',
                                 MozAppearance: 'none',
@@ -761,6 +817,7 @@ const ArteFinalScreen = () => {
                                 width: 'auto',
                                 boxSizing: 'border-box',  // Para garantir que o padding não quebre a largura
                               }}
+
                               value={String(row.pedido_status_id)} // O valor precisa ser uma string
                               onChange={(event) => {
                                 const newStatus = event.target.value;  // O valor será do tipo string
@@ -772,11 +829,11 @@ const ArteFinalScreen = () => {
                                   {status.nome}
                                 </option>
                               ))}
-                            </select>
+                            </CustomSelect>
                           </TableCell>
 
                           <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            // color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
                           }} align='center'>
                             <Tooltip title="Ver Detalhes">
                               <IconButton onClick={() => handleVerDetalhes(row)}>
@@ -946,7 +1003,6 @@ const ArteFinalScreen = () => {
         </>
       </ParentCard>
     </PageContainer>
-
   );
 };
 
