@@ -1,12 +1,16 @@
 'use client';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { ArteFinal, Produto } from './components/types';
-import CircularProgress from '@mui/material/CircularProgress';
-import { IconEdit, IconEye, IconTrash, IconShirt, IconBrush } from '@tabler/icons-react';
-import { useQuery } from '@tanstack/react-query';
+import { isSameDay } from 'date-fns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import getBrazilTime from '@/utils/brazilTime';
+import { DateTime } from 'luxon';
 import {
   Typography,
   Grid,
@@ -22,36 +26,28 @@ import {
   Paper,
   TablePagination,
   IconButton,
-  Collapse,
   Box,
   MenuItem,
-  useTheme,
   TextField,
   Select,
   TextFieldProps,
   Snackbar,
   AlertProps,
-  Alert,
+  Alert
 } from "@mui/material";
-import { useRouter } from 'next/navigation';
+import { IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconPrinter, IconBrandTrello, IconUserPlus } from '@tabler/icons-react';
+import CircularProgress from '@mui/material/CircularProgress';
+import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
+import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import { GridPaginationModel } from '@mui/x-data-grid';
-import { IconPrinter } from '@tabler/icons-react';
-import { IconBrandTrello } from '@tabler/icons-react';
+import { ArteFinal, Produto } from './components/types';
 import SidePanel from './components/drawer';
 import AssignDesignerDialog from './components/designerDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
-import { isSameDay } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
 import deletePedidoArteFinal from './components/useDeletePedido';
-import { useThemeMode } from '@/utils/useThemeMode';
 import atribuirDesigner from './components/useDeisgnerJoin';
-import { IconUserPlus } from '@tabler/icons-react';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
-import getBrazilTime from '@/utils/brazilTime';
-import { DateTime } from 'luxon';
-import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -62,7 +58,6 @@ const ArteFinalScreen = () => {
   const [selectedRowDesinger, setSelectedRowDesinger] = useState<ArteFinal | null>(null);
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
-  const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
   const [searchNumero, setSearchNumero] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -82,14 +77,16 @@ const ArteFinalScreen = () => {
   });
 
   const router = useRouter();
-  const myTheme = useThemeMode()
+  // const myTheme = useThemeMode()
 
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
+
   const allowedRoles = [1, 2, 3, 4, 7, 10];
   const DesignerRoles = [6];
   const DesignerCoordanateRole = [7];
+
   const canShowButtonAtribuirDesigner = roles.some(role => DesignerCoordanateRole.includes(role));
   const canShowButton = roles.some(role => allowedRoles.includes(role));
   const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));
@@ -112,32 +109,37 @@ const ArteFinalScreen = () => {
   });
 
   useEffect(() => {
-    if (dataPedidos && dataPedidos.data) { // Verificação adicional
+    if (dataPedidos && dataPedidos.data) {
       setAllPedidos(dataPedidos.data);
-      // console.log(dataPedidos);
     }
   }, [dataPedidos]);
 
-
-  // Inicializa o estado apenas uma vez
   useEffect(() => {
     const inicializarObservacoes = paginatedPedidos.reduce((acc, row) => {
       acc[row?.id ?? 0] = row.observacoes || "";
       return acc;
     }, {} as { [key: string]: string });
-
     setObservacoes(inicializarObservacoes);
   }, [allPedidos]);
 
+  // const handleObservacaoChange = (id: string, novaObservacao: string) => {
+  //   console.log('novaObservacao: ', novaObservacao);
+  //   setObservacoes((prev) => ({ ...prev, [id]: novaObservacao }));
+  // };
+
   const handleObservacaoChange = (id: string, novaObservacao: string) => {
-    setObservacoes((prev) => ({ ...prev, [id]: novaObservacao }));
+    console.log('novaObservacao: ', novaObservacao);
+    setObservacoes((prev) => {
+      const novoEstado = { ...prev, [id]: novaObservacao };
+      console.log('Novo estado:', novoEstado);
+      return novoEstado;
+    });
   };
 
-  // console.log(allPedidos);
-
+  // isso vai ser mudado
   useEffect(() => {
     if (!openDialogDesinger) {
-      refetch(); // Chama refetch quando o dialog é fechado
+      refetch();
     }
   }, [openDialogDesinger, refetch]);
 
@@ -197,6 +199,8 @@ const ArteFinalScreen = () => {
       console.warn('URL do Trello não disponível');
     }
   };
+
+  // não está funcionando
   const handleListaUniformes = async (row: ArteFinal) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-arte-final/${row.id}/verificar-uniformes`, {
@@ -206,9 +210,7 @@ const ArteFinalScreen = () => {
           'Authorization': `Bearer ${accessToken}`,
         },
       });
-
       const data = await response.json();
-
       if (response.ok) {
         router.push(data.redirect);
       } else {
@@ -255,8 +257,6 @@ const ArteFinalScreen = () => {
 
   const handleEnviarImpressora = async (row: ArteFinal) => {
     const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Impressão?');
-
-    // validações
     if (!row.designer_id) {
       return setSnackbar({
         open: true,
@@ -300,7 +300,6 @@ const ArteFinalScreen = () => {
       });
     }
 
-
     if (confirmar) {
       const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
       if (sucesso) {
@@ -328,7 +327,6 @@ const ArteFinalScreen = () => {
     }
   };
 
-  // handles dos selects
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
     const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
     if (sucesso) {
@@ -349,7 +347,6 @@ const ArteFinalScreen = () => {
   }
 
   const handleClickOpenDialogObs = async (row: ArteFinal) => {
-    // abre o dialog e passa a row
     setSelectedRowObs(row);
     setOpenDialogObs(true);
   };
@@ -370,12 +367,12 @@ const ArteFinalScreen = () => {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-obs-change/${id}`,
         {
-          method: "PUT",
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ observacoes: observacoes[id] }), // Envia apenas a observação específica do ID
+          body: JSON.stringify({ observacoes: observacoes[id] }),
         }
       );
 
@@ -384,14 +381,18 @@ const ArteFinalScreen = () => {
       }
 
       const data = await response.json();
+      setSnackbar({
+        open: true,
+        message: `${'Observação salva com sucesso.'}`,
+        severity: 'success'
+      });
       console.log("Observação salva com sucesso:", data);
 
-      refetch(); // Atualiza os dados da página
+      refetch();
     } catch (error) {
       console.error("Erro ao salvar observação:", error);
     }
   };
-
 
   const pedidoStatus = {
     1: { nome: 'Pendente', fila: 'D' },
@@ -401,22 +402,14 @@ const ArteFinalScreen = () => {
     5: { nome: 'Cor teste', fila: 'D' },
   } as const;
 
-  // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
-      // Verifica se o número do pedido corresponde ao filtro
       const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
-
-      // Verifica se o status do pedido corresponde ao filtro
       const isStatusMatch = !filters.pedido_status_id || pedido.pedido_status_id === Number(filters.pedido_status_id);
-
-      // Filtro de data (data inicial e final)
       const isDateMatch = (
         (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
         (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
       );
-
-      // Retorna true se todas as condições de filtro forem atendidas
       return isNumberMatch && isStatusMatch && isDateMatch;
     });
   }, [allPedidos, filters, dateFilter]);
@@ -437,6 +430,16 @@ const ArteFinalScreen = () => {
     setDateFilter((prev) => ({ ...prev, [field]: newValue }));
   }
 
+  function formatarDataSegura(dataISOString: string): string {
+    const dataUTC = DateTime.fromISO(dataISOString, { zone: 'utc' });
+    const dataFormatada = dataUTC.toFormat('dd/MM/yyyy');
+    return dataFormatada;
+  }
+
+  const zerarHorario = (data: Date): Date => {
+    return new Date(data.getFullYear(), data.getMonth(), data.getDate());
+  };
+
   const BCrumb = [
     {
       to: "/",
@@ -447,14 +450,14 @@ const ArteFinalScreen = () => {
       title: "produção",
     },
     {
-      to: "/apps/produção/pedidos",
-      title: "Pedidos",
+      to: "/apps/produção/arte-final",
+      title: "Pedidos com Arte Final",
     },
   ];
 
-  useEffect(() => {
-    console.log("📌 Estado atualizado - selectedRowIdSidePanel:", selectedRowSidePanel);
-  }, [selectedRowSidePanel]);
+  // useEffect(() => {
+  //   console.log("📌 Estado atualizado - selectedRowIdSidePanel:", selectedRowSidePanel);
+  // }, [selectedRowSidePanel]);
 
   // console.log(allPedidos);
   // console.log(designers);
@@ -462,10 +465,9 @@ const ArteFinalScreen = () => {
   return (
     <PageContainer title="Produção / Arte - Final" description="Tela de Produção da Arte - Final | Arte Arena">
       <Breadcrumb title="Produção / Arte - Final" items={BCrumb} />
-      <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2, }}>
-        <Typography sx={{ fontSize: '18px', fontWeight: '600' }}>
-          Total de {allPedidos.length} Pedidos
-          {/* {filteredPedidos.length} Filtrados */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2, p: 2, border: '1px solid #ddd', borderRadius: 1, }}>
+        <Typography sx={{ fontSize: '14px', fontWeight: '600' }}>
+          Total de Pedidos: <strong>{allPedidos.length}</strong>.
         </Typography>
       </Box>
       <ParentCard title="Arte - Final">
@@ -500,7 +502,6 @@ const ArteFinalScreen = () => {
               </Select>
             </Grid>
 
-            {/* DatePicker - Data Inicial */}
             <Grid item>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
@@ -508,10 +509,13 @@ const ArteFinalScreen = () => {
                   value={dateFilter.start}
                   onChange={handleDateChange('start')}
                   renderInput={(params: TextFieldProps) => (
-                    <TextField
+                    <CustomTextField
                       {...params}
+                      error={false}
                       size="small"
-                      sx={{ width: '200px' }} // Define uma largura fixa
+                      sx={{
+                        width: '200px',
+                      }}
                     />
                   )}
                   inputFormat="dd/MM/yyyy"
@@ -519,7 +523,6 @@ const ArteFinalScreen = () => {
               </LocalizationProvider>
             </Grid>
 
-            {/* DatePicker - Data Final */}
             <Grid item>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
@@ -527,10 +530,13 @@ const ArteFinalScreen = () => {
                   value={dateFilter.end}
                   onChange={handleDateChange('end')}
                   renderInput={(params: TextFieldProps) => (
-                    <TextField
+                    <CustomTextField
                       {...params}
+                      error={false}
                       size="small"
-                      sx={{ width: '200px' }} // Define uma largura fixa
+                      sx={{
+                        width: '200px'
+                      }}
                     />
                   )}
                   inputFormat="dd/MM/yyyy"
@@ -538,7 +544,6 @@ const ArteFinalScreen = () => {
               </LocalizationProvider>
             </Grid>
 
-            {/* Botão Limpar Filtros */}
             <Grid item>
               <Button onClick={handleClearFilters} variant="outlined" size="small">
                 Limpar Filtros
@@ -560,15 +565,14 @@ const ArteFinalScreen = () => {
               <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
                 <TableHead>
                   <TableRow>
-                    {/* <TableCell> </TableCell> */}
-                    <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
-                    <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Previsão de Entrega</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Designer</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Tipo</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Status</TableCell>
-                    <TableCell align='center' sx={{ width: '20%' }}>Ações</TableCell>
+                    <TableCell align='center' sx={{ width: '2%' }}>N° Pedido</TableCell>
+                    <TableCell align='center' sx={{ width: '35%' }}>Produtos</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>Previsão de Entrega</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>Designer</TableCell>
+                    <TableCell align='center' sx={{ width: '20%' }}>Observação</TableCell>
+                    <TableCell align='center' sx={{ width: '7%' }}>Tipo</TableCell>
+                    <TableCell align='center' sx={{ width: '3%' }}>Status</TableCell>
+                    <TableCell align='center' sx={{ width: '13%' }}>Ações</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -579,21 +583,28 @@ const ArteFinalScreen = () => {
                         : row.lista_produtos
                       : [];
 
-                    // definição das datas e atrasos
-                    const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
-                    const dataAtual = getBrazilTime(); //colocar no getBrazilTime
+                    const dataPrevistaSegura = formatarDataSegura(String(row?.data_prevista));
+
+                    const dataPrevista = row?.data_prevista ? dataPrevistaSegura : null;
+
+                    const dataAtual = formatarDataSegura(zerarHorario(getBrazilTime()).toISOString());
+
+                    // console.log('dataAtual: ', row.numero_pedido, dataAtual)
+
                     let atraso = false;
                     let isHoje = false;
+
+                    // console.log('dataPrevista: ', row.numero_pedido, row?.data_prevista, formatarDataSegura(String(row?.data_prevista)), dataPrevista, dataAtual)
+
                     if (dataPrevista && dataPrevista < dataAtual) {
                       atraso = true;
                     }
-                    if (dataPrevista && isSameDay(dataPrevista, dataAtual)) {
+
+                    if (dataPrevista && dataPrevista === dataAtual) {
                       isHoje = true;
                     }
-                    // tem que usar isso na logica do rastreamento
-
-                    // definição dos designers
                     const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
+
                     const usersMap = new Map(
                       Array.isArray(parsedDesigners)
                         ? parsedDesigners.map(designer => [designer.id, designer.name])
@@ -619,74 +630,72 @@ const ArteFinalScreen = () => {
                       3: 'rgba(123, 157, 0, 0.8)',
                       4: 'rgba(0, 152, 63, 0.65)',
                       5: 'rgba(0, 146, 136, 0.8)',
-                      // 19: 'rgba(238, 84, 84, 0.8)',
-                      // 20: 'rgba(20, 175, 0, 0.8)',
-                      // 21: 'rgba(180, 0, 0, 0.8)',
-                      // 22: 'rgba(152, 0, 199, 0.8)',
                     };
-
 
                     const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
                     const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
 
-
                     return (
                       <>
-                        {/* colocar as condições de data e de tipos de status e suas cores */}
-                        {/* teste usar a theme   */}
                         <TableRow
                           key={row.id}
                           sx={{
                           }}
                         >
-
                           <TableCell
                             sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                               cursor: 'pointer',
                             }}
                             onClick={() => {
                               navigator.clipboard.writeText(String(row.numero_pedido));
-                              // colocar um alert bunitinho de copiado
+                              setSnackbar({
+                                open: true,
+                                message: `✅ Número do Pedido ${row.numero_pedido} copiado com sucesso!`,
+                                severity: 'success'
+                              });
+
                             }}
                           >
                             {String(row.numero_pedido)}
                           </TableCell>
 
-                          {/* Nome de produto */}
                           <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                          }} align='center'>
-                            {row.lista_produtos?.length > 0
-                              ? (
-                                <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
-                                  {listaProdutos.map((produto, index) => (
-                                    <li key={index}>{produto.nome}</li> // Cada produto em uma nova linha
-                                  ))}
-                                </ul>
-                              )
-                              : 'N/A'}
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                          }} align='left'>
+                            <Box
+                              sx={{
+                                maxHeight: 80,
+                                overflowY: 'auto',
+                                padding: '12px'
+                              }}
+                            >
+                              {row.lista_produtos?.length > 0
+                                ? (
+                                  <ul style={{ listStyleType: 'disc', padding: 0, margin: 0 }}>
+                                    {listaProdutos.map((produto, index) => (
+                                      <li key={index}>{produto.nome} ({produto.quantidade})</li>
+                                    ))}
+                                  </ul>
+                                )
+                                : 'N/A'}
+                            </Box>
                           </TableCell>
 
                           <TableCell
                             sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black',
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                               backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)',
                             }}
                             align="center"
                           >
-                            {row?.data_prevista
-                              ? DateTime.fromISO(new Date(row.data_prevista).toISOString(), { zone: "utc" })
-                                .setZone("America/Sao_Paulo")
-                                .toFormat("dd/MM/yyyy")
-                              : " "}
-                            {atraso && <span> (Atraso)</span>}
+                            {formatarDataSegura(String(row.data_prevista))}
                           </TableCell>
 
                           {designerNome !== 'Desconhecido' ? (
                             <TableCell
                               sx={{
-                                color: myTheme === "dark" ? "white" : "black", // Branco no modo escuro e preto no claro
+                                color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                               }}
                               align="center"
                             >
@@ -699,8 +708,8 @@ const ArteFinalScreen = () => {
                                   sx={{
                                     backgroundColor: 'transparent',
                                     borderRadius: '100px',
-                                    border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
-                                    color: myTheme === 'dark' ? 'white' : 'black',
+                                    border: (theme: any) => theme.palette.mode === 'dark' ? '1px solid white' : '1px solid black',
+                                    color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                                   }}
                                   onClick={() => handleEntrarDesigner(row.id)}
                                 >
@@ -714,90 +723,64 @@ const ArteFinalScreen = () => {
                             </TableCell>
                           )}
 
-                          <TableCell
-                            sx={{
-                              color: myTheme === "dark" ? "white" : "black",
-                              textAlign: "center",
-                            }}
-                          >
-                            {row?.observacoes ? (
-                              <Tooltip title={"Adicionar Observação?"} placement="top">
-                                <Typography
-                                  onClick={() => handleClickOpenDialogObs(row)}
-                                  sx={{
-                                    cursor: "pointer",
-                                    fontSize: "14px",
-                                    fontWeight: row.observacoes ? "500" : "regular",
-                                    color: myTheme === "dark" ? "white" : "black",
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    maxWidth: "200px", // Ajuste conforme necessário
-                                    display: "inline-block",
-                                    "&:hover": {
-                                      fontWeight: "bold",
-                                      color: myTheme === "dark" ? "#bdbdbd" : "#555",
-                                    },
-                                  }}
-                                >
-                                  {row?.observacoes ?? observacoes[row.id ?? 0]}
-                                </Typography>
-                              </Tooltip>
-                            ) : (
-                              <>
-                                <CustomTextField
-                                  value={observacoes[row?.id ?? 0] || ""}
-                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleObservacaoChange(String(row?.id), e.target.value)}
-                                  onKeyDown={(e: { key: string; }) => e.key === "Enter" && handleEnviarObservacao(String(row?.id))} // Salva ao pressionar Enter
-                                  fullWidth
-                                />
-                                <Typography variant="caption">Pressione Enter para confirmar</Typography>
-                              </>
-                            )}
-                          </TableCell>
+                          <Tooltip title={row?.observacoes ? row.observacoes : "Adicionar Observação"} placement="left">
+                            <TableCell
+                              sx={{
+                                color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                                textAlign: "left",
+                              }}
+                            >
+                              <CustomTextField
+                                value={observacoes[String(row?.id)]}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleObservacaoChange(String(row?.id), e.target.value)}
+                                onKeyDown={(e: { key: string; }) => e.key === "Enter" && handleEnviarObservacao(String(row?.id))}
+                                fullWidth
+                              />
+                            </TableCell>
+                          </Tooltip>
 
                           <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black',
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                             backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
                           }} align='center'>{tipo ?? '-'}</TableCell>
 
                           {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
                           <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                             backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
                           }} align='center'>
-                            <select
+                            <CustomSelect
                               style={{
+                                height: '30px',
                                 textAlign: 'center',
                                 padding: '0px',
                                 fontSize: '12px',
                                 borderRadius: '4px',
-                                border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
                                 backgroundColor: 'transparent',
-                                color: myTheme === 'dark' ? 'white' : 'black',
                                 appearance: 'none',
                                 WebkitAppearance: 'none',
                                 MozAppearance: 'none',
                                 cursor: 'pointer',
-                                width: 'auto',
+                                width: '100%',
                                 boxSizing: 'border-box',  // Para garantir que o padding não quebre a largura
                               }}
+
                               value={String(row.pedido_status_id)} // O valor precisa ser uma string
-                              onChange={(event) => {
+                              onChange={(event: { target: { value: any; }; }) => {
                                 const newStatus = event.target.value;  // O valor será do tipo string
                                 handleStatusChange(row, Number(newStatus)); // Converte para número antes de passar para a função
                               }}
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
-                                <option key={id} value={id}>
+                                <MenuItem key={id} value={id}>
                                   {status.nome}
-                                </option>
+                                </MenuItem>
                               ))}
-                            </select>
+                            </CustomSelect>
                           </TableCell>
 
                           <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                           }} align='center'>
                             <Tooltip title="Ver Detalhes">
                               <IconButton onClick={() => handleVerDetalhes(row)}>
@@ -847,61 +830,6 @@ const ArteFinalScreen = () => {
                                 </Tooltip>
                               </>
                             )}
-                          </TableCell>
-                        </TableRow>
-
-                        <TableRow>
-                          {/* colSpan deve ter o mesmo número que o número de cabeçalhos da tabela, no caso 16 */}
-                          <TableCell sx={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
-                            <Collapse in={openRow[row.id ?? 0]} timeout="auto" unmountOnExit>
-                              <Box margin={1}>
-                                <Table size="small" aria-label="detalhes">
-                                  <TableBody>
-                                    <TableRow>
-                                      <TableCell sx={{ border: 'none' }} colSpan={16}>
-                                        <strong>Lista de Produtos</strong>
-                                        <TableHead>
-                                          <TableRow>
-                                            <TableCell></TableCell>
-                                            <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                              Tipo:
-                                            </TableCell>
-                                            <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                              Material:
-                                            </TableCell>
-                                            <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none', textAlign: 'center' }}>
-                                              Medida linear:
-                                            </TableCell>
-                                          </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                          {listaProdutos.length > 0 ? (
-                                            listaProdutos.map((produto: Produto, index: number) => (
-                                              <TableRow key={produto.id || index}>
-                                                <TableCell sx={{ fontWeight: 'bold', padding: '8px' }} colSpan={1}>
-                                                  {produto.nome}
-                                                </TableCell>
-                                                <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.nome}
-                                                </TableCell>
-                                                {/* <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.materiais.map((material: Material) => material.material).join(', ')} 
-                                                </TableCell> */}
-                                                <TableCell sx={{ padding: '8px', textAlign: 'center' }} colSpan={1}>
-                                                  {produto.medida_linear}
-                                                </TableCell>
-                                              </TableRow>
-                                            ))
-                                          ) : (
-                                            <Typography variant="body2" color="textSecondary">Nenhum produto disponível</Typography>
-                                          )}
-                                        </TableBody>
-                                      </TableCell>
-                                    </TableRow>
-                                  </TableBody>
-                                </Table>
-                              </Box>
-                            </Collapse>
                           </TableCell>
                         </TableRow>
                       </>
@@ -967,7 +895,6 @@ const ArteFinalScreen = () => {
         </>
       </ParentCard>
     </PageContainer>
-
   );
 };
 

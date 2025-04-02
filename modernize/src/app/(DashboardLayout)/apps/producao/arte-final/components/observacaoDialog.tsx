@@ -44,7 +44,7 @@ const DialogObs: React.FC<DialogObsProps> = ({
     }
 
     fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/pedido-obs-change/${row.id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`,
