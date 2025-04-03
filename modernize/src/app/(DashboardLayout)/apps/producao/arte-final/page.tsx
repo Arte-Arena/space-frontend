@@ -432,7 +432,7 @@ const ArteFinalScreen = () => {
 
   function formatarDataSegura(dataISOString: string): string {
     const dataUTC = DateTime.fromISO(dataISOString, { zone: 'utc' });
-    const dataFormatada = dataUTC.toFormat('dd/MM/yyyy');
+    const dataFormatada = dataUTC.toFormat('MM/dd/yyyy');
     return dataFormatada;
   }
 
@@ -594,15 +594,19 @@ const ArteFinalScreen = () => {
                     let atraso = false;
                     let isHoje = false;
 
+                    const dataAtualJS = new Date(dataAtual);
+                    const dataPrevistaJS = new Date(String(dataPrevista));
+                    
                     // console.log('dataPrevista: ', row.numero_pedido, row?.data_prevista, formatarDataSegura(String(row?.data_prevista)), dataPrevista, dataAtual)
 
-                    if (dataPrevista && dataPrevista < dataAtual) {
+                    if (  dataPrevistaJS < dataAtualJS) {
                       atraso = true;
                     }
 
-                    if (dataPrevista && dataPrevista === dataAtual) {
+                    if (isSameDay(dataPrevistaJS, dataAtualJS)) {
                       isHoje = true;
                     }
+                    
                     const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
 
                     const usersMap = new Map(
@@ -739,16 +743,23 @@ const ArteFinalScreen = () => {
                             </TableCell>
                           </Tooltip>
 
-                          <TableCell sx={{
-                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                            backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
-                          }} align='center'>{tipo ?? '-'}</TableCell>
+                          <TableCell
+                            sx={{
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                              backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
+                            }}
+                            align='center'
+                          >
+                            {tipo ?? '-'}
+                          </TableCell>
 
-                          {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
-                          <TableCell sx={{
-                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                            backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
-                          }} align='center'>
+                          <TableCell
+                            sx={{
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                              backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
+                            }}
+                            align='center'
+                          >
                             <CustomSelect
                               style={{
                                 height: '30px',
@@ -757,9 +768,6 @@ const ArteFinalScreen = () => {
                                 fontSize: '12px',
                                 borderRadius: '4px',
                                 backgroundColor: 'transparent',
-                                appearance: 'none',
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none',
                                 cursor: 'pointer',
                                 width: '100%',
                                 boxSizing: 'border-box',  // Para garantir que o padding não quebre a largura
