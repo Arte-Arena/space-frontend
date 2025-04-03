@@ -812,7 +812,6 @@ const ArteFinalScreen = () => {
                             align="center"
                           >
                             <Grid container spacing={0} justifyContent="center">
-                              {/* Primeira linha (2 ícones por linha) */}
                               <Grid item xs={5} sm={5} md={5} lg={5}>
                                 <Tooltip title="Ver Detalhes">
                                   <IconButton onClick={() => handleVerDetalhes(row)}>
@@ -829,7 +828,6 @@ const ArteFinalScreen = () => {
                                 </Tooltip>
                               </Grid>
 
-                              {/* Segunda linha */}
                               <Grid item xs={5} sm={5} md={5} lg={5}>
                                 <Tooltip title="Lista de Uniformes">
                                   <IconButton onClick={() => handleListaUniformes(row)}>
@@ -846,7 +844,6 @@ const ArteFinalScreen = () => {
                                 </Tooltip>
                               </Grid>
 
-                              {/* Se `canShowButtonAtribuirDesigner` for verdadeiro */}
                               {canShowButtonAtribuirDesigner && (
                                 <Grid item xs={5} sm={5} md={5} lg={5}>
                                   <Tooltip title="Atribuir Designer">
@@ -857,7 +854,6 @@ const ArteFinalScreen = () => {
                                 </Grid>
                               )}
 
-                              {/* Se `canShowButton` for verdadeiro */}
                               {canShowButton && (
                                 <>
                                   <Grid item xs={5} sm={5} md={5} lg={5}>
