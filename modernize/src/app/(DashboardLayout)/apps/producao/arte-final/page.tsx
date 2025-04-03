@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
@@ -76,8 +76,9 @@ const ArteFinalScreen = () => {
     severity: 'success'
   });
 
+  const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+
   const router = useRouter();
-  // const myTheme = useThemeMode()
 
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
@@ -114,27 +115,35 @@ const ArteFinalScreen = () => {
     }
   }, [dataPedidos]);
 
-  useEffect(() => {
-    const inicializarObservacoes = paginatedPedidos.reduce((acc, row) => {
-      acc[row?.id ?? 0] = row.observacoes || "";
-      return acc;
-    }, {} as { [key: string]: string });
-    setObservacoes(inicializarObservacoes);
-  }, [allPedidos]);
+  // useEffect(() => {
+  //   const inicializarObservacoes = paginatedPedidos.reduce((acc, row) => {
+  //     acc[row?.id ?? 0] = row.observacoes || "";
+  //     return acc;
+  //   }, {} as { [key: string]: string });
+  //   setObservacoes(inicializarObservacoes);
+  // }, [allPedidos]);
 
   // const handleObservacaoChange = (id: string, novaObservacao: string) => {
   //   console.log('novaObservacao: ', novaObservacao);
   //   setObservacoes((prev) => ({ ...prev, [id]: novaObservacao }));
   // };
 
-  const handleObservacaoChange = (id: string, novaObservacao: string) => {
-    console.log('novaObservacao: ', novaObservacao);
-    setObservacoes((prev) => {
-      const novoEstado = { ...prev, [id]: novaObservacao };
-      console.log('Novo estado:', novoEstado);
-      return novoEstado;
-    });
+  const handleKeyPressObservacoes = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      const inputElement = observacoesRefs.current[id];
+      const valor = inputElement?.value || '';
+      handleEnviarObservacao(id, valor);
+    }
   };
+
+  // const handleObservacaoChange = (id: string, novaObservacao: string) => {
+  //   console.log('novaObservacao: ', novaObservacao);
+  //   setObservacoes((prev) => {
+  //     const novoEstado = { ...prev, [id]: novaObservacao };
+  //     console.log('Novo estado:', novoEstado);
+  //     return novoEstado;
+  //   });
+  // };
 
   // isso vai ser mudado
   useEffect(() => {
@@ -346,12 +355,7 @@ const ArteFinalScreen = () => {
     }
   }
 
-  const handleClickOpenDialogObs = async (row: ArteFinal) => {
-    setSelectedRowObs(row);
-    setOpenDialogObs(true);
-  };
-
-  const handleEnviarObservacao = async (id: string) => {
+  const handleEnviarObservacao = async (id: string, obs: string) => {
     if (!id) {
       console.error("ID do pedido não encontrado");
       return;
@@ -372,7 +376,7 @@ const ArteFinalScreen = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ observacoes: observacoes[id] }),
+          body: JSON.stringify({ observacoes: obs }),
         }
       );
 
@@ -596,17 +600,17 @@ const ArteFinalScreen = () => {
 
                     const dataAtualJS = new Date(dataAtual);
                     const dataPrevistaJS = new Date(String(dataPrevista));
-                    
+
                     // console.log('dataPrevista: ', row.numero_pedido, row?.data_prevista, formatarDataSegura(String(row?.data_prevista)), dataPrevista, dataAtual)
 
-                    if (  dataPrevistaJS < dataAtualJS) {
+                    if (dataPrevistaJS < dataAtualJS) {
                       atraso = true;
                     }
 
                     if (isSameDay(dataPrevistaJS, dataAtualJS)) {
                       isHoje = true;
                     }
-                    
+
                     const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
 
                     const usersMap = new Map(
@@ -735,9 +739,17 @@ const ArteFinalScreen = () => {
                               }}
                             >
                               <CustomTextField
-                                value={observacoes[String(row?.id)]}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleObservacaoChange(String(row?.id), e.target.value)}
-                                onKeyDown={(e: { key: string; }) => e.key === "Enter" && handleEnviarObservacao(String(row?.id))}
+                                key={row?.id}
+                                label={row?.observacoes ? "Observação" : "Adicionar Observação"}
+                                defaultValue={row?.observacoes || ""}
+                                inputRef={(ref: HTMLInputElement | null) => {
+                                  if (row?.id && ref) {
+                                    observacoesRefs.current[row.id] = ref;
+                                  }
+                                }}
+                                onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
+                                  if (row?.id) handleKeyPressObservacoes(String(row.id), event);
+                                }}
                                 fullWidth
                               />
                             </TableCell>
