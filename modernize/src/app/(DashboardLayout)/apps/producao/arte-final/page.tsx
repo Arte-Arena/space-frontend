@@ -45,7 +45,6 @@ import SidePanel from './components/drawer';
 import AssignDesignerDialog from './components/designerDialog';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
-import DialogObs from './components/observacaoDialog';
 import deletePedidoArteFinal from './components/useDeletePedido';
 import atribuirDesigner from './components/useDeisgnerJoin';
 
@@ -54,11 +53,8 @@ const ArteFinalScreen = () => {
   const [openDrawer, setOpenDrawer] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
   const [openDialogDesinger, setOpenDialogDesinger] = useState(false);
-  const [openDialogObs, setOpenDialogObs] = useState(false);
   const [selectedRowDesinger, setSelectedRowDesinger] = useState<ArteFinal | null>(null);
-  const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
-  const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
   const [searchNumero, setSearchNumero] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });
@@ -84,13 +80,14 @@ const ArteFinalScreen = () => {
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
 
-  const allowedRoles = [1, 2, 3, 4, 7, 10];
-  const DesignerRoles = [6];
-  const DesignerCoordanateRole = [7];
+  const DesignerRoles = [1, 6];
+  const DesignerCoordanateRole = [1, 7];
+  const BackOfficeRoles = [1, 10];
 
   const canShowButtonAtribuirDesigner = roles.some(role => DesignerCoordanateRole.includes(role));
-  const canShowButton = roles.some(role => allowedRoles.includes(role));
   const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));
+  const canShowButtonBackOffice = roles.some(role => BackOfficeRoles.includes(role));
+
 
   const filters = {
     numero_pedido: searchNumero,
@@ -115,19 +112,6 @@ const ArteFinalScreen = () => {
     }
   }, [dataPedidos]);
 
-  // useEffect(() => {
-  //   const inicializarObservacoes = paginatedPedidos.reduce((acc, row) => {
-  //     acc[row?.id ?? 0] = row.observacoes || "";
-  //     return acc;
-  //   }, {} as { [key: string]: string });
-  //   setObservacoes(inicializarObservacoes);
-  // }, [allPedidos]);
-
-  // const handleObservacaoChange = (id: string, novaObservacao: string) => {
-  //   console.log('novaObservacao: ', novaObservacao);
-  //   setObservacoes((prev) => ({ ...prev, [id]: novaObservacao }));
-  // };
-
   const handleKeyPressObservacoes = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       const inputElement = observacoesRefs.current[id];
@@ -135,22 +119,6 @@ const ArteFinalScreen = () => {
       handleEnviarObservacao(id, valor);
     }
   };
-
-  // const handleObservacaoChange = (id: string, novaObservacao: string) => {
-  //   console.log('novaObservacao: ', novaObservacao);
-  //   setObservacoes((prev) => {
-  //     const novoEstado = { ...prev, [id]: novaObservacao };
-  //     console.log('Novo estado:', novoEstado);
-  //     return novoEstado;
-  //   });
-  // };
-
-  // isso vai ser mudado
-  useEffect(() => {
-    if (!openDialogDesinger) {
-      refetch();
-    }
-  }, [openDialogDesinger, refetch]);
 
   const handleEdit = (pedido: ArteFinal) => {
     const pedidoId = String(pedido.id);
@@ -465,13 +433,6 @@ const ArteFinalScreen = () => {
     },
   ];
 
-  // useEffect(() => {
-  //   console.log("📌 Estado atualizado - selectedRowIdSidePanel:", selectedRowSidePanel);
-  // }, [selectedRowSidePanel]);
-
-  // console.log(allPedidos);
-  // console.log(designers);
-
   return (
     <PageContainer title="Produção / Arte - Final" description="Tela de Produção da Arte - Final | Arte Arena">
       <Breadcrumb title="Produção / Arte - Final" items={BCrumb} />
@@ -483,7 +444,6 @@ const ArteFinalScreen = () => {
       <ParentCard title="Arte - Final">
         <>
           <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
-            {/* Campo de Número do Pedido */}
             <Grid item>
               <TextField
                 label="Número do Pedido"
@@ -494,10 +454,9 @@ const ArteFinalScreen = () => {
               />
             </Grid>
 
-            {/* Select de Status */}
             <Grid item>
               <Select
-                sx={{ minWidth: '150px' }} // Define uma largura mínima
+                sx={{ minWidth: '150px' }}
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 displayEmpty
@@ -654,6 +613,7 @@ const ArteFinalScreen = () => {
                         <TableRow
                           key={row.id}
                           sx={{
+                            height: '84px',
                           }}
                         >
                           <TableCell
@@ -788,13 +748,13 @@ const ArteFinalScreen = () => {
                                 backgroundColor: 'transparent',
                                 cursor: 'pointer',
                                 width: '100%',
-                                boxSizing: 'border-box',  // Para garantir que o padding não quebre a largura
+                                boxSizing: 'border-box',
                               }}
 
-                              value={String(row.pedido_status_id)} // O valor precisa ser uma string
+                              value={String(row.pedido_status_id)}
                               onChange={(event: { target: { value: any; }; }) => {
-                                const newStatus = event.target.value;  // O valor será do tipo string
-                                handleStatusChange(row, Number(newStatus)); // Converte para número antes de passar para a função
+                                const newStatus = event.target.value;
+                                handleStatusChange(row, Number(newStatus));
                               }}
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
@@ -811,7 +771,7 @@ const ArteFinalScreen = () => {
                             }}
                             align="center"
                           >
-                            <Grid container spacing={0} justifyContent="center">
+                            <Grid container spacing={1} justifyContent="left">
                               <Grid item xs={5} sm={5} md={5} lg={5}>
                                 <Tooltip title="Ver Detalhes">
                                   <IconButton onClick={() => handleVerDetalhes(row)}>
@@ -836,25 +796,31 @@ const ArteFinalScreen = () => {
                                 </Tooltip>
                               </Grid>
 
-                              <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Enviar para Impressão!">
-                                  <IconButton onClick={() => handleEnviarImpressora(row)}>
-                                    <IconPrinter />
-                                  </IconButton>
-                                </Tooltip>
-                              </Grid>
-
                               {canShowButtonAtribuirDesigner && (
-                                <Grid item xs={5} sm={5} md={5} lg={5}>
-                                  <Tooltip title="Atribuir Designer">
-                                    <IconButton onClick={() => handleAtribuirDesigner(row)}>
-                                      <IconBrush />
-                                    </IconButton>
-                                  </Tooltip>
-                                </Grid>
+                                <>
+                                  <Grid item xs={5} sm={5} md={5} lg={5}>
+                                    <Tooltip title="Atribuir Designer">
+                                      <IconButton onClick={() => handleAtribuirDesigner(row)}>
+                                        <IconBrush />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Grid>
+                                </>
                               )}
 
-                              {canShowButton && (
+                              {canShowButtonDesigner && (
+                                <>
+                                  <Grid item xs={5} sm={5} md={5} lg={5}>
+                                    <Tooltip title="Enviar para Impressão!">
+                                      <IconButton onClick={() => handleEnviarImpressora(row)}>
+                                        <IconPrinter />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Grid>
+                                </>
+                              )}
+
+                              {canShowButtonBackOffice && (
                                 <>
                                   <Grid item xs={5} sm={5} md={5} lg={5}>
                                     <Tooltip title="Editar">
@@ -896,7 +862,6 @@ const ArteFinalScreen = () => {
           {selectedRowDesinger !== null && (
             <AssignDesignerDialog openDialogDesinger={openDialogDesinger} onCloseDialogDesinger={() => setOpenDialogDesinger(false)} row={selectedRowDesinger} refetch={refetch} />
           )}
-          <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
 
           <Snackbar
