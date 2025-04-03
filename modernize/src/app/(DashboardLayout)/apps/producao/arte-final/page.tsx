@@ -545,71 +545,61 @@ const ArteFinalScreen = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Array.isArray(paginatedPedidos) && paginatedPedidos.map((row) => {
-                    const listaProdutos: Produto[] = row.lista_produtos
-                      ? typeof row.lista_produtos === 'string'
-                        ? JSON.parse(row.lista_produtos)
-                        : row.lista_produtos
-                      : [];
+                  {Array.isArray(paginatedPedidos) &&
+                    paginatedPedidos.map((row) => {
 
-                    const dataPrevistaSegura = formatarDataSegura(String(row?.data_prevista));
+                      const listaProdutos: Produto[] = row.lista_produtos
+                        ? typeof row.lista_produtos === 'string'
+                          ? JSON.parse(row.lista_produtos)
+                          : row.lista_produtos
+                        : [];
 
-                    const dataPrevista = row?.data_prevista ? dataPrevistaSegura : null;
+                      const dataPrevistaSegura = formatarDataSegura(String(row?.data_prevista));
+                      const dataPrevista = row?.data_prevista ? dataPrevistaSegura : null;
+                      const dataAtual = formatarDataSegura(zerarHorario(getBrazilTime()).toISOString());
+                      let atraso = false;
+                      let isHoje = false;
+                      const dataAtualJS = new Date(dataAtual);
+                      const dataPrevistaJS = new Date(String(dataPrevista));
+                      if (dataPrevistaJS < dataAtualJS) {
+                        atraso = true;
+                      }
+                      if (isSameDay(dataPrevistaJS, dataAtualJS)) {
+                        isHoje = true;
+                      }
 
-                    const dataAtual = formatarDataSegura(zerarHorario(getBrazilTime()).toISOString());
+                      const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
 
-                    // console.log('dataAtual: ', row.numero_pedido, dataAtual)
+                      const usersMap = new Map(
+                        Array.isArray(parsedDesigners)
+                          ? parsedDesigners.map(designer => [designer.id, designer.name])
+                          : []
+                      );
 
-                    let atraso = false;
-                    let isHoje = false;
+                      const getUserNameById = (id: number | null | undefined) => {
+                        return id && usersMap.has(id) ? usersMap.get(id) : "Desconhecido";
+                      };
+                      const designerNome = getUserNameById(row.designer_id);
 
-                    const dataAtualJS = new Date(dataAtual);
-                    const dataPrevistaJS = new Date(String(dataPrevista));
+                      const pedidoTipos = {
+                        1: 'Prazo normal',
+                        2: 'Antecipação',
+                        3: 'Faturado',
+                        4: 'Metade/Metade',
+                        5: 'Amostra',
+                      } as const;
 
-                    // console.log('dataPrevista: ', row.numero_pedido, row?.data_prevista, formatarDataSegura(String(row?.data_prevista)), dataPrevista, dataAtual)
+                      const pedidoStatusColors: Record<number, string> = {
+                        1: 'rgba(220, 53, 69, 0.49)',
+                        2: 'rgba(213, 121, 0, 0.8)',
+                        3: 'rgba(123, 157, 0, 0.8)',
+                        4: 'rgba(0, 152, 63, 0.65)',
+                        5: 'rgba(0, 146, 136, 0.8)',
+                      };
 
-                    if (dataPrevistaJS < dataAtualJS) {
-                      atraso = true;
-                    }
+                      const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
 
-                    if (isSameDay(dataPrevistaJS, dataAtualJS)) {
-                      isHoje = true;
-                    }
-
-                    const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
-
-                    const usersMap = new Map(
-                      Array.isArray(parsedDesigners)
-                        ? parsedDesigners.map(designer => [designer.id, designer.name])
-                        : []
-                    );
-
-                    const getUserNameById = (id: number | null | undefined) => {
-                      return id && usersMap.has(id) ? usersMap.get(id) : "Desconhecido";
-                    };
-                    const designerNome = getUserNameById(row.designer_id);
-
-                    const pedidoTipos = {
-                      1: 'Prazo normal',
-                      2: 'Antecipação',
-                      3: 'Faturado',
-                      4: 'Metade/Metade',
-                      5: 'Amostra',
-                    } as const;
-
-                    const pedidoStatusColors: Record<number, string> = {
-                      1: 'rgba(220, 53, 69, 0.49)',
-                      2: 'rgba(213, 121, 0, 0.8)',
-                      3: 'rgba(123, 157, 0, 0.8)',
-                      4: 'rgba(0, 152, 63, 0.65)',
-                      5: 'rgba(0, 146, 136, 0.8)',
-                    };
-
-                    const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
-                    const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
-
-                    return (
-                      <>
+                      return (
                         <TableRow
                           key={row.id}
                           sx={{
@@ -781,11 +771,17 @@ const ArteFinalScreen = () => {
                               </Grid>
 
                               <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
+                                {row.url_trello !== null ? (
+                                  <Tooltip title="Link Trello">
+                                    <IconButton onClick={() => handleLinkTrello(row)} disabled={row.url_trello === null}>
+                                      <IconBrandTrello />
+                                    </IconButton>
+                                  </Tooltip>
+                                ) : (
                                   <IconButton onClick={() => handleLinkTrello(row)} disabled={row.url_trello === null}>
                                     <IconBrandTrello />
                                   </IconButton>
-                                </Tooltip>
+                                )}
                               </Grid>
 
                               <Grid item xs={5} sm={5} md={5} lg={5}>
@@ -842,9 +838,8 @@ const ArteFinalScreen = () => {
                             </Grid>
                           </TableCell>
                         </TableRow>
-                      </>
-                    );
-                  })}
+                      );
+                    })}
                 </TableBody>
 
               </Table >
