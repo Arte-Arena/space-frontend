@@ -440,6 +440,12 @@ const ArteFinalScreen = () => {
     return dataFormatada;
   }
 
+  function formatarDataJSX(dataISOString: string): string {
+    const dataUTC = DateTime.fromISO(dataISOString, { zone: 'utc' });
+    const dataFormatada = dataUTC.toFormat('dd/MM/yyyy');
+    return dataFormatada;
+  }
+
   const zerarHorario = (data: Date): Date => {
     return new Date(data.getFullYear(), data.getMonth(), data.getDate());
   };
@@ -697,7 +703,7 @@ const ArteFinalScreen = () => {
                             }}
                             align="center"
                           >
-                            {formatarDataSegura(String(row.data_prevista))}
+                            {formatarDataJSX(String(row.data_prevista))}
                           </TableCell>
 
                           {designerNome !== 'Desconhecido' ? (
@@ -799,57 +805,75 @@ const ArteFinalScreen = () => {
                             </CustomSelect>
                           </TableCell>
 
-                          <TableCell sx={{
-                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                          }} align='center'>
-                            <Tooltip title="Ver Detalhes">
-                              <IconButton onClick={() => handleVerDetalhes(row)}>
-                                <IconEye />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
-                              <IconButton
-                                onClick={() => handleLinkTrello(row)}
-                                disabled={row.url_trello === null}
-                              >
-                                <IconBrandTrello />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Lista de Uniformes">
-                              <IconButton onClick={() => handleListaUniformes(row)}>
-                                <IconShirt />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Enviar para Impressão!">
-                              <IconButton onClick={() => handleEnviarImpressora(row)}>
-                                <IconPrinter />
-                              </IconButton>
-                            </Tooltip>
-
-                            {/* validar a role do user 6*/}
-                            {canShowButtonAtribuirDesigner && (
-                              <Tooltip title="Atribuir Designer">
-                                <IconButton onClick={() => handleAtribuirDesigner(row)}>
-                                  <IconBrush />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-
-                            {/* validar a role do user 2,4,1*/}
-                            {canShowButton && (
-                              <>
-                                <Tooltip title="Editar">
-                                  <IconButton onClick={() => handleEdit(row)}>
-                                    <IconEdit />
+                          <TableCell
+                            sx={{
+                              color: (theme: any) => theme.palette.mode === "dark" ? "white" : "black",
+                            }}
+                            align="center"
+                          >
+                            <Grid container spacing={0} justifyContent="center">
+                              <Grid item xs={5} sm={5} md={5} lg={5}>
+                                <Tooltip title="Ver Detalhes">
+                                  <IconButton onClick={() => handleVerDetalhes(row)}>
+                                    <IconEye />
                                   </IconButton>
                                 </Tooltip>
-                                <Tooltip title="Excluir">
-                                  <IconButton onClick={() => handleDelete(row)}>
-                                    <IconTrash />
+                              </Grid>
+
+                              <Grid item xs={5} sm={5} md={5} lg={5}>
+                                <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
+                                  <IconButton onClick={() => handleLinkTrello(row)} disabled={row.url_trello === null}>
+                                    <IconBrandTrello />
                                   </IconButton>
                                 </Tooltip>
-                              </>
-                            )}
+                              </Grid>
+
+                              <Grid item xs={5} sm={5} md={5} lg={5}>
+                                <Tooltip title="Lista de Uniformes">
+                                  <IconButton onClick={() => handleListaUniformes(row)}>
+                                    <IconShirt />
+                                  </IconButton>
+                                </Tooltip>
+                              </Grid>
+
+                              <Grid item xs={5} sm={5} md={5} lg={5}>
+                                <Tooltip title="Enviar para Impressão!">
+                                  <IconButton onClick={() => handleEnviarImpressora(row)}>
+                                    <IconPrinter />
+                                  </IconButton>
+                                </Tooltip>
+                              </Grid>
+
+                              {canShowButtonAtribuirDesigner && (
+                                <Grid item xs={5} sm={5} md={5} lg={5}>
+                                  <Tooltip title="Atribuir Designer">
+                                    <IconButton onClick={() => handleAtribuirDesigner(row)}>
+                                      <IconBrush />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Grid>
+                              )}
+
+                              {canShowButton && (
+                                <>
+                                  <Grid item xs={5} sm={5} md={5} lg={5}>
+                                    <Tooltip title="Editar">
+                                      <IconButton onClick={() => handleEdit(row)}>
+                                        <IconEdit />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Grid>
+
+                                  <Grid item xs={5} sm={5} md={5} lg={5}>
+                                    <Tooltip title="Excluir">
+                                      <IconButton onClick={() => handleDelete(row)}>
+                                        <IconTrash />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Grid>
+                                </>
+                              )}
+                            </Grid>
                           </TableCell>
                         </TableRow>
                       </>
