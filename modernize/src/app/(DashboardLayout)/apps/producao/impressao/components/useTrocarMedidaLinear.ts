@@ -10,7 +10,7 @@ const trocarMedidaLinear = async (id: number | undefined, uid: number | null, me
     }
     
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-media-change/${id}`,
+      `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-medida-change/${id}`,
       {
         method: "PATCH",
         headers: {
