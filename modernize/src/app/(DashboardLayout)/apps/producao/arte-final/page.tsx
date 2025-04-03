@@ -440,6 +440,12 @@ const ArteFinalScreen = () => {
     return dataFormatada;
   }
 
+  function formatarDataJSX(dataISOString: string): string {
+    const dataUTC = DateTime.fromISO(dataISOString, { zone: 'utc' });
+    const dataFormatada = dataUTC.toFormat('dd/MM/yyyy');
+    return dataFormatada;
+  }
+
   const zerarHorario = (data: Date): Date => {
     return new Date(data.getFullYear(), data.getMonth(), data.getDate());
   };
@@ -697,7 +703,7 @@ const ArteFinalScreen = () => {
                             }}
                             align="center"
                           >
-                            {formatarDataSegura(String(row.data_prevista))}
+                            {formatarDataJSX(String(row.data_prevista))}
                           </TableCell>
 
                           {designerNome !== 'Desconhecido' ? (
