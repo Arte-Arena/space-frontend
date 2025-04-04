@@ -631,7 +631,7 @@ const ArteFinalScreen = () => {
                               sx={{
                                 maxHeight: 80,
                                 overflowY: 'auto',
-                                padding: '12px'
+                                paddingLeft: '2em'
                               }}
                             >
                               {row.lista_produtos?.length > 0
@@ -740,7 +740,6 @@ const ArteFinalScreen = () => {
                                 width: '100%',
                                 boxSizing: 'border-box',
                               }}
-
                               value={String(row.pedido_status_id)}
                               onChange={(event: { target: { value: any; }; }) => {
                                 const newStatus = event.target.value;
