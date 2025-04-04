@@ -12,8 +12,8 @@ const SuperAdminTermTabSubTab = () => {
 
   const [diasMenosArteFinal, setDiasMenosArteFinal] = React.useState<number | null>(3);
   const [diasMenosImpressao, setDiasMenosImpressao] = React.useState<number | null>(2);
-  const [diasMenosConfeccao, setDiasMenosConfeccao] = React.useState<number | null>(1);
-  const [diasMenosExpedicao, setDiasMenosExpedicao] = React.useState<number | null>(0);
+  const [diasMenosConfeccaoCostura, setDiasMenosConfeccaoCostura] = React.useState<number | null>(1);
+  const [diasMenosConfeccaoSublimacao, setDiasMenosConfeccaoSublimacao] = React.useState<number | null>(1);
   const [snackbar, setSnackbar] = React.useState<{
     open: boolean;
     message: string;
@@ -32,12 +32,12 @@ const SuperAdminTermTabSubTab = () => {
     setDiasMenosImpressao(newValue as number);
   };
 
-  const handleSliderConfeccaoChange = (event: Event, newValue: number | number[]) => {
-    setDiasMenosConfeccao(newValue as number);
+  const handleSliderConfeccaoSublimacaoChange = (event: Event, newValue: number | number[]) => {
+    setDiasMenosConfeccaoSublimacao(newValue as number);
   };
 
-  const handleSliderExpedicaoChange = (event: Event, newValue: number | number[]) => {
-    setDiasMenosExpedicao(newValue as number);
+  const handleSliderConfeccaoCosturaChange = (event: Event, newValue: number | number[]) => {
+    setDiasMenosConfeccaoCostura(newValue as number);
   };
 
 
@@ -53,10 +53,10 @@ const SuperAdminTermTabSubTab = () => {
       if (!accessToken) throw new Error("Usuário não autenticado.");
 
       const payload = {
-        dias_antecipa_arte_final: diasMenosArteFinal,
-        dias_antecipa_impressao: diasMenosImpressao,
-        dias_antecipa_confeccao: diasMenosConfeccao,
-        dias_antecipa_expedicao: diasMenosExpedicao
+        dias_antecipa_producao_arte_final: diasMenosArteFinal,
+        dias_antecipa_producao_impressao: diasMenosImpressao,
+        dias_antecipa_producao_confeccao_sublimacao: diasMenosConfeccaoSublimacao,
+        dias_antecipa_producao_confeccao_costura: diasMenosConfeccaoCostura
       }
 
       const res = await fetch(
@@ -117,7 +117,7 @@ const SuperAdminTermTabSubTab = () => {
           </CustomFormLabel>
           <CustomTextField
             autoFocus
-            id="custo-tecido"
+            id="arte-final"
             variant="outlined"
             fullWidth
             value={diasMenosArteFinal}
@@ -132,7 +132,7 @@ const SuperAdminTermTabSubTab = () => {
             Dias a menos Prazo de Impressao
           </CustomFormLabel>
           <CustomTextField
-            id="custo-papel"
+            id="impressao"
             variant="outlined"
             fullWidth
             value={diasMenosImpressao}
@@ -144,14 +144,14 @@ const SuperAdminTermTabSubTab = () => {
               mt: 0,
             }}
           >
-            Dias a menos Prazo de Confecção
+            Dias a menos Prazo de Confecção Sublimação
           </CustomFormLabel>
           <CustomTextField
-            id="custo-imposto"
+            id="confeccao-sublimacao"
             variant="outlined"
             fullWidth
-            value={diasMenosConfeccao}
-            onChange={handleSliderConfeccaoChange}
+            value={diasMenosConfeccaoSublimacao}
+            onChange={handleSliderConfeccaoSublimacaoChange}
           />
 
           <CustomFormLabel
@@ -159,14 +159,14 @@ const SuperAdminTermTabSubTab = () => {
               mt: 0,
             }}
           >
-            Dias a menos Prazo de Expedição
+            Dias a menos Prazo de Confecção Costura
           </CustomFormLabel>
           <CustomTextField
-            id="custo-imposto"
+            id="conefccao-costura"
             variant="outlined"
             fullWidth
-            value={diasMenosExpedicao}
-            onChange={handleSliderExpedicaoChange}
+            value={diasMenosConfeccaoCostura}
+            onChange={handleSliderConfeccaoCosturaChange}
           />
         </div>
         <div style={{ marginTop: '20px' }}>
