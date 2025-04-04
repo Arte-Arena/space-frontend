@@ -3,8 +3,9 @@
 import * as React from "react";
 import { Box, Slider, TextField, Button, Typography, Stack, Alert, Snackbar, AlertProps } from "@mui/material";
 import ChildCard from "@/app/components/shared/ChildCard";
+import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 
-const SuperAdminTermTabSubTabs = () => {
+const SuperAdminTermTabSubTab = () => {
   const [diasMenos, setDiasMenos] = React.useState(5);
   const [snackbar, setSnackbar] = React.useState<{
     open: boolean;
@@ -32,15 +33,13 @@ const SuperAdminTermTabSubTabs = () => {
 
   const handleSave = async () => {
     console.log(`Reduzindo ${diasMenos} dias das datas de produção.`);
-    // Aqui você pode fazer uma chamada à API ou atualizar o estado global.
-    // url: /super-admin/update-dias-antecipa
     try {
 
       const accessToken = localStorage.getItem("accessToken");
       if (!accessToken) throw new Error("Usuário não autenticado.");
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API}/api/super-admin/update-dias-antecipa`,
+        `${process.env.NEXT_PUBLIC_API}/api/super-admin/update-dias-antecipa-producao`,
         {
           method: "PUT",
           headers: {
@@ -48,7 +47,7 @@ const SuperAdminTermTabSubTabs = () => {
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            dias: diasMenos
+            dias_antecipa: diasMenos
           }),
         }
       );
@@ -80,7 +79,9 @@ const SuperAdminTermTabSubTabs = () => {
         <Box p={3} sx={{
           backgroundColor: 'background.paper',
           borderRadius: 2,
-          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)'
+          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
+          maxWidth: '600px',
+          margin: '0 auto'
         }}>
           <Typography variant="h5" gutterBottom sx={{
             color: 'primary.main',
@@ -110,7 +111,7 @@ const SuperAdminTermTabSubTabs = () => {
                 step={1}
                 marks
                 sx={{
-                  color: 'secondary.main',
+                  color: 'primary.main',
                   height: 8,
                   '& .MuiSlider-thumb': {
                     width: 24,
@@ -125,7 +126,7 @@ const SuperAdminTermTabSubTabs = () => {
                     fontSize: 12,
                     fontWeight: 'bold',
                     color: 'common.white',
-                    backgroundColor: 'secondary.main',
+                    backgroundColor: 'primary.main',
                     padding: '4px 8px',
                     borderRadius: '8px',
                     '&:before': {
@@ -141,21 +142,22 @@ const SuperAdminTermTabSubTabs = () => {
               />
             </Box>
 
-            <TextField
+            <CustomTextField
               label="Dias a Subtrair"
               type="number"
               value={diasMenos}
               onChange={handleInputChange}
               inputProps={{
-                min: 1,
-                max: 30,
+                min: 0,
+                max: 15,
+                step: 1,
                 style: { textAlign: 'center' }
               }}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '12px',
                   '&.Mui-focused fieldset': {
-                    borderColor: 'secondary.main',
+                    borderColor: 'primary.main',
                     borderWidth: 2
                   }
                 },
@@ -173,14 +175,14 @@ const SuperAdminTermTabSubTabs = () => {
               sx={{
                 py: 1.5,
                 borderRadius: '12px',
-                backgroundColor: 'secondary.main',
+                backgroundColor: 'primary.main',
                 color: 'common.white',
                 fontWeight: 'bold',
                 fontSize: '1rem',
                 textTransform: 'none',
                 boxShadow: 'none',
                 '&:hover': {
-                  backgroundColor: 'secondary.dark',
+                  backgroundColor: 'primary.dark',
                   boxShadow: '0 4px 12px rgba(100, 108, 255, 0.3)'
                 }
               }}
@@ -224,4 +226,4 @@ const SuperAdminTermTabSubTabs = () => {
   );
 };
 
-export default SuperAdminTermTabSubTabs;
+export default SuperAdminTermTabSubTab;

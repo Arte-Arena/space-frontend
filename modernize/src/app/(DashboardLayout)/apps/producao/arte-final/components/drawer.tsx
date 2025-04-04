@@ -15,7 +15,7 @@ interface SidePanelProps {
   refetch: () => void;
 }
 
-const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, refetch }) => {
+const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, refetch}) => {
   const designers = localStorage.getItem('designers');
   const theme = useThemeMode();
 
@@ -39,7 +39,6 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
 
   useEffect(() => {
     setProdutos(listaProdutos);
-    // Inicializa o estado das medidas lineares com os valores dos produtos
     const medidasIniciais: Record<string, number> = {};
     listaProdutos.forEach((produto) => {
       if (produto.uid && produto.medida_linear !== undefined) {

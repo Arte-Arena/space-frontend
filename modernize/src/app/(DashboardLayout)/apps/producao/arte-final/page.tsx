@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { isSameDay } from 'date-fns';
+import { isSameDay, subDays } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -71,7 +71,7 @@ const ArteFinalScreen = () => {
     message: '',
     severity: 'success'
   });
-
+  const [diasAntecipaProducao, setDiasAntecipaProducao] = useState<number>(0);
   const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   const router = useRouter();
@@ -79,7 +79,8 @@ const ArteFinalScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
-
+  const configs = localStorage.getItem('configs');
+  
   const DesignerRoles = [1, 6];
   const DesignerCoordanateRole = [1, 7];
   const BackOfficeRoles = [1, 10];
@@ -88,11 +89,18 @@ const ArteFinalScreen = () => {
   const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));
   const canShowButtonBackOffice = roles.some(role => BackOfficeRoles.includes(role));
 
-
   const filters = {
     numero_pedido: searchNumero,
     pedido_status_id: statusFilter,
   };
+
+  useEffect(() => {
+    if (configs) {
+      const configsParsed = JSON.parse(configs);
+      const diasAntecipaProducao = configsParsed.dias_antecipa_producao;
+      setDiasAntecipaProducao(diasAntecipaProducao);
+    }
+  }, [configs]);
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
@@ -536,7 +544,7 @@ const ArteFinalScreen = () => {
                   <TableRow>
                     <TableCell align='center' sx={{ width: '2%' }}>N° Pedido</TableCell>
                     <TableCell align='center' sx={{ width: '35%' }}>Produtos</TableCell>
-                    <TableCell align='center' sx={{ width: '5%' }}>Previsão de Entrega</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>Prazo de Entrega da Arte Final</TableCell>
                     <TableCell align='center' sx={{ width: '5%' }}>Designer</TableCell>
                     <TableCell align='center' sx={{ width: '20%' }}>Observação</TableCell>
                     <TableCell align='center' sx={{ width: '7%' }}>Tipo</TableCell>
@@ -560,11 +568,12 @@ const ArteFinalScreen = () => {
                       let atraso = false;
                       let isHoje = false;
                       const dataAtualJS = new Date(dataAtual);
-                      const dataPrevistaJS = new Date(String(dataPrevista));
-                      if (dataPrevistaJS < dataAtualJS) {
+                      const dataPrevistaConfeccao = new Date(String(dataPrevista));
+                      const dataPrevistaArteFinal = subDays(dataPrevistaConfeccao, diasAntecipaProducao);
+                      if (dataPrevistaArteFinal < dataAtualJS) {
                         atraso = true;
                       }
-                      if (isSameDay(dataPrevistaJS, dataAtualJS)) {
+                      if (isSameDay(dataPrevistaArteFinal, dataAtualJS)) {
                         isHoje = true;
                       }
 
@@ -653,7 +662,7 @@ const ArteFinalScreen = () => {
                             }}
                             align="center"
                           >
-                            {formatarDataJSX(String(row.data_prevista))}
+                            {formatarDataJSX(dataPrevistaArteFinal.toISOString())}
                           </TableCell>
 
                           {designerNome !== 'Desconhecido' ? (
