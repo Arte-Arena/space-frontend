@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Box, Slider, TextField, Button, Typography, Stack, Alert, Snackbar, AlertProps } from "@mui/material";
+import { Box, Slider, TextField, Button, Typography, Stack, Alert, Snackbar, AlertProps, Card, CardContent, Grid } from "@mui/material";
 import ChildCard from "@/app/components/shared/ChildCard";
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 
@@ -18,11 +18,11 @@ const SuperAdminTermTabSubTab = () => {
   });
 
 
-  const handleSliderChange = (event: Event, newValue: number | number[]) => {
+  const handleSliderChange1 = (event: Event, newValue: number | number[]) => {
     setDiasMenos(newValue as number);
   };
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange1 = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = Math.min(Math.max(Number(event.target.value), 1), 30);
     setDiasMenos(value);
   };
@@ -74,124 +74,371 @@ const SuperAdminTermTabSubTab = () => {
   };
 
   return (
-    <>
-      <ChildCard>
-        <Box p={3} sx={{
-          backgroundColor: 'background.paper',
-          borderRadius: 2,
-          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
-          maxWidth: '600px',
-          margin: '0 auto'
-        }}>
-          <Typography variant="h5" gutterBottom sx={{
+    <Box p={3}>
+      <Grid container direction="column" spacing={0}>
+        <Grid item display={'flex'} direction={'column'} alignItems={'center'} justifyContent={'center'}>
+          <Typography variant="h2" gutterBottom sx={{
             color: 'primary.main',
-            fontWeight: 600,
+            fontWeight: 700,
             mb: 1,
             textAlign: 'center'
           }}>
             Ajustar Redução de Dias na Produção
           </Typography>
 
-          <Typography variant="subtitle2" sx={{ color: 'text.secondary', textAlign: 'center', mb: 0 }}>
-            Apenas para as telas de
-          </Typography>
+          {/* card 1 */}
+          <Card
+            sx={{ width: "50%", mb: 2, borderRadius: 2, boxShadow: 3 }}
+          >
+            <CardContent>
 
-          <Typography variant="subtitle2" sx={{ color: 'text.secondary', textAlign: 'center', mb: 4, fontWeight: 'bold' }}>
-            Arte-Final | Impressão | Confecção
-          </Typography>
+              <Typography variant="h3" color="primary.main" align="center" marginBottom={1}>
+                Apenas para a tela de
+              </Typography>
+              <Typography variant="h5" color="primary.main" align="center" marginBottom={3}>
+                Arte Final
+              </Typography>
 
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                {/* Stack 1: Informativo */}
+                <Stack spacing={1} sx={{ flex: 1, width: '30%' }}>
+                  <Typography variant="h4" fontWeight={600} color="primary.main">
+                    Ajustar Produção
+                  </Typography>
+                  <Box display={'flex'} alignItems='center'>
+                    <Typography variant="h6" marginRight={1}>
+                      Dias a subtrair:
+                    </Typography>
+                    <Typography variant="h6">{diasMenos}</Typography>
+                  </Box>
+                </Stack>
 
-          <Stack spacing={3}>
-            <Box sx={{ px: 2 }}>
-              <Slider
-                value={diasMenos}
-                onChange={handleSliderChange}
-                min={1}
-                max={15}
-                step={1}
-                marks
-                sx={{
-                  color: 'primary.main',
-                  height: 8,
-                  '& .MuiSlider-thumb': {
-                    width: 24,
-                    height: 24,
-                    backgroundColor: '#fff',
-                    border: '3px solid currentColor',
-                    '&:hover, &.Mui-focusVisible': {
-                      boxShadow: '0 0 0 8px rgba(100, 108, 255, 0.16)',
-                    },
-                  },
-                  '& .MuiSlider-valueLabel': {
-                    fontSize: 12,
-                    fontWeight: 'bold',
-                    color: 'common.white',
-                    backgroundColor: 'primary.main',
-                    padding: '4px 8px',
-                    borderRadius: '8px',
-                    '&:before': {
-                      display: 'none',
-                    },
-                  },
-                  '& .MuiSlider-markLabel': {
-                    color: 'text.secondary',
-                    fontSize: '0.75rem',
-                    mt: 1
-                  }
-                }}
-              />
-            </Box>
+                {/* Stack 2: Slider */}
+                <Box sx={{ width: '65%', height: '100%' }}>
+                  <Slider
+                    value={diasMenos}
+                    onChange={handleSliderChange1}
+                    min={1}
+                    max={15}
+                    step={1}
+                    marks
+                    sx={{
+                      color: 'primary.main',
+                      height: 8,
+                      '& .MuiSlider-thumb': {
+                        width: 24,
+                        height: 24,
+                        backgroundColor: '#fff',
+                        border: '3px solid currentColor',
+                        '&:hover, &.Mui-focusVisible': {
+                          boxShadow: '0 0 0 8px rgba(100, 108, 255, 0.16)',
+                        },
+                      },
+                      '& .MuiSlider-valueLabel': {
+                        fontSize: 12,
+                        fontWeight: 'bold',
+                        color: 'common.white',
+                        backgroundColor: 'primary.main',
+                        padding: '4px 8px',
+                        borderRadius: '8px',
+                        '&:before': {
+                          display: 'none',
+                        },
+                      },
+                      '& .MuiSlider-markLabel': {
+                        color: 'text.secondary',
+                        fontSize: '0.75rem',
+                        mt: 1
+                      }
+                    }}
+                  />
+                </Box>
+              </Box>
+              <Grid item sx={{ mt: 4 }}>
+                <Button
+                  fullWidth
+                  size="small"
+                  variant="contained"
+                  onClick={handleSave}
+                  sx={{
+                    py: 1.5,
+                    borderRadius: 2,
+                    fontWeight: "bold",
+                    fontSize: "1rem",
+                    textTransform: "none",
+                  }}
+                >
+                  Salvar Ajuste
+                </Button>
+              </Grid>
+            </CardContent>
+          </Card>
 
-            <CustomTextField
-              label="Dias a Subtrair"
-              type="number"
-              value={diasMenos}
-              onChange={handleInputChange}
-              inputProps={{
-                min: 0,
-                max: 15,
-                step: 1,
-                style: { textAlign: 'center' }
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                  '&.Mui-focused fieldset': {
-                    borderColor: 'primary.main',
-                    borderWidth: 2
-                  }
-                },
-                '& .MuiInputLabel-root.Mui-focused': {
-                  color: 'secondary.main'
-                },
-                MozAppearance: 'textfield'
-              }}
-              fullWidth
-            />
+          {/* card 2 */}
+          <Card
+            sx={{ width: "50%", mb: 2, borderRadius: 2, boxShadow: 3 }}
+          >
+            <CardContent>
 
-            <Button
-              variant="contained"
-              onClick={handleSave}
-              sx={{
-                py: 1.5,
-                borderRadius: '12px',
-                backgroundColor: 'primary.main',
-                color: 'common.white',
-                fontWeight: 'bold',
-                fontSize: '1rem',
-                textTransform: 'none',
-                boxShadow: 'none',
-                '&:hover': {
-                  backgroundColor: 'primary.dark',
-                  boxShadow: '0 4px 12px rgba(100, 108, 255, 0.3)'
-                }
-              }}
-            >
-              Salvar Ajuste
-            </Button>
-          </Stack>
-        </Box>
-      </ChildCard>
+              <Typography variant="h3" color="primary.main" align="center" marginBottom={1}>
+                Apenas para a tela de
+              </Typography>
+              <Typography variant="h5" color="primary.main" align="center" marginBottom={3}>
+                Impressão
+              </Typography>
+
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                {/* Stack 1: Informativo */}
+                <Stack spacing={1} sx={{ flex: 1, width: '30%' }}>
+                  <Typography variant="h4" fontWeight={600} color="primary.main">
+                    Ajustar Produção
+                  </Typography>
+                  <Box display={'flex'} alignItems='center'>
+                    <Typography variant="h6" marginRight={1}>
+                      Dias a subtrair:
+                    </Typography>
+                    <Typography variant="h6">{diasMenos}</Typography>
+                  </Box>
+                </Stack>
+
+                {/* Stack 2: Slider */}
+                <Box sx={{ width: '65%', height: '100%' }}>
+                  <Slider
+                    value={diasMenos}
+                    onChange={handleSliderChange1}
+                    min={1}
+                    max={15}
+                    step={1}
+                    marks
+                    sx={{
+                      color: 'primary.main',
+                      height: 8,
+                      '& .MuiSlider-thumb': {
+                        width: 24,
+                        height: 24,
+                        backgroundColor: '#fff',
+                        border: '3px solid currentColor',
+                        '&:hover, &.Mui-focusVisible': {
+                          boxShadow: '0 0 0 8px rgba(100, 108, 255, 0.16)',
+                        },
+                      },
+                      '& .MuiSlider-valueLabel': {
+                        fontSize: 12,
+                        fontWeight: 'bold',
+                        color: 'common.white',
+                        backgroundColor: 'primary.main',
+                        padding: '4px 8px',
+                        borderRadius: '8px',
+                        '&:before': {
+                          display: 'none',
+                        },
+                      },
+                      '& .MuiSlider-markLabel': {
+                        color: 'text.secondary',
+                        fontSize: '0.75rem',
+                        mt: 1
+                      }
+                    }}
+                  />
+                </Box>
+              </Box>
+              <Grid item sx={{ mt: 4 }}>
+                <Button
+                  fullWidth
+                  size="small"
+                  variant="contained"
+                  onClick={handleSave}
+                  sx={{
+                    py: 1.5,
+                    borderRadius: 2,
+                    fontWeight: "bold",
+                    fontSize: "1rem",
+                    textTransform: "none",
+                  }}
+                >
+                  Salvar Ajuste
+                </Button>
+              </Grid>
+            </CardContent>
+          </Card>
+
+          {/* card 3 */}
+          <Card
+            sx={{ width: "50%", mb: 2, borderRadius: 2, boxShadow: 3 }}
+          >
+            <CardContent>
+
+              <Typography variant="h3" color="primary.main" align="center" marginBottom={1}>
+                Apenas para a tela de
+              </Typography>
+              <Typography variant="h5" color="primary.main" align="center" marginBottom={3}>
+                Confecção
+              </Typography>
+
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                {/* Stack 1: Informativo */}
+                <Stack spacing={1} sx={{ flex: 1, width: '30%' }}>
+                  <Typography variant="h4" fontWeight={600} color="primary.main">
+                    Ajustar Produção
+                  </Typography>
+                  <Box display={'flex'} alignItems='center'>
+                    <Typography variant="h6" marginRight={1}>
+                      Dias a subtrair:
+                    </Typography>
+                    <Typography variant="h6">{diasMenos}</Typography>
+                  </Box>
+                </Stack>
+
+                {/* Stack 2: Slider */}
+                <Box sx={{ width: '65%', height: '100%' }}>
+                  <Slider
+                    value={diasMenos}
+                    onChange={handleSliderChange1}
+                    min={1}
+                    max={15}
+                    step={1}
+                    marks
+                    sx={{
+                      color: 'primary.main',
+                      height: 8,
+                      '& .MuiSlider-thumb': {
+                        width: 24,
+                        height: 24,
+                        backgroundColor: '#fff',
+                        border: '3px solid currentColor',
+                        '&:hover, &.Mui-focusVisible': {
+                          boxShadow: '0 0 0 8px rgba(100, 108, 255, 0.16)',
+                        },
+                      },
+                      '& .MuiSlider-valueLabel': {
+                        fontSize: 12,
+                        fontWeight: 'bold',
+                        color: 'common.white',
+                        backgroundColor: 'primary.main',
+                        padding: '4px 8px',
+                        borderRadius: '8px',
+                        '&:before': {
+                          display: 'none',
+                        },
+                      },
+                      '& .MuiSlider-markLabel': {
+                        color: 'text.secondary',
+                        fontSize: '0.75rem',
+                        mt: 1
+                      }
+                    }}
+                  />
+                </Box>
+              </Box>
+              <Grid item sx={{ mt: 4 }}>
+                <Button
+                  fullWidth
+                  size="small"
+                  variant="contained"
+                  onClick={handleSave}
+                  sx={{
+                    py: 1.5,
+                    borderRadius: 2,
+                    fontWeight: "bold",
+                    fontSize: "1rem",
+                    textTransform: "none",
+                  }}
+                >
+                  Salvar Ajuste
+                </Button>
+              </Grid>
+            </CardContent>
+          </Card>
+
+          {/* card 4 */}
+          <Card
+            sx={{ width: "50%", mb: 2, borderRadius: 2, boxShadow: 3 }}
+          >
+            <CardContent>
+
+              <Typography variant="h3" color="primary.main" align="center" marginBottom={1}>
+                Apenas para a tela de
+              </Typography>
+              <Typography variant="h5" color="primary.main" align="center" marginBottom={3}>
+                Expedição
+              </Typography>
+
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                {/* Stack 1: Informativo */}
+                <Stack spacing={1} sx={{ flex: 1, width: '30%' }}>
+                  <Typography variant="h4" fontWeight={600} color="primary.main">
+                    Ajustar Produção
+                  </Typography>
+                  <Box display={'flex'} alignItems='center'>
+                    <Typography variant="h6" marginRight={1}>
+                      Dias a subtrair:
+                    </Typography>
+                    <Typography variant="h6">{diasMenos}</Typography>
+                  </Box>
+                </Stack>
+
+                {/* Stack 2: Slider */}
+                <Box sx={{ width: '65%', height: '100%' }}>
+                  <Slider
+                    value={diasMenos}
+                    onChange={handleSliderChange1}
+                    min={1}
+                    max={15}
+                    step={1}
+                    marks
+                    sx={{
+                      color: 'primary.main',
+                      height: 8,
+                      '& .MuiSlider-thumb': {
+                        width: 24,
+                        height: 24,
+                        backgroundColor: '#fff',
+                        border: '3px solid currentColor',
+                        '&:hover, &.Mui-focusVisible': {
+                          boxShadow: '0 0 0 8px rgba(100, 108, 255, 0.16)',
+                        },
+                      },
+                      '& .MuiSlider-valueLabel': {
+                        fontSize: 12,
+                        fontWeight: 'bold',
+                        color: 'common.white',
+                        backgroundColor: 'primary.main',
+                        padding: '4px 8px',
+                        borderRadius: '8px',
+                        '&:before': {
+                          display: 'none',
+                        },
+                      },
+                      '& .MuiSlider-markLabel': {
+                        color: 'text.secondary',
+                        fontSize: '0.75rem',
+                        mt: 1
+                      }
+                    }}
+                  />
+                </Box>
+              </Box>
+              <Grid item sx={{ mt: 4 }}>
+                <Button
+                  fullWidth
+                  size="small"
+                  variant="contained"
+                  onClick={handleSave}
+                  sx={{
+                    py: 1.5,
+                    borderRadius: 2,
+                    fontWeight: "bold",
+                    fontSize: "1rem",
+                    textTransform: "none",
+                  }}
+                >
+                  Salvar Ajuste
+                </Button>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       <Snackbar
         open={snackbar.open}
@@ -222,7 +469,7 @@ const SuperAdminTermTabSubTab = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </>
+    </Box>
   );
 };
 
