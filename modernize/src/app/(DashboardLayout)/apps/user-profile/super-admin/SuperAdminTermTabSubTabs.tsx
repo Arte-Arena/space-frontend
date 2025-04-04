@@ -1,12 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { Box, Slider, TextField, Button, Typography, Stack, Alert, Snackbar, AlertProps } from "@mui/material";
-import ChildCard from "@/app/components/shared/ChildCard";
+import { Button, Typography, AlertProps, Box, Alert, Snackbar } from "@mui/material";
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
+import CustomFormLabel from "@/app/components/forms/theme-elements/CustomFormLabel";
 
 const SuperAdminTermTabSubTab = () => {
-  const [diasMenos, setDiasMenos] = React.useState(5);
+
+  // fazer o get das configs
+
+
+  const [diasMenosArteFinal, setDiasMenosArteFinal] = React.useState<number | null>(3);
+  const [diasMenosImpressao, setDiasMenosImpressao] = React.useState<number | null>(2);
+  const [diasMenosConfeccaoCostura, setDiasMenosConfeccaoCostura] = React.useState<number | null>(1);
+  const [diasMenosConfeccaoSublimacao, setDiasMenosConfeccaoSublimacao] = React.useState<number | null>(1);
   const [snackbar, setSnackbar] = React.useState<{
     open: boolean;
     message: string;
@@ -17,29 +24,38 @@ const SuperAdminTermTabSubTab = () => {
     severity: 'success'
   });
 
-
-  const handleSliderChange = (event: Event, newValue: number | number[]) => {
-    setDiasMenos(newValue as number);
+  const handleSliderArteFinalChange = (event: Event, newValue: number | number[]) => {
+    setDiasMenosArteFinal(newValue as number);
   };
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Math.min(Math.max(Number(event.target.value), 1), 30);
-    setDiasMenos(value);
+  const handleSliderImpressaoChange = (event: Event, newValue: number | number[]) => {
+    setDiasMenosImpressao(newValue as number);
   };
+
+  const handleSliderConfeccaoSublimacaoChange = (event: Event, newValue: number | number[]) => {
+    setDiasMenosConfeccaoSublimacao(newValue as number);
+  };
+
+  const handleSliderConfeccaoCosturaChange = (event: Event, newValue: number | number[]) => {
+    setDiasMenosConfeccaoCostura(newValue as number);
+  };
+
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
   const handleSave = async () => {
-    console.log(`Reduzindo ${diasMenos} dias das datas de produção.`);
+    console.log(`Reduzindo ${diasMenosArteFinal ?? 0} dias das datas de produção.`);
     try {
 
       const accessToken = localStorage.getItem("accessToken");
       if (!accessToken) throw new Error("Usuário não autenticado.");
 
+      
+      
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API}/api/super-admin/update-dias-antecipa-producao`,
+        `${process.env.NEXT_PUBLIC_API}/api/super-admin/upsert-config-prazos'`,
         {
           method: "PUT",
           headers: {
@@ -47,7 +63,10 @@ const SuperAdminTermTabSubTab = () => {
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            dias_antecipa: diasMenos
+            dias_antecipa_producao_arte_final: diasMenosArteFinal,
+            dias_antecipa_producao_impressao: diasMenosImpressao,
+            dias_antecipa_producao_confeccao_sublimacao: diasMenosConfeccaoSublimacao,
+            dias_antecipa_producao_confeccao_costura: diasMenosConfeccaoCostura
           }),
         }
       );
@@ -74,124 +93,84 @@ const SuperAdminTermTabSubTab = () => {
   };
 
   return (
-    <>
-      <ChildCard>
-        <Box p={3} sx={{
-          backgroundColor: 'background.paper',
-          borderRadius: 2,
-          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
-          maxWidth: '600px',
-          margin: '0 auto'
+    <Box sx={{ width: "80%", margin: '0 auto' }}>
+      <div style={{ marginTop: '20px' }}>
+
+        <Typography variant="h4" gutterBottom sx={{
+          color: 'text.main',
+          fontWeight: 600,
+          m: 4,
+          textAlign: 'center'
         }}>
-          <Typography variant="h5" gutterBottom sx={{
-            color: 'primary.main',
-            fontWeight: 600,
-            mb: 1,
-            textAlign: 'center'
-          }}>
-            Ajustar Redução de Dias na Produção
-          </Typography>
+          Ajustar Redução de Dias na Produção
+        </Typography>
 
-          <Typography variant="subtitle2" sx={{ color: 'text.secondary', textAlign: 'center', mb: 0 }}>
-            Apenas para as telas de
-          </Typography>
+        <div>
+          <CustomFormLabel
+            sx={{
+              mt: 0,
+            }}
+          >
+            Dias a menos Prazo de Arte Final
+          </CustomFormLabel>
+          <CustomTextField
+            autoFocus
+            id="arte-final"
+            variant="outlined"
+            fullWidth
+            value={diasMenosArteFinal}
+            onChange={handleSliderArteFinalChange}
+          />
 
-          <Typography variant="subtitle2" sx={{ color: 'text.secondary', textAlign: 'center', mb: 4, fontWeight: 'bold' }}>
-            Arte-Final | Impressão | Confecção
-          </Typography>
+          <CustomFormLabel
+            sx={{
+              mt: 0,
+            }}
+          >
+            Dias a menos Prazo de Impressao
+          </CustomFormLabel>
+          <CustomTextField
+            id="impressao"
+            variant="outlined"
+            fullWidth
+            value={diasMenosImpressao}
+            onChange={handleSliderImpressaoChange}
+          />
 
+          <CustomFormLabel
+            sx={{
+              mt: 0,
+            }}
+          >
+            Dias a menos Prazo de Confecção Sublimação
+          </CustomFormLabel>
+          <CustomTextField
+            id="confeccao-sublimacao"
+            variant="outlined"
+            fullWidth
+            value={diasMenosConfeccaoSublimacao}
+            onChange={handleSliderConfeccaoSublimacaoChange}
+          />
 
-          <Stack spacing={3}>
-            <Box sx={{ px: 2 }}>
-              <Slider
-                value={diasMenos}
-                onChange={handleSliderChange}
-                min={1}
-                max={15}
-                step={1}
-                marks
-                sx={{
-                  color: 'primary.main',
-                  height: 8,
-                  '& .MuiSlider-thumb': {
-                    width: 24,
-                    height: 24,
-                    backgroundColor: '#fff',
-                    border: '3px solid currentColor',
-                    '&:hover, &.Mui-focusVisible': {
-                      boxShadow: '0 0 0 8px rgba(100, 108, 255, 0.16)',
-                    },
-                  },
-                  '& .MuiSlider-valueLabel': {
-                    fontSize: 12,
-                    fontWeight: 'bold',
-                    color: 'common.white',
-                    backgroundColor: 'primary.main',
-                    padding: '4px 8px',
-                    borderRadius: '8px',
-                    '&:before': {
-                      display: 'none',
-                    },
-                  },
-                  '& .MuiSlider-markLabel': {
-                    color: 'text.secondary',
-                    fontSize: '0.75rem',
-                    mt: 1
-                  }
-                }}
-              />
-            </Box>
-
-            <CustomTextField
-              label="Dias a Subtrair"
-              type="number"
-              value={diasMenos}
-              onChange={handleInputChange}
-              inputProps={{
-                min: 0,
-                max: 15,
-                step: 1,
-                style: { textAlign: 'center' }
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                  '&.Mui-focused fieldset': {
-                    borderColor: 'primary.main',
-                    borderWidth: 2
-                  }
-                },
-                '& .MuiInputLabel-root.Mui-focused': {
-                  color: 'secondary.main'
-                },
-                MozAppearance: 'textfield'
-              }}
-              fullWidth
-            />
-
-            <Button
-              variant="contained"
-              onClick={handleSave}
-              sx={{
-                py: 1.5,
-                borderRadius: '12px',
-                backgroundColor: 'primary.main',
-                color: 'common.white',
-                fontWeight: 'bold',
-                fontSize: '1rem',
-                textTransform: 'none',
-                boxShadow: 'none',
-                '&:hover': {
-                  backgroundColor: 'primary.dark',
-                  boxShadow: '0 4px 12px rgba(100, 108, 255, 0.3)'
-                }
-              }}
-            >
-              Salvar Ajuste
-            </Button>
-          </Stack>
-        </Box>
-      </ChildCard>
+          <CustomFormLabel
+            sx={{
+              mt: 0,
+            }}
+          >
+            Dias a menos Prazo de Confecção Costura
+          </CustomFormLabel>
+          <CustomTextField
+            id="conefccao-costura"
+            variant="outlined"
+            fullWidth
+            value={diasMenosConfeccaoCostura}
+            onChange={handleSliderConfeccaoCosturaChange}
+          />
+        </div>
+        <div style={{ marginTop: '20px' }}>
+          <Button variant="contained" onClick={handleSave}>Salvar Configurações</Button>
+        </div>
+      </div>
 
       <Snackbar
         open={snackbar.open}
@@ -201,7 +180,11 @@ const SuperAdminTermTabSubTab = () => {
         sx={{
           '& .MuiPaper-root': {
             borderRadius: '12px',
-            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.15)'
+            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.15)',
+            backdropFilter: 'blur(4px)',
+            backgroundColor: snackbar.severity === 'success'
+              ? 'rgba(46, 125, 50, 0.9)'
+              : 'rgba(211, 47, 47, 0.9)'
           }
         }}
       >
@@ -209,20 +192,24 @@ const SuperAdminTermTabSubTab = () => {
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
           variant="filled"
+          icon={false}
           sx={{
             width: '100%',
             alignItems: 'center',
             fontSize: '0.875rem',
             fontWeight: 500,
-            '& .MuiAlert-icon': {
-              fontSize: '1.25rem'
+            color: 'common.white',
+            '& .MuiAlert-message': {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
             }
           }}
         >
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </>
+    </Box>
   );
 };
 
