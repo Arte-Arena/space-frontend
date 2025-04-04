@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconNeedleThread } from '@tabler/icons-react';
+import { IconEye, IconShirt, IconNeedleThread } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -21,14 +21,10 @@ import {
   TableRow,
   Paper,
   TablePagination,
-  TableSortLabel,
   IconButton,
   Collapse,
   Box,
-  FormControl,
-  InputLabel,
   MenuItem,
-  SelectChangeEvent,
   useTheme,
   TextField,
   Select,
@@ -46,7 +42,6 @@ import { format, isSameDay } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import DialogObs from './components/observacaoDialog';
 import { useThemeMode } from '@/utils/useThemeMode';
-import { IconDirectionSign } from '@tabler/icons-react';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import getBrazilTime from '@/utils/brazilTime';
@@ -57,11 +52,8 @@ const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [openDialogObs, setOpenDialogObs] = useState(false);
-
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
-  const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
-  const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
@@ -522,9 +514,6 @@ const ImpressaoScreen = () => {
                       11: 'rgba(0, 152, 63, 0.65)',
                       12: 'rgba(0, 146, 136, 0.8)',
                       13: 'rgba(238, 84, 84, 0.8)',
-                      //   20: 'rgba(20, 175, 0, 0.8)',
-                      //   21: 'rgba(180, 0, 0, 0.8)',
-                      //   22: 'rgba(152, 0, 199, 0.8)',
                     };
 
                     const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
@@ -541,21 +530,21 @@ const ImpressaoScreen = () => {
 
                           <TableCell
                             sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                              color: myTheme === 'dark' ? 'white' : 'black' 
                             }}
                           >
                             {String(row.numero_pedido)}</TableCell>
 
                           <TableCell
                             sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                              color: myTheme === 'dark' ? 'white' : 'black' 
                             }}
                             align='center'>
                             {row.lista_produtos?.length > 0
                               ? (
                                 <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
                                   {listaProdutos.map((produto, index) => (
-                                    <li key={index}>{produto.nome}</li> // Cada produto em uma nova linha
+                                    <li key={index}>{produto.nome}</li> 
                                   ))}
                                 </ul>
                               )
@@ -565,7 +554,7 @@ const ImpressaoScreen = () => {
                           {/* medida linear */}
                           <TableCell
                             sx={{
-                              color: myTheme === "dark" ? "white" : "black", // Branco no modo escuro e preto no claro
+                              color: myTheme === "dark" ? "white" : "black",
                             }}
                             align="center"
                           >
@@ -573,9 +562,9 @@ const ImpressaoScreen = () => {
                               <>
                                 <strong>
                                   {listaProdutos
-                                    .filter((produto) => produto.medida_linear) // Filtra os produtos que possuem medida_linear
-                                    .reduce((acc, produto) => acc + produto.medida_linear, 0) // Soma todas as medidas lineares
-                                  }{" "}
+                                    .filter((produto) => produto.medida_linear)
+                                    .reduce((acc, produto) => acc + produto.medida_linear, 0)
+                                    .toFixed(2)}{" "}
                                   m
                                 </strong>
                               </>
@@ -585,7 +574,7 @@ const ImpressaoScreen = () => {
                           </TableCell>
 
                           <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                            color: myTheme === 'dark' ? 'white' : 'black', 
                             backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)'
                           }} align='center'>
                             {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
@@ -594,7 +583,7 @@ const ImpressaoScreen = () => {
 
                           <TableCell
                             sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                              color: myTheme === 'dark' ? 'white' : 'black' 
                             }}
                             align='center'
                           >
