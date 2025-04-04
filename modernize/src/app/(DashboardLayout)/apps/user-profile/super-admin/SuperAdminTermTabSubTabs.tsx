@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Button, Typography, AlertProps, Box} from "@mui/material";
+import { Button, Typography, AlertProps, Box, Alert, Snackbar } from "@mui/material";
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomFormLabel from "@/app/components/forms/theme-elements/CustomFormLabel";
 
@@ -95,7 +95,7 @@ const SuperAdminTermTabSubTab = () => {
   };
 
   return (
-    <Box sx={{width:"80%", margin: '0 auto'}}>
+    <Box sx={{ width: "80%", margin: '0 auto' }}>
       <div style={{ marginTop: '20px' }}>
 
         <Typography variant="h4" gutterBottom sx={{
@@ -112,7 +112,7 @@ const SuperAdminTermTabSubTab = () => {
             sx={{
               mt: 0,
             }}
-            >
+          >
             Dias a menos Prazo de Arte Final
           </CustomFormLabel>
           <CustomTextField
@@ -173,6 +173,44 @@ const SuperAdminTermTabSubTab = () => {
           <Button variant="contained" onClick={handleSave}>Salvar Configurações</Button>
         </div>
       </div>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        sx={{
+          '& .MuiPaper-root': {
+            borderRadius: '12px',
+            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.15)',
+            backdropFilter: 'blur(4px)',
+            backgroundColor: snackbar.severity === 'success'
+              ? 'rgba(46, 125, 50, 0.9)'
+              : 'rgba(211, 47, 47, 0.9)'
+          }
+        }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          variant="filled"
+          icon={false}
+          sx={{
+            width: '100%',
+            alignItems: 'center',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            color: 'common.white',
+            '& .MuiAlert-message': {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
