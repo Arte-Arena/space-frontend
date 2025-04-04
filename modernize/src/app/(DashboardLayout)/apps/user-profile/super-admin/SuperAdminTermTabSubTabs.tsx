@@ -52,15 +52,10 @@ const SuperAdminTermTabSubTab = () => {
       const accessToken = localStorage.getItem("accessToken");
       if (!accessToken) throw new Error("Usuário não autenticado.");
 
-      const payload = {
-        dias_antecipa_producao_arte_final: diasMenosArteFinal,
-        dias_antecipa_producao_impressao: diasMenosImpressao,
-        dias_antecipa_producao_confeccao_sublimacao: diasMenosConfeccaoSublimacao,
-        dias_antecipa_producao_confeccao_costura: diasMenosConfeccaoCostura
-      }
-
+      
+      
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API}/api/super-admin/update-dias-antecipa-producao`,
+        `${process.env.NEXT_PUBLIC_API}/api/super-admin/upsert-config-prazos'`,
         {
           method: "PUT",
           headers: {
@@ -68,7 +63,10 @@ const SuperAdminTermTabSubTab = () => {
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            payload
+            dias_antecipa_producao_arte_final: diasMenosArteFinal,
+            dias_antecipa_producao_impressao: diasMenosImpressao,
+            dias_antecipa_producao_confeccao_sublimacao: diasMenosConfeccaoSublimacao,
+            dias_antecipa_producao_confeccao_costura: diasMenosConfeccaoCostura
           }),
         }
       );
