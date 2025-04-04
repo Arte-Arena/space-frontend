@@ -43,7 +43,6 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
 
   useEffect(() => {
     setProdutos(listaProdutos);
-    // Inicializa o estado das medidas lineares com os valores dos produtos
     const medidasIniciais: Record<string, number> = {};
     listaProdutos.forEach((produto) => {
       if (produto.uid && produto.medida_linear !== undefined) {
@@ -125,17 +124,21 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
     }
   };
 
+
   const handleMedidaLinearChange = (produto: Produto, novaMedidaLinear: number) => {
+    // Garante que o produto tenha um UID válido
+    const produtoAtualizado = { ...produto, uid: produto.uid ?? produto.id };
+
     // Atualiza o estado das medidas lineares
     setMedidasLineares((prevState) => ({
       ...prevState,
-      [String(produto.uid)]: novaMedidaLinear,
+      [String(produtoAtualizado.uid)]: novaMedidaLinear,
     }));
 
     // Atualiza o estado dos produtos
     setProdutos((prevProdutos) =>
       prevProdutos.map((p) =>
-        p.uid === produto.uid ? { ...p, medida_linear: novaMedidaLinear } : p
+        p.uid === produtoAtualizado.uid ? { ...p, medida_linear: novaMedidaLinear } : p
       )
     );
   };
@@ -251,7 +254,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                                       const novaMedidaLinear = Number(inputElement.value);
                                       handleMedidaLinearChange(produto, novaMedidaLinear);
                                       if (row?.id !== undefined) {
-                                        handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id);
+                                        handletrocarMedidaLinear(produto.uid ?? produto.id, medidasLineares, row.id);
                                       }
                                     }
                                   }}
@@ -279,7 +282,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                                 <Button
                                   onClick={() => {
                                     if (row?.id !== undefined) {
-                                      handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id);
+                                      handletrocarMedidaLinear(produto.uid ?? produto.id, medidasLineares, row.id);
                                     }
                                   }}
                                   sx={{ ml: 1, padding: 0 }}

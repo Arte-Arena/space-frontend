@@ -39,7 +39,6 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
 
   useEffect(() => {
     setProdutos(listaProdutos);
-    // Inicializa o estado das medidas lineares com os valores dos produtos
     const medidasIniciais: Record<string, number> = {};
     listaProdutos.forEach((produto) => {
       if (produto.uid && produto.medida_linear !== undefined) {
@@ -233,6 +232,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center' }} colSpan={1}>
                               {produto.material}
                             </TableCell>
+                            
                             <TableCell sx={{ fontSize: '12px', padding: '8px', textAlign: 'center', display: 'flex' }} colSpan={1}>
                               <TextField
                                 key={produto.uid}
@@ -255,7 +255,6 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                                     }
                                   }
                                 }}
-
                                 sx={{
                                   minWidth: '50px',
                                   '& input': {

@@ -40,7 +40,6 @@ import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import { isSameDay } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
-import DialogObs from './components/observacaoDialog';
 import { useThemeMode } from '@/utils/useThemeMode';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -771,8 +770,7 @@ const ImpressaoScreen = () => {
             </TableContainer>
           )}
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
-          <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
-
+            
           <Snackbar
             open={snackbar.open}
             autoHideDuration={6000}
