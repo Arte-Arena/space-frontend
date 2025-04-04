@@ -12,6 +12,7 @@ interface ArteFinal {
     prazo_arte_final: Date;
     prazo_confeccao: Date;
     lista_produtos: Produto[];
+    impressao?: Impressao;
     observacao: string;
     rolo: string;
     estagio?: string | null;
@@ -26,6 +27,15 @@ interface ArteFinal {
     tipo_de_pedido: string;
     created_at: Date;
     updated_at: Date;
+}
+
+interface Impressao {
+    id: number;
+    pedido_arte_final_id?: number;
+    impressora?: number | null; // dependendo se o valor for numérico ou nome da impressora
+    tipo_corte?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
 }
 
 interface Produto {
