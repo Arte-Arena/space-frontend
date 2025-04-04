@@ -730,7 +730,10 @@ const ImpressaoScreen = () => {
                             <MenuItem key={1} value={"Laser"}>
                               Laser
                             </MenuItem>
-                            <MenuItem key={2} value={"Normal"}>
+                            <MenuItem key={2} value={"Mesa"}>
+                              Mesa
+                            </MenuItem>
+                            <MenuItem key={3} value={"Normal"}>
                               Normal
                             </MenuItem>
                           </CustomSelect>
