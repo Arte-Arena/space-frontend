@@ -99,10 +99,10 @@ const ImpressaoScreen = () => {
         },
       }).then((res) => res.json()),
   });
+  console.log(dataPedidos);
 
   const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("I");
-  console.log(errorPedido);
-  console.log(porDia);
+  // console.log(errorPedido);
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) { // Verificação adicional
@@ -130,7 +130,50 @@ const ImpressaoScreen = () => {
     }, 0)
     : 0;
 
-  // handles
+    // handles
+    //     Route::patch('/producao/impressao/impressora-change/{id}', [PedidoArteFinalController::class, 'trocarImpressoraArteFinalImpressao']);
+    // Route::patch('/producao/impressao/corte-change/{id}', [PedidoArteFinalController::class, 'trocarCorteArteFinalImpressao']);
+    // criar os handles de trocarImpressoraArteFinalImpressao e trocarCorteArteFinalImpressao
+    
+  const handleImpressoraChange = async (row: ArteFinal, impressora: number) => {
+    const sucesso = await trocarImpressora(row?.id, impressora, refetch);
+    if (sucesso) {
+      console.log("Impressora atualizada com sucesso!");
+      setSnackbar({
+        open: true,
+        message: `✅ ${'Sucesso!'}`,
+        severity: 'success'
+      });
+    } else {
+      console.log("Falha ao trocar Impressora.");
+      setSnackbar({
+        open: true,
+        message: `${'Impressora não atualizada.'}`,
+        severity: 'warning'
+      });
+    }
+  }
+
+  const handleTipoCorteChange = async (row: ArteFinal, TipoCorte: string) => {
+    const sucesso = await trocarTipoCorte(row?.id, TipoCorte, refetch);
+    if (sucesso) {
+      console.log("Corte atualizado com sucesso!");
+      setSnackbar({
+        open: true,
+        message: `✅ ${'Sucesso!'}`,
+        severity: 'success'
+      });
+    } else {
+      console.log("Falha ao trocar corte.");
+      setSnackbar({
+        open: true,
+        message: `${'Corte não atualizado.'}`,
+        severity: 'warning'
+      });
+    }
+  }
+
+
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
@@ -234,11 +277,6 @@ const ImpressaoScreen = () => {
       });
     }
   }
-
-  const handleClickOpenDialogObs = async (row: ArteFinal) => {
-    setSelectedRowObs(row);
-    setOpenDialogObs(true);
-  };
 
   const handleClearFilters = () => {
     setSearchNumero('');
@@ -432,6 +470,7 @@ const ImpressaoScreen = () => {
                   renderInput={(params: TextFieldProps) => (
                     <TextField
                       {...params}
+                      error={false}
                       size="small"
                       sx={{ width: '200px' }} // Define uma largura fixa
                     />
@@ -451,6 +490,7 @@ const ImpressaoScreen = () => {
                   renderInput={(params: TextFieldProps) => (
                     <TextField
                       {...params}
+                      error={false}
                       size="small"
                       sx={{ width: '200px' }} // Define uma largura fixa
                     />
@@ -486,8 +526,8 @@ const ImpressaoScreen = () => {
                     <TableCell align='center' sx={{ width: '2%' }}>N° Pedido</TableCell>
                     <TableCell align='center' sx={{ width: '30%' }}>Produtos</TableCell>
                     <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell>
-                    {/* <TableCell align='center' sx={{ width: '5%' }}>Impressora</TableCell>
-                    <TableCell align='center' sx={{ width: '5%' }}>Tipo de corte</TableCell> */}
+                    <TableCell align='center' sx={{ width: '5%' }}>Impressora</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>Tipo de corte</TableCell>
                     <TableCell align='center' sx={{ width: '5%' }}>Data De Entrega</TableCell>
                     <TableCell align='center' sx={{ width: '5%' }}>Designer</TableCell>
                     <TableCell align='center' sx={{ width: '20%' }}>Observação</TableCell>
@@ -625,6 +665,75 @@ const ImpressaoScreen = () => {
                           ) : (
                             "N/A"
                           )}
+                        </TableCell>
+                        {/* impressora */}
+                        <TableCell
+                          sx={{
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                          }}
+                          align='center'
+                        >
+                          <CustomSelect
+                            style={{
+                              height: '30px',
+                              textAlign: 'center',
+                              padding: '0px',
+                              fontSize: '12px',
+                              borderRadius: '4px',
+                              backgroundColor: 'transparent',
+                              cursor: 'pointer',
+                              width: '100%',
+                              boxSizing: 'border-box',
+                            }}
+
+                            value={row.impressao?.impressora ?? 0}
+                            onChange={(event: { target: { value: number; }; }) => {
+                              const newImpressora = event.target.value;
+                              handleImpressoraChange(row, newImpressora);
+                            }}
+                          >
+                            <MenuItem key={1} value={1}>
+                              {1}
+                            </MenuItem>
+                            <MenuItem key={2} value={2}>
+                              {2}
+                            </MenuItem>
+                          </CustomSelect>
+                        </TableCell>
+
+                        {/* tipo_corte */}
+                        <TableCell
+                          sx={{
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                          }}
+                          align='center'
+                        >
+                          <CustomSelect
+                            style={{
+                              height: '30px',
+                              textAlign: 'center',
+                              padding: '0px',
+                              fontSize: '12px',
+                              borderRadius: '4px',
+                              backgroundColor: 'transparent',
+                              cursor: 'pointer',
+                              width: '100%',
+                              boxSizing: 'border-box',
+                            }}
+
+                            value={row.impressao?.tipo_corte ?? " - "}
+                            onChange={(event: { target: { value: string; }; }) => {
+                              const newTipoCorte = event.target.value;
+                              handleTipoCorteChange(row, newTipoCorte);
+                            }}
+                          >
+                            <MenuItem key={1} value={"Laser"}>
+                              Laser
+                            </MenuItem>
+                            <MenuItem key={2} value={"Normal"}>
+                              Normal
+                            </MenuItem>
+                          </CustomSelect>
                         </TableCell>
 
                         <TableCell sx={{
