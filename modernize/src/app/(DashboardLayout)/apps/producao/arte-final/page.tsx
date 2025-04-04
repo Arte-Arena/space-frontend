@@ -547,8 +547,8 @@ const ArteFinalScreen = () => {
                     <TableCell align='center' sx={{ width: '5%' }}>Prazo de Entrega da Arte Final</TableCell>
                     <TableCell align='center' sx={{ width: '5%' }}>Designer</TableCell>
                     <TableCell align='center' sx={{ width: '20%' }}>Observação</TableCell>
-                    <TableCell align='center' sx={{ width: '7%' }}>Tipo</TableCell>
-                    <TableCell align='center' sx={{ width: '3%' }}>Status</TableCell>
+                    <TableCell align='center' sx={{ width: '3%' }}>Tipo</TableCell>
+                    <TableCell align='center' sx={{ width: '7%' }}>Status</TableCell>
                     <TableCell align='center' sx={{ width: '13%' }}>Ações</TableCell>
                   </TableRow>
                 </TableHead>
