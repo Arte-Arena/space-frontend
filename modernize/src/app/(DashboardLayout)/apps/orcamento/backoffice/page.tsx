@@ -138,6 +138,7 @@ const OrcamentoBackofficeScreen = () => {
   const [confirmacaoArteFinalConfigurados, setConfirmacaoArteFinalConfigurados] = useState<{ [key: number]: boolean }>({});
   const [currentPackage, setCurrentPackage] = useState<string>('Start');
   const [email, setEmail] = useState<string>('');
+  const [emailConfirmation, setEmailConfirmation] = useState<string>('');
 
   const theme = useTheme()
 
@@ -145,6 +146,9 @@ const OrcamentoBackofficeScreen = () => {
   const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
   const regexEntrega = /Previsão de Entrega:\s*([\d]{1,2} de [a-zA-Z]+ de \d{4})\s?\(([^)]+)\)/;
   const regexBrinde = /Brinde:\s*\d+\s*un\s*[\w\s]*\s*R\$\s*\d{1,3}(?:,\d{2})*\s*\(R\$\s*\d{1,3}(?:,\d{2})*\)/;
+  const REGEX = {
+    email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+  };
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -1032,7 +1036,7 @@ const OrcamentoBackofficeScreen = () => {
                                       </TableContainer>
                                     )}
 
-                                    <Box sx={{ mt: 2 }}>
+                                    <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
                                       <CustomTextField
                                         fullWidth
                                         label="E-mail para linkar os uniformes"
@@ -1040,6 +1044,16 @@ const OrcamentoBackofficeScreen = () => {
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                                         disabled={isLinkGenerated}
                                         type="email"
+                                      />
+                                      <CustomTextField
+                                        fullWidth
+                                        label="Confirme o e-mail"
+                                        value={emailConfirmation}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmailConfirmation(e.target.value)}
+                                        disabled={isLinkGenerated}
+                                        type="email"
+                                        error={emailConfirmation !== '' && email !== emailConfirmation}
+                                        helperText={emailConfirmation !== '' && email !== emailConfirmation ? 'Os e-mails não coincidem' : ''}
                                       />
                                     </Box>
 
@@ -1056,13 +1070,21 @@ const OrcamentoBackofficeScreen = () => {
                               <DialogActions>
                                 {!existingUniforms ? (
                                   !isLinkGenerated ? (
-                                    <Button
-                                      onClick={handleGenerateAndCopyLink}
-                                      disabled={isGeneratingLink || sketches.length === 0}
-                                      startIcon={isGeneratingLink && <CircularProgress size={16} />}
-                                    >
-                                      {isGeneratingLink ? 'Gerando...' : sketches.length === 0 ? 'Adicione um esboço' : 'Gerar Link'}
-                                    </Button>
+                                    <>
+                                      <Button
+                                        onClick={() => setOpenUniformDialog(false)}
+                                      >
+                                        Fechar
+                                      </Button>
+                                      <Button
+                                        variant="contained"
+                                        onClick={handleGenerateAndCopyLink}
+                                        disabled={isGeneratingLink || !email || !REGEX.email.test(email) || email !== emailConfirmation}
+                                        startIcon={isGeneratingLink && <CircularProgress size={16} />}
+                                      >
+                                        {!isGeneratingLink && 'Inserir'}
+                                      </Button>
+                                    </>
                                   ) : (
                                     <>
                                       <Typography variant="body2" color="success.main" sx={{ mr: 2 }}>
@@ -1075,38 +1097,7 @@ const OrcamentoBackofficeScreen = () => {
                                       </Button>
                                     </>
                                   )
-                                ) : (
-                                  <>
-                                    {linkCopied ? (
-                                      <>
-                                        <Typography variant="body2" color="success.main" sx={{ mr: 2 }}>
-                                          Link copiado!
-                                        </Typography>
-                                        <Button
-                                          onClick={() => {
-                                            navigator.clipboard.writeText(linkUniform);
-                                            setLinkCopied(true);
-                                          }}
-                                        >
-                                          Copiar novamente
-                                        </Button>
-                                      </>
-                                    ) : (
-                                      <Button
-                                        onClick={() => {
-                                          navigator.clipboard.writeText(linkUniform);
-                                          setLinkCopied(true);
-                                        }}
-                                        variant="outlined"
-                                      >
-                                        Copiar link existente
-                                      </Button>
-                                    )}
-                                  </>
-                                )}
-                                <Button onClick={handleDialogClose}>
-                                  Fechar
-                                </Button>
+                                ) : null}
                               </DialogActions>
                             </Dialog>
 
