@@ -27,8 +27,7 @@ const ImpressaoScreen = () => {
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
-    // Log fetching data for current page
-    console.log(`Fetching data for page: ${currentPage}`);
+    // console.log(`Fetching data for page: ${currentPage}`);
     fetchData(currentPage);
   }, [currentPage]);
 

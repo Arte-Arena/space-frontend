@@ -338,14 +338,17 @@ const ImpressaoScreen = () => {
     }
   };
 
-  const pedidoStatus = {
-    8: { nome: 'Pendente', fila: 'I' },
-    9: { nome: 'Processando', fila: 'I' },
-    10: { nome: 'Renderizando', fila: 'I' },
-    11: { nome: 'Impresso', fila: 'I' },
-    12: { nome: 'Em Impressão', fila: 'I' },
-    13: { nome: 'Separação', fila: 'I' },
-  } as const;
+  const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
+  const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
+
+  const pedidosStatusFilaD: Record<number, { nome: string; fila: 'I' }> = Object.fromEntries(
+    parsedPedidosStatus
+      .filter((item: { fila: string }) => item.fila === 'I')
+      .map(({ id, nome, fila }: { id: number; nome: string; fila: 'I' }) => [id, { nome, fila }])
+  );
+
+  const pedidoStatus: Record<number, { nome: string; fila: 'I' }> = pedidosStatusFilaD as Record<number, { nome: string; fila: 'I' }>;
+
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
@@ -580,14 +583,6 @@ const ImpressaoScreen = () => {
                       5: 'Amostra',
                     } as const;
 
-                    const pedidoStatus = {
-                      8: { nome: 'Pendente', fila: 'I' },
-                      9: { nome: 'Processando', fila: 'I' },
-                      10: { nome: 'Renderizando', fila: 'I' },
-                      11: { nome: 'Impresso', fila: 'I' },
-                      12: { nome: 'Em Impressão', fila: 'I' },
-                      13: { nome: 'Separação', fila: 'I' },
-                    } as const;
 
                     const pedidoStatusColors: Record<number, string> = {
                       8: 'rgba(220, 53, 69, 0.49)',

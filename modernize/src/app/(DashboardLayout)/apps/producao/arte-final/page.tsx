@@ -395,13 +395,28 @@ const ArteFinalScreen = () => {
     }
   };
 
-  const pedidoStatus = {
-    1: { nome: 'Pendente', fila: 'D' },
-    2: { nome: 'Em andamento', fila: 'D' },
-    3: { nome: 'Arte OK', fila: 'D' },
-    4: { nome: 'Em espera', fila: 'D' },
-    5: { nome: 'Cor teste', fila: 'D' },
-  } as const;
+  const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
+  const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
+
+  const pedidosStatusFilaD: Record<number, { nome: string; fila: 'D' }> = Object.fromEntries(
+    parsedPedidosStatus
+      .filter((item: { fila: string }) => item.fila === 'D')
+      .map(({ id, nome, fila }: { id: number; nome: string; fila: 'D' }) => [id, { nome, fila }])
+  );
+
+  const pedidoStatus = pedidosStatusFilaD as const;
+
+
+
+
+
+  // const pedidoStatus = {
+  //   1: { nome: 'Pendente', fila: 'D' },
+  //   2: { nome: 'Em andamento', fila: 'D' },
+  //   3: { nome: 'Arte OK', fila: 'D' },
+  //   4: { nome: 'Em espera', fila: 'D' },
+  //   5: { nome: 'Cor teste', fila: 'D' },
+  // } as const;
 
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
@@ -453,11 +468,11 @@ const ArteFinalScreen = () => {
       title: "Home",
     },
     {
-      to: "/apps/produção/",
+      to: "/apps/producao/",
       title: "produção",
     },
     {
-      to: "/apps/produção/arte-final",
+      to: "/apps/producao/arte-final",
       title: "Pedidos com Arte Final",
     },
   ];
