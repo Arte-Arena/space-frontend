@@ -285,6 +285,27 @@ const ArteFinalScreen = () => {
       });
     }
 
+    if (row.lista_produtos) {
+      const listaProdutos: Produto[] = row.lista_produtos
+        ? typeof row.lista_produtos === 'string'
+          ? JSON.parse(row.lista_produtos)
+          : row.lista_produtos
+        : [];
+
+      const produtosInvalidos = listaProdutos.some(
+        (produto: Produto) => !produto.medida_linear || produto.medida_linear <= 0
+      );
+
+      if (produtosInvalidos) {
+        return setSnackbar({
+          open: true,
+          message: `${'Todos os produtos devem ter medidas lineares maiores que zero antes de enviar para Impressão'}`,
+          severity: 'error'
+        });
+      }
+    }
+
+
     if (confirmar) {
       const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
       if (sucesso) {
