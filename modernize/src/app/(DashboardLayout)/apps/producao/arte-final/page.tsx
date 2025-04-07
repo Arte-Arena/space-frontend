@@ -5,12 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { format, isSameDay, subDays } from 'date-fns';
+import { isSameDay, subDays } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import getBrazilTime from '@/utils/brazilTime';
 import { DateTime } from 'luxon';
+import { calcularDataPassadaDiasUteis } from '@/utils/calcDiasUteis';
 import {
   Typography,
   Grid,
@@ -447,12 +448,6 @@ const ArteFinalScreen = () => {
     return dataFormatada;
   }
 
-  function formatarDataJSX(dataISOString: string): string {
-    const dataUTC = DateTime.fromISO(dataISOString, { zone: 'utc' });
-    const dataFormatada = dataUTC.toFormat('dd/MM/yyyy');
-    return dataFormatada;
-  }
-
   const zerarHorario = (data: Date): Date => {
     return new Date(data.getFullYear(), data.getMonth(), data.getDate());
   };
@@ -593,32 +588,48 @@ const ArteFinalScreen = () => {
                           : row.lista_produtos
                         : [];
 
-                      // const dataPrevistaSegura = formatarDataSegura(String(row?.data_prevista));
-                      // const dataPrevista = row?.data_prevista ? dataPrevistaSegura : null;
-                      // const dataAtual = formatarDataSegura(zerarHorario(getBrazilTime()).toISOString());
-                      // let atraso = false;
-                      // let isHoje = false;
-                      // const dataAtualJS = new Date(dataAtual);
-                      // const dataPrevistaConfeccao = new Date(String(dataPrevista));
-                      // const dataPrevistaArteFinal = subDays(dataPrevistaConfeccao, diasAntecipaProducao);
-                      // if (dataPrevistaArteFinal < dataAtualJS) {
-                      //   atraso = true;
-                      // }
-                      // if (isSameDay(dataPrevistaArteFinal, dataAtualJS)) {
-                      //   isHoje = true;
-                      // }
+                      const dataPrevistaSegura = formatarDataSegura(String(row?.data_prevista));
 
-                      const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
-                      const dataAtual = getBrazilTime(); //colocar no getBrazilTime
+                      console.log("dataPrevistaSegura: ", dataPrevistaSegura);
+                      console.log("typeof dataPrevistaSegura: ", typeof dataPrevistaSegura);
+
+
+                      const dataPrevista = row?.data_prevista ? dataPrevistaSegura : '';
+                      const dataPrevistaDateTime = DateTime.fromFormat(dataPrevista, 'MM/dd/yyyy').startOf('day');
+
+                      const dataAtual = formatarDataSegura(zerarHorario(getBrazilTime()).toISOString());
+                      console.log("dataAtual: ", dataAtual);
+                      console.log("typeof dataAtual: ", typeof dataAtual);
+
+                      const localStoragePrazos = localStorage.getItem('configPrazos');
+                      const parsedPrazos = JSON.parse(localStoragePrazos || '[]');
+                      const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_arte_final;
+                      console.log("diasAntecipaProducao: ", diasAntecipaProducao);
+
+                      const feriados = localStorage.getItem('feriados');
+                      const parsedFeriados = JSON.parse(feriados || '[]');
+
+                      const prazoArteFinal = calcularDataPassadaDiasUteis(dataPrevistaDateTime, diasAntecipaProducao, parsedFeriados);
+
                       let atraso = false;
                       let isHoje = false;
-                      if (dataPrevista && dataPrevista < dataAtual) {
+
+
+                      const dataAtualJS = new Date(dataAtual);
+                      const dataPrevistaConfeccao = new Date(String(dataPrevista));
+
+
+
+                      const dataPrevistaArteFinal = subDays(dataPrevistaConfeccao, diasAntecipaProducao);
+                      console.log("typeof dataPrevistaArteFinal: ", typeof dataPrevistaArteFinal);
+                      console.log("dataPrevistaArteFinal: ", dataPrevistaArteFinal);
+
+                      if (dataPrevistaArteFinal < dataAtualJS) {
                         atraso = true;
                       }
-                      if (dataPrevista && isSameDay(dataPrevista, dataAtual)) {
+                      if (isSameDay(dataPrevistaArteFinal, dataAtualJS)) {
                         isHoje = true;
                       }
-
 
                       const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
 
@@ -697,8 +708,7 @@ const ArteFinalScreen = () => {
                             }}
                             align="center"
                           >
-                            {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
-                            {/* {formatarDataJSX(dataPrevistaArteFinal.toISOString())} */}
+                            {prazoArteFinal.toFormat('dd/MM/yyyy')}
                           </TableCell>
 
                           {designerNome !== 'Desconhecido' ? (
