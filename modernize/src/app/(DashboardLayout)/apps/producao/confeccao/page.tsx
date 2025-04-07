@@ -459,7 +459,7 @@ const ConfeccaoScreen = () => {
                       <TableCell align='center' sx={{ width: '30%' }}>Produtos</TableCell>
                       <TableCell align='center' sx={{ width: '5%' }}>Data De Entrega</TableCell>
                       <TableCell align='center' sx={{ width: '5%' }}>Designer</TableCell>
-                      <TableCell align='center' sx={{ width: '5%' }}>Observação</TableCell>
+                      <TableCell align='center' sx={{ width: '20%' }}>Observação</TableCell>
                       <TableCell align='center' sx={{ width: '3%' }}>Tipo</TableCell>
                       <TableCell align='center' sx={{ width: '7%' }}>Status</TableCell>
                       <TableCell align='center' sx={{ width: '15%' }}>Ações</TableCell>
