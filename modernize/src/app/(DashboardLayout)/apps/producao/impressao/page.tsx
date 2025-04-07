@@ -337,6 +337,13 @@ const ImpressaoScreen = () => {
     }
   };
 
+  const localStoragePedidosTipos = localStorage.getItem('pedidosTipos');
+  const parsedPedidosTipos = JSON.parse(localStoragePedidosTipos || '[]');
+  const pedidoTiposMapping = parsedPedidosTipos.reduce((acc: any, item: any) => {
+    acc[item.id] = item.nome;
+    return acc;
+  }, {});
+
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
 
@@ -573,14 +580,6 @@ const ImpressaoScreen = () => {
                     };
                     const designerNome = getUserNameById(row.designer_id);
 
-                    const pedidoTipos = {
-                      1: 'Prazo normal',
-                      2: 'Antecipação',
-                      3: 'Faturado',
-                      4: 'Metade/Metade',
-                      5: 'Amostra',
-                    } as const;
-
 
                     const pedidoStatusColors: Record<number, string> = {
                       8: 'rgba(220, 53, 69, 0.49)',
@@ -591,8 +590,7 @@ const ImpressaoScreen = () => {
                       13: 'rgba(238, 84, 84, 0.8)',
                     };
 
-                    const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
-                    const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
+                    const tipo = row.pedido_tipo_id && pedidoTiposMapping[row.pedido_tipo_id as keyof typeof pedidoTiposMapping];
 
                     return (
                       <TableRow
