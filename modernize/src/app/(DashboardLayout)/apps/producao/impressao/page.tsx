@@ -132,11 +132,7 @@ const ImpressaoScreen = () => {
     }, 0)
     : 0;
 
-    // handles
-    //     Route::patch('/producao/impressao/impressora-change/{id}', [PedidoArteFinalController::class, 'trocarImpressoraArteFinalImpressao']);
-    // Route::patch('/producao/impressao/corte-change/{id}', [PedidoArteFinalController::class, 'trocarCorteArteFinalImpressao']);
-    // criar os handles de trocarImpressoraArteFinalImpressao e trocarCorteArteFinalImpressao
-    
+  //handles
   const handleImpressoraChange = async (row: ArteFinal, impressora: number) => {
     const sucesso = await trocarImpressora(row?.id, impressora, refetch);
     if (sucesso) {
@@ -632,7 +628,7 @@ const ImpressaoScreen = () => {
                             sx={{
                               maxHeight: 80,
                               overflowY: 'auto',
-                              padding: '12px'
+                              paddingLeft: '5%',
                             }}
                           >
                             {row.lista_produtos?.length > 0
