@@ -40,7 +40,8 @@ import {
   IconTools,
   IconCalendarTime,
   IconRoad,
-  IconIroning  
+  IconIroning,
+  IconCut
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -295,15 +296,15 @@ const getMenuItems = (): MenuitemsType[] => {
         },
         {
           id: uniqueId(),
-          title: "Costura",
-          icon: IconNeedleThread,
-          href: "/apps/producao/confeccao/costura",
+          title: "Corte & Conferência",
+          icon: IconCut,
+          href: "/apps/producao/corte-conferencia",
         },
         {
           id: uniqueId(),
-          title: "Reposição Adm",
-          icon: IconReplace,
-          href: "/apps/producao/reposicao",
+          title: "Costura",
+          icon: IconNeedleThread,
+          href: "/apps/producao/confeccao/costura",
         },
         {
           id: uniqueId(),
