@@ -7,6 +7,30 @@ const BackgroundUpdater = () => {
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
+    const fetchDataConfigs = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-config`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const configs = await response.json();
+        localStorage.setItem('configs', JSON.stringify(configs));
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    };
+    
+    fetchDataConfigs();
+    
+    const intervalConfigs = setInterval(fetchDataConfigs, 900000);
+    return () => clearInterval(intervalConfigs);
+  }, []);
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
     const fetchDataClientes = async () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/clientes-consolidados`, {

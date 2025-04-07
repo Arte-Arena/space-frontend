@@ -1,11 +1,11 @@
 'use client';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconNeedleThread } from '@tabler/icons-react';
+import { IconEye, IconShirt, IconNeedleThread } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -21,14 +21,10 @@ import {
   TableRow,
   Paper,
   TablePagination,
-  TableSortLabel,
   IconButton,
   Collapse,
   Box,
-  FormControl,
-  InputLabel,
   MenuItem,
-  SelectChangeEvent,
   useTheme,
   TextField,
   Select,
@@ -44,28 +40,30 @@ import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import { format, isSameDay } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
-import DialogObs from './components/observacaoDialog';
 import { useThemeMode } from '@/utils/useThemeMode';
-import { IconDirectionSign } from '@tabler/icons-react';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import getBrazilTime from '@/utils/brazilTime';
 import useFetchPedidoPorData from './components/useGetPedidoPorData';
 import { DateTime } from 'luxon';
+import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
+import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
+import trocarImpressora from './components/useTrocarImpressora';
+import trocarTipoCorte from './components/useTrocarTipoCorte';
 
 const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [openDialogObs, setOpenDialogObs] = useState(false);
-
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
-  const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
   const [open, setOpen] = useState(false);
+  const [diasAntecipaProducao, setDiasAntecipaProducao] = useState<number>(0);
+  const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 100,
     page: 0,
@@ -86,6 +84,11 @@ const ImpressaoScreen = () => {
 
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
+  const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
+
+  const DesignerRoles = [1, 6, 7];
+
+  const unableTipoCorte = roles.some(role => DesignerRoles.includes(role))
 
   const filters = {
     numero_pedido: searchNumero,
@@ -103,16 +106,24 @@ const ImpressaoScreen = () => {
         },
       }).then((res) => res.json()),
   });
+  console.log(dataPedidos);
 
   const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("I");
-  console.log(errorPedido);
-  console.log(porDia);
+  // console.log(errorPedido);
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) { // Verificação adicional
       setAllPedidos(dataPedidos.data);
     }
   }, [dataPedidos]);
+
+  const handleKeyPressObservacoes = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      const inputElement = observacoesRefs.current[id];
+      const valor = inputElement?.value || '';
+      handleEnviarObservacao(id, valor);
+    }
+  };
 
   const totalMedidaLinearGlobal = Array.isArray(allPedidos)
     ? allPedidos.reduce((totalPedido, row) => {
@@ -126,7 +137,46 @@ const ImpressaoScreen = () => {
     }, 0)
     : 0;
 
-  // handles
+  //handles
+  const handleImpressoraChange = async (row: ArteFinal, impressora: number) => {
+    const sucesso = await trocarImpressora(row?.id, impressora, refetch);
+    if (sucesso) {
+      console.log("Impressora atualizada com sucesso!");
+      setSnackbar({
+        open: true,
+        message: `✅ ${'Sucesso!'}`,
+        severity: 'success'
+      });
+    } else {
+      console.log("Falha ao trocar Impressora.");
+      setSnackbar({
+        open: true,
+        message: `${'Impressora não atualizada.'}`,
+        severity: 'warning'
+      });
+    }
+  }
+
+  const handleTipoCorteChange = async (row: ArteFinal, TipoCorte: string) => {
+    const sucesso = await trocarTipoCorte(row?.id, TipoCorte, refetch);
+    if (sucesso) {
+      console.log("Corte atualizado com sucesso!");
+      setSnackbar({
+        open: true,
+        message: `✅ ${'Sucesso!'}`,
+        severity: 'success'
+      });
+    } else {
+      console.log("Falha ao trocar corte.");
+      setSnackbar({
+        open: true,
+        message: `${'Corte não atualizado.'}`,
+        severity: 'warning'
+      });
+    }
+  }
+
+
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
@@ -212,7 +262,6 @@ const ImpressaoScreen = () => {
     }, 0);
   };
 
-  // handles dos selects
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
     const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
     if (sucesso) {
@@ -232,12 +281,6 @@ const ImpressaoScreen = () => {
     }
   }
 
-  const handleClickOpenDialogObs = async (row: ArteFinal) => {
-    // abre o dialog e passa a row
-    setSelectedRowObs(row);
-    setOpenDialogObs(true);
-  };
-
   const handleClearFilters = () => {
     setSearchNumero('');
     setStatusFilter('');
@@ -252,6 +295,49 @@ const ImpressaoScreen = () => {
     setOpen(!open);
   };
 
+  const handleEnviarObservacao = async (id: string, obs: string) => {
+    if (!id) {
+      console.error("ID do pedido não encontrado");
+      return;
+    }
+
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      console.error("Usuário não autenticado");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-obs-change/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ observacoes: obs }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erro ao salvar observação");
+      }
+
+      const data = await response.json();
+      setSnackbar({
+        open: true,
+        message: `${'Observação salva com sucesso.'}`,
+        severity: 'success'
+      });
+      console.log("Observação salva com sucesso:", data);
+
+      refetch();
+    } catch (error) {
+      console.error("Erro ao salvar observação:", error);
+    }
+  };
+
   const pedidoStatus = {
     8: { nome: 'Pendente', fila: 'I' },
     9: { nome: 'Processando', fila: 'I' },
@@ -264,19 +350,12 @@ const ImpressaoScreen = () => {
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
-      // Verifica se o número do pedido corresponde ao filtro
       const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
-
-      // Verifica se o status do pedido corresponde ao filtro
       const isStatusMatch = !filters.pedido_status_id || pedido.pedido_status_id === Number(filters.pedido_status_id);
-
-      // Filtro de data (data inicial e final)
       const isDateMatch = (
         (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
         (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
       );
-
-      // Retorna true se todas as condições de filtro forem atendidas
       return isNumberMatch && isStatusMatch && isDateMatch;
     });
   }, [allPedidos, filters, dateFilter]);
@@ -303,13 +382,6 @@ const ImpressaoScreen = () => {
     },
   ];
 
-  useEffect(() => {
-    console.log("📌 Estado atualizado - selectedRowIdSidePanel:", selectedRowSidePanel);
-  }, [selectedRowSidePanel]);
-
-  // console.log(allPedidos);
-  // console.log(designers);
-
   return (
     <PageContainer title="Produção / Impressão" description="Tela de Produção da Impressão | Arte Arena">
       <Breadcrumb title="Produção / Impressão" items={BCrumb} />
@@ -319,9 +391,7 @@ const ImpressaoScreen = () => {
         </Typography>
         <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
           <span style={{ fontWeight: 'bold' }}>Total De: </span> {allPedidos.length} Pedidos:
-          {/* {filteredPedidos.length} Filtrados */}
         </Typography>
-        {/* quantidade de pedidos por dia (mostrando a data) | quantidade de metros por dia  (mostrando a data) */}
         <Typography variant="body1" sx={{ fontWeight: 500, alignItems: 'center' }}>
           <span style={{ fontWeight: 'bold', fontSize: 16 }}>Por Dia: </span>
           <Button onClick={handleToggle} variant="outlined" size='small' sx={{ mb: 0, padding: 1, height: '16px', width: "auto" }}>
@@ -403,6 +473,7 @@ const ImpressaoScreen = () => {
                   renderInput={(params: TextFieldProps) => (
                     <TextField
                       {...params}
+                      error={false}
                       size="small"
                       sx={{ width: '200px' }} // Define uma largura fixa
                     />
@@ -422,6 +493,7 @@ const ImpressaoScreen = () => {
                   renderInput={(params: TextFieldProps) => (
                     <TextField
                       {...params}
+                      error={false}
                       size="small"
                       sx={{ width: '200px' }} // Define uma largura fixa
                     />
@@ -454,15 +526,17 @@ const ImpressaoScreen = () => {
                 <TableHead>
                   <TableRow>
                     {/* <TableCell> </TableCell> */}
-                    <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
-                    <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
+                    <TableCell align='center' sx={{ width: '2%' }}>N° Pedido</TableCell>
+                    <TableCell align='center' sx={{ width: '30%' }}>Produtos</TableCell>
                     <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Data De Entrega</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Designer</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Tipo</TableCell>
-                    <TableCell align='center' sx={{ width: '10%' }}>Status</TableCell>
-                    <TableCell align='center' sx={{ width: '25%' }}>Ações</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>Impressora</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>Tipo de corte</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>Data De Entrega</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>Designer</TableCell>
+                    <TableCell align='center' sx={{ width: '20%' }}>Observação</TableCell>
+                    <TableCell align='center' sx={{ width: '3%' }}>Tipo</TableCell>
+                    <TableCell align='center' sx={{ width: '7%' }}>Status</TableCell>
+                    <TableCell align='center' sx={{ width: '13%' }}>Ações</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -522,192 +596,259 @@ const ImpressaoScreen = () => {
                       11: 'rgba(0, 152, 63, 0.65)',
                       12: 'rgba(0, 146, 136, 0.8)',
                       13: 'rgba(238, 84, 84, 0.8)',
-                      //   20: 'rgba(20, 175, 0, 0.8)',
-                      //   21: 'rgba(180, 0, 0, 0.8)',
-                      //   22: 'rgba(152, 0, 199, 0.8)',
                     };
 
                     const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
                     const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
 
                     return (
-                      <>
-                        {/* colocar as condições de data e de tipos de status e suas cores */}
-                        <TableRow
-                          key={row.id}
+                      <TableRow
+                        key={row.id}
+                        sx={{
+                        }}
+                      >
+
+                        <TableCell
                           sx={{
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => {
+                            navigator.clipboard.writeText(String(row.numero_pedido));
+                            setSnackbar({
+                              open: true,
+                              message: `✅ Número do Pedido ${row.numero_pedido} copiado com sucesso!`,
+                              severity: 'success'
+                            });
+
                           }}
                         >
+                          {String(row.numero_pedido)}
+                        </TableCell>
 
-                          <TableCell
+                        <TableCell sx={{
+                          color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                        }} align='left'>
+                          <Box
                             sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                              maxHeight: 80,
+                              overflowY: 'auto',
+                              paddingLeft: '5%',
                             }}
                           >
-                            {String(row.numero_pedido)}</TableCell>
-
-                          <TableCell
-                            sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                            }}
-                            align='center'>
                             {row.lista_produtos?.length > 0
                               ? (
-                                <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
+                                <ul style={{ listStyleType: 'disc', padding: 0, margin: 0 }}>
                                   {listaProdutos.map((produto, index) => (
-                                    <li key={index}>{produto.nome}</li> // Cada produto em uma nova linha
+                                    <li key={index}>{produto.nome} ({produto.quantidade})</li>
                                   ))}
                                 </ul>
                               )
                               : 'N/A'}
-                          </TableCell>
+                          </Box>
+                        </TableCell>
 
-                          {/* medida linear */}
-                          <TableCell
-                            sx={{
-                              color: myTheme === "dark" ? "white" : "black", // Branco no modo escuro e preto no claro
+                        {/* medida linear */}
+                        <TableCell
+                          sx={{
+                            color: myTheme === "dark" ? "white" : "black",
+                          }}
+                          align="center"
+                        >
+                          {row.lista_produtos?.length > 0 ? (
+                            <>
+                              <strong>
+                                {listaProdutos
+                                  .filter((produto) => produto.medida_linear)
+                                  .reduce((acc, produto) => acc + produto.medida_linear, 0)
+                                  .toFixed(2)}{" "}
+                                m
+                              </strong>
+                            </>
+                          ) : (
+                            "N/A"
+                          )}
+                        </TableCell>
+                        {/* impressora */}
+                        <TableCell
+                          sx={{
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                          }}
+                          align='center'
+                        >
+                          <CustomSelect
+                            style={{
+                              height: '30px',
+                              textAlign: 'center',
+                              padding: '0px',
+                              fontSize: '12px',
+                              borderRadius: '4px',
+                              backgroundColor: 'transparent',
+                              cursor: 'pointer',
+                              width: '100%',
+                              boxSizing: 'border-box',
                             }}
-                            align="center"
-                          >
-                            {row.lista_produtos?.length > 0 ? (
-                              <>
-                                <strong>
-                                  {listaProdutos
-                                    .filter((produto) => produto.medida_linear) // Filtra os produtos que possuem medida_linear
-                                    .reduce((acc, produto) => acc + produto.medida_linear, 0) // Soma todas as medidas lineares
-                                  }{" "}
-                                  m
-                                </strong>
-                              </>
-                            ) : (
-                              "N/A"
-                            )}
-                          </TableCell>
 
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
-                            backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)'
-                          }} align='center'>
-                            {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
-                            {atraso && <span> (Atraso)</span>}
-                          </TableCell>
-
-                          <TableCell
-                            sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                            }}
-                            align='center'
-                          >
-                            {designerNome ?? 'Não Atribuido'}
-                          </TableCell>
-
-                          <TableCell
-                            sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black'
-                            }}
-                            align="center"
-                          >
-                            <Tooltip title={row.observacoes ?? "Adicionar Observações"} placement='top'>
-                              <Button
-                                sx={{
-                                  background: 'transparent',
-                                  color: myTheme === 'dark' ? 'white' : 'black',
-                                  borderRadius: '4px',
-                                  border: row.observacoes
-                                    ? 'none'
-                                    : (myTheme === 'dark' ? '1px solid white' : '1px solid black'),
-                                  fontSize: '12px',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  maxWidth: '150px',
-                                  display: 'flex', // Torna o botão um flex container
-                                  justifyContent: row.observacoes ? 'flex-start' : 'center', // Alinha o conteúdo à esquerda se tiver observação, senão centraliza
-                                  alignItems: 'center', // Centraliza verticalmente
-                                  textTransform: 'none', // Mantém o texto sem transformação (evita tudo maiúsculo)
-                                  '&:hover': {
-                                    backgroundColor: 'rgba(13, 12, 12, 0.1)',
-                                    color: theme.palette.text.secondary,
-                                  }
-                                }}
-                                onClick={() => handleClickOpenDialogObs(row)}
-                              >
-                                {row.observacoes ?? "Adicionar Observação"}
-                              </Button>
-                            </Tooltip>
-                          </TableCell>
-
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black',
-                            backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
-                          }} align='center'>{tipo ?? '-'}</TableCell>
-
-                          {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
-                          {/* <TableCell align='center'>{status ? status.nome + " " + status.fila : 'null'}</TableCell> */}
-                          <TableCell
-                            align='center'
-                            sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black',
-                              backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
+                            value={row.impressao?.impressora ?? 0}
+                            onChange={(event: { target: { value: number; }; }) => {
+                              const newImpressora = event.target.value;
+                              handleImpressoraChange(row, newImpressora);
                             }}
                           >
-                            <select
-                              style={{
-                                textAlign: 'center',
-                                padding: '0px',
-                                fontSize: '12px',
-                                borderRadius: '4px',
-                                border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
-                                backgroundColor: 'transparent',
-                                color: myTheme === 'dark' ? 'white' : 'black',
-                                appearance: 'none',
-                                WebkitAppearance: 'none',
-                                MozAppearance: 'none',
-                                cursor: 'pointer',
-                                width: 'auto',
-                                boxSizing: 'border-box',  // Para garantir que o padding não quebre a largura
+                            <MenuItem key={1} value={1}>
+                              {1}
+                            </MenuItem>
+                            <MenuItem key={2} value={2}>
+                              {2}
+                            </MenuItem>
+                          </CustomSelect>
+                        </TableCell>
+
+                        {/* tipo_corte */}
+                        <TableCell
+                          sx={{
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                          }}
+                          align='center'
+                        >
+                          <CustomSelect
+                            disabled={!unableTipoCorte}
+                            style={{
+                              height: '30px',
+                              textAlign: 'center',
+                              padding: '0px',
+                              fontSize: '12px',
+                              borderRadius: '4px',
+                              backgroundColor: 'transparent',
+                              cursor: 'pointer',
+                              width: '100%',
+                              boxSizing: 'border-box',
+                            }}
+
+                            value={row.impressao?.tipo_corte ?? " - "}
+                            onChange={(event: { target: { value: string; }; }) => {
+                              const newTipoCorte = event.target.value;
+                              handleTipoCorteChange(row, newTipoCorte);
+                            }}
+                          >
+                            <MenuItem key={1} value={"Laser"}>
+                              Laser
+                            </MenuItem>
+                            <MenuItem key={2} value={"Mesa"}>
+                              Mesa
+                            </MenuItem>
+                            <MenuItem key={3} value={"Normal"}>
+                              Normal
+                            </MenuItem>
+                          </CustomSelect>
+                        </TableCell>
+
+                        <TableCell sx={{
+                          color: myTheme === 'dark' ? 'white' : 'black',
+                          backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)'
+                        }} align='center'>
+                          {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
+                          {atraso && <span> (Atraso)</span>}
+                        </TableCell>
+
+                        <TableCell
+                          sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black'
+                          }}
+                          align='center'
+                        >
+                          {designerNome ?? 'Não Atribuido'}
+                        </TableCell>
+
+                        <Tooltip title={row?.observacoes ? row.observacoes : "Adicionar Observação"} placement="left">
+                          <TableCell
+                            sx={{
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                              textAlign: "left",
+                            }}
+                          >
+                            <CustomTextField
+                              key={row?.id}
+                              label={row?.observacoes ? "Observação" : "Adicionar Observação"}
+                              defaultValue={row?.observacoes || ""}
+                              inputRef={(ref: HTMLInputElement | null) => {
+                                if (row?.id && ref) {
+                                  observacoesRefs.current[row.id] = ref;
+                                }
                               }}
-                              value={String(row.pedido_status_id)} // O valor precisa ser uma string
-                              onChange={(event) => {
-                                const newStatus = event.target.value;  // O valor será do tipo string
-                                handleStatusChange(row, Number(newStatus)); // Converte para número antes de passar para a função
+                              onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
+                                if (row?.id) handleKeyPressObservacoes(String(row.id), event);
                               }}
+                              fullWidth
+                            />
+                          </TableCell>
+                        </Tooltip>
+
+                        <TableCell sx={{
+                          color: myTheme === 'dark' ? 'white' : 'black',
+                          backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
+                        }} align='center'>{tipo ?? '-'}</TableCell>
+
+                        <TableCell
+                          sx={{
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                            backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
+                          }}
+                          align='center'
+                        >
+                          <CustomSelect
+                            style={{
+                              height: '30px',
+                              textAlign: 'center',
+                              padding: '0px',
+                              fontSize: '12px',
+                              borderRadius: '4px',
+                              backgroundColor: 'transparent',
+                              cursor: 'pointer',
+                              width: '100%',
+                              boxSizing: 'border-box',
+                            }}
+
+                            value={String(row.pedido_status_id)}
+                            onChange={(event: { target: { value: any; }; }) => {
+                              const newStatus = event.target.value;
+                              handleStatusChange(row, Number(newStatus));
+                            }}
+                          >
+                            {Object.entries(pedidoStatus).map(([id, status]) => (
+                              <MenuItem key={id} value={id}>
+                                {status.nome}
+                              </MenuItem>
+                            ))}
+                          </CustomSelect>
+                        </TableCell>
+
+                        <TableCell align='center'>
+                          <Tooltip title="Ver Detalhes">
+                            <IconButton onClick={() => handleVerDetalhes(row)}>
+                              <IconEye />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Lista de Uniformes">
+                            <IconButton onClick={() => handleListaUniformes(row)}>
+                              <IconShirt />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
+                            <IconButton
+                              onClick={() => handleLinkTrello(row)}
+                              disabled={row.url_trello === null}
                             >
-                              {Object.entries(pedidoStatus).map(([id, status]) => (
-                                <option key={id} value={id}>  {/* O 'id' ainda é uma string */}
-                                  {status.nome}  {/* Exibe o nome do status */}
-                                </option>
-                              ))}
-                            </select>
-                          </TableCell>
-
-                          <TableCell align='center'>
-                            <Tooltip title="Ver Detalhes">
-                              <IconButton onClick={() => handleVerDetalhes(row)}>
-                                <IconEye />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Lista de Uniformes">
-                              <IconButton onClick={() => handleListaUniformes(row)}>
-                                <IconShirt />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
-                              <IconButton
-                                onClick={() => handleLinkTrello(row)}
-                                disabled={row.url_trello === null}
-                              >
-                                <IconBrandTrello />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Enviar para Confecção!">
-                              <IconButton onClick={() => handleEnviarConfeccao(row)}>
-                                <IconNeedleThread />
-                              </IconButton>
-                            </Tooltip>
-                          </TableCell>
-                        </TableRow>
-                      </>
+                              <IconBrandTrello />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Enviar para Confecção!">
+                            <IconButton onClick={() => handleEnviarConfeccao(row)}>
+                              <IconNeedleThread />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
                 </TableBody>
@@ -725,7 +866,6 @@ const ImpressaoScreen = () => {
             </TableContainer>
           )}
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
-          <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
 
           <Snackbar
             open={snackbar.open}

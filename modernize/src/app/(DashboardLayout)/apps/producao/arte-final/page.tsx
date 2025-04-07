@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { isSameDay } from 'date-fns';
+import { format, isSameDay, subDays } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -71,7 +71,7 @@ const ArteFinalScreen = () => {
     message: '',
     severity: 'success'
   });
-
+  const [diasAntecipaProducao, setDiasAntecipaProducao] = useState<number>(0);
   const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   const router = useRouter();
@@ -79,6 +79,7 @@ const ArteFinalScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
+  const configs = localStorage.getItem('configs');
 
   const DesignerRoles = [1, 6];
   const DesignerCoordanateRole = [1, 7];
@@ -88,11 +89,18 @@ const ArteFinalScreen = () => {
   const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));
   const canShowButtonBackOffice = roles.some(role => BackOfficeRoles.includes(role));
 
-
   const filters = {
     numero_pedido: searchNumero,
     pedido_status_id: statusFilter,
   };
+
+  useEffect(() => {
+    if (configs) {
+      const configsParsed = JSON.parse(configs);
+      const diasAntecipaProducao = configsParsed.dias_antecipa_producao;
+      setDiasAntecipaProducao(diasAntecipaProducao);
+    }
+  }, [configs]);
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
@@ -277,6 +285,27 @@ const ArteFinalScreen = () => {
       });
     }
 
+    if (row.lista_produtos) {
+      const listaProdutos: Produto[] = row.lista_produtos
+        ? typeof row.lista_produtos === 'string'
+          ? JSON.parse(row.lista_produtos)
+          : row.lista_produtos
+        : [];
+
+      const produtosInvalidos = listaProdutos.some(
+        (produto: Produto) => !produto.medida_linear || produto.medida_linear <= 0
+      );
+
+      if (produtosInvalidos) {
+        return setSnackbar({
+          open: true,
+          message: `${'Todos os produtos devem ter medidas lineares maiores que zero antes de enviar para Impressão'}`,
+          severity: 'error'
+        });
+      }
+    }
+
+
     if (confirmar) {
       const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
       if (sucesso) {
@@ -436,7 +465,7 @@ const ArteFinalScreen = () => {
   return (
     <PageContainer title="Produção / Arte - Final" description="Tela de Produção da Arte - Final | Arte Arena">
       <Breadcrumb title="Produção / Arte - Final" items={BCrumb} />
-      <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2, p: 2, border: '1px solid #ddd', borderRadius: 1, }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2, p: 2 }}>
         <Typography sx={{ fontSize: '14px', fontWeight: '600' }}>
           Total de Pedidos: <strong>{allPedidos.length}</strong>.
         </Typography>
@@ -536,11 +565,11 @@ const ArteFinalScreen = () => {
                   <TableRow>
                     <TableCell align='center' sx={{ width: '2%' }}>N° Pedido</TableCell>
                     <TableCell align='center' sx={{ width: '35%' }}>Produtos</TableCell>
-                    <TableCell align='center' sx={{ width: '5%' }}>Previsão de Entrega</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>Prazo de Entrega da Arte Final</TableCell>
                     <TableCell align='center' sx={{ width: '5%' }}>Designer</TableCell>
                     <TableCell align='center' sx={{ width: '20%' }}>Observação</TableCell>
-                    <TableCell align='center' sx={{ width: '7%' }}>Tipo</TableCell>
-                    <TableCell align='center' sx={{ width: '3%' }}>Status</TableCell>
+                    <TableCell align='center' sx={{ width: '3%' }}>Tipo</TableCell>
+                    <TableCell align='center' sx={{ width: '7%' }}>Status</TableCell>
                     <TableCell align='center' sx={{ width: '13%' }}>Ações</TableCell>
                   </TableRow>
                 </TableHead>
@@ -554,19 +583,32 @@ const ArteFinalScreen = () => {
                           : row.lista_produtos
                         : [];
 
-                      const dataPrevistaSegura = formatarDataSegura(String(row?.data_prevista));
-                      const dataPrevista = row?.data_prevista ? dataPrevistaSegura : null;
-                      const dataAtual = formatarDataSegura(zerarHorario(getBrazilTime()).toISOString());
+                      // const dataPrevistaSegura = formatarDataSegura(String(row?.data_prevista));
+                      // const dataPrevista = row?.data_prevista ? dataPrevistaSegura : null;
+                      // const dataAtual = formatarDataSegura(zerarHorario(getBrazilTime()).toISOString());
+                      // let atraso = false;
+                      // let isHoje = false;
+                      // const dataAtualJS = new Date(dataAtual);
+                      // const dataPrevistaConfeccao = new Date(String(dataPrevista));
+                      // const dataPrevistaArteFinal = subDays(dataPrevistaConfeccao, diasAntecipaProducao);
+                      // if (dataPrevistaArteFinal < dataAtualJS) {
+                      //   atraso = true;
+                      // }
+                      // if (isSameDay(dataPrevistaArteFinal, dataAtualJS)) {
+                      //   isHoje = true;
+                      // }
+
+                      const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
+                      const dataAtual = getBrazilTime(); //colocar no getBrazilTime
                       let atraso = false;
                       let isHoje = false;
-                      const dataAtualJS = new Date(dataAtual);
-                      const dataPrevistaJS = new Date(String(dataPrevista));
-                      if (dataPrevistaJS < dataAtualJS) {
+                      if (dataPrevista && dataPrevista < dataAtual) {
                         atraso = true;
                       }
-                      if (isSameDay(dataPrevistaJS, dataAtualJS)) {
+                      if (dataPrevista && isSameDay(dataPrevista, dataAtual)) {
                         isHoje = true;
                       }
+
 
                       const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
 
@@ -631,7 +673,7 @@ const ArteFinalScreen = () => {
                               sx={{
                                 maxHeight: 80,
                                 overflowY: 'auto',
-                                padding: '12px'
+                                paddingLeft: '5%',
                               }}
                             >
                               {row.lista_produtos?.length > 0
@@ -653,7 +695,8 @@ const ArteFinalScreen = () => {
                             }}
                             align="center"
                           >
-                            {formatarDataJSX(String(row.data_prevista))}
+                            {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
+                            {/* {formatarDataJSX(dataPrevistaArteFinal.toISOString())} */}
                           </TableCell>
 
                           {designerNome !== 'Desconhecido' ? (
@@ -761,7 +804,7 @@ const ArteFinalScreen = () => {
                             }}
                             align="center"
                           >
-                            <Grid container spacing={1} justifyContent="left">
+                            <Grid container spacing={0} justifyContent="left">
                               <Grid item xs={5} sm={5} md={5} lg={5}>
                                 <Tooltip title="Ver Detalhes">
                                   <IconButton onClick={() => handleVerDetalhes(row)}>

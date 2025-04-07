@@ -1,6 +1,6 @@
 import React from 'react';
 import Typography from '@mui/material/Typography';
-import SuperAdminTermTabSubTabs from './SuperAdminTermTabSubTabs';
+import SuperAdminTermTabSubTab from './SuperAdminTermTabSubTabs';
 
 const SuperAdminTermTab = () => {
 
@@ -20,7 +20,7 @@ const SuperAdminTermTab = () => {
           Controle de Acessos
         </Typography>
 
-        <SuperAdminTermTabSubTabs />
+        <SuperAdminTermTabSubTab />
 
       </div>
     </>
