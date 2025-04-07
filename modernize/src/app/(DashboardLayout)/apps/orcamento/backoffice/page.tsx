@@ -12,7 +12,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
-import { Pagination, Stack, Button, Box, Typography, Collapse, FormControlLabel, Checkbox, TextField, useTheme, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText } from '@mui/material';
+import { Pagination, Stack, Button, Box, Typography, Collapse, FormControlLabel, Checkbox, TextField, useTheme, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { IconPlus, IconSearch, IconLink, IconShirtSport, IconCheck, IconTrash, IconBrush, IconUser } from '@tabler/icons-react';
@@ -89,6 +89,7 @@ interface Orcamento {
 interface Sketch {
   letter: string;
   quantity: number;
+  package: string;
 }
 
 const OrcamentoBackofficeScreen = () => {
@@ -135,8 +136,8 @@ const OrcamentoBackofficeScreen = () => {
   const [arteFinalConfigurados, setArteFinalConfigurados] = useState<{ [key: number]: boolean }>({});
   const [verificandoArteFinal, setVerificandoArteFinal] = useState<{ [key: number]: boolean }>({});
   const [confirmacaoArteFinalConfigurados, setConfirmacaoArteFinalConfigurados] = useState<{ [key: number]: boolean }>({});
-
-
+  const [currentPackage, setCurrentPackage] = useState<string>('Start');
+  const [email, setEmail] = useState<string>('');
 
   const theme = useTheme()
 
@@ -555,7 +556,9 @@ const OrcamentoBackofficeScreen = () => {
           orcamento_id: currentOrcamentoId,
           esboco: sketch.letter,
           quantidade_jogadores: sketch.quantity,
-          configuracoes: []
+          configuracoes: [],
+          package: sketch.package,
+          email: email
         };
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes`, {
@@ -595,6 +598,8 @@ const OrcamentoBackofficeScreen = () => {
     setSketches([]);
     setCurrentLetter('');
     setCurrentQuantity(1);
+    setCurrentPackage('Start');
+    setEmail('');
     setIsLinkGenerated(false);
     setApiError(null);
     setCurrentOrcamentoId(null);
@@ -920,7 +925,18 @@ const OrcamentoBackofficeScreen = () => {
                                   </Box>
                                 ) : (
                                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 2 }}>
-                                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                    <Box sx={{ 
+                                      display: 'grid', 
+                                      gridTemplateColumns: '1fr 1fr 1fr auto',
+                                      gap: 2,
+                                      alignItems: 'center',
+                                      '@media (max-width: 900px)': {
+                                        gridTemplateColumns: '1fr 1fr',
+                                        '& > *:last-child': {
+                                          gridColumn: '1 / -1'
+                                        }
+                                      }
+                                    }}>
                                       <CustomTextField
                                         label="Letra do Esboço (A-Z)"
                                         value={currentLetter}
@@ -944,6 +960,22 @@ const OrcamentoBackofficeScreen = () => {
                                         inputProps={{ min: 1 }}
                                         disabled={isLinkGenerated}
                                       />
+                                      <FormControl fullWidth>
+                                        <InputLabel>Pacote</InputLabel>
+                                        <Select
+                                          value={currentPackage}
+                                          label="Pacote"
+                                          onChange={(e) => setCurrentPackage(e.target.value)}
+                                          disabled={isLinkGenerated}
+                                        >
+                                          <MenuItem value="Start">Start</MenuItem>
+                                          <MenuItem value="Prata">Prata</MenuItem>
+                                          <MenuItem value="Ouro">Ouro</MenuItem>
+                                          <MenuItem value="Diamante">Diamante</MenuItem>
+                                          <MenuItem value="Premium">Premium</MenuItem>
+                                          <MenuItem value="Profissional">Profissional</MenuItem>
+                                        </Select>
+                                      </FormControl>
                                       <Button
                                         variant="contained"
                                         onClick={() => {
@@ -955,9 +987,10 @@ const OrcamentoBackofficeScreen = () => {
                                             setError('Esta letra já foi utilizada');
                                             return;
                                           }
-                                          setSketches([...sketches, { letter: currentLetter, quantity: currentQuantity }]);
+                                          setSketches([...sketches, { letter: currentLetter, quantity: currentQuantity, package: currentPackage }]);
                                           setCurrentLetter('');
                                           setCurrentQuantity(1);
+                                          setCurrentPackage('Start');
                                           setError('');
                                         }}
                                         disabled={isLinkGenerated}
@@ -973,6 +1006,7 @@ const OrcamentoBackofficeScreen = () => {
                                             <TableRow>
                                               <TableCell>Esboço</TableCell>
                                               <TableCell>Quantidade</TableCell>
+                                              <TableCell>Pacote</TableCell>
                                               <TableCell>Ações</TableCell>
                                             </TableRow>
                                           </TableHead>
@@ -981,6 +1015,7 @@ const OrcamentoBackofficeScreen = () => {
                                               <TableRow key={sketch.letter}>
                                                 <TableCell>Esboço {sketch.letter}</TableCell>
                                                 <TableCell>{sketch.quantity}</TableCell>
+                                                <TableCell>{sketch.package}</TableCell>
                                                 <TableCell>
                                                   <IconButton
                                                     size="small"
@@ -996,6 +1031,17 @@ const OrcamentoBackofficeScreen = () => {
                                         </Table>
                                       </TableContainer>
                                     )}
+
+                                    <Box sx={{ mt: 2 }}>
+                                      <CustomTextField
+                                        fullWidth
+                                        label="E-mail para linkar os uniformes"
+                                        value={email}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                                        disabled={isLinkGenerated}
+                                        type="email"
+                                      />
+                                    </Box>
 
                                     {apiError && (
                                       <Box sx={{ mt: 2, p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
