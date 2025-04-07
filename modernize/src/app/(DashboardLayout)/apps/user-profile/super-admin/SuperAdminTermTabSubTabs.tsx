@@ -1,14 +1,11 @@
 "use client";
 
-import * as React from "react";
+import React, { useEffect } from "react";
 import { Button, Typography, AlertProps, Box, Alert, Snackbar } from "@mui/material";
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomFormLabel from "@/app/components/forms/theme-elements/CustomFormLabel";
 
 const SuperAdminTermTabSubTab = () => {
-
-  // fazer o get das configs
-
 
   const [diasMenosArteFinal, setDiasMenosArteFinal] = React.useState<number | null>(3);
   const [diasMenosImpressao, setDiasMenosImpressao] = React.useState<number | null>(2);
@@ -23,51 +20,69 @@ const SuperAdminTermTabSubTab = () => {
     message: '',
     severity: 'success'
   });
+  
+  // fazer o get das configs
+  // /super-admin/get-dias-antecipa-producao
 
-  const handleSliderArteFinalChange = (event: Event, newValue: number | number[]) => {
-    setDiasMenosArteFinal(newValue as number);
-  };
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-config-prazos`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('accessToken'),
+          },
+        });
 
-  const handleSliderImpressaoChange = (event: Event, newValue: number | number[]) => {
-    setDiasMenosImpressao(newValue as number);
-  };
+        if (!response.ok) {
+          throw new Error(`Error fetching configurations: ${response.status}`);
+        }
 
-  const handleSliderConfeccaoSublimacaoChange = (event: Event, newValue: number | number[]) => {
-    setDiasMenosConfeccaoSublimacao(newValue as number);
-  };
+        const data = await response.json();
+        setDiasMenosArteFinal(data.dias_antecipa_producao_arte_final);
+        setDiasMenosImpressao(data.dias_antecipa_producao_impressao);
+        setDiasMenosConfeccaoSublimacao(data.dias_antecipa_producao_confeccao_sublimacao);
+        setDiasMenosConfeccaoCostura(data.dias_antecipa_producao_confeccao_costura);
 
-  const handleSliderConfeccaoCosturaChange = (event: Event, newValue: number | number[]) => {
-    setDiasMenosConfeccaoCostura(newValue as number);
-  };
+      } catch (error) {
+        console.error('Error:', (error as Error).message);
+        alert('Falha ao buscar as configurações. (1)');
+      }
+    };
 
+    fetchConfig();
+  }, []);
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
   const handleSave = async () => {
-    console.log(`Reduzindo ${diasMenosArteFinal ?? 0} dias das datas de produção.`);
+
+    const bodyData = {
+      'dias_antecipa_producao_arte_final': diasMenosArteFinal,
+      'dias_antecipa_producao_impressao': diasMenosImpressao,
+      'dias_antecipa_producao_confeccao_sublimacao': diasMenosConfeccaoSublimacao,
+      'dias_antecipa_producao_confeccao_costura': diasMenosConfeccaoCostura,
+    };
+
+    console.log('bodyData: ', bodyData);
+
     try {
 
       const accessToken = localStorage.getItem("accessToken");
       if (!accessToken) throw new Error("Usuário não autenticado.");
-
-      
       
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API}/api/super-admin/upsert-config-prazos'`,
+        `${process.env.NEXT_PUBLIC_API}/api/super-admin/upsert-config-prazos`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({
-            dias_antecipa_producao_arte_final: diasMenosArteFinal,
-            dias_antecipa_producao_impressao: diasMenosImpressao,
-            dias_antecipa_producao_confeccao_sublimacao: diasMenosConfeccaoSublimacao,
-            dias_antecipa_producao_confeccao_costura: diasMenosConfeccaoCostura
-          }),
+          body: JSON.stringify(bodyData),
         }
       );
 
@@ -79,14 +94,14 @@ const SuperAdminTermTabSubTab = () => {
         });
       } else {
         const errorData = await res.json();
-        throw new Error(errorData.message || 'Erro ao atualizar dias de antecipação');
+        throw new Error(errorData.message || 'Erro ao atualizar dias de antecipação (1)');
       }
 
     } catch (err) {
       console.log(err);
       setSnackbar({
         open: true,
-        message: err instanceof Error ? err.message : 'Ocorreu um erro inesperado',
+        message: err instanceof Error ? err.message : 'Ocorreu um erro inesperado (1)',
         severity: 'error'
       });
     }
@@ -119,7 +134,7 @@ const SuperAdminTermTabSubTab = () => {
             variant="outlined"
             fullWidth
             value={diasMenosArteFinal}
-            onChange={handleSliderArteFinalChange}
+            onChange={(e: { target: { value: Number; }; }) => setDiasMenosArteFinal(Number(e.target.value))}
           />
 
           <CustomFormLabel
@@ -134,7 +149,7 @@ const SuperAdminTermTabSubTab = () => {
             variant="outlined"
             fullWidth
             value={diasMenosImpressao}
-            onChange={handleSliderImpressaoChange}
+            onChange={(e: { target: { value: Number; }; }) => setDiasMenosImpressao(Number(e.target.value))}
           />
 
           <CustomFormLabel
@@ -149,7 +164,7 @@ const SuperAdminTermTabSubTab = () => {
             variant="outlined"
             fullWidth
             value={diasMenosConfeccaoSublimacao}
-            onChange={handleSliderConfeccaoSublimacaoChange}
+            onChange={(e: { target: { value: Number; }; }) => setDiasMenosConfeccaoSublimacao(Number(e.target.value))}
           />
 
           <CustomFormLabel
@@ -164,7 +179,7 @@ const SuperAdminTermTabSubTab = () => {
             variant="outlined"
             fullWidth
             value={diasMenosConfeccaoCostura}
-            onChange={handleSliderConfeccaoCosturaChange}
+            onChange={(e: { target: { value: Number; }; }) => setDiasMenosConfeccaoCostura(Number(e.target.value))}
           />
         </div>
         <div style={{ marginTop: '20px' }}>
