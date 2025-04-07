@@ -277,13 +277,13 @@ const ConfeccaoScreen = () => {
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
 
-  const pedidosStatusFilaD: Record<number, { nome: string; fila: 'D' }> = Object.fromEntries(
+  const pedidosStatusFilaD: Record<number, { nome: string; fila: 'C' }> = Object.fromEntries(
     parsedPedidosStatus
-      .filter((item: { fila: string }) => item.fila === 'D')
-      .map(({ id, nome, fila }: { id: number; nome: string; fila: 'D' }) => [id, { nome, fila }])
+      .filter((item: { fila: string }) => item.fila === 'C')
+      .map(({ id, nome, fila }: { id: number; nome: string; fila: 'C' }) => [id, { nome, fila }])
   );
 
-  const pedidoStatus: Record<number, { nome: string; fila: 'D' }> = pedidosStatusFilaD as Record<number, { nome: string; fila: 'D' }>;
+  const pedidoStatus: Record<number, { nome: string; fila: 'C' }> = pedidosStatusFilaD as Record<number, { nome: string; fila: 'C' }>;
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
