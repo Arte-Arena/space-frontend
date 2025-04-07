@@ -404,19 +404,7 @@ const ArteFinalScreen = () => {
       .map(({ id, nome, fila }: { id: number; nome: string; fila: 'D' }) => [id, { nome, fila }])
   );
 
-  const pedidoStatus = pedidosStatusFilaD as const;
-
-
-
-
-
-  // const pedidoStatus = {
-  //   1: { nome: 'Pendente', fila: 'D' },
-  //   2: { nome: 'Em andamento', fila: 'D' },
-  //   3: { nome: 'Arte OK', fila: 'D' },
-  //   4: { nome: 'Em espera', fila: 'D' },
-  //   5: { nome: 'Cor teste', fila: 'D' },
-  // } as const;
+  const pedidoStatus: Record<number, { nome: string; fila: 'D' }> = pedidosStatusFilaD as Record<number, { nome: string; fila: 'D' }>;
 
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
