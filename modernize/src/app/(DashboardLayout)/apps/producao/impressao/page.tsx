@@ -84,6 +84,11 @@ const ImpressaoScreen = () => {
 
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
+  const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
+
+  const DesignerRoles = [1, 6, 7];
+
+  const unableTipoCorte = roles.some(role => DesignerRoles.includes(role))
 
   const filters = {
     numero_pedido: searchNumero,
@@ -707,6 +712,7 @@ const ImpressaoScreen = () => {
                           align='center'
                         >
                           <CustomSelect
+                            disabled={!unableTipoCorte}
                             style={{
                               height: '30px',
                               textAlign: 'center',
