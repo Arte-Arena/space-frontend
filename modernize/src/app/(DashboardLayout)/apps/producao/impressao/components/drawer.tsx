@@ -126,16 +126,16 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
   };
 
   const handleMedidaLinearChange = (produto: Produto, novaMedidaLinear: number) => {
+    const produtoAtualizado = { ...produto, uid: produto.uid ?? produto.id };
     // Atualiza o estado das medidas lineares
     setMedidasLineares((prevState) => ({
       ...prevState,
-      [String(produto.uid)]: novaMedidaLinear,
+      [String(produtoAtualizado.uid)]: novaMedidaLinear,
     }));
-
     // Atualiza o estado dos produtos
     setProdutos((prevProdutos) =>
       prevProdutos.map((p) =>
-        p.uid === produto.uid ? { ...p, medida_linear: novaMedidaLinear } : p
+        p.uid === produtoAtualizado.uid ? { ...p, medida_linear: novaMedidaLinear } : p
       )
     );
   };
@@ -251,7 +251,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                                       const novaMedidaLinear = Number(inputElement.value);
                                       handleMedidaLinearChange(produto, novaMedidaLinear);
                                       if (row?.id !== undefined) {
-                                        handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id);
+                                        handletrocarMedidaLinear(produto.uid ?? produto.id, medidasLineares, row.id);
                                       }
                                     }
                                   }}
@@ -279,7 +279,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
                                 <Button
                                   onClick={() => {
                                     if (row?.id !== undefined) {
-                                      handletrocarMedidaLinear(produto.uid ?? null, medidasLineares, row.id);
+                                      handletrocarMedidaLinear(produto.uid ?? produto.id, medidasLineares, row.id);
                                     }
                                   }}
                                   sx={{ ml: 1, padding: 0 }}
