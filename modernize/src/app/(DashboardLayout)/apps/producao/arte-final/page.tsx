@@ -395,13 +395,23 @@ const ArteFinalScreen = () => {
     }
   };
 
-  const pedidoStatus = {
-    1: { nome: 'Pendente', fila: 'D' },
-    2: { nome: 'Em andamento', fila: 'D' },
-    3: { nome: 'Arte OK', fila: 'D' },
-    4: { nome: 'Em espera', fila: 'D' },
-    5: { nome: 'Cor teste', fila: 'D' },
-  } as const;
+  const localStoragePedidosTipos = localStorage.getItem('pedidosTipos');
+  const parsedPedidosTipos = JSON.parse(localStoragePedidosTipos || '[]');
+  const pedidoTiposMapping = parsedPedidosTipos.reduce((acc: any, item: any) => {
+    acc[item.id] = item.nome;
+    return acc;
+  }, {});
+
+  const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
+  const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
+
+  const pedidosStatusFilaD: Record<number, { nome: string; fila: 'D' }> = Object.fromEntries(
+    parsedPedidosStatus
+      .filter((item: { fila: string }) => item.fila === 'D')
+      .map(({ id, nome, fila }: { id: number; nome: string; fila: 'D' }) => [id, { nome, fila }])
+  );
+
+  const pedidoStatus: Record<number, { nome: string; fila: 'D' }> = pedidosStatusFilaD as Record<number, { nome: string; fila: 'D' }>;
 
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
@@ -453,11 +463,11 @@ const ArteFinalScreen = () => {
       title: "Home",
     },
     {
-      to: "/apps/produção/",
+      to: "/apps/producao/",
       title: "produção",
     },
     {
-      to: "/apps/produção/arte-final",
+      to: "/apps/producao/arte-final",
       title: "Pedidos com Arte Final",
     },
   ];
@@ -623,14 +633,6 @@ const ArteFinalScreen = () => {
                       };
                       const designerNome = getUserNameById(row.designer_id);
 
-                      const pedidoTipos = {
-                        1: 'Prazo normal',
-                        2: 'Antecipação',
-                        3: 'Faturado',
-                        4: 'Metade/Metade',
-                        5: 'Amostra',
-                      } as const;
-
                       const pedidoStatusColors: Record<number, string> = {
                         1: 'rgba(220, 53, 69, 0.49)',
                         2: 'rgba(213, 121, 0, 0.8)',
@@ -639,7 +641,7 @@ const ArteFinalScreen = () => {
                         5: 'rgba(0, 146, 136, 0.8)',
                       };
 
-                      const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
+                      const tipo = row.pedido_tipo_id && pedidoTiposMapping[row.pedido_tipo_id as keyof typeof pedidoTiposMapping];
 
                       return (
                         <TableRow
