@@ -48,6 +48,8 @@ import useFetchPedidoPorData from './components/useGetPedidoPorData';
 import { DateTime } from 'luxon';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
+import trocarImpressora from './components/useTrocarImpressora';
+import trocarTipoCorte from './components/useTrocarTipoCorte';
 
 const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
