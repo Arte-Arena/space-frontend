@@ -40,6 +40,7 @@ import {
   IconTools,
   IconCalendarTime,
   IconRoad,
+  IconIroning  
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -288,15 +289,15 @@ const getMenuItems = (): MenuitemsType[] => {
         },
         {
           id: uniqueId(),
-          title: "Confecção",
-          icon: IconNeedleThread,
-          href: "/apps/producao/confeccao",
+          title: "Sublimação",
+          icon: IconIroning,
+          href: "/apps/producao/confeccao/sublimacao",
         },
         {
           id: uniqueId(),
-          title: "Expedição",
-          icon: IconRoad,
-          href: "/apps/producao/expedicao",
+          title: "Costura",
+          icon: IconNeedleThread,
+          href: "/apps/producao/confeccao/costura",
         },
         {
           id: uniqueId(),
@@ -311,6 +312,12 @@ const getMenuItems = (): MenuitemsType[] => {
           href: "/apps/producao/relatorios",
         },
       ],
+    },
+    {
+      id: uniqueId(),
+      title: "Expedição",
+      icon: IconRoad,
+      href: "/apps/expedicao",
     },
     {
       id: uniqueId(),
