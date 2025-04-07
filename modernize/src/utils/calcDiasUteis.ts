@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon';
 import avancarDias from './avancarDias';
+import retrocederDias from './retrocederDias';
 
 interface Feriado {
   start_at: string; // Assumindo que vem no formato 'YYYY-MM-DD'
@@ -70,6 +71,25 @@ export function calcularDataFuturaDiasUteis(
 
   while (diasUteisContados < diasUteisDesejados) {
     dataAtual = avancarDias(dataAtual, 1);
+    if (isDiaUtil(dataAtual, feriadosSet)) {
+      diasUteisContados++;
+    }
+  }
+
+  return dataAtual;
+}
+
+export function calcularDataPassadaDiasUteis(
+  dataInicial: DateTime,
+  diasUteisDesejados: number,
+  feriados: ApiResponseFeriados
+): DateTime {
+  let dataAtual = dataInicial;
+  let diasUteisContados = 0;
+  const feriadosSet = criarSetDeFeriados(feriados);
+
+  while (diasUteisContados < diasUteisDesejados) {
+    dataAtual = retrocederDias(dataAtual, 1);
     if (isDiaUtil(dataAtual, feriadosSet)) {
       diasUteisContados++;
     }

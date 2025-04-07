@@ -31,6 +31,30 @@ const BackgroundUpdater = () => {
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
+    const fetchDataConfigsPrazos = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/super-admin/get-config-prazos`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        const configsPrazos = await response.json();
+        localStorage.setItem('configPrazos', JSON.stringify(configsPrazos));
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    };
+    
+    fetchDataConfigsPrazos();
+    
+    const intervalConfigsPrazos = setInterval(fetchDataConfigsPrazos, 900000);
+    return () => clearInterval(intervalConfigsPrazos);
+  }, []);
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
     const fetchDataClientes = async () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/clientes-consolidados`, {
