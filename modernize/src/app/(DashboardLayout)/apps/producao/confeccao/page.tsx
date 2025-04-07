@@ -1,11 +1,11 @@
 'use client';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconPlus, IconEdit, IconEye, IconTrash, IconShirt, IconBrush } from '@tabler/icons-react';
+import { IconEye, IconShirt } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -21,15 +21,10 @@ import {
   TableRow,
   Paper,
   TablePagination,
-  TableSortLabel,
   IconButton,
   Collapse,
   Box,
-  FormControl,
-  InputLabel,
   MenuItem,
-  SelectChangeEvent,
-  useTheme,
   Select,
   TextField,
   TextFieldProps,
@@ -39,7 +34,6 @@ import {
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { GridPaginationModel } from '@mui/x-data-grid';
-import { IconPrinter } from '@tabler/icons-react';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import DialogObs from './components/observacaoDialog';
@@ -53,6 +47,8 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import getBrazilTime from '@/utils/brazilTime';
 import useFetchPedidoPorData from '../impressao/components/useGetPedidoPorData';
 import { DateTime } from 'luxon';
+import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
+import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 
 const ConfeccaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -60,11 +56,10 @@ const ConfeccaoScreen = () => {
   const [openDialogObs, setOpenDialogObs] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
   const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
-  const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
-  const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
+  const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const [open, setOpen] = useState(false);
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 100,
@@ -81,7 +76,6 @@ const ConfeccaoScreen = () => {
   });
 
   const router = useRouter();
-  const theme = useTheme()
   const myTheme = useThemeMode()
 
   const accessToken = localStorage.getItem('accessToken');
@@ -109,13 +103,10 @@ const ConfeccaoScreen = () => {
   console.log(porDia);
 
   useEffect(() => {
-    if (dataPedidos && dataPedidos.data) { // Verificação adicional
+    if (dataPedidos && dataPedidos.data) {
       setAllPedidos(dataPedidos.data);
     }
   }, [dataPedidos]);
-
-  // console.log(allPedidos);
-  // total de medidas
 
   // handles
   const handleCloseSnackbar = () => {
@@ -199,7 +190,6 @@ const ConfeccaoScreen = () => {
     }
   }
 
-  // handles dos selects
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
     const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
     if (sucesso) {
@@ -219,12 +209,6 @@ const ConfeccaoScreen = () => {
     }
   }
 
-  const handleClickOpenDialogObs = async (row: ArteFinal) => {
-    // abre o dialog e passa a row
-    setSelectedRowObs(row);
-    setOpenDialogObs(true);
-  };
-
   const handleClearFilters = () => {
     setSearchNumero('');
     setStatusFilter('');
@@ -239,33 +223,77 @@ const ConfeccaoScreen = () => {
     setOpen(!open);
   };
 
-  const pedidoStatus = {
-    14: { nome: 'prensa/clandra', fila: 'C' },
-    15: { nome: 'checagem', fila: 'C' },
-    16: { nome: 'corte/preparaçao', fila: 'C' },
-    17: { nome: 'prateleriera/pendente', fila: 'C' },
-    18: { nome: 'costura/confeccao', fila: 'C' },
-    19: { nome: 'conferencia final', fila: 'C' },
-    20: { nome: 'finalizado', fila: 'C' },
-    21: { nome: 'reposição', fila: 'C' },
-  } as const;
+  const handleKeyPressObservacoes = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      const inputElement = observacoesRefs.current[id];
+      const valor = inputElement?.value || '';
+      handleEnviarObservacao(id, valor);
+    }
+  };
+
+  const handleEnviarObservacao = async (id: string, obs: string) => {
+    if (!id) {
+      console.error("ID do pedido não encontrado");
+      return;
+    }
+
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      console.error("Usuário não autenticado");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-obs-change/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ observacoes: obs }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erro ao salvar observação");
+      }
+
+      const data = await response.json();
+      setSnackbar({
+        open: true,
+        message: `${'Observação salva com sucesso.'}`,
+        severity: 'success'
+      });
+      console.log("Observação salva com sucesso:", data);
+
+      refetch();
+    } catch (error) {
+      console.error("Erro ao salvar observação:", error);
+    }
+  };
+
+  const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
+  const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
+
+  const pedidosStatusFilaD: Record<number, { nome: string; fila: 'D' }> = Object.fromEntries(
+    parsedPedidosStatus
+      .filter((item: { fila: string }) => item.fila === 'D')
+      .map(({ id, nome, fila }: { id: number; nome: string; fila: 'D' }) => [id, { nome, fila }])
+  );
+
+  const pedidoStatus: Record<number, { nome: string; fila: 'D' }> = pedidosStatusFilaD as Record<number, { nome: string; fila: 'D' }>;
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
-      // Verifica se o número do pedido corresponde ao filtro
       const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
-
-      // Verifica se o status do pedido corresponde ao filtro
       const isStatusMatch = !filters.pedido_status_id || pedido.pedido_status_id === Number(filters.pedido_status_id);
-
-      // Filtro de data (data inicial e final)
       const isDateMatch = (
         (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
         (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
       );
-
-      // Retorna true se todas as condições de filtro forem atendidas
       return isNumberMatch && isStatusMatch && isDateMatch;
     });
   }, [allPedidos, filters, dateFilter]);
@@ -290,13 +318,6 @@ const ConfeccaoScreen = () => {
       title: "Pedidos",
     },
   ];
-
-  useEffect(() => {
-    console.log("📌 Estado atualizado - selectedRowIdSidePanel:", selectedRowSidePanel);
-  }, [selectedRowSidePanel]);
-
-  // console.log(allPedidos);
-  // console.log(designers);
 
   return (
     <PageContainer title="Produção / Confecção" description="Tela de Produção da Confecção | Arte Arena">
@@ -382,8 +403,9 @@ const ConfeccaoScreen = () => {
                     renderInput={(params: TextFieldProps) => (
                       <TextField
                         {...params}
+                        error={false}
                         size="small"
-                        sx={{ width: '200px' }} // Define uma largura fixa
+                        sx={{ width: '200px' }}
                       />
                     )}
                     inputFormat="dd/MM/yyyy"
@@ -401,8 +423,9 @@ const ConfeccaoScreen = () => {
                     renderInput={(params: TextFieldProps) => (
                       <TextField
                         {...params}
+                        error={false}
                         size="small"
-                        sx={{ width: '200px' }} // Define uma largura fixa
+                        sx={{ width: '200px' }}
                       />
                     )}
                     inputFormat="dd/MM/yyyy"
@@ -432,16 +455,14 @@ const ConfeccaoScreen = () => {
                 <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
                   <TableHead>
                     <TableRow>
-                      {/* <TableCell> </TableCell> */}
                       <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
-                      <TableCell align='center' sx={{ width: '15%' }}>Produtos</TableCell>
-                      <TableCell align='center' sx={{ width: '10%' }}>Data De Entrega</TableCell>
-                      {/* <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell> */}
-                      <TableCell align='center' sx={{ width: '10%' }}>Designer</TableCell>
-                      <TableCell align='center' sx={{ width: '10%' }}>Observação</TableCell>
-                      <TableCell align='center' sx={{ width: '10%' }}>Tipo</TableCell>
-                      <TableCell align='center' sx={{ width: '10%' }}>Status</TableCell>
-                      <TableCell align='center' sx={{ width: '20%' }}>Ações</TableCell>
+                      <TableCell align='center' sx={{ width: '30%' }}>Produtos</TableCell>
+                      <TableCell align='center' sx={{ width: '5%' }}>Data De Entrega</TableCell>
+                      <TableCell align='center' sx={{ width: '5%' }}>Designer</TableCell>
+                      <TableCell align='center' sx={{ width: '5%' }}>Observação</TableCell>
+                      <TableCell align='center' sx={{ width: '3%' }}>Tipo</TableCell>
+                      <TableCell align='center' sx={{ width: '7%' }}>Status</TableCell>
+                      <TableCell align='center' sx={{ width: '15%' }}>Ações</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -472,10 +493,8 @@ const ConfeccaoScreen = () => {
                           : []
                       );
 
-                      // terminar de ver no backend se esta realmente mudando
                       const getUserNameById = (id: number | null | undefined) => {
                         return id && usersMap.has(id) ? usersMap.get(id) : row.designer_id;
-                        // return id && usersMap.has(id) ? usersMap.get(id) : "Desconhecido";
                       };
                       const designerNome = getUserNameById(row.designer_id);
 
@@ -485,17 +504,6 @@ const ConfeccaoScreen = () => {
                         3: 'Faturado',
                         4: 'Metade/Metade',
                         5: 'Amostra',
-                      } as const;
-
-                      const pedidoStatus = {
-                        14: { nome: 'prensa/clandra', fila: 'C' },
-                        15: { nome: 'checagem', fila: 'C' },
-                        16: { nome: 'corte/preparaçao', fila: 'C' },
-                        17: { nome: 'prateleriera/pendente', fila: 'C' },
-                        18: { nome: 'costura/confeccao', fila: 'C' },
-                        19: { nome: 'conferencia final', fila: 'C' },
-                        20: { nome: 'finalizado', fila: 'C' },
-                        21: { nome: 'reposição', fila: 'C' },
                       } as const;
 
                       const pedidoStatusColors: Record<number, string> = {
@@ -510,41 +518,42 @@ const ConfeccaoScreen = () => {
                         22: 'rgba(152, 0, 199, 0.8)',
                       };
 
-                      const status = pedidoStatus[row.pedido_status_id as keyof typeof pedidoStatus];
                       const tipo = row.pedido_tipo_id && pedidoTipos[row.pedido_tipo_id as keyof typeof pedidoTipos];
 
                       return (
                         <>
-                          {/* colocar as condições de data e de tipos de status e suas cores */}
-                          {/* total: {totalMedidaLinearPorPedido} */}
                           <TableRow
                             key={row.id}
-                            sx={{
-
-                            }}
                           >
 
                             <TableCell sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                              color: myTheme === 'dark' ? 'white' : 'black'
                             }}>{String(row.numero_pedido)}</TableCell>
 
-
                             <TableCell sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
-                            }} align='center'>
-                              {row.lista_produtos?.length > 0
-                                ? (
-                                  <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
-                                    {listaProdutos.map((produto, index) => (
-                                      <li key={index}>{produto.nome}</li> // Cada produto em uma nova linha
-                                    ))}
-                                  </ul>
-                                )
-                                : 'N/A'}
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                            }} align='left'>
+                              <Box
+                                sx={{
+                                  maxHeight: 80,
+                                  overflowY: 'auto',
+                                  paddingLeft: '5%',
+                                }}
+                              >
+                                {row.lista_produtos?.length > 0
+                                  ? (
+                                    <ul style={{ listStyleType: 'disc', padding: 0, margin: 0 }}>
+                                      {listaProdutos.map((produto, index) => (
+                                        <li key={index}>{produto.nome} ({produto.quantidade})</li>
+                                      ))}
+                                    </ul>
+                                  )
+                                  : 'N/A'}
+                              </Box>
                             </TableCell>
 
                             <TableCell sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                              color: myTheme === 'dark' ? 'white' : 'black',
                               backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)'
                             }} align='center'>
                               {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
@@ -552,93 +561,70 @@ const ConfeccaoScreen = () => {
                             </TableCell>
 
                             <TableCell sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black' // Branco no modo escuro e azul escuro no claro
+                              color: myTheme === 'dark' ? 'white' : 'black'
                             }} align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
 
-                            <TableCell
-                              sx={{
-                                color: myTheme === 'dark' ? 'white' : 'black'
-                              }}
-                              align="center"
-                            >
-                              <Tooltip title={row.observacoes ?? "Adicionar Observações"} placement='top'>
-                                <Button
-                                  sx={{
-                                    background: 'transparent',
-                                    color: myTheme === 'dark' ? 'white' : 'black',
-                                    borderRadius: '4px',
-                                    border: row.observacoes
-                                      ? 'none'
-                                      : (myTheme === 'dark' ? '1px solid white' : '1px solid black'),
-                                    fontSize: '12px',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    maxWidth: '150px',
-                                    display: 'flex', // Torna o botão um flex container
-                                    justifyContent: row.observacoes ? 'flex-start' : 'center', // Alinha o conteúdo à esquerda se tiver observação, senão centraliza
-                                    alignItems: 'center', // Centraliza verticalmente
-                                    textTransform: 'none', // Mantém o texto sem transformação (evita tudo maiúsculo)
-                                    '&:hover': {
-                                      backgroundColor: 'rgba(13, 12, 12, 0.1)',
-                                      color: theme.palette.text.secondary,
+                            <Tooltip title={row?.observacoes ? row.observacoes : "Adicionar Observação"} placement="left">
+                              <TableCell
+                                sx={{
+                                  color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                                  textAlign: "left",
+                                }}
+                              >
+                                <CustomTextField
+                                  key={row?.id}
+                                  label={row?.observacoes ? "Observação" : "Adicionar Observação"}
+                                  defaultValue={row?.observacoes || ""}
+                                  inputRef={(ref: HTMLInputElement | null) => {
+                                    if (row?.id && ref) {
+                                      observacoesRefs.current[row.id] = ref;
                                     }
                                   }}
-                                  onClick={() => handleClickOpenDialogObs(row)}
-                                >
-                                  {row.observacoes ?? "Adicionar Observação"}
-                                </Button>
-                              </Tooltip>
-                            </TableCell>
+                                  onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
+                                    if (row?.id) handleKeyPressObservacoes(String(row.id), event);
+                                  }}
+                                  fullWidth
+                                />
+                              </TableCell>
+                            </Tooltip>
 
                             <TableCell sx={{
                               color: myTheme === 'dark' ? 'white' : 'black',
                               backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
                             }} align='center'>{tipo ?? '-'}</TableCell>
 
-                            {/* STATUS (precisa validar qual q role do usuario pra usar ou um ou outro) */}
                             <TableCell
                               sx={{
-                                color: myTheme === 'dark' ? 'white' : 'black', // Branco no modo escuro e azul escuro no claro
+                                color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
                                 backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
                               }}
-                              align='center'>
-                              <select
+                              align='center'
+                            >
+                              <CustomSelect
                                 style={{
+                                  height: '30px',
                                   textAlign: 'center',
                                   padding: '0px',
                                   fontSize: '12px',
                                   borderRadius: '4px',
-                                  border: myTheme === 'dark' ? '1px solid white' : '1px solid black',
-                                  color: myTheme === 'dark' ? 'white' : 'black',
-                                  appearance: 'none',
-                                  WebkitAppearance: 'none',
-                                  MozAppearance: 'none',
-                                  cursor: 'pointer',
-                                  width: 'auto',
-                                  boxSizing: 'border-box',  // Para garantir que o padding não quebre a largura
                                   backgroundColor: 'transparent',
+                                  cursor: 'pointer',
+                                  width: '100%',
+                                  boxSizing: 'border-box',
                                 }}
-                                value={String(row.pedido_status_id)} // O valor precisa ser uma string
-                                onChange={(event) => {
-                                  const newStatus = event.target.value;  // O valor será do tipo string
-                                  handleStatusChange(row, Number(newStatus)); // Converte para número antes de passar para a função
+
+                                value={String(row.pedido_status_id)}
+                                onChange={(event: { target: { value: any; }; }) => {
+                                  const newStatus = event.target.value;
+                                  handleStatusChange(row, Number(newStatus));
                                 }}
                               >
                                 {Object.entries(pedidoStatus).map(([id, status]) => (
-                                  <option
-                                    key={id}
-                                    value={id}
-                                    style={{
-                                      backgroundColor: myTheme === 'dark' ? 'black' : 'white', // Define um fundo para os options
-                                      color: myTheme === 'dark' ? 'white' : 'black',
-                                    }}
-                                  >
+                                  <MenuItem key={id} value={id}>
                                     {status.nome}
-                                    {/* {status.fila} */}
-                                  </option>
+                                  </MenuItem>
                                 ))}
-                              </select>
+                              </CustomSelect>
                             </TableCell>
 
                             <TableCell align='center'>

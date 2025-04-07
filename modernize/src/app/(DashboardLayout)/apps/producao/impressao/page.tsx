@@ -109,10 +109,9 @@ const ImpressaoScreen = () => {
   console.log(dataPedidos);
 
   const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("I");
-  // console.log(errorPedido);
 
   useEffect(() => {
-    if (dataPedidos && dataPedidos.data) { // Verificação adicional
+    if (dataPedidos && dataPedidos.data) { 
       setAllPedidos(dataPedidos.data);
     }
   }, [dataPedidos]);
@@ -152,7 +151,7 @@ const ImpressaoScreen = () => {
       setSnackbar({
         open: true,
         message: `${'Impressora não atualizada.'}`,
-        severity: 'warning'
+        severity: 'error'
       });
     }
   }
@@ -171,7 +170,7 @@ const ImpressaoScreen = () => {
       setSnackbar({
         open: true,
         message: `${'Corte não atualizado.'}`,
-        severity: 'warning'
+        severity: 'error'
       });
     }
   }
@@ -348,7 +347,6 @@ const ImpressaoScreen = () => {
   );
 
   const pedidoStatus: Record<number, { nome: string; fila: 'I' }> = pedidosStatusFilaD as Record<number, { nome: string; fila: 'I' }>;
-
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
