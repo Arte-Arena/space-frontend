@@ -184,19 +184,27 @@ const OrcamentoBackofficeScreen = () => {
     setVerificandoUniformes(prev => ({ ...prev, [orcamentoId]: true }));
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${orcamentoId}`, {
+      // Usando o middleware Laravel para verificar uniformes
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes-go/${orcamentoId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${accessToken}`
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        const temConfiguracao = data.length > 0 && data.some(
-          (uniforme: any) => uniforme.configuracoes && uniforme.configuracoes.length > 0
-        );
+        // Verificando se existem jogadores configurados nos esboços
+        const temConfiguracao = data.data && 
+          data.data.length > 0 && 
+          data.data.some((uniforme: any) => 
+            uniforme.sketches && 
+            uniforme.sketches.some((sketch: any) => 
+              sketch.players && sketch.players.length > 0 && 
+              sketch.players.some((player: any) => player.ready)
+            )
+          );
         setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: temConfiguracao }));
       } else {
         setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
@@ -512,23 +520,24 @@ const OrcamentoBackofficeScreen = () => {
     setIsCheckingUniforms(true);
 
     try {
-      const uniformResponse = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${uniformId}`, {
+      const uniformResponse = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes-go/${uniformId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${accessToken}`
         },
       });
 
-      const uniformData = await uniformResponse.json();
-
-      if (uniformData && uniformData.length > 0) {
-        setExistingUniforms(true);
-      } else {
+      if (!uniformResponse.ok) {
+        console.error('Erro ao verificar uniformes existentes:', uniformResponse.status);
         setExistingUniforms(false);
+      } else {
+        const uniformData = await uniformResponse.json();
+        setExistingUniforms(uniformData && uniformData.data && uniformData.data.length > 0);
       }
     } catch (error) {
       console.error('Erro ao verificar uniformes existentes:', error);
+      setExistingUniforms(false);
     } finally {
       setIsCheckingUniforms(false);
     }
@@ -555,36 +564,33 @@ const OrcamentoBackofficeScreen = () => {
       setIsGeneratingLink(true);
       setApiError(null);
 
-      for (const sketch of sketches) {
-        const uniformData = {
-          orcamento_id: currentOrcamentoId,
-          esboco: sketch.letter,
-          quantidade_jogadores: sketch.quantity,
-          configuracoes: [],
-          package: sketch.package,
-          email: email
-        };
+      const goApiSketches = sketches.map(sketch => ({
+        id: sketch.letter,
+        player_count: sketch.quantity,
+        package_type: sketch.package,
+        players: []
+      }));
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify(uniformData),
-        });
+      const uniformData = {
+        budget_id: currentOrcamentoId,
+        client_email: email,
+        sketches: goApiSketches
+      };
 
-        const data = await response.json();
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes-go`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(uniformData),
+      });
 
-        if (!response.ok) {
-          if (response.status === 422 && data.errors) {
-            setApiError(`Erro: Já existe um esboço ${sketch.letter} para este orçamento.`);
-          } else {
-            setApiError(`Erro ao salvar o esboço ${sketch.letter}: ${data.message || 'Erro desconhecido'}`);
-          }
-          setIsGeneratingLink(false);
-          return;
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        setApiError(errorData.message || 'Erro ao salvar os esboços. Tente novamente.');
+        setIsGeneratingLink(false);
+        return;
       }
 
       await navigator.clipboard.writeText(linkUniform);
@@ -1088,13 +1094,8 @@ const OrcamentoBackofficeScreen = () => {
                                   ) : (
                                     <>
                                       <Typography variant="body2" color="success.main" sx={{ mr: 2 }}>
-                                        Link gerado e copiado!
+                                        Configuração de uniformes inserida com sucesso!
                                       </Typography>
-                                      <Button
-                                        onClick={() => navigator.clipboard.writeText(linkUniform)}
-                                      >
-                                        Copiar novamente
-                                      </Button>
                                     </>
                                   )
                                 ) : null}
