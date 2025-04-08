@@ -1,17 +1,17 @@
-const trocarStatusPedido = async (id: number | undefined, status_nome: string | undefined, refetch: () => void): Promise<boolean> => {
+const trocarEstagioPedidoArteFinal = async (id: number | undefined, estagio: string | undefined, refetch: () => void): Promise<boolean> => {
   try {
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) throw new Error("Usuário não autenticado.");
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-status-change/${id}`,
+      `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-estagio-change/${id}`,
       {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ pedido_status_nome: status_nome }),
+        body: JSON.stringify({ estagio: estagio }),
       }
     );
 
@@ -24,4 +24,4 @@ const trocarStatusPedido = async (id: number | undefined, status_nome: string | 
   }
 };
 
-export default trocarStatusPedido;
+export default trocarEstagioPedidoArteFinal;

@@ -48,6 +48,7 @@ import { ApiResponsePedidosArteFinal } from './components/types';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import deletePedidoArteFinal from './components/useDeletePedido';
 import atribuirDesigner from './components/useDeisgnerJoin';
+import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -308,7 +309,7 @@ const ArteFinalScreen = () => {
 
 
     if (confirmar) {
-      const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, 'I', refetch);
       if (sucesso) {
         console.log("Pedido enviado com sucesso!");
         setSnackbar({
@@ -334,8 +335,8 @@ const ArteFinalScreen = () => {
     }
   };
 
-  const handleStatusChange = async (row: ArteFinal, status_id: number) => {
-    const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
+  const handleStatusChange = async (row: ArteFinal, status_nome: string) => {
+    const sucesso = await trocarStatusPedido(row?.id, status_nome, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
       setSnackbar({
@@ -797,13 +798,13 @@ const ArteFinalScreen = () => {
                               }}
 
                               value={String(row.pedido_status_id)}
-                              onChange={(event: { target: { value: any; }; }) => {
+                              onChange={(event: { target: { value: string; }; }) => {
                                 const newStatus = event.target.value;
-                                handleStatusChange(row, Number(newStatus));
+                                handleStatusChange(row, newStatus);
                               }}
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
-                                <MenuItem key={id} value={id}>
+                                <MenuItem key={id} value={status.nome}>
                                   {status.nome}
                                 </MenuItem>
                               ))}
