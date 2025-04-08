@@ -40,6 +40,7 @@ import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import { format, isSameDay } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
+import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 import { useThemeMode } from '@/utils/useThemeMode';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -229,7 +230,7 @@ const ImpressaoScreen = () => {
     const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Confecção?');
 
     if (confirmar) {
-      const sucesso = await trocarStatusPedido(row?.id, 14, refetch);
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "C", refetch);
       if (sucesso) {
         setSnackbar({
           open: true,
@@ -261,8 +262,8 @@ const ImpressaoScreen = () => {
     }, 0);
   };
 
-  const handleStatusChange = async (row: ArteFinal, status_id: number) => {
-    const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
+  const handleStatusChange = async (row: ArteFinal, status_nome: string) => {
+    const sucesso = await trocarStatusPedido(row?.id, status_nome, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
       setSnackbar({
@@ -801,13 +802,13 @@ const ImpressaoScreen = () => {
                             }}
 
                             value={String(row.pedido_status_id)}
-                            onChange={(event: { target: { value: any; }; }) => {
+                            onChange={(event: { target: { value: string; }; }) => {
                               const newStatus = event.target.value;
-                              handleStatusChange(row, Number(newStatus));
+                              handleStatusChange(row, newStatus);
                             }}
                           >
                             {Object.entries(pedidoStatus).map(([id, status]) => (
-                              <MenuItem key={id} value={id}>
+                              <MenuItem key={id} value={status.nome}>
                                 {status.nome}
                               </MenuItem>
                             ))}
