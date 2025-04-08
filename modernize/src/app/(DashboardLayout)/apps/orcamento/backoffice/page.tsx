@@ -22,6 +22,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { IconTruckDelivery } from '@tabler/icons-react';
 import useAprovarPedidoStatus from './components/useAprovarPedidoStatus';
 import { logger } from '@/utils/logger';
+import Link from 'next/link';
 
 interface Pedidos {
   id: number;
@@ -928,10 +929,12 @@ const OrcamentoBackofficeScreen = () => {
                                     <Typography sx={{ ml: 2 }}>Verificando uniformes existentes...</Typography>
                                   </Box>
                                 ) : existingUniforms ? (
-                                  <Box sx={{ mt: 2, p: 1, bgcolor: 'warning.light', borderRadius: 1 }}>
-                                    <Typography variant="body1" color="warning.dark">
-                                      Já existem uniformes cadastrados para este orçamento. Não é possível adicionar ou editar esboços.
-                                    </Typography>
+                                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    <Box sx={{ mt: 2, p: 1, bgcolor: 'warning.light', borderRadius: 1 }}>
+                                      <Typography variant="body1" color="warning.dark">
+                                        Já existem uniformes cadastrados para este orçamento. Não é possível adicionar ou editar esboços.
+                                      </Typography>
+                                    </Box>
                                   </Box>
                                 ) : (
                                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 2 }}>
@@ -1074,7 +1077,11 @@ const OrcamentoBackofficeScreen = () => {
                                 )}
                               </DialogContent>
                               <DialogActions>
-                                {!existingUniforms ? (
+                                {isCheckingUniforms ? (
+                                  <Button onClick={() => setOpenUniformDialog(false)}>
+                                    Fechar
+                                  </Button>
+                                ) : !existingUniforms ? (
                                   !isLinkGenerated ? (
                                     <>
                                       <Button
@@ -1098,7 +1105,21 @@ const OrcamentoBackofficeScreen = () => {
                                       </Typography>
                                     </>
                                   )
-                                ) : null}
+                                ) : (
+                                  <>
+                                    <Button onClick={() => setOpenUniformDialog(false)}>
+                                      Fechar
+                                    </Button>
+                                    <Button 
+                                      variant="contained" 
+                                      color="primary"
+                                      component={Link}
+                                      href={`/uniforms/${currentOrcamentoId}`}
+                                    >
+                                      Visualizar Uniformes
+                                    </Button>
+                                  </>
+                                )}
                               </DialogActions>
                             </Dialog>
 
