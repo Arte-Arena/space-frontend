@@ -39,7 +39,7 @@ import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, subDays } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 import { useThemeMode } from '@/utils/useThemeMode';
@@ -53,6 +53,7 @@ import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import trocarImpressora from './components/useTrocarImpressora';
 import trocarTipoCorte from './components/useTrocarTipoCorte';
 import trocarRolo from './components/useTrocarRolo';
+import { calcularDataPassadaDiasUteis } from '@/utils/calcDiasUteis';
 
 const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -424,6 +425,15 @@ const ImpressaoScreen = () => {
     return filteredPedidos.slice(startIndex, endIndex);
   }, [filteredPedidos, paginationModel]);
 
+  function formatarDataSegura(dataISOString: string): string {
+    const dataUTC = DateTime.fromISO(dataISOString, { zone: 'utc' });
+    const dataFormatada = dataUTC.toFormat('MM/dd/yyyy');
+    return dataFormatada;
+  }
+
+  const zerarHorario = (data: Date): Date => {
+    return new Date(data.getFullYear(), data.getMonth(), data.getDate());
+  };
 
   const BCrumb = [
     {
@@ -606,15 +616,36 @@ const ImpressaoScreen = () => {
                         : row.lista_produtos
                       : [];
 
-                    // definição das datas e atrasos
-                    const dataPrevista = row?.data_prevista ? new Date(row?.data_prevista) : null;
-                    const dataAtual = getBrazilTime(); //colocar no getBrazilTime
+                    const dataPrevistaSegura = formatarDataSegura(String(row?.data_prevista));
+                    // console.log("dataPrevistaSegura: ", dataPrevistaSegura);
+                    // console.log("typeof dataPrevistaSegura: ", typeof dataPrevistaSegura);
+
+                    const dataPrevista = row?.data_prevista ? dataPrevistaSegura : '';
+                    const dataPrevistaDateTime = DateTime.fromFormat(dataPrevista, 'MM/dd/yyyy').startOf('day');
+                    const dataAtual = formatarDataSegura(zerarHorario(getBrazilTime()).toISOString());
+                    // console.log("dataAtual: ", dataAtual);
+                    // console.log("typeof dataAtual: ", typeof dataAtual);
+
+                    const localStoragePrazos = localStorage.getItem('configPrazos');
+                    const parsedPrazos = JSON.parse(localStoragePrazos || '[]');
+                    const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_impressao;
+                    // console.log("diasAntecipaProducao: ", diasAntecipaProducao);
+
+                    const feriados = localStorage.getItem('feriados');
+                    const parsedFeriados = JSON.parse(feriados || '[]');
+                    const prazoImpressao = calcularDataPassadaDiasUteis(dataPrevistaDateTime, diasAntecipaProducao, parsedFeriados);
+
                     let atraso = false;
                     let isHoje = false;
-                    if (dataPrevista && dataPrevista < dataAtual) {
+                    const dataAtualJS = new Date(dataAtual);
+                    const dataPrevistaConfeccao = new Date(String(dataPrevista));
+                    const dataPrevistaArteFinal = subDays(dataPrevistaConfeccao, diasAntecipaProducao);
+                    // console.log("typeof dataPrevistaArteFinal: ", typeof dataPrevistaArteFinal);
+                    // console.log("dataPrevistaArteFinal: ", dataPrevistaArteFinal);
+                    if (dataPrevistaArteFinal < dataAtualJS) {
                       atraso = true;
                     }
-                    if (dataPrevista && isSameDay(dataPrevista, dataAtual)) {
+                    if (isSameDay(dataPrevistaArteFinal, dataAtualJS)) {
                       isHoje = true;
                     }
 
@@ -675,7 +706,7 @@ const ImpressaoScreen = () => {
                             sx={{
                               maxHeight: 80,
                               overflowY: 'auto',
-                              paddingLeft: '5%',
+                              paddingLeft: '5`%',
                             }}
                           >
                             {row.lista_produtos?.length > 0
@@ -817,7 +848,7 @@ const ImpressaoScreen = () => {
                           color: myTheme === 'dark' ? 'white' : 'black',
                           backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)'
                         }} align='center'>
-                          {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
+                          {prazoImpressao.toFormat('dd/MM/yyyy')}
                         </TableCell>
 
                         <TableCell
