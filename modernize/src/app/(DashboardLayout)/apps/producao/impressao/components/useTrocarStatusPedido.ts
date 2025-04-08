@@ -11,7 +11,10 @@ const trocarStatusPedido = async (id: number | undefined, status_nome: string | 
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ pedido_status_nome: status_nome }),
+        body: JSON.stringify({ 
+          pedido_status_nome: status_nome,
+          estagio: "I",
+         }),
       }
     );
 

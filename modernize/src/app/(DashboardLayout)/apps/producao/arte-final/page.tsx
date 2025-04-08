@@ -335,8 +335,19 @@ const ArteFinalScreen = () => {
     }
   };
 
-  const handleStatusChange = async (row: ArteFinal, status_nome: string) => {
-    const sucesso = await trocarStatusPedido(row?.id, status_nome, refetch);
+  const handleStatusChange = async (row: ArteFinal, status_id: number) => {
+    const statusEncontrado = pedidoStatus[status_id];
+
+    if (!statusEncontrado) {
+      console.error("Status não encontrado para o id fornecido:", status_id);
+      setSnackbar({
+        open: true,
+        message: 'Status não encontrado.',
+        severity: 'warning'
+      });
+      return;
+    }
+    const sucesso = await trocarStatusPedido(row?.id, statusEncontrado.nome, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
       setSnackbar({
@@ -407,13 +418,13 @@ const ArteFinalScreen = () => {
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
 
-  const pedidosStatusFilaD: Record<number, { nome: string; fila: 'D' }> = Object.fromEntries(
+  const pedidosStatusFilaD: Record<number, { id: number, nome: string; fila: 'D' }> = Object.fromEntries(
     parsedPedidosStatus
       .filter((item: { fila: string }) => item.fila === 'D')
       .map(({ id, nome, fila }: { id: number; nome: string; fila: 'D' }) => [id, { nome, fila }])
   );
 
-  const pedidoStatus: Record<number, { nome: string; fila: 'D' }> = pedidosStatusFilaD as Record<number, { nome: string; fila: 'D' }>;
+  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'D' }> = pedidosStatusFilaD as Record<number, { id: number, nome: string; fila: 'D' }>;
 
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
@@ -798,13 +809,13 @@ const ArteFinalScreen = () => {
                               }}
 
                               value={String(row.pedido_status_id)}
-                              onChange={(event: { target: { value: string; }; }) => {
+                              onChange={(event: { target: { value: number; }; }) => {
                                 const newStatus = event.target.value;
                                 handleStatusChange(row, newStatus);
                               }}
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
-                                <MenuItem key={id} value={status.nome}>
+                                <MenuItem key={id} value={id}>
                                   {status.nome}
                                 </MenuItem>
                               ))}
