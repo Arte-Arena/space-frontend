@@ -13,7 +13,7 @@ const trocarStatusPedido = async (id: number | undefined, status_nome: string | 
         },
         body: JSON.stringify({ 
           pedido_status_nome: status_nome,
-          estagio: "C",
+          estagio: "F",
          }),
       }
     );
