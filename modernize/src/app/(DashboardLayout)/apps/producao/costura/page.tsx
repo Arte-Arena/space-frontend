@@ -49,7 +49,7 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 
-const ConfeccaoScreen = () => {
+const CosturaScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
@@ -96,6 +96,8 @@ const ConfeccaoScreen = () => {
   });
 
   const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("C");
+  console.log(errorPedido);
+  console.log(porDia);
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) {
@@ -323,19 +325,19 @@ const ConfeccaoScreen = () => {
       title: "Home",
     },
     {
-      to: "/apps/produção/",
+      to: "/apps/producao/",
       title: "produção",
     },
     {
-      to: "/apps/produção/pedidos",
+      to: "/apps/producao/pedidos",
       title: "Pedidos",
     },
   ];
 
   return (
-    <PageContainer title="Produção / Confecção" description="Tela de Produção da Confecção | Arte Arena">
+    <PageContainer title="Produção / Costura" description="Tela de Produção da Costura | Arte Arena">
       <>
-        <Breadcrumb title="Produção / Confecção" items={BCrumb} />
+        <Breadcrumb title="Produção / Costura" items={BCrumb} />
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2, }}>
           <Typography variant="body1" sx={{ fontWeight: 500, alignItems: 'center' }}>
             <span style={{ fontWeight: 'bold', fontSize: 16 }}>Por Dia: </span>
@@ -374,7 +376,7 @@ const ConfeccaoScreen = () => {
             </TableContainer>
           </Collapse>
         </Box>
-        <ParentCard title="Confecção">
+        <ParentCard title="Costura">
           <>
             <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
               {/* Campo de Número do Pedido */}
@@ -733,4 +735,4 @@ const ConfeccaoScreen = () => {
   );
 };
 
-export default ConfeccaoScreen;
+export default CosturaScreen;
