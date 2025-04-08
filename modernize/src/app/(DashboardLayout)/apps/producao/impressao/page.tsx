@@ -151,8 +151,6 @@ const ImpressaoScreen = () => {
 
   };
 
-
-
   const handleKeyPressObservacoes = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       const inputElement = observacoesRefs.current[id];

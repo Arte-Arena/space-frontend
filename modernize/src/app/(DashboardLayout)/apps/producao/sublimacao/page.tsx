@@ -97,8 +97,6 @@ const SublimacaoScreen = () => {
   });
 
   const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("C");
-  console.log(errorPedido);
-  console.log(porDia);
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) {
@@ -326,19 +324,19 @@ const SublimacaoScreen = () => {
       title: "Home",
     },
     {
-      to: "/apps/produção/",
+      to: "/apps/producao/",
       title: "produção",
     },
     {
-      to: "/apps/produção/pedidos",
+      to: "/apps/producao/pedidos",
       title: "Pedidos",
     },
   ];
 
   return (
-    <PageContainer title="Produção / Confecção" description="Tela de Produção da Confecção | Arte Arena">
+    <PageContainer title="Produção / Sublimação" description="Tela de Produção da Sublimação | Arte Arena">
       <>
-        <Breadcrumb title="Produção / Confecção" items={BCrumb} />
+        <Breadcrumb title="Produção / Sublimação" items={BCrumb} />
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2, }}>
           <Typography variant="body1" sx={{ fontWeight: 500, alignItems: 'center' }}>
             <span style={{ fontWeight: 'bold', fontSize: 16 }}>Por Dia: </span>
@@ -377,7 +375,7 @@ const SublimacaoScreen = () => {
             </TableContainer>
           </Collapse>
         </Box>
-        <ParentCard title="Confecção">
+        <ParentCard title="Sublimação">
           <>
             <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
               {/* Campo de Número do Pedido */}

@@ -25,7 +25,6 @@ import {
   Collapse,
   Box,
   MenuItem,
-  Select,
   TextField,
   TextFieldProps,
   AlertProps,
@@ -97,8 +96,6 @@ const ConfeccaoScreen = () => {
   });
 
   const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("C");
-  console.log(errorPedido);
-  console.log(porDia);
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) {
