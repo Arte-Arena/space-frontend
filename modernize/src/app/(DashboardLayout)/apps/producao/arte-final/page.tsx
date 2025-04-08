@@ -48,6 +48,7 @@ import { ApiResponsePedidosArteFinal } from './components/types';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import deletePedidoArteFinal from './components/useDeletePedido';
 import atribuirDesigner from './components/useDeisgnerJoin';
+import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 
 const ArteFinalScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -308,7 +309,7 @@ const ArteFinalScreen = () => {
 
 
     if (confirmar) {
-      const sucesso = await trocarStatusPedido(row?.id, 8, refetch);
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, 'I', refetch);
       if (sucesso) {
         console.log("Pedido enviado com sucesso!");
         setSnackbar({
@@ -335,7 +336,18 @@ const ArteFinalScreen = () => {
   };
 
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
-    const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
+    const statusEncontrado = pedidoStatus[status_id];
+
+    if (!statusEncontrado) {
+      console.error("Status não encontrado para o id fornecido:", status_id);
+      setSnackbar({
+        open: true,
+        message: 'Status não encontrado.',
+        severity: 'warning'
+      });
+      return;
+    }
+    const sucesso = await trocarStatusPedido(row?.id, statusEncontrado.nome, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
       setSnackbar({
@@ -406,13 +418,13 @@ const ArteFinalScreen = () => {
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
 
-  const pedidosStatusFilaD: Record<number, { nome: string; fila: 'D' }> = Object.fromEntries(
+  const pedidosStatusFilaD: Record<number, { id: number, nome: string; fila: 'D' }> = Object.fromEntries(
     parsedPedidosStatus
       .filter((item: { fila: string }) => item.fila === 'D')
       .map(({ id, nome, fila }: { id: number; nome: string; fila: 'D' }) => [id, { nome, fila }])
   );
 
-  const pedidoStatus: Record<number, { nome: string; fila: 'D' }> = pedidosStatusFilaD as Record<number, { nome: string; fila: 'D' }>;
+  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'D' }> = pedidosStatusFilaD as Record<number, { id: number, nome: string; fila: 'D' }>;
 
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
@@ -797,9 +809,9 @@ const ArteFinalScreen = () => {
                               }}
 
                               value={String(row.pedido_status_id)}
-                              onChange={(event: { target: { value: any; }; }) => {
+                              onChange={(event: { target: { value: number; }; }) => {
                                 const newStatus = event.target.value;
-                                handleStatusChange(row, Number(newStatus));
+                                handleStatusChange(row, newStatus);
                               }}
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (

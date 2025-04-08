@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconEye, IconShirt, IconNeedleThread } from '@tabler/icons-react';
+import { IconEye, IconShirt, IconNeedleThread, IconEraser } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -32,6 +32,7 @@ import {
   AlertProps,
   Snackbar,
   Alert,
+  Divider,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { GridPaginationModel } from '@mui/x-data-grid';
@@ -40,6 +41,7 @@ import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import { format, isSameDay } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
+import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 import { useThemeMode } from '@/utils/useThemeMode';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -54,10 +56,7 @@ import trocarTipoCorte from './components/useTrocarTipoCorte';
 const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
-  const [openDialogObs, setOpenDialogObs] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
-  const [selectedRowObs, setSelectedRowObs] = useState<ArteFinal | null>(null);
-  const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
@@ -79,7 +78,6 @@ const ImpressaoScreen = () => {
   });
 
   const router = useRouter();
-  const theme = useTheme()
   const myTheme = useThemeMode()
 
   const accessToken = localStorage.getItem('accessToken');
@@ -111,7 +109,7 @@ const ImpressaoScreen = () => {
   const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("I");
 
   useEffect(() => {
-    if (dataPedidos && dataPedidos.data) { 
+    if (dataPedidos && dataPedidos.data) {
       setAllPedidos(dataPedidos.data);
     }
   }, [dataPedidos]);
@@ -229,7 +227,7 @@ const ImpressaoScreen = () => {
     const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Confecção?');
 
     if (confirmar) {
-      const sucesso = await trocarStatusPedido(row?.id, 14, refetch);
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "C", refetch);
       if (sucesso) {
         setSnackbar({
           open: true,
@@ -262,7 +260,21 @@ const ImpressaoScreen = () => {
   };
 
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
-    const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
+    console.log("Status selecionado ID:", status_id);
+    const statusEncontrado = pedidoStatus[status_id];
+
+    if (!statusEncontrado) {
+      console.error("Status não encontrado para o id fornecido:", status_id);
+      setSnackbar({
+        open: true,
+        message: 'Status não encontrado.',
+        severity: 'warning'
+      });
+      return;
+    }
+    console.log("Nome selecionado:", statusEncontrado);
+
+    const sucesso = await trocarStatusPedido(row?.id, statusEncontrado.nome, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
       setSnackbar({
@@ -347,13 +359,13 @@ const ImpressaoScreen = () => {
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
 
-  const pedidosStatusFilaD: Record<number, { nome: string; fila: 'I' }> = Object.fromEntries(
+  const pedidosStatusFilaD: Record<number, { id: number, nome: string; fila: 'I' }> = Object.fromEntries(
     parsedPedidosStatus
       .filter((item: { fila: string }) => item.fila === 'I')
       .map(({ id, nome, fila }: { id: number; nome: string; fila: 'I' }) => [id, { nome, fila }])
   );
 
-  const pedidoStatus: Record<number, { nome: string; fila: 'I' }> = pedidosStatusFilaD as Record<number, { nome: string; fila: 'I' }>;
+  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'I' }> = pedidosStatusFilaD as Record<number, { id: number, nome: string; fila: 'I' }>;
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
@@ -464,7 +476,7 @@ const ImpressaoScreen = () => {
               >
                 <MenuItem value="">Todos os Status</MenuItem>
                 {Object.entries(pedidoStatus).map(([id, status]) => (
-                  <MenuItem key={id} value={id}>
+                  <MenuItem key={id} value={status.nome}>
                     {status.nome}
                   </MenuItem>
                 ))}
@@ -692,6 +704,10 @@ const ImpressaoScreen = () => {
                             <MenuItem key={2} value={2}>
                               {2}
                             </MenuItem>
+                            <Divider />
+                            <MenuItem key={"clear"} value={""}>
+                              <IconEraser size={15} style={{ marginRight: '6px' }} /> Limpar
+                            </MenuItem>
                           </CustomSelect>
                         </TableCell>
 
@@ -728,8 +744,9 @@ const ImpressaoScreen = () => {
                             <MenuItem key={2} value={"Mesa"}>
                               Mesa
                             </MenuItem>
-                            <MenuItem key={3} value={"Normal"}>
-                              Normal
+                            <Divider/>
+                            <MenuItem key={"clear"} value={""}>
+                              <IconEraser size={15} style={{ marginRight: '6px'}}/> Limpar
                             </MenuItem>
                           </CustomSelect>
                         </TableCell>
@@ -801,9 +818,9 @@ const ImpressaoScreen = () => {
                             }}
 
                             value={String(row.pedido_status_id)}
-                            onChange={(event: { target: { value: any; }; }) => {
+                            onChange={(event: { target: { value: number; }; }) => {
                               const newStatus = event.target.value;
-                              handleStatusChange(row, Number(newStatus));
+                              handleStatusChange(row, newStatus);
                             }}
                           >
                             {Object.entries(pedidoStatus).map(([id, status]) => (
@@ -814,30 +831,46 @@ const ImpressaoScreen = () => {
                           </CustomSelect>
                         </TableCell>
 
-                        <TableCell align='center'>
-                          <Tooltip title="Ver Detalhes">
-                            <IconButton onClick={() => handleVerDetalhes(row)}>
-                              <IconEye />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Lista de Uniformes">
-                            <IconButton onClick={() => handleListaUniformes(row)}>
-                              <IconShirt />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
-                            <IconButton
-                              onClick={() => handleLinkTrello(row)}
-                              disabled={row.url_trello === null}
-                            >
-                              <IconBrandTrello />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Enviar para Confecção!">
-                            <IconButton onClick={() => handleEnviarConfeccao(row)}>
-                              <IconNeedleThread />
-                            </IconButton>
-                          </Tooltip>
+                        <TableCell
+                          sx={{
+                            color: (theme: any) => theme.palette.mode === "dark" ? "white" : "black",
+                          }}
+                          align="center"
+                        >
+                          <Grid container spacing={0} justifyContent="left">
+                            <Grid item xs={5} sm={5} md={5} lg={5}>
+                              <Tooltip title="Ver Detalhes">
+                                <IconButton onClick={() => handleVerDetalhes(row)}>
+                                  <IconEye />
+                                </IconButton>
+                              </Tooltip>
+                            </Grid>
+                            <Grid item xs={5} sm={5} md={5} lg={5}>
+
+                              <Tooltip title="Lista de Uniformes">
+                                <IconButton onClick={() => handleListaUniformes(row)}>
+                                  <IconShirt />
+                                </IconButton>
+                              </Tooltip>
+                            </Grid>
+                            <Grid item xs={5} sm={5} md={5} lg={5}>
+                              <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
+                                <IconButton
+                                  onClick={() => handleLinkTrello(row)}
+                                  disabled={row.url_trello === null}
+                                >
+                                  <IconBrandTrello />
+                                </IconButton>
+                              </Tooltip>
+                            </Grid>
+                            <Grid item xs={5} sm={5} md={5} lg={5}>
+                              <Tooltip title="Enviar para Confecção!">
+                                <IconButton onClick={() => handleEnviarConfeccao(row)}>
+                                  <IconNeedleThread />
+                                </IconButton>
+                              </Tooltip>
+                            </Grid>
+                          </Grid>
                         </TableCell>
                       </TableRow>
                     );
