@@ -12,6 +12,7 @@ interface ArteFinal {
     prazo_arte_final: Date;
     prazo_confeccao: Date;
     lista_produtos: Produto[];
+    confeccao_sublimacao: Sublimacao;
     observacao: string;
     rolo: string;
     estagio?: string | null;
@@ -50,6 +51,14 @@ interface PedidoStatus {
     id: number;
     nome: string;
     fila: string;
+}
+
+interface Sublimacao {
+    id: number;
+    pedido_arte_final_id: number;
+    status: string;
+    created_at: Date | null;
+    updated_at: Date | null;
 }
 
 interface PedidoTipo {
