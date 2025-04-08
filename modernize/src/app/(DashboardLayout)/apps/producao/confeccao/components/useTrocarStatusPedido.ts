@@ -1,4 +1,4 @@
-const trocarStatusPedido = async (id: number | undefined, status_id: number | undefined, refetch: () => void): Promise<boolean> => {
+const trocarStatusPedido = async (id: number | undefined, status_nome: string | undefined, refetch: () => void): Promise<boolean> => {
   try {
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) throw new Error("Usuário não autenticado.");
@@ -11,7 +11,10 @@ const trocarStatusPedido = async (id: number | undefined, status_id: number | un
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ pedido_status_id: status_id }),
+        body: JSON.stringify({ 
+          pedido_status_nome: status_nome,
+          estagio: "C",
+         }),
       }
     );
 

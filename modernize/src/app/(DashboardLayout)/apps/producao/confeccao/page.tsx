@@ -49,6 +49,7 @@ import useFetchPedidoPorData from '../impressao/components/useGetPedidoPorData';
 import { DateTime } from 'luxon';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
+import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 
 const ConfeccaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -166,7 +167,7 @@ const ConfeccaoScreen = () => {
   const handleEnviarEntrega = async (row: ArteFinal) => {
     const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Expedição?');
     if (confirmar) {
-      const sucesso = await trocarStatusPedido(row?.id, 22, refetch);
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "E", refetch);
       if (sucesso) {
         setSnackbar({
           open: true,
@@ -191,7 +192,18 @@ const ConfeccaoScreen = () => {
   }
 
   const handleStatusChange = async (row: ArteFinal, status_id: number) => {
-    const sucesso = await trocarStatusPedido(row?.id, status_id, refetch);
+    const statusEncontrado = pedidoStatus[status_id];
+
+    if (!statusEncontrado) {
+      console.error("Status não encontrado para o id fornecido:", status_id);
+      setSnackbar({
+        open: true,
+        message: 'Status não encontrado.',
+        severity: 'warning'
+      });
+      return;
+    }
+    const sucesso = await trocarStatusPedido(row?.id, statusEncontrado.nome, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
       setSnackbar({
@@ -284,13 +296,13 @@ const ConfeccaoScreen = () => {
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
 
-  const pedidosStatusFilaD: Record<number, { nome: string; fila: 'C' }> = Object.fromEntries(
+  const pedidosStatusFilaD: Record<number, { id: number, nome: string; fila: 'C' }> = Object.fromEntries(
     parsedPedidosStatus
       .filter((item: { fila: string }) => item.fila === 'C')
       .map(({ id, nome, fila }: { id: number; nome: string; fila: 'C' }) => [id, { nome, fila }])
   );
 
-  const pedidoStatus: Record<number, { nome: string; fila: 'C' }> = pedidosStatusFilaD as Record<number, { nome: string; fila: 'C' }>;
+  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'C' }> = pedidosStatusFilaD as Record<number, { id: number, nome: string; fila: 'C' }>;
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
@@ -384,10 +396,10 @@ const ConfeccaoScreen = () => {
 
               {/* Select de Status */}
               <Grid item>
-                <Select
+                <CustomSelect
                   sx={{ minWidth: '150px' }} // Define uma largura mínima
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setStatusFilter(e.target.value)}
                   displayEmpty
                   size="small"
                 >
@@ -397,7 +409,7 @@ const ConfeccaoScreen = () => {
                       {status.nome}
                     </MenuItem>
                   ))}
-                </Select>
+                </CustomSelect>
               </Grid>
 
               {/* DatePicker - Data Inicial */}
@@ -463,10 +475,10 @@ const ConfeccaoScreen = () => {
                   <TableHead>
                     <TableRow>
                       <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
-                      <TableCell align='center' sx={{ width: '30%' }}>Produtos</TableCell>
+                      <TableCell align='center' sx={{ width: '33%' }}>Produtos</TableCell>
                       <TableCell align='center' sx={{ width: '5%' }}>Data De Entrega</TableCell>
-                      <TableCell align='center' sx={{ width: '5%' }}>Designer</TableCell>
-                      <TableCell align='center' sx={{ width: '20%' }}>Observação</TableCell>
+                      <TableCell align='center' sx={{ width: '7%' }}>Designer</TableCell>
+                      <TableCell align='center' sx={{ width: '25%' }}>Observação</TableCell>
                       <TableCell align='center' sx={{ width: '3%' }}>Tipo</TableCell>
                       <TableCell align='center' sx={{ width: '7%' }}>Status</TableCell>
                       <TableCell align='center' sx={{ width: '15%' }}>Ações</TableCell>
@@ -520,143 +532,155 @@ const ConfeccaoScreen = () => {
                       const tipo = row.pedido_tipo_id && pedidoTiposMapping[row.pedido_tipo_id as keyof typeof pedidoTiposMapping];
 
                       return (
-                        <>
-                          <TableRow
-                            key={row.id}
-                          >
+                        <TableRow
+                          key={row.id}
+                        >
 
-                            <TableCell sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black'
-                            }}>{String(row.numero_pedido)}</TableCell>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black'
+                          }}>{String(row.numero_pedido)}</TableCell>
 
-                            <TableCell sx={{
-                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                            }} align='left'>
-                              <Box
-                                sx={{
-                                  maxHeight: 80,
-                                  overflowY: 'auto',
-                                  paddingLeft: '5%',
-                                }}
-                              >
-                                {row.lista_produtos?.length > 0
-                                  ? (
-                                    <ul style={{ listStyleType: 'disc', padding: 0, margin: 0 }}>
-                                      {listaProdutos.map((produto, index) => (
-                                        <li key={index}>{produto.nome} ({produto.quantidade})</li>
-                                      ))}
-                                    </ul>
-                                  )
-                                  : 'N/A'}
-                              </Box>
-                            </TableCell>
+                          <TableCell sx={{
+                            color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                          }} align='left'>
+                            <Box
+                              sx={{
+                                maxHeight: 80,
+                                overflowY: 'auto',
+                                paddingLeft: '5%',
+                              }}
+                            >
+                              {row.lista_produtos?.length > 0
+                                ? (
+                                  <ul style={{ listStyleType: 'disc', padding: 0, margin: 0 }}>
+                                    {listaProdutos.map((produto, index) => (
+                                      <li key={index}>{produto.nome} ({produto.quantidade})</li>
+                                    ))}
+                                  </ul>
+                                )
+                                : 'N/A'}
+                            </Box>
+                          </TableCell>
 
-                            <TableCell sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black',
-                              backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)'
-                            }} align='center'>
-                              {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
-                              {atraso && <span> (Atraso)</span>}
-                            </TableCell>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black',
+                            backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)'
+                          }} align='center'>
+                            {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
+                          </TableCell>
 
-                            <TableCell sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black'
-                            }} align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black'
+                          }} align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
 
-                            <Tooltip title={row?.observacoes ? row.observacoes : "Adicionar Observação"} placement="left">
-                              <TableCell
-                                sx={{
-                                  color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                                  textAlign: "left",
-                                }}
-                              >
-                                <CustomTextField
-                                  key={row?.id}
-                                  label={row?.observacoes ? "Observação" : "Adicionar Observação"}
-                                  defaultValue={row?.observacoes || ""}
-                                  inputRef={(ref: HTMLInputElement | null) => {
-                                    if (row?.id && ref) {
-                                      observacoesRefs.current[row.id] = ref;
-                                    }
-                                  }}
-                                  onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
-                                    if (row?.id) handleKeyPressObservacoes(String(row.id), event);
-                                  }}
-                                  fullWidth
-                                />
-                              </TableCell>
-                            </Tooltip>
-
-                            <TableCell sx={{
-                              color: myTheme === 'dark' ? 'white' : 'black',
-                              backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
-                            }} align='center'>{tipo ?? '-'}</TableCell>
-
+                          <Tooltip title={row?.observacoes ? row.observacoes : "Adicionar Observação"} placement="left">
                             <TableCell
                               sx={{
                                 color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                                backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
+                                textAlign: "left",
                               }}
-                              align='center'
                             >
-                              <CustomSelect
-                                style={{
-                                  height: '30px',
-                                  textAlign: 'center',
-                                  padding: '0px',
-                                  fontSize: '12px',
-                                  borderRadius: '4px',
-                                  backgroundColor: 'transparent',
-                                  cursor: 'pointer',
-                                  width: '100%',
-                                  boxSizing: 'border-box',
+                              <CustomTextField
+                                key={row?.id}
+                                label={row?.observacoes ? "Observação" : "Adicionar Observação"}
+                                defaultValue={row?.observacoes || ""}
+                                inputRef={(ref: HTMLInputElement | null) => {
+                                  if (row?.id && ref) {
+                                    observacoesRefs.current[row.id] = ref;
+                                  }
                                 }}
-
-                                value={String(row.pedido_status_id)}
-                                onChange={(event: { target: { value: any; }; }) => {
-                                  const newStatus = event.target.value;
-                                  handleStatusChange(row, Number(newStatus));
+                                onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
+                                  if (row?.id) handleKeyPressObservacoes(String(row.id), event);
                                 }}
-                              >
-                                {Object.entries(pedidoStatus).map(([id, status]) => (
-                                  <MenuItem key={id} value={id}>
-                                    {status.nome}
-                                  </MenuItem>
-                                ))}
-                              </CustomSelect>
+                                fullWidth
+                              />
                             </TableCell>
+                          </Tooltip>
 
-                            <TableCell align='center'>
-                              <Tooltip title="Ver Detalhes">
-                                <IconButton onClick={() => handleVerDetalhes(row)}>
-                                  <IconEye />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
-                                <IconButton
-                                  onClick={() => handleLinkTrello(row)}
-                                  disabled={row.url_trello === null}
-                                >
-                                  <IconBrandTrello />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Lista de Uniformes">
-                                <IconButton onClick={() => handleListaUniformes(row)}>
-                                  <IconShirt />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Enviar para Expedição">
-                                <IconButton onClick={() => handleEnviarEntrega(row)}>
-                                  <IconDirectionSign />
-                                </IconButton>
-                              </Tooltip>
-                            </TableCell>
-                          </TableRow>
-                        </>
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black',
+                            backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
+                          }} align='center'>{tipo ?? '-'}</TableCell>
+
+                          <TableCell
+                            sx={{
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                              backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
+                            }}
+                            align='center'
+                          >
+                            <CustomSelect
+                              style={{
+                                height: '30px',
+                                textAlign: 'center',
+                                padding: '0px',
+                                fontSize: '12px',
+                                borderRadius: '4px',
+                                backgroundColor: 'transparent',
+                                cursor: 'pointer',
+                                width: '100%',
+                                boxSizing: 'border-box',
+                              }}
+
+                              value={String(row.pedido_status_id)}
+                              onChange={(event: { target: { value: number; }; }) => {
+                                const newStatus = event.target.value;
+                                handleStatusChange(row, newStatus);
+                              }}
+                            >
+                              {Object.entries(pedidoStatus).map(([id, status]) => (
+                                <MenuItem key={id} value={id}>
+                                  {status.nome}
+                                </MenuItem>
+                              ))}
+                            </CustomSelect>
+                          </TableCell>
+
+                          <TableCell
+                            sx={{
+                              color: (theme: any) => theme.palette.mode === "dark" ? "white" : "black",
+                            }}
+                            align="center"
+                          >
+                            <Grid container spacing={0} justifyContent="left">
+                              <Grid item xs={5} sm={5} md={5} lg={5}>
+                                <Tooltip title="Ver Detalhes">
+                                  <IconButton onClick={() => handleVerDetalhes(row)}>
+                                    <IconEye />
+                                  </IconButton>
+                                </Tooltip>
+                              </Grid>
+                              <Grid item xs={5} sm={5} md={5} lg={5}>
+
+                                <Tooltip title="Lista de Uniformes">
+                                  <IconButton onClick={() => handleListaUniformes(row)}>
+                                    <IconShirt />
+                                  </IconButton>
+                                </Tooltip>
+                              </Grid>
+                              <Grid item xs={5} sm={5} md={5} lg={5}>
+                                <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
+                                  <IconButton
+                                    onClick={() => handleLinkTrello(row)}
+                                    disabled={row.url_trello === null}
+                                  >
+                                    <IconBrandTrello />
+                                  </IconButton>
+                                </Tooltip>
+                              </Grid>
+                              <Grid item xs={5} sm={5} md={5} lg={5}>
+                                <Tooltip title="Enviar para Expedição">
+                                  <IconButton onClick={() => handleEnviarEntrega(row)}>
+                                    <IconDirectionSign />
+                                  </IconButton>
+                                </Tooltip>
+                              </Grid>
+                            </Grid>
+                          </TableCell>
+                        </TableRow>
                       );
                     })}
                   </TableBody>
-
                 </Table>
                 <TablePagination
                   rowsPerPageOptions={[15, 25, 50, 100, 200]}
@@ -670,8 +694,6 @@ const ConfeccaoScreen = () => {
               </TableContainer>
             )}
             <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
-            <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
-
             <Snackbar
               open={snackbar.open}
               autoHideDuration={6000}
