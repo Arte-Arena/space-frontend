@@ -25,7 +25,6 @@ import {
   Collapse,
   Box,
   MenuItem,
-  Select,
   TextField,
   TextFieldProps,
   AlertProps,
@@ -44,13 +43,13 @@ import { IconDirectionSign } from '@tabler/icons-react';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import getBrazilTime from '@/utils/brazilTime';
-import useFetchPedidoPorData from '../impressao/components/useGetPedidoPorData';
+import useFetchPedidoPorData from '../../impressao/components/useGetPedidoPorData';
 import { DateTime } from 'luxon';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 
-const SublimacaoScreen = () => {
+const CosturaScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
@@ -97,6 +96,8 @@ const SublimacaoScreen = () => {
   });
 
   const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("C");
+  console.log(errorPedido);
+  console.log(porDia);
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) {
@@ -334,9 +335,9 @@ const SublimacaoScreen = () => {
   ];
 
   return (
-    <PageContainer title="Produção / Sublimação" description="Tela de Produção da Sublimação | Arte Arena">
+    <PageContainer title="Produção / Costura" description="Tela de Produção da Costura | Arte Arena">
       <>
-        <Breadcrumb title="Produção / Sublimação" items={BCrumb} />
+        <Breadcrumb title="Produção / Costura" items={BCrumb} />
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2, }}>
           <Typography variant="body1" sx={{ fontWeight: 500, alignItems: 'center' }}>
             <span style={{ fontWeight: 'bold', fontSize: 16 }}>Por Dia: </span>
@@ -375,7 +376,7 @@ const SublimacaoScreen = () => {
             </TableContainer>
           </Collapse>
         </Box>
-        <ParentCard title="Sublimação">
+        <ParentCard title="Costura">
           <>
             <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
               {/* Campo de Número do Pedido */}
@@ -734,4 +735,4 @@ const SublimacaoScreen = () => {
   );
 };
 
-export default SublimacaoScreen;
+export default CosturaScreen;
