@@ -52,6 +52,7 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import trocarImpressora from './components/useTrocarImpressora';
 import trocarTipoCorte from './components/useTrocarTipoCorte';
+import trocarRolo from './components/useTrocarRolo';
 
 const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -63,6 +64,7 @@ const ImpressaoScreen = () => {
   const [open, setOpen] = useState(false);
   const [diasAntecipaProducao, setDiasAntecipaProducao] = useState<number>(0);
   const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+  const roloRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
     pageSize: 100,
     page: 0,
@@ -113,6 +115,42 @@ const ImpressaoScreen = () => {
       setAllPedidos(dataPedidos.data);
     }
   }, [dataPedidos]);
+
+  const handleKeyPressRolo = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      const inputElement = roloRefs.current[id];
+      const valor = inputElement?.value || '';
+      handleEnviarRolo(id, valor);
+    }
+  };
+
+  const handleEnviarRolo = async (id: string, rolo: string) => {
+    if (!id) {
+      console.error("ID do pedido não encontrado");
+      return;
+    }
+
+    const sucesso = await trocarRolo(Number(id), Number(rolo), refetch);
+
+    if (sucesso) {
+      console.log("Rolo atualizado com sucesso!");
+      setSnackbar({
+        open: true,
+        message: `✅ ${'Sucesso!'}`,
+        severity: 'success'
+      });
+    } else {
+      console.log("Falha ao trocar Rolo.");
+      setSnackbar({
+        open: true,
+        message: `${'Rolo não atualizada.'}`,
+        severity: 'error'
+      });
+    }
+
+  };
+
+
 
   const handleKeyPressObservacoes = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -547,10 +585,11 @@ const ImpressaoScreen = () => {
                   <TableRow>
                     {/* <TableCell> </TableCell> */}
                     <TableCell align='center' sx={{ width: '2%' }}>N° Pedido</TableCell>
-                    <TableCell align='center' sx={{ width: '30%' }}>Produtos</TableCell>
+                    <TableCell align='center' sx={{ width: '25%' }}>Produtos</TableCell>
                     <TableCell align='center' sx={{ width: '5%' }}>Medida Linear</TableCell>
                     <TableCell align='center' sx={{ width: '5%' }}>Impressora</TableCell>
                     <TableCell align='center' sx={{ width: '5%' }}>Tipo de corte</TableCell>
+                    <TableCell align='center' sx={{ width: '5%' }}>Rolo</TableCell>
                     <TableCell align='center' sx={{ width: '5%' }}>Data De Entrega</TableCell>
                     <TableCell align='center' sx={{ width: '5%' }}>Designer</TableCell>
                     <TableCell align='center' sx={{ width: '20%' }}>Observação</TableCell>
@@ -744,19 +783,41 @@ const ImpressaoScreen = () => {
                             <MenuItem key={2} value={"Mesa"}>
                               Mesa
                             </MenuItem>
-                            <Divider/>
+                            <Divider />
                             <MenuItem key={"clear"} value={""}>
-                              <IconEraser size={15} style={{ marginRight: '6px'}}/> Limpar
+                              <IconEraser size={15} style={{ marginRight: '6px' }} /> Limpar
                             </MenuItem>
                           </CustomSelect>
                         </TableCell>
+
+                        <Tooltip title={row?.rolo ? "" : "Adicionar Rolo"} placement="left">
+                          <TableCell
+                            sx={{
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                              textAlign: "left",
+                            }}
+                          >
+                            <CustomTextField
+                              key={row?.id}
+                              defaultValue={row?.rolo || ""}
+                              inputRef={(ref: HTMLInputElement | null) => {
+                                if (row?.id && ref) {
+                                  roloRefs.current[row.id] = ref;
+                                }
+                              }}
+                              onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
+                                if (row?.id) handleKeyPressRolo(String(row.id), event);
+                              }}
+                              fullWidth
+                            />
+                          </TableCell>
+                        </Tooltip>
 
                         <TableCell sx={{
                           color: myTheme === 'dark' ? 'white' : 'black',
                           backgroundColor: atraso ? 'rgba(255, 31, 53, 0.64)' : isHoje ? 'rgba(0, 255, 0, 0.64)' : 'rgba(1, 152, 1, 0.64)'
                         }} align='center'>
                           {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
-                          {atraso && <span> (Atraso)</span>}
                         </TableCell>
 
                         <TableCell
