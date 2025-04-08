@@ -118,6 +118,7 @@ const ArteFinalScreen = () => {
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) {
+      console.log(dataPedidos.data);
       setAllPedidos(dataPedidos.data);
     }
   }, [dataPedidos]);

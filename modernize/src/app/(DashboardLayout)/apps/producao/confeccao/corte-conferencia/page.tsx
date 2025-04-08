@@ -86,7 +86,7 @@ const CorteConferenciaScreen = () => {
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=C`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=C`, { // mudar pra fila Corte e Costura no hooks e 
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -96,8 +96,6 @@ const CorteConferenciaScreen = () => {
   });
 
   const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("C");
-  console.log(errorPedido);
-  console.log(porDia);
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) {

@@ -96,7 +96,7 @@ const SublimacaoScreen = () => {
       }).then((res) => res.json()),
   });
 
-  const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("C");
+  const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("S");
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) {
