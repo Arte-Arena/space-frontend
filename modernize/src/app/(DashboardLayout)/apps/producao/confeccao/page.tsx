@@ -671,8 +671,6 @@ const ConfeccaoScreen = () => {
               </TableContainer>
             )}
             <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
-            <DialogObs openDialogObs={openDialogObs} onCloseDialogObs={() => setOpenDialogObs(false)} row={selectedRowObs} refetch={refetch} />
-
             <Snackbar
               open={snackbar.open}
               autoHideDuration={6000}
