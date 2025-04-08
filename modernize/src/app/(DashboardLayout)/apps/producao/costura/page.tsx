@@ -50,7 +50,7 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 
-const ConfeccaoScreen = () => {
+const SublimacaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
@@ -736,4 +736,4 @@ const ConfeccaoScreen = () => {
   );
 };
 
-export default ConfeccaoScreen;
+export default SublimacaoScreen;
