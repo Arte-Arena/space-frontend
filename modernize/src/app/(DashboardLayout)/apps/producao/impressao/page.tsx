@@ -39,7 +39,7 @@ import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
-import { format, isSameDay, subDays } from 'date-fns';
+import { isSameDay, subDays } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 import { useThemeMode } from '@/utils/useThemeMode';
@@ -63,7 +63,6 @@ const ImpressaoScreen = () => {
   const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
   const [open, setOpen] = useState(false);
-  const [diasAntecipaProducao, setDiasAntecipaProducao] = useState<number>(0);
   const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const roloRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
