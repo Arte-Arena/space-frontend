@@ -12,6 +12,7 @@ interface ArteFinal {
     prazo_arte_final: Date;
     prazo_confeccao: Date;
     lista_produtos: Produto[];
+    confeccao_corte_conferencia: CorteConferencia;
     observacao: string;
     rolo: string;
     estagio?: string | null;
@@ -44,6 +45,14 @@ interface User {
     id: number;
     name: string;
     role_id: number;
+}
+
+interface CorteConferencia {
+    id: number;
+    pedido_arte_final_id: number;
+    status: string;
+    created_at: Date | null;
+    updated_at: Date | null;
 }
 
 interface PedidoStatus {

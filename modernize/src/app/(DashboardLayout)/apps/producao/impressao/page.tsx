@@ -930,7 +930,7 @@ const ImpressaoScreen = () => {
                               </Tooltip>
                             </Grid>
                             <Grid item xs={5} sm={5} md={5} lg={5}>
-                              <Tooltip title="Enviar para Sublimacao!">
+                              <Tooltip title="Enviar para Sublimação!">
                                 <IconButton onClick={() => handleEnviarSublimacao(row)}>
                                   <IconNeedleThread />
                                 </IconButton>
