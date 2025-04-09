@@ -49,7 +49,7 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 
-const CosturaScreen = () => {
+const SublimacaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
@@ -80,7 +80,7 @@ const CosturaScreen = () => {
 
   const filters = {
     numero_pedido: searchNumero,
-    pedido_status_id: statusFilter,
+    pedido_status: statusFilter,
   };
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
@@ -96,8 +96,6 @@ const CosturaScreen = () => {
   });
 
   const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("C");
-  console.log(errorPedido);
-  console.log(porDia);
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) {
@@ -187,19 +185,8 @@ const CosturaScreen = () => {
     }
   }
 
-  const handleStatusChange = async (row: ArteFinal, status_id: number) => {
-    const statusEncontrado = pedidoStatus[status_id];
-
-    if (!statusEncontrado) {
-      console.error("Status não encontrado para o id fornecido:", status_id);
-      setSnackbar({
-        open: true,
-        message: 'Status não encontrado.',
-        severity: 'warning'
-      });
-      return;
-    }
-    const sucesso = await trocarStatusPedido(row?.id, statusEncontrado.nome, refetch);
+  const handleStatusChange = async (row: ArteFinal, status: string) => {
+    const sucesso = await trocarStatusPedido(row?.id, status, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
       setSnackbar({
@@ -292,26 +279,35 @@ const CosturaScreen = () => {
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
 
-  const pedidosStatusFilaD: Record<number, { id: number, nome: string; fila: 'C' }> = Object.fromEntries(
+  const pedidosStatusFilaS: Record<number, { id: number, nome: string; fila: 'C' }> = Object.fromEntries(
     parsedPedidosStatus
       .filter((item: { fila: string }) => item.fila === 'C')
       .map(({ id, nome, fila }: { id: number; nome: string; fila: 'C' }) => [id, { nome, fila }])
   );
 
-  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'C' }> = pedidosStatusFilaD as Record<number, { id: number, nome: string; fila: 'C' }>;
+  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'C' }> = pedidosStatusFilaS as Record<number, { id: number, nome: string; fila: 'C' }>;
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
-      const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
-      const isStatusMatch = !filters.pedido_status_id || pedido.pedido_status_id === Number(filters.pedido_status_id);
-      const isDateMatch = (
-        (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
-        (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
-      );
+      const isNumberMatch =
+        !filters.numero_pedido ||
+        pedido.numero_pedido.toString().includes(filters.numero_pedido);
+  
+      const isStatusMatch =
+        !filters.pedido_status ||
+        pedido.confeccao_costura?.status === filters.pedido_status;
+  
+      const isDateMatch =
+        (!dateFilter.start ||
+          new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
+        (!dateFilter.end ||
+          new Date(pedido.data_prevista) <= new Date(dateFilter.end));
+  
       return isNumberMatch && isStatusMatch && isDateMatch;
     });
   }, [allPedidos, filters, dateFilter]);
+  
 
   const paginatedPedidos = useMemo(() => {
     const startIndex = paginationModel.page * paginationModel.pageSize;
@@ -335,9 +331,9 @@ const CosturaScreen = () => {
   ];
 
   return (
-    <PageContainer title="Produção / Costura" description="Tela de Produção da Costura | Arte Arena">
+    <PageContainer title="Produção / Sublimação" description="Tela de Produção da Sublimação | Arte Arena">
       <>
-        <Breadcrumb title="Produção / Costura" items={BCrumb} />
+        <Breadcrumb title="Produção / Sublimação" items={BCrumb} />
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2, }}>
           <Typography variant="body1" sx={{ fontWeight: 500, alignItems: 'center' }}>
             <span style={{ fontWeight: 'bold', fontSize: 16 }}>Por Dia: </span>
@@ -376,7 +372,7 @@ const CosturaScreen = () => {
             </TableContainer>
           </Collapse>
         </Box>
-        <ParentCard title="Costura">
+        <ParentCard title="Sublimação">
           <>
             <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
               {/* Campo de Número do Pedido */}
@@ -401,8 +397,9 @@ const CosturaScreen = () => {
                 >
                   <MenuItem value="">Todos os Status</MenuItem>
                   {Object.entries(pedidoStatus).map(([id, status]) => (
-                    <MenuItem key={id} value={id}>
+                    <MenuItem key={id} value={status.nome}>
                       {status.nome}
+                      {/* tem que arrumar esse campo pra filtrar pelo nome */}
                     </MenuItem>
                   ))}
                 </CustomSelect>
@@ -513,17 +510,13 @@ const CosturaScreen = () => {
                       };
                       const designerNome = getUserNameById(row.designer_id);
 
-                      const pedidoStatusColors: Record<number, string> = {
-                        14: 'rgba(220, 53, 69, 0.49)',
-                        15: 'rgba(213, 121, 0, 0.8)',
-                        16: 'rgba(123, 157, 0, 0.8)',
-                        17: 'rgba(0, 152, 63, 0.65)',
-                        18: 'rgba(0, 146, 136, 0.8)',
-                        19: 'rgba(238, 84, 84, 0.8)',
-                        20: 'rgba(20, 175, 0, 0.8)',
-                        21: 'rgba(180, 0, 0, 0.8)',
-                        22: 'rgba(152, 0, 199, 0.8)',
+                      const pedidoStatusColors: Record<string, string> = {
+                        'Pendente': 'rgba(220, 53, 69, 0.49)',
+                        'Calandra': 'rgba(213, 121, 0, 0.8)',
+                        'Prensa': 'rgba(123, 157, 0, 0.8)',
                       };
+
+                      console.log("row value: ",row.confeccao_costura?.status);
 
                       const tipo = row.pedido_tipo_id && pedidoTiposMapping[row.pedido_tipo_id as keyof typeof pedidoTiposMapping];
 
@@ -601,7 +594,7 @@ const CosturaScreen = () => {
                           <TableCell
                             sx={{
                               color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                              backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
+                              backgroundColor: pedidoStatusColors[row.confeccao_costura?.status ?? ''] || 'inherit',
                             }}
                             align='center'
                           >
@@ -618,14 +611,14 @@ const CosturaScreen = () => {
                                 boxSizing: 'border-box',
                               }}
 
-                              value={String(row.pedido_status_id)}
-                              onChange={(event: { target: { value: number; }; }) => {
+                              value={String(row.confeccao_costura?.status)}
+                              onChange={(event: { target: { value: string; }; }) => {
                                 const newStatus = event.target.value;
                                 handleStatusChange(row, newStatus);
                               }}
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
-                                <MenuItem key={id} value={id}>
+                                <MenuItem key={id} value={status.nome}>
                                   {status.nome}
                                 </MenuItem>
                               ))}
@@ -735,4 +728,4 @@ const CosturaScreen = () => {
   );
 };
 
-export default CosturaScreen;
+export default SublimacaoScreen;

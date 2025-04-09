@@ -32,7 +32,8 @@ interface ArteFinal {
 interface Impressao {
     id: number;
     pedido_arte_final_id?: number;
-    impressora?: number | null; // dependendo se o valor for numérico ou nome da impressora
+    status?: string | null;
+    impressora?: number | null;
     tipo_corte?: string | null;
     created_at?: string | null;
     updated_at?: string | null;

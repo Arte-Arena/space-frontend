@@ -25,7 +25,6 @@ import {
   Collapse,
   Box,
   MenuItem,
-  Select,
   TextField,
   TextFieldProps,
   AlertProps,
@@ -81,7 +80,7 @@ const SublimacaoScreen = () => {
 
   const filters = {
     numero_pedido: searchNumero,
-    pedido_status_id: statusFilter,
+    pedido_status: statusFilter,
   };
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
@@ -96,12 +95,11 @@ const SublimacaoScreen = () => {
       }).then((res) => res.json()),
   });
 
-  const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("C");
+  const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("S");
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) {
       setAllPedidos(dataPedidos.data);
-      console.log('dados da req: ',dataPedidos.data);
     }
   }, [dataPedidos]);
 
@@ -281,26 +279,35 @@ const SublimacaoScreen = () => {
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
 
-  const pedidosStatusFilaD: Record<number, { id: number, nome: string; fila: 'S' }> = Object.fromEntries(
+  const pedidosStatusFilaS: Record<number, { id: number, nome: string; fila: 'S' }> = Object.fromEntries(
     parsedPedidosStatus
       .filter((item: { fila: string }) => item.fila === 'S')
       .map(({ id, nome, fila }: { id: number; nome: string; fila: 'S' }) => [id, { nome, fila }])
   );
 
-  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'S' }> = pedidosStatusFilaD as Record<number, { id: number, nome: string; fila: 'S' }>;
+  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'S' }> = pedidosStatusFilaS as Record<number, { id: number, nome: string; fila: 'S' }>;
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
-      const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
-      const isStatusMatch = !filters.pedido_status_id || pedido.pedido_status_id === Number(filters.pedido_status_id);
-      const isDateMatch = (
-        (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
-        (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
-      );
+      const isNumberMatch =
+        !filters.numero_pedido ||
+        pedido.numero_pedido.toString().includes(filters.numero_pedido);
+  
+      const isStatusMatch =
+        !filters.pedido_status ||
+        pedido.confeccao_sublimacao?.status === filters.pedido_status;
+  
+      const isDateMatch =
+        (!dateFilter.start ||
+          new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
+        (!dateFilter.end ||
+          new Date(pedido.data_prevista) <= new Date(dateFilter.end));
+  
       return isNumberMatch && isStatusMatch && isDateMatch;
     });
   }, [allPedidos, filters, dateFilter]);
+  
 
   const paginatedPedidos = useMemo(() => {
     const startIndex = paginationModel.page * paginationModel.pageSize;
@@ -390,8 +397,9 @@ const SublimacaoScreen = () => {
                 >
                   <MenuItem value="">Todos os Status</MenuItem>
                   {Object.entries(pedidoStatus).map(([id, status]) => (
-                    <MenuItem key={id} value={id}>
+                    <MenuItem key={id} value={status.nome}>
                       {status.nome}
+                      {/* tem que arrumar esse campo pra filtrar pelo nome */}
                     </MenuItem>
                   ))}
                 </CustomSelect>
@@ -506,12 +514,6 @@ const SublimacaoScreen = () => {
                         'Pendente': 'rgba(220, 53, 69, 0.49)',
                         'Calandra': 'rgba(213, 121, 0, 0.8)',
                         'Prensa': 'rgba(123, 157, 0, 0.8)',
-                        // 17: 'rgba(0, 152, 63, 0.65)',
-                        // 18: 'rgba(0, 146, 136, 0.8)',
-                        // 19: 'rgba(238, 84, 84, 0.8)',
-                        // 20: 'rgba(20, 175, 0, 0.8)',
-                        // 21: 'rgba(180, 0, 0, 0.8)',
-                        // 22: 'rgba(152, 0, 199, 0.8)',
                       };
 
                       console.log("row value: ",row.confeccao_sublimacao?.status);
