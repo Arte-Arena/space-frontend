@@ -34,6 +34,45 @@ export const uniformService = {
     }
   },
 
+  allowUniformEditing: async (budgetId: string | number): Promise<boolean> => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) {
+        throw new Error("Access token is missing");
+      }
+
+      const budgetIdInt = typeof budgetId === 'string' ? parseInt(budgetId, 10) : budgetId;
+      
+      if (isNaN(budgetIdInt) || budgetIdInt <= 0) {
+        throw new Error("BudgetID inválido");
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes-go/permitir-edicao`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ budget_id: budgetIdInt }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Falha ao permitir edição do uniforme"
+        );
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Erro ao permitir edição do uniforme:", error);
+      throw error;
+    }
+  },
+
   updatePlayerData: async (
     uniformId: string,
     sketchId: string,

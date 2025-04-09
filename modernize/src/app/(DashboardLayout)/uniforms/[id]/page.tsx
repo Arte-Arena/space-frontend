@@ -115,6 +115,8 @@ export default function UniformViewPage({ params }: UniformViewPageProps) {
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [isMockData, setIsMockData] = useState(false);
   const [showTestButtons, setShowTestButtons] = useState(false);
+  const [allowingEditing, setAllowingEditing] = useState(false);
+  const [editingMessage, setEditingMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
   const BCrumb = [
     {
@@ -202,8 +204,24 @@ export default function UniformViewPage({ params }: UniformViewPageProps) {
     }
   };
 
-  const handleAllowEditing = () => {
-    console.log("Allow editing clicked");
+  const handleAllowEditing = async () => {
+    try {
+      setAllowingEditing(true);
+      setEditingMessage(null);
+      await uniformService.allowUniformEditing(id);
+      setEditingMessage({type: 'success', text: 'Edição permitida com sucesso!'});
+      if (!isMockData) {
+        const apiResponse = await uniformService.getUniformsByBudgetId(id);
+        if (apiResponse.data && apiResponse.data.length > 0) {
+          setUniformData(apiResponse.data[0]);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao permitir edição:", error);
+      setEditingMessage({type: 'error', text: 'Ocorreu um erro ao permitir a edição.'});
+    } finally {
+      setAllowingEditing(false);
+    }
   };
 
   const handleToggleMockData = () => {
@@ -212,6 +230,10 @@ export default function UniformViewPage({ params }: UniformViewPageProps) {
 
   const handleCloseSnackbar = () => {
     setPdfError(null);
+  };
+
+  const handleCloseEditingMessage = () => {
+    setEditingMessage(null);
   };
 
   const handleGenerateTestPDF = async () => {
@@ -589,6 +611,27 @@ export default function UniformViewPage({ params }: UniformViewPageProps) {
         }}
       />
 
+      <Snackbar
+        open={!!editingMessage}
+        autoHideDuration={4000}
+        onClose={handleCloseEditingMessage}
+        message={editingMessage?.text}
+        action={
+          <IconButton
+            size="small"
+            color="inherit"
+            onClick={handleCloseEditingMessage}
+          >
+            <IconX />
+          </IconButton>
+        }
+        sx={{
+          "& .MuiSnackbarContent-root": {
+            bgcolor: editingMessage?.type === 'success' ? 'success.main' : 'error.main',
+          },
+        }}
+      />
+
       <Breadcrumb title={`Visualização de Uniformes`} items={BCrumb} />
 
       <Grid container spacing={3}>
@@ -671,8 +714,18 @@ export default function UniformViewPage({ params }: UniformViewPageProps) {
                       color="secondary"
                       startIcon={<IconEdit />}
                       onClick={handleAllowEditing}
+                      disabled={allowingEditing || (uniformData && !isMockData && uniformData.editable)}
                     >
-                      Permitir Edição
+                      {allowingEditing ? (
+                        <>
+                          <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                          Processando...
+                        </>
+                      ) : uniformData && !isMockData && uniformData.editable ? (
+                        "Edição já permitida"
+                      ) : (
+                        "Permitir Edição"
+                      )}
                     </Button>
 
                     {isMockData && (
