@@ -76,7 +76,6 @@ const SublimacaoScreen = () => {
   const myTheme = useThemeMode()
 
   const accessToken = localStorage.getItem('accessToken');
-  const designers = localStorage.getItem('designers');
 
   const filters = {
     numero_pedido: searchNumero,
@@ -158,10 +157,10 @@ const SublimacaoScreen = () => {
     setOpenDrawer(true);
   };
 
-  const handleEnviarEntrega = async (row: ArteFinal) => {
-    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Expedição?');
+  const handleEnviarCorte = async (row: ArteFinal) => {
+    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Corte & Conferência?');
     if (confirmar) {
-      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "E", refetch);
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "F", refetch);
       if (sucesso) {
         setSnackbar({
           open: true,
@@ -293,21 +292,21 @@ const SublimacaoScreen = () => {
       const isNumberMatch =
         !filters.numero_pedido ||
         pedido.numero_pedido.toString().includes(filters.numero_pedido);
-  
+
       const isStatusMatch =
         !filters.pedido_status ||
         pedido.confeccao_sublimacao?.status === filters.pedido_status;
-  
+
       const isDateMatch =
         (!dateFilter.start ||
           new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
         (!dateFilter.end ||
           new Date(pedido.data_prevista) <= new Date(dateFilter.end));
-  
+
       return isNumberMatch && isStatusMatch && isDateMatch;
     });
   }, [allPedidos, filters, dateFilter]);
-  
+
 
   const paginatedPedidos = useMemo(() => {
     const startIndex = paginationModel.page * paginationModel.pageSize;
@@ -470,7 +469,6 @@ const SublimacaoScreen = () => {
                       <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
                       <TableCell align='center' sx={{ width: '33%' }}>Produtos</TableCell>
                       <TableCell align='center' sx={{ width: '5%' }}>Data De Entrega</TableCell>
-                      <TableCell align='center' sx={{ width: '7%' }}>Designer</TableCell>
                       <TableCell align='center' sx={{ width: '25%' }}>Observação</TableCell>
                       <TableCell align='center' sx={{ width: '3%' }}>Tipo</TableCell>
                       <TableCell align='center' sx={{ width: '7%' }}>Status</TableCell>
@@ -497,26 +495,13 @@ const SublimacaoScreen = () => {
                         isHoje = true;
                       }
 
-                      // definição dos designers
-                      const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
-                      const usersMap = new Map(
-                        Array.isArray(parsedDesigners)
-                          ? parsedDesigners.map(designer => [designer.id, designer.name])
-                          : []
-                      );
-
-                      const getUserNameById = (id: number | null | undefined) => {
-                        return id && usersMap.has(id) ? usersMap.get(id) : row.designer_id;
-                      };
-                      const designerNome = getUserNameById(row.designer_id);
-
                       const pedidoStatusColors: Record<string, string> = {
                         'Pendente': 'rgba(220, 53, 69, 0.49)',
                         'Calandra': 'rgba(213, 121, 0, 0.8)',
                         'Prensa': 'rgba(123, 157, 0, 0.8)',
                       };
 
-                      console.log("row value: ",row.confeccao_sublimacao?.status);
+                      console.log("row value: ", row.confeccao_sublimacao?.status);
 
                       const tipo = row.pedido_tipo_id && pedidoTiposMapping[row.pedido_tipo_id as keyof typeof pedidoTiposMapping];
 
@@ -557,10 +542,6 @@ const SublimacaoScreen = () => {
                           }} align='center'>
                             {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
                           </TableCell>
-
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black'
-                          }} align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
 
                           <Tooltip title={row?.observacoes ? row.observacoes : "Adicionar Observação"} placement="left">
                             <TableCell
@@ -658,8 +639,8 @@ const SublimacaoScreen = () => {
                                 </Tooltip>
                               </Grid>
                               <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Enviar para Expedição">
-                                  <IconButton onClick={() => handleEnviarEntrega(row)}>
+                                <Tooltip title="Enviar para Corte e Conferência">
+                                  <IconButton onClick={() => handleEnviarCorte(row)}>
                                     <IconDirectionSign />
                                   </IconButton>
                                 </Tooltip>
