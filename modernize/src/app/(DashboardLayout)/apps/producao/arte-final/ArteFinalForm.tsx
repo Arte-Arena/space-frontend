@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from "react";
-import { ArteFinal, Produto, PedidoStatus, PedidoTipo, User } from './types';
+import { ArteFinal, Produto, PedidoTipo, User } from './types';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import getBrazilTime from "@/utils/brazilTime";
@@ -204,7 +204,12 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
 
   useEffect(() => {
     if (initialData) {
-      setFormData((prev) => ({ ...prev, ...initialData }));
+
+      const dataPrevistaBrasil = String(initialData.data_prevista).slice(0, 10);
+      const [year, month, day] = dataPrevistaBrasil.split('-');
+      const dateLocal = new Date(Number(year), Number(month) - 1, Number(day));
+
+      setFormData((prev) => ({ ...prev, ...initialData, data_prevista: dateLocal }));
 
       if (initialData.lista_produtos && Array.isArray(initialData.lista_produtos) && initialData.lista_produtos.length > 0) {
         const initialProductsList = initialData.lista_produtos.map((product) => ({
@@ -302,22 +307,6 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
       material: event.target.value
     };
     atualizarProduto(updatedProduct);
-  };
-
-  const calcPrazoArteFinal = (dataEntrega: Date | null, hoje: Date, prazo_confeccao: number): number => {
-    if (!dataEntrega) {
-      console.error('Erro: dataEntrega é nula ou indefinida.');
-      return 0;
-    }
-    const dataEntregaLuxon = DateTime.fromJSDate(dataEntrega);
-    const hojeLuxon = DateTime.fromJSDate(hoje);
-    const dataFeriados = localStorage.getItem('feriados') ? JSON.parse(localStorage.getItem('feriados') as string) : { dias_feriados: [] };
-    const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
-
-    const dataProjetada = calcularDataFuturaDiasUteis(hojeLuxon, prazo_confeccao, safeDataFeriados);
-    const diasUteisRestantes = calcDiasUteisEntreDatas(dataProjetada, dataEntregaLuxon, safeDataFeriados);
-
-    return diasUteisRestantes;
   };
 
   const handleClick = () => {
@@ -452,7 +441,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DatePicker
             label="Data de Entrega Prevista"
-            value={formData.data_prevista ? new Date(formData.data_prevista) : null} // Garante que a data inicial seja válida
+            value={formData.data_prevista ? formData.data_prevista : ""}
             onChange={(newValue) => {
               if (!newValue) return;
 
@@ -642,32 +631,6 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                       const newProductValue = Math.max(0, +event.target.value);
                       const updatedProduct = { ...product, prazo_confeccao: newProductValue };
-                      atualizarProduto(updatedProduct);
-                    }}
-                    type="number"
-                    variant="outlined"
-                    size="small"
-                    sx={{
-                      width: '70px',
-                      '& input[type=number]::-webkit-inner-spin-button': {
-                        display: 'none',
-                      },
-                      '& input[type=number]::-webkit-outer-spin-button': {
-                        display: 'none',
-                      },
-                      '& input[type=number]': {
-                        MozAppearance: 'textfield',
-                      },
-                    }}
-                  />
-                </TableCell>
-
-                <TableCell align="right">
-                  <CustomTextField
-                    value={calcPrazoArteFinal(formData.data_prevista, getBrazilTime(), product.prazo)}
-                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                      const newProductValue = Math.max(0, +event.target.value);
-                      const updatedProduct = { ...product, prazo_arte: newProductValue };
                       atualizarProduto(updatedProduct);
                     }}
                     type="number"
