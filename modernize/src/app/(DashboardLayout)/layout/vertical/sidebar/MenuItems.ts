@@ -304,7 +304,7 @@ const getMenuItems = (): MenuitemsType[] => {
           id: uniqueId(),
           title: "Corte & Conferência",
           icon: IconCut,
-          href: "/apps/producao/corte-conferencia",
+          href: "/apps/producao/confeccao/corte-conferencia",
         },
         {
           id: uniqueId(),

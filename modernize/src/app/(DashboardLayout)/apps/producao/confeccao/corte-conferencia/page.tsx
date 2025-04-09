@@ -76,7 +76,6 @@ const CorteConferenciaScreen = () => {
   const myTheme = useThemeMode()
 
   const accessToken = localStorage.getItem('accessToken');
-  const designers = localStorage.getItem('designers');
 
   const filters = {
     numero_pedido: searchNumero,
@@ -86,7 +85,7 @@ const CorteConferenciaScreen = () => {
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=C`, { // mudar pra fila Corte e Costura no hooks e 
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=F`, { // mudar pra fila Corte e Costura no hooks e 
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +94,7 @@ const CorteConferenciaScreen = () => {
       }).then((res) => res.json()),
   });
 
-  const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("C");
+  const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("F");
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) {
@@ -158,10 +157,10 @@ const CorteConferenciaScreen = () => {
     setOpenDrawer(true);
   };
 
-  const handleEnviarEntrega = async (row: ArteFinal) => {
+  const handleEnviarCostura = async (row: ArteFinal) => {
     const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Expedição?');
     if (confirmar) {
-      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "E", refetch);
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "R", refetch);
       if (sucesso) {
         setSnackbar({
           open: true,
@@ -185,19 +184,8 @@ const CorteConferenciaScreen = () => {
     }
   }
 
-  const handleStatusChange = async (row: ArteFinal, status_id: number) => {
-    const statusEncontrado = pedidoStatus[status_id];
-
-    if (!statusEncontrado) {
-      console.error("Status não encontrado para o id fornecido:", status_id);
-      setSnackbar({
-        open: true,
-        message: 'Status não encontrado.',
-        severity: 'warning'
-      });
-      return;
-    }
-    const sucesso = await trocarStatusPedido(row?.id, statusEncontrado.nome, refetch);
+  const handleStatusChange = async (row: ArteFinal, status: string) => {
+    const sucesso = await trocarStatusPedido(row?.id, status, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
       setSnackbar({
@@ -290,13 +278,13 @@ const CorteConferenciaScreen = () => {
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
 
-  const pedidosStatusFilaD: Record<number, { id: number, nome: string; fila: 'C' }> = Object.fromEntries(
+  const pedidosStatusFilaD: Record<number, { id: number, nome: string; fila: 'F' }> = Object.fromEntries(
     parsedPedidosStatus
-      .filter((item: { fila: string }) => item.fila === 'C')
-      .map(({ id, nome, fila }: { id: number; nome: string; fila: 'C' }) => [id, { nome, fila }])
+      .filter((item: { fila: string }) => item.fila === 'F')
+      .map(({ id, nome, fila }: { id: number; nome: string; fila: 'F' }) => [id, { nome, fila }])
   );
 
-  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'C' }> = pedidosStatusFilaD as Record<number, { id: number, nome: string; fila: 'C' }>;
+  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'F' }> = pedidosStatusFilaD as Record<number, { id: number, nome: string; fila: 'F' }>;
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
@@ -471,7 +459,6 @@ const CorteConferenciaScreen = () => {
                       <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
                       <TableCell align='center' sx={{ width: '33%' }}>Produtos</TableCell>
                       <TableCell align='center' sx={{ width: '5%' }}>Data De Entrega</TableCell>
-                      <TableCell align='center' sx={{ width: '7%' }}>Designer</TableCell>
                       <TableCell align='center' sx={{ width: '25%' }}>Observação</TableCell>
                       <TableCell align='center' sx={{ width: '3%' }}>Tipo</TableCell>
                       <TableCell align='center' sx={{ width: '7%' }}>Status</TableCell>
@@ -498,29 +485,10 @@ const CorteConferenciaScreen = () => {
                         isHoje = true;
                       }
 
-                      // definição dos designers
-                      const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
-                      const usersMap = new Map(
-                        Array.isArray(parsedDesigners)
-                          ? parsedDesigners.map(designer => [designer.id, designer.name])
-                          : []
-                      );
-
-                      const getUserNameById = (id: number | null | undefined) => {
-                        return id && usersMap.has(id) ? usersMap.get(id) : row.designer_id;
-                      };
-                      const designerNome = getUserNameById(row.designer_id);
-
-                      const pedidoStatusColors: Record<number, string> = {
-                        14: 'rgba(220, 53, 69, 0.49)',
-                        15: 'rgba(213, 121, 0, 0.8)',
-                        16: 'rgba(123, 157, 0, 0.8)',
-                        17: 'rgba(0, 152, 63, 0.65)',
-                        18: 'rgba(0, 146, 136, 0.8)',
-                        19: 'rgba(238, 84, 84, 0.8)',
-                        20: 'rgba(20, 175, 0, 0.8)',
-                        21: 'rgba(180, 0, 0, 0.8)',
-                        22: 'rgba(152, 0, 199, 0.8)',
+                      const pedidoStatusColors: Record<string, string> = {
+                        "Pendente": 'rgba(238, 84, 84, 0.8)',
+                        "Não Conferido": 'rgba(220, 53, 69, 0.49)',
+                        "Conferido": 'rgba(213, 121, 0, 0.8)',
                       };
 
                       const tipo = row.pedido_tipo_id && pedidoTiposMapping[row.pedido_tipo_id as keyof typeof pedidoTiposMapping];
@@ -563,10 +531,6 @@ const CorteConferenciaScreen = () => {
                             {row?.data_prevista ? format(new Date(row?.data_prevista), "dd/MM/yyyy") : "Data inválida"}
                           </TableCell>
 
-                          <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black'
-                          }} align='center'>{designerNome ?? 'Não Atribuido'}</TableCell>
-
                           <Tooltip title={row?.observacoes ? row.observacoes : "Adicionar Observação"} placement="left">
                             <TableCell
                               sx={{
@@ -599,7 +563,7 @@ const CorteConferenciaScreen = () => {
                           <TableCell
                             sx={{
                               color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                              backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
+                              backgroundColor: pedidoStatusColors[row?.confeccao_corte_conferencia?.status ?? 0] || 'inherit',
                             }}
                             align='center'
                           >
@@ -617,13 +581,13 @@ const CorteConferenciaScreen = () => {
                               }}
 
                               value={String(row.pedido_status_id)}
-                              onChange={(event: { target: { value: number; }; }) => {
+                              onChange={(event: { target: { value: string; }; }) => {
                                 const newStatus = event.target.value;
                                 handleStatusChange(row, newStatus);
                               }}
                             >
                               {Object.entries(pedidoStatus).map(([id, status]) => (
-                                <MenuItem key={id} value={id}>
+                                <MenuItem key={id} value={status.nome}>
                                   {status.nome}
                                 </MenuItem>
                               ))}
@@ -663,8 +627,8 @@ const CorteConferenciaScreen = () => {
                                 </Tooltip>
                               </Grid>
                               <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Enviar para Expedição">
-                                  <IconButton onClick={() => handleEnviarEntrega(row)}>
+                                <Tooltip title="Enviar para Costura">
+                                  <IconButton onClick={() => handleEnviarCostura(row)}>
                                     <IconDirectionSign />
                                   </IconButton>
                                 </Tooltip>
