@@ -35,7 +35,8 @@ import {
   IconCalendarTime,
   IconRoad,
   IconIroning,
-  IconCut
+  IconCut,
+  IconPalette
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -267,15 +268,23 @@ const getMenuItems = (): MenuitemsType[] => {
     },
     {
       id: uniqueId(),
-      title: "Produção",
-      icon: IconBuildingFactory,
+      title: "Design",
+      icon: IconPalette,
       children: [
         {
           id: uniqueId(),
           title: "Arte Final",
           icon: IconBrush,
           href: "/apps/producao/arte-final",
-        },
+
+        }
+      ]
+    },
+    {
+      id: uniqueId(),
+      title: "Produção",
+      icon: IconBuildingFactory,
+      children: [
         {
           id: uniqueId(),
           title: "Impressão",
