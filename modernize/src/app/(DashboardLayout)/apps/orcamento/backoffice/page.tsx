@@ -22,7 +22,6 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { IconTruckDelivery } from '@tabler/icons-react';
 import useAprovarPedidoStatus from './components/useAprovarPedidoStatus';
 import { logger } from '@/utils/logger';
-import { DateUtils } from '@/utils/DateUtils';
 
 interface Pedidos {
   id: number;
@@ -784,7 +783,9 @@ const OrcamentoBackofficeScreen = () => {
               <TableBody>
                 {dataOrcamentos?.data.map((row: Orcamento) => {
 
-                  const dataLocal = DateUtils.parseLocalDate(row.prev_entrega);
+                  const dataPrevistaBrasil = String(row.prev_entrega);
+                  const [year, month, day] = dataPrevistaBrasil.split('-');
+                  const dateLocal = new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString('pt-BR');
 
                   const listaProdutos = row.lista_produtos
                     ? (typeof row.lista_produtos === 'string' ? JSON.parse(row.lista_produtos) : row.lista_produtos)
@@ -815,7 +816,7 @@ const OrcamentoBackofficeScreen = () => {
                         <TableCell>{hasPedidos ? row.pedidos[0].numero_pedido : '-'}</TableCell>
                         <TableCell>{row.cliente_octa_number}</TableCell>
                         <TableCell>{new Date(row.created_at).toLocaleDateString('pt-BR')}</TableCell>
-                        <TableCell>{dataLocal.toLocaleDateString('pt-BR')}</TableCell>
+                        <TableCell>{row.prev_entrega ? dateLocal : ""}</TableCell>
                         <TableCell>
                           <Stack direction="row" spacing={1}>
                             <Button
