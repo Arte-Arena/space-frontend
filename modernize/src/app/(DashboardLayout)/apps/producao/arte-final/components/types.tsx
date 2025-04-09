@@ -12,7 +12,7 @@ interface ArteFinal {
     data_prevista: Date;
     prazo_arte_final: Date;
     prazo_confeccao: Date;
-    desingn: Desingn;
+    design: Design;
     lista_produtos: Produto[];
     observacao: string;
     rolo: string;
@@ -30,7 +30,7 @@ interface ArteFinal {
     updated_at: Date;
 }
 
-interface Desingn {
+interface Design {
     id: number;
     pedido_arte_final_id: number;
     status: string;
