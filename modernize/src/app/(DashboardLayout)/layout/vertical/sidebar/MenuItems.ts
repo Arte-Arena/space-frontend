@@ -290,12 +290,6 @@ const getMenuItems = (): MenuitemsType[] => {
         },
         {
           id: uniqueId(),
-          title: "Confeccao",
-          icon: IconNeedleThread,
-          href: "/apps/producao/confeccao",
-        },
-        {
-          id: uniqueId(),
           title: "Sublimação",
           icon: IconIroning,
           href: "/apps/producao/confeccao/sublimacao",
