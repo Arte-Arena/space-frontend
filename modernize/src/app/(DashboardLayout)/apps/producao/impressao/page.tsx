@@ -93,7 +93,7 @@ const ImpressaoScreen = () => {
 
   const filters = {
     numero_pedido: searchNumero,
-    pedido_status_id: statusFilter,
+    pedido_status: statusFilter,
   };
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
@@ -296,22 +296,8 @@ const ImpressaoScreen = () => {
     }, 0);
   };
 
-  const handleStatusChange = async (row: ArteFinal, status_id: number) => {
-    console.log("Status selecionado ID:", status_id);
-    const statusEncontrado = pedidoStatus[status_id];
-
-    if (!statusEncontrado) {
-      console.error("Status não encontrado para o id fornecido:", status_id);
-      setSnackbar({
-        open: true,
-        message: 'Status não encontrado.',
-        severity: 'warning'
-      });
-      return;
-    }
-    console.log("Nome selecionado:", statusEncontrado);
-
-    const sucesso = await trocarStatusPedido(row?.id, statusEncontrado.nome, refetch);
+  const handleStatusChange = async (row: ArteFinal, status: string) => {
+    const sucesso = await trocarStatusPedido(row?.id, status, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
       setSnackbar({
@@ -396,19 +382,22 @@ const ImpressaoScreen = () => {
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
 
-  const pedidosStatusFilaD: Record<number, { id: number, nome: string; fila: 'I' }> = Object.fromEntries(
+  const pedidosStatusFilaI: Record<number, { id: number, nome: string; fila: 'I' }> = Object.fromEntries(
     parsedPedidosStatus
       .filter((item: { fila: string }) => item.fila === 'I')
       .map(({ id, nome, fila }: { id: number; nome: string; fila: 'I' }) => [id, { nome, fila }])
   );
 
-  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'I' }> = pedidosStatusFilaD as Record<number, { id: number, nome: string; fila: 'I' }>;
+  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'I' }> = pedidosStatusFilaI as Record<number, { id: number, nome: string; fila: 'I' }>;
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
       const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
-      const isStatusMatch = !filters.pedido_status_id || pedido.pedido_status_id === Number(filters.pedido_status_id);
+      const isStatusMatch =
+        !filters.pedido_status ||
+        pedido.impressao?.status === filters.pedido_status;
+
       const isDateMatch = (
         (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
         (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
@@ -615,31 +604,20 @@ const ImpressaoScreen = () => {
                       : [];
 
                     const dataPrevistaSegura = formatarDataSegura(String(row?.data_prevista));
-                    // console.log("dataPrevistaSegura: ", dataPrevistaSegura);
-                    // console.log("typeof dataPrevistaSegura: ", typeof dataPrevistaSegura);
-
                     const dataPrevista = row?.data_prevista ? dataPrevistaSegura : '';
                     const dataPrevistaDateTime = DateTime.fromFormat(dataPrevista, 'MM/dd/yyyy').startOf('day');
                     const dataAtual = formatarDataSegura(zerarHorario(getBrazilTime()).toISOString());
-                    // console.log("dataAtual: ", dataAtual);
-                    // console.log("typeof dataAtual: ", typeof dataAtual);
-
                     const localStoragePrazos = localStorage.getItem('configPrazos');
                     const parsedPrazos = JSON.parse(localStoragePrazos || '[]');
                     const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_impressao;
-                    // console.log("diasAntecipaProducao: ", diasAntecipaProducao);
-
                     const feriados = localStorage.getItem('feriados');
                     const parsedFeriados = JSON.parse(feriados || '[]');
                     const prazoImpressao = calcularDataPassadaDiasUteis(dataPrevistaDateTime, diasAntecipaProducao, parsedFeriados);
-
                     let atraso = false;
                     let isHoje = false;
                     const dataAtualJS = new Date(dataAtual);
                     const dataPrevistaConfeccao = new Date(String(dataPrevista));
                     const dataPrevistaArteFinal = subDays(dataPrevistaConfeccao, diasAntecipaProducao);
-                    // console.log("typeof dataPrevistaArteFinal: ", typeof dataPrevistaArteFinal);
-                    // console.log("dataPrevistaArteFinal: ", dataPrevistaArteFinal);
                     if (dataPrevistaArteFinal < dataAtualJS) {
                       atraso = true;
                     }
@@ -661,13 +639,12 @@ const ImpressaoScreen = () => {
                     const designerNome = getUserNameById(row.designer_id);
 
 
-                    const pedidoStatusColors: Record<number, string> = {
-                      8: 'rgba(220, 53, 69, 0.49)',
-                      9: 'rgba(213, 121, 0, 0.8)',
-                      10: 'rgba(123, 157, 0, 0.8)',
-                      11: 'rgba(0, 152, 63, 0.65)',
-                      12: 'rgba(0, 146, 136, 0.8)',
-                      13: 'rgba(238, 84, 84, 0.8)',
+                    const pedidoStatusColors: Record<string, string> = {
+                      'Pendente': 'rgba(220, 53, 69, 0.49)',
+                      'Processando': 'rgba(213, 121, 0, 0.8)',
+                      'Em Impressão': 'rgba(123, 157, 0, 0.8)',
+                      'Impresso': 'rgba(0, 152, 63, 0.65)',
+                      'Separação': 'rgba(0, 146, 136, 0.8)',
                     };
 
                     const tipo = row.pedido_tipo_id && pedidoTiposMapping[row.pedido_tipo_id as keyof typeof pedidoTiposMapping];
@@ -678,7 +655,6 @@ const ImpressaoScreen = () => {
                         sx={{
                         }}
                       >
-
                         <TableCell
                           sx={{
                             color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
@@ -704,7 +680,7 @@ const ImpressaoScreen = () => {
                             sx={{
                               maxHeight: 80,
                               overflowY: 'auto',
-                              paddingLeft: '5`%',
+                              paddingLeft: '7`%',
                             }}
                           >
                             {row.lista_produtos?.length > 0
@@ -890,7 +866,7 @@ const ImpressaoScreen = () => {
                         <TableCell
                           sx={{
                             color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                            backgroundColor: pedidoStatusColors[row?.pedido_status_id ?? 0] || 'inherit',
+                            backgroundColor: pedidoStatusColors[row?.impressao?.status ?? 0] || 'inherit',
                           }}
                           align='center'
                         >
@@ -907,14 +883,14 @@ const ImpressaoScreen = () => {
                               boxSizing: 'border-box',
                             }}
 
-                            value={String(row.pedido_status_id)}
-                            onChange={(event: { target: { value: number; }; }) => {
+                            value={String(row.impressao?.status)}
+                            onChange={(event: { target: { value: string; }; }) => {
                               const newStatus = event.target.value;
                               handleStatusChange(row, newStatus);
                             }}
                           >
                             {Object.entries(pedidoStatus).map(([id, status]) => (
-                              <MenuItem key={id} value={id}>
+                              <MenuItem key={id} value={status.nome}>
                                 {status.nome}
                               </MenuItem>
                             ))}

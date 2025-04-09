@@ -4,7 +4,7 @@ const trocarStatusPedido = async (id: number | undefined, status_nome: string | 
     if (!accessToken) throw new Error("Usuário não autenticado.");
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-status-change/${id}`,
+      `${process.env.NEXT_PUBLIC_API}/api/producao/impressao/status-change`,
       {
         method: "PATCH",
         headers: {
@@ -12,8 +12,8 @@ const trocarStatusPedido = async (id: number | undefined, status_nome: string | 
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ 
-          pedido_status_nome: status_nome,
-          estagio: "I",
+          status: status_nome,
+          pedido_arte_final_id: id,
          }),
       }
     );
