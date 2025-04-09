@@ -22,6 +22,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { IconTruckDelivery } from '@tabler/icons-react';
 import useAprovarPedidoStatus from './components/useAprovarPedidoStatus';
 import { logger } from '@/utils/logger';
+import { DateUtils } from '@/utils/DateUtils';
 
 interface Pedidos {
   id: number;
@@ -782,6 +783,9 @@ const OrcamentoBackofficeScreen = () => {
               </TableHead>
               <TableBody>
                 {dataOrcamentos?.data.map((row: Orcamento) => {
+
+                  const dataLocal = DateUtils.parseLocalDate(row.prev_entrega);
+
                   const listaProdutos = row.lista_produtos
                     ? (typeof row.lista_produtos === 'string' ? JSON.parse(row.lista_produtos) : row.lista_produtos)
                     : [];
@@ -811,7 +815,7 @@ const OrcamentoBackofficeScreen = () => {
                         <TableCell>{hasPedidos ? row.pedidos[0].numero_pedido : '-'}</TableCell>
                         <TableCell>{row.cliente_octa_number}</TableCell>
                         <TableCell>{new Date(row.created_at).toLocaleDateString('pt-BR')}</TableCell>
-                        <TableCell>{new Date(row.prev_entrega).toLocaleDateString('pt-BR')}</TableCell>
+                        <TableCell>{dataLocal.toLocaleDateString('pt-BR')}</TableCell>
                         <TableCell>
                           <Stack direction="row" spacing={1}>
                             <Button
@@ -1151,7 +1155,6 @@ const OrcamentoBackofficeScreen = () => {
                                     </TableCell>
                                   </TableRow>
 
-                                  {/* Texto do Orçamento */}
                                   <TableRow>
                                     <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
                                       Cliente:
@@ -1171,7 +1174,7 @@ const OrcamentoBackofficeScreen = () => {
                                   {entrega !== null && (
                                     <TableRow>
                                       <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', border: 'none' }}>
-                                        Entrega:
+                                        Data de Entrega:
                                       </TableCell>
                                       <TableCell sx={{ border: 'none' }} colSpan={1}>{entrega}</TableCell>
                                     </TableRow>
