@@ -38,4 +38,4 @@ export interface UniformData {
 export interface ApiResponse {
   data: UniformData[];
   message?: string;
-} 
+}
