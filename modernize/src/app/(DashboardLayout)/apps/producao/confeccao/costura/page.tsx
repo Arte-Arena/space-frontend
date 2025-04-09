@@ -278,13 +278,13 @@ const SublimacaoScreen = () => {
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
 
-  const pedidosStatusFilaS: Record<number, { id: number, nome: string; fila: 'R' }> = Object.fromEntries(
+  const pedidosStatusFilaS: Record<number, { id: number, nome: string; fila: 'C' }> = Object.fromEntries(
     parsedPedidosStatus
-      .filter((item: { fila: string }) => item.fila === 'R')
-      .map(({ id, nome, fila }: { id: number; nome: string; fila: 'R' }) => [id, { nome, fila }])
+      .filter((item: { fila: string }) => item.fila === 'C')
+      .map(({ id, nome, fila }: { id: number; nome: string; fila: 'C' }) => [id, { nome, fila }])
   );
 
-  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'R' }> = pedidosStatusFilaS as Record<number, { id: number, nome: string; fila: 'R' }>;
+  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'C' }> = pedidosStatusFilaS as Record<number, { id: number, nome: string; fila: 'C' }>;
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
@@ -497,8 +497,9 @@ const SublimacaoScreen = () => {
 
                       const pedidoStatusColors: Record<string, string> = {
                         'Pendente': 'rgba(220, 53, 69, 0.49)',
-                        'Calandra': 'rgba(213, 121, 0, 0.8)',
-                        'Prensa': 'rgba(123, 157, 0, 0.8)',
+                        'Não Cortado': 'rgba(213, 121, 0, 0.8)',
+                        'Cortado': 'rgba(123, 157, 0, 0.8)',
+                        'Costurado': 'rgba(123, 157, 0, 0.8)',
                       };
 
                       console.log("row value: ", row.confeccao_costura?.status);

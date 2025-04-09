@@ -580,7 +580,7 @@ const CorteConferenciaScreen = () => {
                                 boxSizing: 'border-box',
                               }}
 
-                              value={String(row.pedido_status_id)}
+                              value={String(row.confeccao_corte_conferencia?.status ?? 0)}
                               onChange={(event: { target: { value: string; }; }) => {
                                 const newStatus = event.target.value;
                                 handleStatusChange(row, newStatus);

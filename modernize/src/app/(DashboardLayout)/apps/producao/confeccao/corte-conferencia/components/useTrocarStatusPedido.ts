@@ -4,7 +4,7 @@ const trocarStatusPedido = async (id: number | undefined, status_nome: string | 
     if (!accessToken) throw new Error("Usuário não autenticado.");
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API}/api/producao/confeccao/corte-conferencia/status-change/${id}`,
+      `${process.env.NEXT_PUBLIC_API}/api/producao/confeccao/corte-conferencia/status-change`,
       {
         method: "PATCH",
         headers: {
