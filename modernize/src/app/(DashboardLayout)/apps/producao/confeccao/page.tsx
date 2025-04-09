@@ -158,10 +158,10 @@ const ConfeccaoScreen = () => {
     setOpenDrawer(true);
   };
 
-  const handleEnviarEntrega = async (row: ArteFinal) => {
+  const handleEnviarSublimacao = async (row: ArteFinal) => {
     const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Expedição?');
     if (confirmar) {
-      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "E", refetch);
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "S", refetch);
       if (sucesso) {
         setSnackbar({
           open: true,
@@ -663,8 +663,8 @@ const ConfeccaoScreen = () => {
                                 </Tooltip>
                               </Grid>
                               <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Enviar para Expedição">
-                                  <IconButton onClick={() => handleEnviarEntrega(row)}>
+                                <Tooltip title="Enviar para Sublimação">
+                                  <IconButton onClick={() => handleEnviarSublimacao(row)}>
                                     <IconDirectionSign />
                                   </IconButton>
                                 </Tooltip>
