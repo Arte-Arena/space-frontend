@@ -89,8 +89,13 @@ const UniformSketchesView: React.FC<UniformSketchesViewProps> = ({
       setSaving(true);
       setError(null);
 
-      // Simulate saving for all cases
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const updates = modifiedSketches.map(sketch => ({
+        sketch_id: sketch.sketchId,
+        players: sketch.players
+      }));
+
+      await uniformService.updatePlayerData(uniformData.budget_id, updates);
+      
       setSuccess(true);
 
       if (refreshData) {

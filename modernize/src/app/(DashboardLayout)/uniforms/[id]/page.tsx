@@ -121,7 +121,7 @@ export default function UniformViewPage({ params }: UniformViewPageProps) {
     try {
       setAllowingEditing(true);
       setEditingMessage(null);
-      await uniformService.allowUniformEditing(id);
+      await uniformService.updatePlayerData(id, undefined, true);
       setEditingMessage({type: 'success', text: 'Edição permitida com sucesso!'});
       const apiResponse = await uniformService.getUniformsByBudgetId(id);
       if (apiResponse.data && apiResponse.data.length > 0) {
