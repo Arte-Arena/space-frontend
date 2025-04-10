@@ -782,11 +782,6 @@ const OrcamentoBackofficeScreen = () => {
               </TableHead>
               <TableBody>
                 {dataOrcamentos?.data.map((row: Orcamento) => {
-
-                  const dataPrevistaBrasil = String(row.prev_entrega);
-                  const [year, month, day] = dataPrevistaBrasil.split('-');
-                  const dateLocal = new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString('pt-BR');
-
                   const listaProdutos = row.lista_produtos
                     ? (typeof row.lista_produtos === 'string' ? JSON.parse(row.lista_produtos) : row.lista_produtos)
                     : [];
@@ -816,7 +811,32 @@ const OrcamentoBackofficeScreen = () => {
                         <TableCell>{hasPedidos ? row.pedidos[0].numero_pedido : '-'}</TableCell>
                         <TableCell>{row.cliente_octa_number}</TableCell>
                         <TableCell>{new Date(row.created_at).toLocaleDateString('pt-BR')}</TableCell>
-                        <TableCell>{row.prev_entrega ? dateLocal : ""}</TableCell>
+                        <TableCell>{(() => {
+                          // Verifica se existe um valor válido para row.prev_entrega
+                          if (row.prev_entrega && String(row.prev_entrega) !== "null") {
+                            // Se a data estiver no formato ISO com horário (ex.: "2025-04-24T00:00:00.000Z"),
+                            // extraímos apenas a parte da data antes do "T"
+                            const dataStr =
+                              String(row.prev_entrega).indexOf("T") > -1
+                                ? String(row.prev_entrega).split("T")[0]
+                                : String(row.prev_entrega);
+
+                            // Separa os componentes da data
+                            const [year, month, day] = dataStr.split("-");
+
+                            // Confirma se temos os três componentes
+                            if (year && month && day) {
+                              // Cria a data em horário local (lembre que o mês é indexado de 0)
+                              const dateLocal = new Date(Number(year), Number(month) - 1, Number(day));
+                              return dateLocal.toLocaleDateString("pt-BR");
+                            } else {
+                              console.error("Formato de data inesperado:", row.prev_entrega);
+                              return "";
+                            }
+                          }
+                          return "";
+                        })()}
+                        </TableCell>
                         <TableCell>
                           <Stack direction="row" spacing={1}>
                             <Button
