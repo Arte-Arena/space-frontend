@@ -606,41 +606,20 @@ const ArteFinalScreen = () => {
                         : [];
 
                       const dataPrevistaSegura = formatarDataSegura(String(row?.data_prevista));
-
-                      console.log("dataPrevistaSegura: ", dataPrevistaSegura);
-                      console.log("typeof dataPrevistaSegura: ", typeof dataPrevistaSegura);
-
-
                       const dataPrevista = row?.data_prevista ? dataPrevistaSegura : '';
                       const dataPrevistaDateTime = DateTime.fromFormat(dataPrevista, 'MM/dd/yyyy').startOf('day');
-
                       const dataAtual = formatarDataSegura(zerarHorario(getBrazilTime()).toISOString());
-                      console.log("dataAtual: ", dataAtual);
-                      console.log("typeof dataAtual: ", typeof dataAtual);
-
                       const localStoragePrazos = localStorage.getItem('configPrazos');
                       const parsedPrazos = JSON.parse(localStoragePrazos || '[]');
                       const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_arte_final;
-                      console.log("diasAntecipaProducao: ", diasAntecipaProducao);
-
                       const feriados = localStorage.getItem('feriados');
                       const parsedFeriados = JSON.parse(feriados || '[]');
-
                       const prazoArteFinal = calcularDataPassadaDiasUteis(dataPrevistaDateTime, diasAntecipaProducao, parsedFeriados);
-
                       let atraso = false;
                       let isHoje = false;
-
-
                       const dataAtualJS = new Date(dataAtual);
                       const dataPrevistaConfeccao = new Date(String(dataPrevista));
-
-
-
                       const dataPrevistaArteFinal = subDays(dataPrevistaConfeccao, diasAntecipaProducao);
-                      console.log("typeof dataPrevistaArteFinal: ", typeof dataPrevistaArteFinal);
-                      console.log("dataPrevistaArteFinal: ", dataPrevistaArteFinal);
-
                       if (dataPrevistaArteFinal < dataAtualJS) {
                         atraso = true;
                       }
@@ -649,7 +628,6 @@ const ArteFinalScreen = () => {
                       }
 
                       const parsedDesigners = typeof designers === 'string' ? JSON.parse(designers) : designers;
-
                       const usersMap = new Map(
                         Array.isArray(parsedDesigners)
                           ? parsedDesigners.map(designer => [designer.id, designer.name])

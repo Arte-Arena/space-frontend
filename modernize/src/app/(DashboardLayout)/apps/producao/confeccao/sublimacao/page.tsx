@@ -344,6 +344,16 @@ const SublimacaoScreen = () => {
     return filteredPedidos.slice(startIndex, endIndex);
   }, [filteredPedidos, paginationModel]);
 
+  function formatarDataRelatorio(dataString: string): string {
+    let dataUTC;
+    if (dataString.includes(' ')) {
+      dataUTC = DateTime.fromFormat(dataString, 'yyyy-MM-dd HH:mm:ss', { zone: 'utc' });
+    } else {
+      dataUTC = DateTime.fromISO(dataString, { zone: 'utc' });
+    }
+    return dataUTC.toFormat('MM/dd/yyyy');
+  }
+
   function formatarDataSegura(dataISOString: string): string {
     const dataUTC = DateTime.fromISO(dataISOString, { zone: 'utc' });
     const dataFormatada = dataUTC.toFormat('MM/dd/yyyy');
@@ -395,13 +405,19 @@ const SublimacaoScreen = () => {
                   {porDia && Object.entries(porDia.dados_por_data).map(([data, valores]) => {
                     const { quantidade_pedidos, total_medida_linear } = valores as { quantidade_pedidos: number; total_medida_linear: number };
 
-                    // Formata a data para "DD/MM/YYYY"
-                    const dataObjeto = DateTime.fromFormat(data, "yyyy-MM-dd HH:mm:ss");
-                    const dataFormatada = dataObjeto.toFormat("dd/MM/yyyy");
+                    const localStoragePrazos = localStorage.getItem('configPrazos');
+                    const feriados = localStorage.getItem('feriados');
+                    const parsedFeriados = JSON.parse(feriados || '[]');
+                    const parsedPrazos = JSON.parse(localStoragePrazos || '[]');
+                    const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_confeccao_sublimacao;
+                    const dataSeguraRelatorio = formatarDataRelatorio(data); // mes dia e ano
+                    const dataRelatorio = data ? dataSeguraRelatorio : '';
+                    const dataPrevistaDateTime = DateTime.fromFormat(dataRelatorio, 'MM/dd/yyyy').startOf('day');
+                    const prazoRelatoriosSublimiacao = calcularDataPassadaDiasUteis(dataPrevistaDateTime, diasAntecipaProducao, parsedFeriados);
 
                     return (
                       <TableRow key={data}>
-                        <TableCell align="center">{dataFormatada}</TableCell>
+                        <TableCell align="center">{prazoRelatoriosSublimiacao.toFormat('dd/MM/yyyy')}</TableCell>
                         <TableCell align="center">{quantidade_pedidos}</TableCell>
                       </TableRow>
                     );
