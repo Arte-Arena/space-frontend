@@ -712,7 +712,7 @@ const CorteConferenciaScreen = () => {
                                 </Tooltip>
                               </Grid>
                               <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Enviar para Sublimação">
+                                <Tooltip title="Voltar para Sublimação">
                                   <IconButton onClick={() => handleVoltarSublimacao(row)}>
                                     <IconSquareChevronsLeft />
                                   </IconButton>
