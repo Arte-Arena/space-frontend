@@ -689,14 +689,14 @@ const SublimacaoScreen = () => {
                                 </Tooltip>
                               </Grid>
                               <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Voltar para Impressão">
+                                <Tooltip title="Mover para Impressão">
                                   <IconButton onClick={() => handleVoltarImpressao(row)}>
                                     <IconSquareChevronsLeft />
                                   </IconButton>
                                 </Tooltip>
                               </Grid>
                               <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Enviar para Corte e Conferência">
+                                <Tooltip title="Mover para Corte e Conferência">
                                   <IconButton onClick={() => handleEnviarCorte(row)}>
                                     <IconSquareChevronsRight />
                                   </IconButton>

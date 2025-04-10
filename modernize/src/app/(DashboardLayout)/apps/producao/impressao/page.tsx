@@ -958,14 +958,14 @@ const ImpressaoScreen = () => {
                               </Tooltip>
                             </Grid>
                             <Grid item xs={5} sm={5} md={5} lg={5}>
-                              <Tooltip title="Voltar para o Design!">
+                              <Tooltip title="Mover para o Design!">
                                 <IconButton onClick={() => handleVoltarDesign(row)}>
                                   <IconSquareChevronsLeft />
                                 </IconButton>
                               </Tooltip>
                             </Grid>
                             <Grid item xs={5} sm={5} md={5} lg={5}>
-                              <Tooltip title="Enviar para Sublimação!">
+                              <Tooltip title="Mover para Sublimação!">
                                 <IconButton onClick={() => handleEnviarSublimacao(row)}>
                                   <IconSquareChevronsRight />
                                 </IconButton>

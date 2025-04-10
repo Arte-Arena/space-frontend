@@ -712,14 +712,14 @@ const CorteConferenciaScreen = () => {
                                 </Tooltip>
                               </Grid>
                               <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Enviar para Sublimação">
+                                <Tooltip title="Mover para Sublimação">
                                   <IconButton onClick={() => handleVoltarSublimacao(row)}>
                                     <IconSquareChevronsLeft />
                                   </IconButton>
                                 </Tooltip>
                               </Grid>
                               <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Enviar para Costura">
+                                <Tooltip title="Mover para Costura">
                                   <IconButton onClick={() => handleEnviarCostura(row)}>
                                     <IconSquareChevronsRight />
                                   </IconButton>
