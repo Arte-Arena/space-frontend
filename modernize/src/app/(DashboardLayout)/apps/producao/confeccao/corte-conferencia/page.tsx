@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconEye, IconShirt } from '@tabler/icons-react';
+import { IconEye, IconShirt, IconSquareChevronsRight, IconSquareChevronsLeft } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -36,10 +36,10 @@ import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
-import { format, isSameDay, subDays } from 'date-fns';
-import trocarStatusPedido from './components/useTrocarStatusPedido';
+import { isSameDay, subDays } from 'date-fns';
+import trocarStatusPedidoCorte from './components/useTrocarStatusPedidoCorte';
+import trocarStatusPedidoConferencia from './components/useTrocarStatusPedidoConferencia';
 import { useThemeMode } from '@/utils/useThemeMode';
-import { IconDirectionSign } from '@tabler/icons-react';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import getBrazilTime from '@/utils/brazilTime';
@@ -159,7 +159,7 @@ const CorteConferenciaScreen = () => {
   };
 
   const handleEnviarCostura = async (row: ArteFinal) => {
-    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Expedição?');
+    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Costura?');
     if (confirmar) {
       const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "R", refetch);
       if (sucesso) {
@@ -185,8 +185,53 @@ const CorteConferenciaScreen = () => {
     }
   }
 
-  const handleStatusChange = async (row: ArteFinal, status: string) => {
-    const sucesso = await trocarStatusPedido(row?.id, status, refetch);
+  const handleVoltarSublimacao = async (row: ArteFinal) => {
+    const confirmar = window.confirm('Deseja voltar o pedido N° ' + row.numero_pedido + ' para Sublimação?');
+    if (confirmar) {
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "S", refetch);
+      if (sucesso) {
+        setSnackbar({
+          open: true,
+          message: '✅ Sucesso!',
+          severity: 'success'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: `${'Falha ao enviar pedido.'}`,
+          severity: 'error'
+        });
+      }
+    } else {
+      console.log("Envio cancelado.");
+      setSnackbar({
+        open: true,
+        message: `${'Envio cancelado.'}`,
+        severity: 'error'
+      });
+    }
+  }
+
+  const handleStatusChangeCorte = async (row: ArteFinal, status: string) => {
+    const sucesso = await trocarStatusPedidoCorte(row?.id, status, refetch);
+    if (sucesso) {
+      console.log("Pedido enviado com sucesso!");
+      setSnackbar({
+        open: true,
+        message: `✅ ${'Sucesso!'}`,
+        severity: 'success'
+      });
+    } else {
+      console.log("Falha ao trocar status.");
+      setSnackbar({
+        open: true,
+        message: `${'Status não atualizado.'}`,
+        severity: 'warning'
+      });
+    }
+  }
+  const handleStatusChangeConferencia = async (row: ArteFinal, status: string) => {
+    const sucesso = await trocarStatusPedidoConferencia(row?.id, status, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
       setSnackbar({
@@ -278,14 +323,21 @@ const CorteConferenciaScreen = () => {
 
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
+  
+  const pedidosStatusFilaR: Record<number, { id: number, nome: string; fila: 'R' }> = Object.fromEntries(
+    parsedPedidosStatus
+      .filter((item: { fila: string }) => item.fila === 'R')
+      .map(({ id, nome, fila }: { id: number; nome: string; fila: 'R' }) => [id, { nome, fila }])
+  );
 
-  const pedidosStatusFilaD: Record<number, { id: number, nome: string; fila: 'F' }> = Object.fromEntries(
+  const pedidosStatusFilaF: Record<number, { id: number, nome: string; fila: 'F' }> = Object.fromEntries(
     parsedPedidosStatus
       .filter((item: { fila: string }) => item.fila === 'F')
       .map(({ id, nome, fila }: { id: number; nome: string; fila: 'F' }) => [id, { nome, fila }])
   );
 
-  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'F' }> = pedidosStatusFilaD as Record<number, { id: number, nome: string; fila: 'F' }>;
+  const pedidoStatusCorte: Record<number, { id: number, nome: string; fila: 'R' }> = pedidosStatusFilaR as Record<number, { id: number, nome: string; fila: 'R' }>;
+  const pedidoStatusConferencia: Record<number, { id: number, nome: string; fila: 'F' }> = pedidosStatusFilaF as Record<number, { id: number, nome: string; fila: 'F' }>;
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
@@ -305,6 +357,16 @@ const CorteConferenciaScreen = () => {
     const endIndex = startIndex + paginationModel.pageSize;
     return filteredPedidos.slice(startIndex, endIndex);
   }, [filteredPedidos, paginationModel]);
+
+  function formatarDataRelatorio(dataString: string): string {
+    let dataUTC;
+    if (dataString.includes(' ')) {
+      dataUTC = DateTime.fromFormat(dataString, 'yyyy-MM-dd HH:mm:ss', { zone: 'utc' });
+    } else {
+      dataUTC = DateTime.fromISO(dataString, { zone: 'utc' });
+    }
+    return dataUTC.toFormat('MM/dd/yyyy');
+  }
 
   function formatarDataSegura(dataISOString: string): string {
     const dataUTC = DateTime.fromISO(dataISOString, { zone: 'utc' });
@@ -357,13 +419,19 @@ const CorteConferenciaScreen = () => {
                   {porDia && Object.entries(porDia.dados_por_data).map(([data, valores]) => {
                     const { quantidade_pedidos, total_medida_linear } = valores as { quantidade_pedidos: number; total_medida_linear: number };
 
-                    // Formata a data para "DD/MM/YYYY"
-                    const dataObjeto = DateTime.fromFormat(data, "yyyy-MM-dd HH:mm:ss");
-                    const dataFormatada = dataObjeto.toFormat("dd/MM/yyyy");
+                    const localStoragePrazos = localStorage.getItem('configPrazos');
+                    const feriados = localStorage.getItem('feriados');
+                    const parsedFeriados = JSON.parse(feriados || '[]');
+                    const parsedPrazos = JSON.parse(localStoragePrazos || '[]');
+                    const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_confeccao_sublimacao;
+                    const dataSeguraRelatorio = formatarDataRelatorio(data); // mes dia e ano
+                    const dataRelatorio = data ? dataSeguraRelatorio : '';
+                    const dataPrevistaDateTime = DateTime.fromFormat(dataRelatorio, 'MM/dd/yyyy').startOf('day');
+                    const prazoRelatoriosSublimiacao = calcularDataPassadaDiasUteis(dataPrevistaDateTime, diasAntecipaProducao, parsedFeriados);
 
                     return (
                       <TableRow key={data}>
-                        <TableCell align="center">{dataFormatada}</TableCell>
+                        <TableCell align="center">{prazoRelatoriosSublimiacao.toFormat('dd/MM/yyyy')}</TableCell>
                         <TableCell align="center">{quantidade_pedidos}</TableCell>
                       </TableRow>
                     );
@@ -388,6 +456,22 @@ const CorteConferenciaScreen = () => {
               </Grid>
 
               {/* Select de Status */}
+              {/* <Grid item>
+                <CustomSelect
+                  sx={{ minWidth: '150px' }} // Define uma largura mínima
+                  value={statusFilter}
+                  onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setStatusFilter(e.target.value)}
+                  displayEmpty
+                  size="small"
+                >
+                  <MenuItem value="">Status Corte</MenuItem>
+                  {Object.entries(pedidoStatusCorte).map(([id, status]) => (
+                    <MenuItem key={id} value={status.nome}>
+                      {status.nome}
+                    </MenuItem>
+                  ))}
+                </CustomSelect>
+              </Grid>
               <Grid item>
                 <CustomSelect
                   sx={{ minWidth: '150px' }} // Define uma largura mínima
@@ -396,14 +480,14 @@ const CorteConferenciaScreen = () => {
                   displayEmpty
                   size="small"
                 >
-                  <MenuItem value="">Todos os Status</MenuItem>
-                  {Object.entries(pedidoStatus).map(([id, status]) => (
-                    <MenuItem key={id} value={id}>
+                  <MenuItem value="">Status Conferência</MenuItem>
+                  {Object.entries(pedidoStatusConferencia).map(([id, status]) => (
+                    <MenuItem key={id} value={status.nome}>
                       {status.nome}
                     </MenuItem>
                   ))}
                 </CustomSelect>
-              </Grid>
+              </Grid> */}
 
               {/* DatePicker - Data Inicial */}
               <Grid item>
@@ -472,7 +556,8 @@ const CorteConferenciaScreen = () => {
                       <TableCell align='center' sx={{ width: '5%' }}>Data De Entrega</TableCell>
                       <TableCell align='center' sx={{ width: '25%' }}>Observação</TableCell>
                       <TableCell align='center' sx={{ width: '3%' }}>Tipo</TableCell>
-                      <TableCell align='center' sx={{ width: '7%' }}>Status</TableCell>
+                      <TableCell align='center' sx={{ width: '7%' }}>Corte</TableCell>
+                      <TableCell align='center' sx={{ width: '7%' }}>Conferênia</TableCell>
                       <TableCell align='center' sx={{ width: '15%' }}>Ações</TableCell>
                     </TableRow>
                   </TableHead>
@@ -506,10 +591,13 @@ const CorteConferenciaScreen = () => {
                         isHoje = true;
                       }
 
-                      const pedidoStatusColors: Record<string, string> = {
-                        "Pendente": 'rgba(238, 84, 84, 0.8)',
-                        "Não Conferido": 'rgba(220, 53, 69, 0.49)',
-                        "Conferido": 'rgba(213, 121, 0, 0.8)',
+                      const pedidoStatusColorsCortado: Record<string, string> = {
+                        "Não Cortado": 'inherit',
+                        "Cortado": 'rgba(0, 152, 63, 0.65)',
+                      };
+                      const pedidoStatusColorsConferido: Record<string, string> = {
+                        "Não Conferido": 'inherit',
+                        "Conferido": 'rgba(0, 152, 63, 0.65)',
                       };
 
                       const tipo = row.pedido_tipo_id && pedidoTiposMapping[row.pedido_tipo_id as keyof typeof pedidoTiposMapping];
@@ -568,6 +656,13 @@ const CorteConferenciaScreen = () => {
                                     observacoesRefs.current[row.id] = ref;
                                   }
                                 }}
+                                onBlur={() => {
+                                  if (row?.id) {
+                                    const inputElement = observacoesRefs.current[row.id];
+                                    const valor = inputElement?.value || '';
+                                    handleEnviarObservacao(String(row.id), valor);
+                                  }
+                                }}
                                 onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
                                   if (row?.id) handleKeyPressObservacoes(String(row.id), event);
                                 }}
@@ -584,7 +679,7 @@ const CorteConferenciaScreen = () => {
                           <TableCell
                             sx={{
                               color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                              backgroundColor: pedidoStatusColors[row?.confeccao_corte_conferencia?.status ?? 0] || 'inherit',
+                              backgroundColor: pedidoStatusColorsCortado[row?.confeccao_corte_conferencia?.status_corte ?? 0] || 'inherit',
                             }}
                             align='center'
                           >
@@ -601,13 +696,47 @@ const CorteConferenciaScreen = () => {
                                 boxSizing: 'border-box',
                               }}
 
-                              value={String(row.confeccao_corte_conferencia?.status ?? 0)}
+                              value={String(row.confeccao_corte_conferencia?.status_corte ?? 0)}
                               onChange={(event: { target: { value: string; }; }) => {
                                 const newStatus = event.target.value;
-                                handleStatusChange(row, newStatus);
+                                handleStatusChangeCorte(row, newStatus);
                               }}
                             >
-                              {Object.entries(pedidoStatus).map(([id, status]) => (
+                              {Object.entries(pedidoStatusCorte).map(([id, status]) => (
+                                <MenuItem key={id} value={status.nome}>
+                                  {status.nome}
+                                </MenuItem>
+                              ))}
+                            </CustomSelect>
+                          </TableCell>
+
+                          <TableCell
+                            sx={{
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                              backgroundColor: pedidoStatusColorsConferido[row?.confeccao_corte_conferencia?.status_conferencia ?? 0] || 'inherit',
+                            }}
+                            align='center'
+                          >
+                            <CustomSelect
+                              style={{
+                                height: '30px',
+                                textAlign: 'center',
+                                padding: '0px',
+                                fontSize: '12px',
+                                borderRadius: '4px',
+                                backgroundColor: 'transparent',
+                                cursor: 'pointer',
+                                width: '100%',
+                                boxSizing: 'border-box',
+                              }}
+
+                              value={String(row.confeccao_corte_conferencia?.status_conferencia ?? 0)}
+                              onChange={(event: { target: { value: string; }; }) => {
+                                const newStatus = event.target.value;
+                                handleStatusChangeConferencia(row, newStatus);
+                              }}
+                            >
+                              {Object.entries(pedidoStatusConferencia).map(([id, status]) => (
                                 <MenuItem key={id} value={status.nome}>
                                   {status.nome}
                                 </MenuItem>
@@ -648,9 +777,16 @@ const CorteConferenciaScreen = () => {
                                 </Tooltip>
                               </Grid>
                               <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Enviar para Costura">
+                                <Tooltip title="Mover para Sublimação">
+                                  <IconButton onClick={() => handleVoltarSublimacao(row)}>
+                                    <IconSquareChevronsLeft />
+                                  </IconButton>
+                                </Tooltip>
+                              </Grid>
+                              <Grid item xs={5} sm={5} md={5} lg={5}>
+                                <Tooltip title="Mover para Costura">
                                   <IconButton onClick={() => handleEnviarCostura(row)}>
-                                    <IconDirectionSign />
+                                    <IconSquareChevronsRight />
                                   </IconButton>
                                 </Tooltip>
                               </Grid>

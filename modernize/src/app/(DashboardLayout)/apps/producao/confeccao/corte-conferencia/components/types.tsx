@@ -50,6 +50,8 @@ interface User {
 interface CorteConferencia {
     id: number;
     pedido_arte_final_id: number;
+    status_corte: string;
+    status_conferencia: string;
     status: string;
     created_at: Date | null;
     updated_at: Date | null;

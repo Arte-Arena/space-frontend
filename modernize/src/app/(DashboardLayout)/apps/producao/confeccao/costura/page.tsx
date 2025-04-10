@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconEye, IconShirt } from '@tabler/icons-react';
+import { IconEye, IconShirt, IconSquareChevronsLeft, IconSquareChevronsRight } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -86,7 +86,7 @@ const SublimacaoScreen = () => {
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=R`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=C`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +95,7 @@ const SublimacaoScreen = () => {
       }).then((res) => res.json()),
   });
 
-  const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("R");
+  const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("C");
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) {
@@ -184,6 +184,34 @@ const SublimacaoScreen = () => {
       });
     }
   }
+  const handleVoltarConferencia = async (row: ArteFinal) => {
+    const confirmar = window.confirm('Deseja voltar o pedido N° ' + row.numero_pedido + ' para Corte e Conferência?');
+    if (confirmar) {
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "F", refetch);
+      if (sucesso) {
+        setSnackbar({
+          open: true,
+          message: '✅ Sucesso!',
+          severity: 'success'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: `${'Falha ao enviar pedido.'}`,
+          severity: 'error'
+        });
+      }
+    } else {
+      console.log("Envio cancelado.");
+      setSnackbar({
+        open: true,
+        message: `${'Envio cancelado.'}`,
+        severity: 'error'
+      });
+    }
+  }
+
+
 
   const handleStatusChange = async (row: ArteFinal, status: string) => {
     const sucesso = await trocarStatusPedido(row?.id, status, refetch);
@@ -308,6 +336,16 @@ const SublimacaoScreen = () => {
     });
   }, [allPedidos, filters, dateFilter]);
 
+  function formatarDataRelatorio(dataString: string): string {
+    let dataUTC;
+    if (dataString.includes(' ')) {
+      dataUTC = DateTime.fromFormat(dataString, 'yyyy-MM-dd HH:mm:ss', { zone: 'utc' });
+    } else {
+      dataUTC = DateTime.fromISO(dataString, { zone: 'utc' });
+    }
+    return dataUTC.toFormat('MM/dd/yyyy');
+  }
+
   function formatarDataSegura(dataISOString: string): string {
     const dataUTC = DateTime.fromISO(dataISOString, { zone: 'utc' });
     const dataFormatada = dataUTC.toFormat('MM/dd/yyyy');
@@ -341,9 +379,9 @@ const SublimacaoScreen = () => {
   ];
 
   return (
-    <PageContainer title="Produção / Sublimação" description="Tela de Produção da Sublimação | Arte Arena">
+    <PageContainer title="Produção / Costura" description="Tela de Produção da Costura | Arte Arena">
       <>
-        <Breadcrumb title="Produção / Sublimação" items={BCrumb} />
+        <Breadcrumb title="Produção / Costura" items={BCrumb} />
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2, }}>
           <Typography variant="body1" sx={{ fontWeight: 500, alignItems: 'center' }}>
             <span style={{ fontWeight: 'bold', fontSize: 16 }}>Por Dia: </span>
@@ -366,13 +404,19 @@ const SublimacaoScreen = () => {
                   {porDia && Object.entries(porDia.dados_por_data).map(([data, valores]) => {
                     const { quantidade_pedidos, total_medida_linear } = valores as { quantidade_pedidos: number; total_medida_linear: number };
 
-                    // Formata a data para "DD/MM/YYYY"
-                    const dataObjeto = DateTime.fromFormat(data, "yyyy-MM-dd HH:mm:ss");
-                    const dataFormatada = dataObjeto.toFormat("dd/MM/yyyy");
+                    const localStoragePrazos = localStorage.getItem('configPrazos');
+                    const feriados = localStorage.getItem('feriados');
+                    const parsedFeriados = JSON.parse(feriados || '[]');
+                    const parsedPrazos = JSON.parse(localStoragePrazos || '[]');
+                    const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_confeccao_costura;
+                    const dataSeguraRelatorio = formatarDataRelatorio(data); // mes dia e ano
+                    const dataRelatorio = data ? dataSeguraRelatorio : '';
+                    const dataPrevistaDateTime = DateTime.fromFormat(dataRelatorio, 'MM/dd/yyyy').startOf('day');
+                    const prazoRelatoriosSublimiacao = calcularDataPassadaDiasUteis(dataPrevistaDateTime, diasAntecipaProducao, parsedFeriados);
 
                     return (
                       <TableRow key={data}>
-                        <TableCell align="center">{dataFormatada}</TableCell>
+                        <TableCell align="center">{prazoRelatoriosSublimiacao.toFormat('dd/MM/yyyy')}</TableCell>
                         <TableCell align="center">{quantidade_pedidos}</TableCell>
                       </TableRow>
                     );
@@ -382,7 +426,7 @@ const SublimacaoScreen = () => {
             </TableContainer>
           </Collapse>
         </Box>
-        <ParentCard title="Sublimação">
+        <ParentCard title="Costura">
           <>
             <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
               {/* Campo de Número do Pedido */}
@@ -494,27 +538,27 @@ const SublimacaoScreen = () => {
                           : row.lista_produtos
                         : [];
 
-                        const dataPrevistaSegura = formatarDataSegura(String(row?.data_prevista));
-                        const dataPrevista = row?.data_prevista ? dataPrevistaSegura : '';
-                        const dataPrevistaDateTime = DateTime.fromFormat(dataPrevista, 'MM/dd/yyyy').startOf('day');
-                        const dataAtual = formatarDataSegura(zerarHorario(getBrazilTime()).toISOString());
-                        const localStoragePrazos = localStorage.getItem('configPrazos');
-                        const parsedPrazos = JSON.parse(localStoragePrazos || '[]');
-                        const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_confeccao_costura;
-                        const feriados = localStorage.getItem('feriados');
-                        const parsedFeriados = JSON.parse(feriados || '[]');
-                        const prazoCostura = calcularDataPassadaDiasUteis(dataPrevistaDateTime, diasAntecipaProducao, parsedFeriados);
-                        let atraso = false;
-                        let isHoje = false;
-                        const dataAtualJS = new Date(dataAtual);
-                        const dataPrevistaConfeccao = new Date(String(dataPrevista));
-                        const dataPrevistaArteFinal = subDays(dataPrevistaConfeccao, diasAntecipaProducao);
-                        if (dataPrevistaArteFinal < dataAtualJS) {
-                          atraso = true;
-                        }
-                        if (isSameDay(dataPrevistaArteFinal, dataAtualJS)) {
-                          isHoje = true;
-                        }
+                      const dataPrevistaSegura = formatarDataSegura(String(row?.data_prevista));
+                      const dataPrevista = row?.data_prevista ? dataPrevistaSegura : '';
+                      const dataPrevistaDateTime = DateTime.fromFormat(dataPrevista, 'MM/dd/yyyy').startOf('day');
+                      const dataAtual = formatarDataSegura(zerarHorario(getBrazilTime()).toISOString());
+                      const localStoragePrazos = localStorage.getItem('configPrazos');
+                      const parsedPrazos = JSON.parse(localStoragePrazos || '[]');
+                      const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_confeccao_costura;
+                      const feriados = localStorage.getItem('feriados');
+                      const parsedFeriados = JSON.parse(feriados || '[]');
+                      const prazoCostura = calcularDataPassadaDiasUteis(dataPrevistaDateTime, diasAntecipaProducao, parsedFeriados);
+                      let atraso = false;
+                      let isHoje = false;
+                      const dataAtualJS = new Date(dataAtual);
+                      const dataPrevistaConfeccao = new Date(String(dataPrevista));
+                      const dataPrevistaArteFinal = subDays(dataPrevistaConfeccao, diasAntecipaProducao);
+                      if (dataPrevistaArteFinal < dataAtualJS) {
+                        atraso = true;
+                      }
+                      if (isSameDay(dataPrevistaArteFinal, dataAtualJS)) {
+                        isHoje = true;
+                      }
 
                       const pedidoStatusColors: Record<string, string> = {
                         'Pendente': 'rgba(220, 53, 69, 0.49)',
@@ -579,6 +623,13 @@ const SublimacaoScreen = () => {
                                 inputRef={(ref: HTMLInputElement | null) => {
                                   if (row?.id && ref) {
                                     observacoesRefs.current[row.id] = ref;
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (row?.id) {
+                                    const inputElement = observacoesRefs.current[row.id];
+                                    const valor = inputElement?.value || '';
+                                    handleEnviarObservacao(String(row.id), valor);
                                   }
                                 }}
                                 onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -661,9 +712,16 @@ const SublimacaoScreen = () => {
                                 </Tooltip>
                               </Grid>
                               <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Enviar para Expedição">
+                                <Tooltip title="Mover para Conferência">
+                                  <IconButton onClick={() => handleVoltarConferencia(row)}>
+                                    <IconSquareChevronsLeft />
+                                  </IconButton>
+                                </Tooltip>
+                              </Grid>
+                              <Grid item xs={5} sm={5} md={5} lg={5}>
+                                <Tooltip title="Finalizar e mover para Expedição!">
                                   <IconButton onClick={() => handleEnviarEntrega(row)}>
-                                    <IconDirectionSign />
+                                    <IconSquareChevronsRight />
                                   </IconButton>
                                 </Tooltip>
                               </Grid>

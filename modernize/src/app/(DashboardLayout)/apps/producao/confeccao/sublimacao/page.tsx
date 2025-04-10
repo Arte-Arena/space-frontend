@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconEye, IconShirt } from '@tabler/icons-react';
+import { IconEye, IconPrinter, IconShirt, IconSquareChevronsLeft } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -49,6 +49,7 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 import { calcularDataPassadaDiasUteis } from '@/utils/calcDiasUteis';
+import { IconSquareChevronsRight } from '@tabler/icons-react';
 
 const SublimacaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -183,7 +184,35 @@ const SublimacaoScreen = () => {
         severity: 'error'
       });
     }
-  }
+  };
+
+  const handleVoltarImpressao = async (row: ArteFinal) => {
+    const confirmar = window.confirm('Deseja voltar o pedido N° ' + row.numero_pedido + ' para o Impressão?');
+
+    if (confirmar) {
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "I", refetch);
+      if (sucesso) {
+        setSnackbar({
+          open: true,
+          message: '✅ Sucesso!',
+          severity: 'success'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: `${'Falha ao enviar pedido.'}`,
+          severity: 'error'
+        });
+      }
+    } else {
+      console.log("Envio cancelado.");
+      setSnackbar({
+        open: true,
+        message: `${'Envio cancelado.'}`,
+        severity: 'error'
+      });
+    }
+  };
 
   const handleStatusChange = async (row: ArteFinal, status: string) => {
     const sucesso = await trocarStatusPedido(row?.id, status, refetch);
@@ -315,6 +344,16 @@ const SublimacaoScreen = () => {
     return filteredPedidos.slice(startIndex, endIndex);
   }, [filteredPedidos, paginationModel]);
 
+  function formatarDataRelatorio(dataString: string): string {
+    let dataUTC;
+    if (dataString.includes(' ')) {
+      dataUTC = DateTime.fromFormat(dataString, 'yyyy-MM-dd HH:mm:ss', { zone: 'utc' });
+    } else {
+      dataUTC = DateTime.fromISO(dataString, { zone: 'utc' });
+    }
+    return dataUTC.toFormat('MM/dd/yyyy');
+  }
+
   function formatarDataSegura(dataISOString: string): string {
     const dataUTC = DateTime.fromISO(dataISOString, { zone: 'utc' });
     const dataFormatada = dataUTC.toFormat('MM/dd/yyyy');
@@ -366,13 +405,19 @@ const SublimacaoScreen = () => {
                   {porDia && Object.entries(porDia.dados_por_data).map(([data, valores]) => {
                     const { quantidade_pedidos, total_medida_linear } = valores as { quantidade_pedidos: number; total_medida_linear: number };
 
-                    // Formata a data para "DD/MM/YYYY"
-                    const dataObjeto = DateTime.fromFormat(data, "yyyy-MM-dd HH:mm:ss");
-                    const dataFormatada = dataObjeto.toFormat("dd/MM/yyyy");
+                    const localStoragePrazos = localStorage.getItem('configPrazos');
+                    const feriados = localStorage.getItem('feriados');
+                    const parsedFeriados = JSON.parse(feriados || '[]');
+                    const parsedPrazos = JSON.parse(localStoragePrazos || '[]');
+                    const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_confeccao_sublimacao;
+                    const dataSeguraRelatorio = formatarDataRelatorio(data); // mes dia e ano
+                    const dataRelatorio = data ? dataSeguraRelatorio : '';
+                    const dataPrevistaDateTime = DateTime.fromFormat(dataRelatorio, 'MM/dd/yyyy').startOf('day');
+                    const prazoRelatoriosSublimiacao = calcularDataPassadaDiasUteis(dataPrevistaDateTime, diasAntecipaProducao, parsedFeriados);
 
                     return (
                       <TableRow key={data}>
-                        <TableCell align="center">{dataFormatada}</TableCell>
+                        <TableCell align="center">{prazoRelatoriosSublimiacao.toFormat('dd/MM/yyyy')}</TableCell>
                         <TableCell align="center">{quantidade_pedidos}</TableCell>
                       </TableRow>
                     );
@@ -580,6 +625,13 @@ const SublimacaoScreen = () => {
                                     observacoesRefs.current[row.id] = ref;
                                   }
                                 }}
+                                onBlur={() => {
+                                  if (row?.id) {
+                                    const inputElement = observacoesRefs.current[row.id];
+                                    const valor = inputElement?.value || '';
+                                    handleEnviarObservacao(String(row.id), valor);
+                                  }
+                                }}
                                 onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
                                   if (row?.id) handleKeyPressObservacoes(String(row.id), event);
                                 }}
@@ -660,9 +712,16 @@ const SublimacaoScreen = () => {
                                 </Tooltip>
                               </Grid>
                               <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Enviar para Corte e Conferência">
+                                <Tooltip title="Mover para Impressão">
+                                  <IconButton onClick={() => handleVoltarImpressao(row)}>
+                                    <IconSquareChevronsLeft />
+                                  </IconButton>
+                                </Tooltip>
+                              </Grid>
+                              <Grid item xs={5} sm={5} md={5} lg={5}>
+                                <Tooltip title="Mover para Corte e Conferência">
                                   <IconButton onClick={() => handleEnviarCorte(row)}>
-                                    <IconDirectionSign />
+                                    <IconSquareChevronsRight />
                                   </IconButton>
                                 </Tooltip>
                               </Grid>

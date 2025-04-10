@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconEye, IconShirt, IconNeedleThread, IconEraser } from '@tabler/icons-react';
+import { IconEye, IconShirt, IconNeedleThread, IconEraser, IconArrowLeft, IconSquareChevronsRight, IconSquareChevronsLeft } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -54,6 +54,7 @@ import trocarImpressora from './components/useTrocarImpressora';
 import trocarTipoCorte from './components/useTrocarTipoCorte';
 import trocarRolo from './components/useTrocarRolo';
 import { calcularDataPassadaDiasUteis } from '@/utils/calcDiasUteis';
+import { IconPalette } from '@tabler/icons-react';
 
 const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -106,7 +107,7 @@ const ImpressaoScreen = () => {
         },
       }).then((res) => res.json()),
   });
-  console.log(dataPedidos);
+  // console.log(dataPedidos);
 
   const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("I");
 
@@ -260,10 +261,38 @@ const ImpressaoScreen = () => {
   };
 
   const handleEnviarSublimacao = async (row: ArteFinal) => {
-    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Confecção?');
+    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Sublimação?');
 
     if (confirmar) {
       const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "S", refetch);
+      if (sucesso) {
+        setSnackbar({
+          open: true,
+          message: '✅ Sucesso!',
+          severity: 'success'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: `${'Falha ao enviar pedido.'}`,
+          severity: 'error'
+        });
+      }
+    } else {
+      console.log("Envio cancelado.");
+      setSnackbar({
+        open: true,
+        message: `${'Envio cancelado.'}`,
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleVoltarDesign = async (row: ArteFinal) => {
+    const confirmar = window.confirm('Deseja voltar o pedido N° ' + row.numero_pedido + ' para o Design?');
+
+    if (confirmar) {
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "D", refetch);
       if (sucesso) {
         setSnackbar({
           open: true,
@@ -411,6 +440,16 @@ const ImpressaoScreen = () => {
     return filteredPedidos.slice(startIndex, endIndex);
   }, [filteredPedidos, paginationModel]);
 
+  function formatarDataRelatorio(dataString: string): string {
+    let dataUTC;
+    if (dataString.includes(' ')) {
+      dataUTC = DateTime.fromFormat(dataString, 'yyyy-MM-dd HH:mm:ss', { zone: 'utc' });
+    } else {
+      dataUTC = DateTime.fromISO(dataString, { zone: 'utc' });
+    }
+    return dataUTC.toFormat('MM/dd/yyyy');
+  }
+
   function formatarDataSegura(dataISOString: string): string {
     const dataUTC = DateTime.fromISO(dataISOString, { zone: 'utc' });
     const dataFormatada = dataUTC.toFormat('MM/dd/yyyy');
@@ -468,13 +507,19 @@ const ImpressaoScreen = () => {
                 {porDia && Object.entries(porDia.dados_por_data).map(([data, valores]) => {
                   const { quantidade_pedidos, total_medida_linear } = valores as { quantidade_pedidos: number; total_medida_linear: number };
 
-                  // Formata a data para "DD/MM/YYYY"
-                  const dataObjeto = DateTime.fromFormat(data, "yyyy-MM-dd HH:mm:ss");
-                  const dataFormatada = dataObjeto.toFormat("dd/MM/yyyy");
+                  const localStoragePrazos = localStorage.getItem('configPrazos');
+                  const feriados = localStorage.getItem('feriados');
+                  const parsedFeriados = JSON.parse(feriados || '[]');
+                  const parsedPrazos = JSON.parse(localStoragePrazos || '[]');
+                  const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_impressao;
+                  const dataSeguraRelatorio = formatarDataRelatorio(data); // mes dia e ano
+                  const dataRelatorio = data ? dataSeguraRelatorio : '';
+                  const dataPrevistaDateTime = DateTime.fromFormat(dataRelatorio, 'MM/dd/yyyy').startOf('day');
+                  const prazoRelatoriosImpressao = calcularDataPassadaDiasUteis(dataPrevistaDateTime, diasAntecipaProducao, parsedFeriados);
 
                   return (
                     <TableRow key={data}>
-                      <TableCell align="center">{dataFormatada}</TableCell>
+                      <TableCell align="center">{prazoRelatoriosImpressao.toFormat('dd/MM/yyyy')}</TableCell>
                       <TableCell align="center">{quantidade_pedidos}</TableCell>
                       <TableCell align="center">{total_medida_linear.toFixed(2)}</TableCell>
                     </TableRow>
@@ -849,6 +894,13 @@ const ImpressaoScreen = () => {
                                   observacoesRefs.current[row.id] = ref;
                                 }
                               }}
+                              onBlur={() => {
+                                if (row?.id) {
+                                  const inputElement = observacoesRefs.current[row.id];
+                                  const valor = inputElement?.value || '';
+                                  handleEnviarObservacao(String(row.id), valor);
+                                }
+                              }}
                               onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
                                 if (row?.id) handleKeyPressObservacoes(String(row.id), event);
                               }}
@@ -929,9 +981,16 @@ const ImpressaoScreen = () => {
                               </Tooltip>
                             </Grid>
                             <Grid item xs={5} sm={5} md={5} lg={5}>
-                              <Tooltip title="Enviar para Sublimação!">
+                              <Tooltip title="Mover para o Design!">
+                                <IconButton onClick={() => handleVoltarDesign(row)}>
+                                  <IconSquareChevronsLeft />
+                                </IconButton>
+                              </Tooltip>
+                            </Grid>
+                            <Grid item xs={5} sm={5} md={5} lg={5}>
+                              <Tooltip title="Mover para Sublimação!">
                                 <IconButton onClick={() => handleEnviarSublimacao(row)}>
-                                  <IconNeedleThread />
+                                  <IconSquareChevronsRight />
                                 </IconButton>
                               </Tooltip>
                             </Grid>
