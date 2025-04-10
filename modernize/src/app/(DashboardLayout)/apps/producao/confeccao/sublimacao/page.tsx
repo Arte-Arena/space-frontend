@@ -409,7 +409,7 @@ const SublimacaoScreen = () => {
                     const feriados = localStorage.getItem('feriados');
                     const parsedFeriados = JSON.parse(feriados || '[]');
                     const parsedPrazos = JSON.parse(localStoragePrazos || '[]');
-                    const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_sublimacao;
+                    const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_confeccao_sublimacao;
                     const dataSeguraRelatorio = formatarDataRelatorio(data); // mes dia e ano
                     const dataRelatorio = data ? dataSeguraRelatorio : '';
                     const dataPrevistaDateTime = DateTime.fromFormat(dataRelatorio, 'MM/dd/yyyy').startOf('day');
