@@ -597,6 +597,13 @@ const CorteConferenciaScreen = () => {
                                     observacoesRefs.current[row.id] = ref;
                                   }
                                 }}
+                                onBlur={() => {
+                                  if (row?.id) {
+                                    const inputElement = observacoesRefs.current[row.id];
+                                    const valor = inputElement?.value || '';
+                                    handleEnviarObservacao(String(row.id), valor);
+                                  }
+                                }}
                                 onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
                                   if (row?.id) handleKeyPressObservacoes(String(row.id), event);
                                 }}
