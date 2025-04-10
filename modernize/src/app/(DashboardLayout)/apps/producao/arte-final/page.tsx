@@ -635,8 +635,6 @@ const ArteFinalScreen = () => {
                       const dataAtualJS = new Date(dataAtual);
                       const dataPrevistaConfeccao = new Date(String(dataPrevista));
 
-
-
                       const dataPrevistaArteFinal = subDays(dataPrevistaConfeccao, diasAntecipaProducao);
                       console.log("typeof dataPrevistaArteFinal: ", typeof dataPrevistaArteFinal);
                       console.log("dataPrevistaArteFinal: ", dataPrevistaArteFinal);
