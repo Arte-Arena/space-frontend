@@ -458,6 +458,7 @@ export default function ArteFinalForm({ initialData, onSubmit, readOnly = false,
             renderInput={(params) => (
               <CustomTextField
                 {...params}
+                error={false}
                 fullWidth
                 readOnly={readOnly}
               />

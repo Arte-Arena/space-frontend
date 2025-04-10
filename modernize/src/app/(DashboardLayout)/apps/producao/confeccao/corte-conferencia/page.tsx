@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconEye, IconShirt } from '@tabler/icons-react';
+import { IconArrowBack, IconArrowLeftBar, IconEye, IconShirt, IconSquareChevronsRight, IconSquareChevronsRightFilled } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -49,6 +49,7 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 import { calcularDataPassadaDiasUteis } from '@/utils/calcDiasUteis';
+import { IconSquareChevronsLeft } from '@tabler/icons-react';
 
 const CorteConferenciaScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -159,9 +160,36 @@ const CorteConferenciaScreen = () => {
   };
 
   const handleEnviarCostura = async (row: ArteFinal) => {
-    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Expedição?');
+    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Costura?');
     if (confirmar) {
       const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "R", refetch);
+      if (sucesso) {
+        setSnackbar({
+          open: true,
+          message: '✅ Sucesso!',
+          severity: 'success'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: `${'Falha ao enviar pedido.'}`,
+          severity: 'error'
+        });
+      }
+    } else {
+      console.log("Envio cancelado.");
+      setSnackbar({
+        open: true,
+        message: `${'Envio cancelado.'}`,
+        severity: 'error'
+      });
+    }
+  }
+  
+  const handleVoltarSublimacao = async (row: ArteFinal) => {
+    const confirmar = window.confirm('Deseja voltar o pedido N° ' + row.numero_pedido + ' para Sublimação?');
+    if (confirmar) {
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "S", refetch);
       if (sucesso) {
         setSnackbar({
           open: true,
@@ -472,7 +500,8 @@ const CorteConferenciaScreen = () => {
                       <TableCell align='center' sx={{ width: '5%' }}>Data De Entrega</TableCell>
                       <TableCell align='center' sx={{ width: '25%' }}>Observação</TableCell>
                       <TableCell align='center' sx={{ width: '3%' }}>Tipo</TableCell>
-                      <TableCell align='center' sx={{ width: '7%' }}>Status</TableCell>
+                      {/* <TableCell align='center' sx={{ width: '7%' }}>Status Corte</TableCell> */}
+                      <TableCell align='center' sx={{ width: '7%' }}>Status Conferênia</TableCell>
                       <TableCell align='center' sx={{ width: '15%' }}>Ações</TableCell>
                     </TableRow>
                   </TableHead>
@@ -581,6 +610,41 @@ const CorteConferenciaScreen = () => {
                             backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
                           }} align='center'>{tipo ?? '-'}</TableCell>
 
+                          {/* status corte  */}
+                          {/* <TableCell
+                            sx={{
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                              backgroundColor: pedidoStatusColors[row?.confeccao_corte_conferencia?.statusCorte ?? 0] || 'inherit',
+                            }}
+                            align='center'
+                          >
+                            <CustomSelect
+                              style={{
+                                height: '30px',
+                                textAlign: 'center',
+                                padding: '0px',
+                                fontSize: '12px',
+                                borderRadius: '4px',
+                                backgroundColor: 'transparent',
+                                cursor: 'pointer',
+                                width: '100%',
+                                boxSizing: 'border-box',
+                              }}
+
+                              value={String(row.confeccao_corte_conferencia?.statusCorte ?? 0)}
+                              onChange={(event: { target: { value: string; }; }) => {
+                                const newStatus = event.target.value;
+                                handleStatusChange(row, newStatus);
+                              }}
+                            >
+                              {Object.entries(pedidoStatus).map(([id, status]) => (
+                                <MenuItem key={id} value={status.nome}>
+                                  {status.nome}
+                                </MenuItem>
+                              ))}
+                            </CustomSelect>
+                          </TableCell> */}
+
                           <TableCell
                             sx={{
                               color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
@@ -648,9 +712,16 @@ const CorteConferenciaScreen = () => {
                                 </Tooltip>
                               </Grid>
                               <Grid item xs={5} sm={5} md={5} lg={5}>
+                                <Tooltip title="Enviar para Sublimação">
+                                  <IconButton onClick={() => handleVoltarSublimacao(row)}>
+                                    <IconSquareChevronsLeft />
+                                  </IconButton>
+                                </Tooltip>
+                              </Grid>
+                              <Grid item xs={5} sm={5} md={5} lg={5}>
                                 <Tooltip title="Enviar para Costura">
                                   <IconButton onClick={() => handleEnviarCostura(row)}>
-                                    <IconDirectionSign />
+                                    <IconSquareChevronsRight />
                                   </IconButton>
                                 </Tooltip>
                               </Grid>

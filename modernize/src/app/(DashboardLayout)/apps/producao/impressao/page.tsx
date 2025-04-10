@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconEye, IconShirt, IconNeedleThread, IconEraser } from '@tabler/icons-react';
+import { IconEye, IconShirt, IconNeedleThread, IconEraser, IconArrowLeft, IconSquareChevronsRight, IconSquareChevronsLeft } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -54,6 +54,7 @@ import trocarImpressora from './components/useTrocarImpressora';
 import trocarTipoCorte from './components/useTrocarTipoCorte';
 import trocarRolo from './components/useTrocarRolo';
 import { calcularDataPassadaDiasUteis } from '@/utils/calcDiasUteis';
+import { IconPalette } from '@tabler/icons-react';
 
 const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -260,10 +261,38 @@ const ImpressaoScreen = () => {
   };
 
   const handleEnviarSublimacao = async (row: ArteFinal) => {
-    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Confecção?');
+    const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Sublimação?');
 
     if (confirmar) {
       const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "S", refetch);
+      if (sucesso) {
+        setSnackbar({
+          open: true,
+          message: '✅ Sucesso!',
+          severity: 'success'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: `${'Falha ao enviar pedido.'}`,
+          severity: 'error'
+        });
+      }
+    } else {
+      console.log("Envio cancelado.");
+      setSnackbar({
+        open: true,
+        message: `${'Envio cancelado.'}`,
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleVoltarDesign = async (row: ArteFinal) => {
+    const confirmar = window.confirm('Deseja voltar o pedido N° ' + row.numero_pedido + ' para o Design?');
+
+    if (confirmar) {
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "D", refetch);
       if (sucesso) {
         setSnackbar({
           open: true,
@@ -929,9 +958,16 @@ const ImpressaoScreen = () => {
                               </Tooltip>
                             </Grid>
                             <Grid item xs={5} sm={5} md={5} lg={5}>
+                              <Tooltip title="Voltar para o Design!">
+                                <IconButton onClick={() => handleVoltarDesign(row)}>
+                                  <IconSquareChevronsLeft />
+                                </IconButton>
+                              </Tooltip>
+                            </Grid>
+                            <Grid item xs={5} sm={5} md={5} lg={5}>
                               <Tooltip title="Enviar para Sublimação!">
                                 <IconButton onClick={() => handleEnviarSublimacao(row)}>
-                                  <IconNeedleThread />
+                                  <IconSquareChevronsRight />
                                 </IconButton>
                               </Tooltip>
                             </Grid>
