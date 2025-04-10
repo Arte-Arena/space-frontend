@@ -85,30 +85,12 @@ const UniformSketchesView: React.FC<UniformSketchesViewProps> = ({
       return;
     }
 
-    const isMockData = uniformData.id.startsWith("mock-");
-
     try {
       setSaving(true);
       setError(null);
 
-      if (isMockData) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setSuccess(true);
-
-        if (refreshData) {
-          refreshData();
-        }
-        return;
-      }
-
-      await uniformService.updateAllPlayerData(
-        uniformData.id,
-        modifiedSketches.map((sketch) => ({
-          sketchId: sketch.sketchId,
-          players: sketch.players,
-        })),
-      );
-
+      // Simulate saving for all cases
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       setSuccess(true);
 
       if (refreshData) {
@@ -170,7 +152,7 @@ const UniformSketchesView: React.FC<UniformSketchesViewProps> = ({
             disabled={saving}
             sx={{ minWidth: "180px" }}
           >
-            {saving ? "Salvando..." : "Salvar Todas Alterações"}
+            {saving ? "Salvando..." : "Salvar todas as alterações"}
           </Button>
         )}
       </Box>
