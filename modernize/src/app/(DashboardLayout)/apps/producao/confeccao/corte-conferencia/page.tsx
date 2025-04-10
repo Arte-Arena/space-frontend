@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconArrowBack, IconArrowLeftBar, IconEye, IconShirt, IconSquareChevronsRight, IconSquareChevronsRightFilled } from '@tabler/icons-react';
+import { IconEye, IconShirt, IconSquareChevronsRight, IconSquareChevronsLeft } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -36,10 +36,10 @@ import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
-import { format, isSameDay, subDays } from 'date-fns';
-import trocarStatusPedido from './components/useTrocarStatusPedido';
+import { isSameDay, subDays } from 'date-fns';
+import trocarStatusPedidoCorte from './components/useTrocarStatusPedidoCorte';
+import trocarStatusPedidoConferencia from './components/useTrocarStatusPedidoConferencia';
 import { useThemeMode } from '@/utils/useThemeMode';
-import { IconDirectionSign } from '@tabler/icons-react';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import getBrazilTime from '@/utils/brazilTime';
@@ -49,7 +49,6 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 import { calcularDataPassadaDiasUteis } from '@/utils/calcDiasUteis';
-import { IconSquareChevronsLeft } from '@tabler/icons-react';
 
 const CorteConferenciaScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -213,8 +212,26 @@ const CorteConferenciaScreen = () => {
     }
   }
 
-  const handleStatusChange = async (row: ArteFinal, status: string) => {
-    const sucesso = await trocarStatusPedido(row?.id, status, refetch);
+  const handleStatusChangeCorte = async (row: ArteFinal, status: string) => {
+    const sucesso = await trocarStatusPedidoCorte(row?.id, status, refetch);
+    if (sucesso) {
+      console.log("Pedido enviado com sucesso!");
+      setSnackbar({
+        open: true,
+        message: `✅ ${'Sucesso!'}`,
+        severity: 'success'
+      });
+    } else {
+      console.log("Falha ao trocar status.");
+      setSnackbar({
+        open: true,
+        message: `${'Status não atualizado.'}`,
+        severity: 'warning'
+      });
+    }
+  }
+  const handleStatusChangeConferencia = async (row: ArteFinal, status: string) => {
+    const sucesso = await trocarStatusPedidoConferencia(row?.id, status, refetch);
     if (sucesso) {
       console.log("Pedido enviado com sucesso!");
       setSnackbar({
@@ -306,14 +323,21 @@ const CorteConferenciaScreen = () => {
 
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
+  
+  const pedidosStatusFilaR: Record<number, { id: number, nome: string; fila: 'R' }> = Object.fromEntries(
+    parsedPedidosStatus
+      .filter((item: { fila: string }) => item.fila === 'R')
+      .map(({ id, nome, fila }: { id: number; nome: string; fila: 'R' }) => [id, { nome, fila }])
+  );
 
-  const pedidosStatusFilaD: Record<number, { id: number, nome: string; fila: 'F' }> = Object.fromEntries(
+  const pedidosStatusFilaF: Record<number, { id: number, nome: string; fila: 'F' }> = Object.fromEntries(
     parsedPedidosStatus
       .filter((item: { fila: string }) => item.fila === 'F')
       .map(({ id, nome, fila }: { id: number; nome: string; fila: 'F' }) => [id, { nome, fila }])
   );
 
-  const pedidoStatus: Record<number, { id: number, nome: string; fila: 'F' }> = pedidosStatusFilaD as Record<number, { id: number, nome: string; fila: 'F' }>;
+  const pedidoStatusCorte: Record<number, { id: number, nome: string; fila: 'R' }> = pedidosStatusFilaR as Record<number, { id: number, nome: string; fila: 'R' }>;
+  const pedidoStatusConferencia: Record<number, { id: number, nome: string; fila: 'F' }> = pedidosStatusFilaF as Record<number, { id: number, nome: string; fila: 'F' }>;
 
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
@@ -432,6 +456,22 @@ const CorteConferenciaScreen = () => {
               </Grid>
 
               {/* Select de Status */}
+              {/* <Grid item>
+                <CustomSelect
+                  sx={{ minWidth: '150px' }} // Define uma largura mínima
+                  value={statusFilter}
+                  onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setStatusFilter(e.target.value)}
+                  displayEmpty
+                  size="small"
+                >
+                  <MenuItem value="">Status Corte</MenuItem>
+                  {Object.entries(pedidoStatusCorte).map(([id, status]) => (
+                    <MenuItem key={id} value={status.nome}>
+                      {status.nome}
+                    </MenuItem>
+                  ))}
+                </CustomSelect>
+              </Grid>
               <Grid item>
                 <CustomSelect
                   sx={{ minWidth: '150px' }} // Define uma largura mínima
@@ -440,14 +480,14 @@ const CorteConferenciaScreen = () => {
                   displayEmpty
                   size="small"
                 >
-                  <MenuItem value="">Todos os Status</MenuItem>
-                  {Object.entries(pedidoStatus).map(([id, status]) => (
-                    <MenuItem key={id} value={id}>
+                  <MenuItem value="">Status Conferência</MenuItem>
+                  {Object.entries(pedidoStatusConferencia).map(([id, status]) => (
+                    <MenuItem key={id} value={status.nome}>
                       {status.nome}
                     </MenuItem>
                   ))}
                 </CustomSelect>
-              </Grid>
+              </Grid> */}
 
               {/* DatePicker - Data Inicial */}
               <Grid item>
@@ -516,8 +556,8 @@ const CorteConferenciaScreen = () => {
                       <TableCell align='center' sx={{ width: '5%' }}>Data De Entrega</TableCell>
                       <TableCell align='center' sx={{ width: '25%' }}>Observação</TableCell>
                       <TableCell align='center' sx={{ width: '3%' }}>Tipo</TableCell>
-                      {/* <TableCell align='center' sx={{ width: '7%' }}>Status Corte</TableCell> */}
-                      <TableCell align='center' sx={{ width: '7%' }}>Status Conferênia</TableCell>
+                      <TableCell align='center' sx={{ width: '7%' }}>Corte</TableCell>
+                      <TableCell align='center' sx={{ width: '7%' }}>Conferênia</TableCell>
                       <TableCell align='center' sx={{ width: '15%' }}>Ações</TableCell>
                     </TableRow>
                   </TableHead>
@@ -551,10 +591,13 @@ const CorteConferenciaScreen = () => {
                         isHoje = true;
                       }
 
-                      const pedidoStatusColors: Record<string, string> = {
-                        "Pendente": 'rgba(238, 84, 84, 0.8)',
-                        "Não Conferido": 'rgba(220, 53, 69, 0.49)',
-                        "Conferido": 'rgba(213, 121, 0, 0.8)',
+                      const pedidoStatusColorsCortado: Record<string, string> = {
+                        "Não Cortado": 'inherit',
+                        "Cortado": 'rgba(0, 152, 63, 0.65)',
+                      };
+                      const pedidoStatusColorsConferido: Record<string, string> = {
+                        "Não Conferido": 'inherit',
+                        "Conferido": 'rgba(0, 152, 63, 0.65)',
                       };
 
                       const tipo = row.pedido_tipo_id && pedidoTiposMapping[row.pedido_tipo_id as keyof typeof pedidoTiposMapping];
@@ -633,11 +676,10 @@ const CorteConferenciaScreen = () => {
                             backgroundColor: Number(row.pedido_tipo_id) === 2 ? 'rgba(255, 31, 53, 0.64)' : 'inherit',
                           }} align='center'>{tipo ?? '-'}</TableCell>
 
-                          {/* status corte  */}
-                          {/* <TableCell
+                          <TableCell
                             sx={{
                               color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                              backgroundColor: pedidoStatusColors[row?.confeccao_corte_conferencia?.statusCorte ?? 0] || 'inherit',
+                              backgroundColor: pedidoStatusColorsCortado[row?.confeccao_corte_conferencia?.status_corte ?? 0] || 'inherit',
                             }}
                             align='center'
                           >
@@ -654,24 +696,24 @@ const CorteConferenciaScreen = () => {
                                 boxSizing: 'border-box',
                               }}
 
-                              value={String(row.confeccao_corte_conferencia?.statusCorte ?? 0)}
+                              value={String(row.confeccao_corte_conferencia?.status_corte ?? 0)}
                               onChange={(event: { target: { value: string; }; }) => {
                                 const newStatus = event.target.value;
-                                handleStatusChange(row, newStatus);
+                                handleStatusChangeCorte(row, newStatus);
                               }}
                             >
-                              {Object.entries(pedidoStatus).map(([id, status]) => (
+                              {Object.entries(pedidoStatusCorte).map(([id, status]) => (
                                 <MenuItem key={id} value={status.nome}>
                                   {status.nome}
                                 </MenuItem>
                               ))}
                             </CustomSelect>
-                          </TableCell> */}
+                          </TableCell>
 
                           <TableCell
                             sx={{
                               color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                              backgroundColor: pedidoStatusColors[row?.confeccao_corte_conferencia?.status ?? 0] || 'inherit',
+                              backgroundColor: pedidoStatusColorsConferido[row?.confeccao_corte_conferencia?.status_conferencia ?? 0] || 'inherit',
                             }}
                             align='center'
                           >
@@ -688,13 +730,13 @@ const CorteConferenciaScreen = () => {
                                 boxSizing: 'border-box',
                               }}
 
-                              value={String(row.confeccao_corte_conferencia?.status ?? 0)}
+                              value={String(row.confeccao_corte_conferencia?.status_conferencia ?? 0)}
                               onChange={(event: { target: { value: string; }; }) => {
                                 const newStatus = event.target.value;
-                                handleStatusChange(row, newStatus);
+                                handleStatusChangeConferencia(row, newStatus);
                               }}
                             >
-                              {Object.entries(pedidoStatus).map(([id, status]) => (
+                              {Object.entries(pedidoStatusConferencia).map(([id, status]) => (
                                 <MenuItem key={id} value={status.nome}>
                                   {status.nome}
                                 </MenuItem>

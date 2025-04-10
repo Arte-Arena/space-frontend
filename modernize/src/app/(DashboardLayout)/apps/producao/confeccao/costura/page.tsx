@@ -86,7 +86,7 @@ const SublimacaoScreen = () => {
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=R`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=C`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +95,7 @@ const SublimacaoScreen = () => {
       }).then((res) => res.json()),
   });
 
-  const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("R");
+  const { errorPedido, isLoadingPedido, pedido: porDia } = useFetchPedidoPorData("C");
 
   useEffect(() => {
     if (dataPedidos && dataPedidos.data) {

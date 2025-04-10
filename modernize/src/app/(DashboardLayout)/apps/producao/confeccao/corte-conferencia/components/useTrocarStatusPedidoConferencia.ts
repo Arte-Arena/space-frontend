@@ -1,10 +1,10 @@
-const trocarStatusPedido = async (id: number | undefined, status_nome: string | undefined, refetch: () => void): Promise<boolean> => {
+const trocarStatusPedidoConferencia = async (id: number | undefined, status_nome: string | undefined, refetch: () => void): Promise<boolean> => {
   try {
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) throw new Error("Usuário não autenticado.");
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API}/api/producao/confeccao/corte-conferencia/status-change`,
+      `${process.env.NEXT_PUBLIC_API}/api/producao/confeccao/corte-conferencia/status-conferencia-change`,
       {
         method: "PATCH",
         headers: {
@@ -27,4 +27,4 @@ const trocarStatusPedido = async (id: number | undefined, status_nome: string | 
   }
 };
 
-export default trocarStatusPedido;
+export default trocarStatusPedidoConferencia;
