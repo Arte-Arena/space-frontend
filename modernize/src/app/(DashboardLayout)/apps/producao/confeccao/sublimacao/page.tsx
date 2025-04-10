@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconEye, IconShirt } from '@tabler/icons-react';
+import { IconEye, IconPrinter, IconShirt, IconSquareChevronsLeft } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -49,6 +49,7 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 import { calcularDataPassadaDiasUteis } from '@/utils/calcDiasUteis';
+import { IconSquareChevronsRight } from '@tabler/icons-react';
 
 const SublimacaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -183,7 +184,35 @@ const SublimacaoScreen = () => {
         severity: 'error'
       });
     }
-  }
+  };
+
+  const handleVoltarImpressao = async (row: ArteFinal) => {
+    const confirmar = window.confirm('Deseja voltar o pedido N° ' + row.numero_pedido + ' para o Impressão?');
+
+    if (confirmar) {
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "I", refetch);
+      if (sucesso) {
+        setSnackbar({
+          open: true,
+          message: '✅ Sucesso!',
+          severity: 'success'
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: `${'Falha ao enviar pedido.'}`,
+          severity: 'error'
+        });
+      }
+    } else {
+      console.log("Envio cancelado.");
+      setSnackbar({
+        open: true,
+        message: `${'Envio cancelado.'}`,
+        severity: 'error'
+      });
+    }
+  };
 
   const handleStatusChange = async (row: ArteFinal, status: string) => {
     const sucesso = await trocarStatusPedido(row?.id, status, refetch);
@@ -660,9 +689,16 @@ const SublimacaoScreen = () => {
                                 </Tooltip>
                               </Grid>
                               <Grid item xs={5} sm={5} md={5} lg={5}>
+                                <Tooltip title="Voltar para Impressão">
+                                  <IconButton onClick={() => handleVoltarImpressao(row)}>
+                                    <IconSquareChevronsLeft />
+                                  </IconButton>
+                                </Tooltip>
+                              </Grid>
+                              <Grid item xs={5} sm={5} md={5} lg={5}>
                                 <Tooltip title="Enviar para Corte e Conferência">
                                   <IconButton onClick={() => handleEnviarCorte(row)}>
-                                    <IconDirectionSign />
+                                    <IconSquareChevronsRight />
                                   </IconButton>
                                 </Tooltip>
                               </Grid>
