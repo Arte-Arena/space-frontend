@@ -161,7 +161,7 @@ const CorteConferenciaScreen = () => {
   const handleEnviarCostura = async (row: ArteFinal) => {
     const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Costura?');
     if (confirmar) {
-      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "R", refetch);
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "C", refetch);
       if (sucesso) {
         setSnackbar({
           open: true,
