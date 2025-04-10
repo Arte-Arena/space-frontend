@@ -234,6 +234,11 @@ const ArteFinalScreen = () => {
       });
     } else {
       console.log("Falha ao atribuir designer.");
+      setSnackbar({
+        open: true,
+        message: 'Falha ao atribuir designer.',
+        severity: 'error'
+      });
     }
   }
 
@@ -874,7 +879,7 @@ const ArteFinalScreen = () => {
                               {canShowButtonDesigner && (
                                 <>
                                   <Grid item xs={5} sm={5} md={5} lg={5}>
-                                    <Tooltip title="Enviar para Impressão!">
+                                    <Tooltip title="Mover para Impressão!">
                                       <IconButton onClick={() => handleEnviarImpressora(row)}>
                                         <IconPrinter />
                                       </IconButton>
