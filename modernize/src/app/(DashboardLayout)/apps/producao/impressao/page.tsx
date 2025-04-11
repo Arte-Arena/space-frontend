@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconEye, IconShirt, IconNeedleThread, IconEraser, IconArrowLeft, IconSquareChevronsRight, IconSquareChevronsLeft } from '@tabler/icons-react';
+import { IconEye, IconShirt, IconEraser, IconSquareChevronsRight, IconSquareChevronsLeft } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -59,9 +59,9 @@ const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
-  const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
-  const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
-  const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
+  const [searchNumero, setSearchNumero] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });
   const [open, setOpen] = useState(false);
   const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const roloRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
