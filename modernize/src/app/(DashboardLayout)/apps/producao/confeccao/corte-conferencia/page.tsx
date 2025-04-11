@@ -55,7 +55,8 @@ const CorteConferenciaScreen = () => {
   const [openDrawer, setOpenDrawer] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
   const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
-  const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
+  const [statusFilterCorte, setStatusFilterCorte] = useState<string>("");
+  const [statusFilterConferencia, setStatusFilterConferencia] = useState<string>("");
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
   const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const [open, setOpen] = useState(false);
@@ -80,7 +81,8 @@ const CorteConferenciaScreen = () => {
 
   const filters = {
     numero_pedido: searchNumero,
-    pedido_status_id: statusFilter,
+    status_corte: statusFilterCorte,
+    status_conferencia: statusFilterConferencia,
   };
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
@@ -251,7 +253,8 @@ const CorteConferenciaScreen = () => {
 
   const handleClearFilters = () => {
     setSearchNumero('');
-    setStatusFilter('');
+    setStatusFilterCorte('');
+    setStatusFilterConferencia('');
     setDateFilter({ start: null, end: null });
   };
 
@@ -323,7 +326,7 @@ const CorteConferenciaScreen = () => {
 
   const localStoragePedidosStatus = localStorage.getItem('pedidosStatus');
   const parsedPedidosStatus = JSON.parse(localStoragePedidosStatus || '[]');
-  
+
   const pedidosStatusFilaR: Record<number, { id: number, nome: string; fila: 'R' }> = Object.fromEntries(
     parsedPedidosStatus
       .filter((item: { fila: string }) => item.fila === 'R')
@@ -343,14 +346,24 @@ const CorteConferenciaScreen = () => {
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
       const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
-      const isStatusMatch = !filters.pedido_status_id || pedido.pedido_status_id === Number(filters.pedido_status_id);
+
+      let isCorteMatch = true;
+      if (statusFilterCorte && pedido.confeccao_corte_conferencia) {
+        isCorteMatch = pedido.confeccao_corte_conferencia.status_corte === String(statusFilterCorte);
+      }
+
+      let isConferenciaMatch = true;
+      if (statusFilterConferencia && pedido.confeccao_corte_conferencia) {
+        isConferenciaMatch = pedido.confeccao_corte_conferencia.status_conferencia === String(statusFilterConferencia);
+      }
+
       const isDateMatch = (
         (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
         (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
       );
-      return isNumberMatch && isStatusMatch && isDateMatch;
+      return isNumberMatch && isCorteMatch && isConferenciaMatch && isDateMatch;
     });
-  }, [allPedidos, filters, dateFilter]);
+  }, [allPedidos, searchNumero, statusFilterCorte, statusFilterConferencia, dateFilter]);
 
   const paginatedPedidos = useMemo(() => {
     const startIndex = paginationModel.page * paginationModel.pageSize;
@@ -456,15 +469,15 @@ const CorteConferenciaScreen = () => {
               </Grid>
 
               {/* Select de Status */}
-              {/* <Grid item>
+              <Grid item>
                 <CustomSelect
                   sx={{ minWidth: '150px' }} // Define uma largura mínima
-                  value={statusFilter}
-                  onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setStatusFilter(e.target.value)}
+                  value={statusFilterCorte}
+                  onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setStatusFilterCorte(e.target.value)}
                   displayEmpty
                   size="small"
                 >
-                  <MenuItem value="">Status Corte</MenuItem>
+                  <MenuItem value="">Todos os Status Corte</MenuItem>
                   {Object.entries(pedidoStatusCorte).map(([id, status]) => (
                     <MenuItem key={id} value={status.nome}>
                       {status.nome}
@@ -475,19 +488,19 @@ const CorteConferenciaScreen = () => {
               <Grid item>
                 <CustomSelect
                   sx={{ minWidth: '150px' }} // Define uma largura mínima
-                  value={statusFilter}
-                  onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setStatusFilter(e.target.value)}
+                  value={statusFilterConferencia}
+                  onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setStatusFilterConferencia(e.target.value)}
                   displayEmpty
                   size="small"
                 >
-                  <MenuItem value="">Status Conferência</MenuItem>
+                  <MenuItem value="">Todos os Status Conferência</MenuItem>
                   {Object.entries(pedidoStatusConferencia).map(([id, status]) => (
                     <MenuItem key={id} value={status.nome}>
                       {status.nome}
                     </MenuItem>
                   ))}
                 </CustomSelect>
-              </Grid> */}
+              </Grid>
 
               {/* DatePicker - Data Inicial */}
               <Grid item>
