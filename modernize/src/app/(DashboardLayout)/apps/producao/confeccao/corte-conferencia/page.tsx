@@ -78,6 +78,9 @@ const CorteConferenciaScreen = () => {
   const myTheme = useThemeMode()
 
   const accessToken = localStorage.getItem('accessToken');
+  const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
+  const MoverProducaoRoles = [1, 11, 13];
+  const canShowButtonMover = roles.some(role => MoverProducaoRoles.includes(role));
 
   const filters = {
     numero_pedido: searchNumero,
@@ -789,20 +792,24 @@ const CorteConferenciaScreen = () => {
                                   </IconButton>
                                 </Tooltip>
                               </Grid>
-                              <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Mover para Sublimação">
-                                  <IconButton onClick={() => handleVoltarSublimacao(row)}>
-                                    <IconSquareChevronsLeft />
-                                  </IconButton>
-                                </Tooltip>
-                              </Grid>
-                              <Grid item xs={5} sm={5} md={5} lg={5}>
-                                <Tooltip title="Mover para Costura">
-                                  <IconButton onClick={() => handleEnviarCostura(row)}>
-                                    <IconSquareChevronsRight />
-                                  </IconButton>
-                                </Tooltip>
-                              </Grid>
+                              {canShowButtonMover && (
+                                <>
+                                  <Grid item xs={5} sm={5} md={5} lg={5}>
+                                    <Tooltip title="Mover para Sublimação">
+                                      <IconButton onClick={() => handleVoltarSublimacao(row)}>
+                                        <IconSquareChevronsLeft />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Grid>
+                                  <Grid item xs={5} sm={5} md={5} lg={5}>
+                                    <Tooltip title="Mover para Costura">
+                                      <IconButton onClick={() => handleEnviarCostura(row)}>
+                                        <IconSquareChevronsRight />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Grid>
+                                </>
+                              )}
                             </Grid>
                           </TableCell>
                         </TableRow>
