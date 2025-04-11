@@ -61,7 +61,7 @@ const ArteFinalScreen = () => {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });
   const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    pageSize: 100,
+    pageSize: 15,
     page: 0,
   });
   const [snackbar, setSnackbar] = React.useState<{
@@ -107,7 +107,7 @@ const ArteFinalScreen = () => {
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos'],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=D`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?per_page=${paginationModel.pageSize}&fila=D`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -121,6 +121,12 @@ const ArteFinalScreen = () => {
       setAllPedidos(dataPedidos.data);
     }
   }, [dataPedidos]);
+
+  useEffect(() => {
+    if (paginationModel) {
+      refetch();
+    }
+  }, [paginationModel.pageSize]);
 
   const handleKeyPressObservacoes = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
