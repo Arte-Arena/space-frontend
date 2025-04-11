@@ -54,7 +54,6 @@ import trocarImpressora from './components/useTrocarImpressora';
 import trocarTipoCorte from './components/useTrocarTipoCorte';
 import trocarRolo from './components/useTrocarRolo';
 import { calcularDataPassadaDiasUteis } from '@/utils/calcDiasUteis';
-import { IconPalette } from '@tabler/icons-react';
 
 const ImpressaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -86,10 +85,10 @@ const ImpressaoScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
-  
+
   const DesignerRoles = [1, 6, 7];
   const MoverProducaoRoles = [1, 11, 12, 13];
-  
+
   const canShowButtonMover = roles.some(role => MoverProducaoRoles.includes(role));
   const unableTipoCorte = roles.some(role => DesignerRoles.includes(role))
 
@@ -972,14 +971,23 @@ const ImpressaoScreen = () => {
                               </Tooltip>
                             </Grid>
                             <Grid item xs={5} sm={5} md={5} lg={5}>
-                              <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
+                              {row.url_trello === null ? (
                                 <IconButton
                                   onClick={() => handleLinkTrello(row)}
                                   disabled={row.url_trello === null}
                                 >
                                   <IconBrandTrello />
                                 </IconButton>
-                              </Tooltip>
+                              ) : (
+                                <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
+                                  <IconButton
+                                    onClick={() => handleLinkTrello(row)}
+                                    disabled={row.url_trello === null}
+                                  >
+                                    <IconBrandTrello />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
                             </Grid>
                             {canShowButtonMover && (
                               <>
