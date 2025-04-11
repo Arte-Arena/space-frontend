@@ -85,6 +85,12 @@ interface Orcamento {
   total_orcamento: number;
   prev_entrega: Date;
   pedidos: Pedidos[];
+  client_info?: {
+    client_id: number | null;
+    client_name: string | null;
+    client_email: string | null;
+    has_uniform: boolean;
+  };
 }
 
 interface Sketch {
@@ -104,8 +110,6 @@ const OrcamentoBackofficeScreen = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
-  const [linkOrcamento, setLinkOrcamento] = useState<string>('');
-  const [openLinkDialog, setOpenLinkDialog] = useState<boolean>(false);
   const [linkUniform, setLinkUniform] = useState<string>('');
   const [openUniformDialog, setOpenUniformDialog] = useState<boolean>(false);
   const [sketches, setSketches] = useState<Sketch[]>([]);
@@ -140,6 +144,12 @@ const OrcamentoBackofficeScreen = () => {
   const [currentPackage, setCurrentPackage] = useState<string>('Start');
   const [email, setEmail] = useState<string>('');
   const [emailConfirmation, setEmailConfirmation] = useState<string>('');
+  const [clientEmail, setClientEmail] = useState<string>('');
+  const [clientEmailConfirmation, setClientEmailConfirmation] = useState<string>('');
+  const [openClientEmailDialog, setOpenClientEmailDialog] = useState<boolean>(false);
+  const [isLinkingClient, setIsLinkingClient] = useState<boolean>(false);
+  const [isClientLinked, setIsClientLinked] = useState<boolean>(false);
+  const [clientEmailError, setClientEmailError] = useState<string | null>(null);
 
   const theme = useTheme()
 
@@ -493,71 +503,85 @@ const OrcamentoBackofficeScreen = () => {
   if (errorOrcamentos) return <p>Ocorreu um erro: {errorOrcamentos.message}</p>;
   if (dataOrcamentos) logger.log(dataOrcamentos);
 
-  const handleLinkOrcamento = async (orcamentoId: number) => {
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/url/${orcamentoId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (!data.caminho) {
-        console.log('Erro: servidor de short URL não disponível');
-      } else {
-        setLinkOrcamento(`${window.location.origin}/s${data.caminho}`);
-        setOpenLinkDialog(true);
-      }
+  const handleClientEmailDialog = (orcamentoId: number) => {
+    setCurrentOrcamentoId(orcamentoId);
+    setOpenClientEmailDialog(true);
+    
+    // Verificar se o cliente já está cadastrado através do client_info
+    const orcamento = dataOrcamentos?.data.find((o: Orcamento) => o.id === orcamentoId);
+    if (orcamento?.client_info?.client_id) {
+      setIsClientLinked(true);
+      setClientEmail(orcamento.client_info.client_email || '');
+      setClientEmailConfirmation(orcamento.client_info.client_email || '');
+    } else {
+      setIsClientLinked(false);
+      setClientEmail('');
+      setClientEmailConfirmation('');
     }
-  };
+    
+    setClientEmailError(null);
+  }
+
+  const handleLinkClientEmail = async () => {
+    if (!currentOrcamentoId) return;
+    
+    try {
+      setIsLinkingClient(true);
+      setClientEmailError(null);
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/${currentOrcamentoId}/link-client`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          client_email: clientEmail,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setIsClientLinked(true);
+        refetch();
+      } else {
+        setClientEmailError(data.message || 'Erro ao vincular cliente ao orçamento');
+      }
+    } catch (error) {
+      console.error('Error linking client email:', error);
+      setClientEmailError('Erro ao vincular cliente ao orçamento. Tente novamente.');
+    } finally {
+      setIsLinkingClient(false);
+    }
+  }
+
+  const handleCloseClientEmailDialog = () => {
+    setOpenClientEmailDialog(false);
+    setClientEmail('');
+    setClientEmailConfirmation('');
+    setIsClientLinked(false);
+    setCurrentOrcamentoId(null);
+    setClientEmailError(null);
+  }
 
   async function handleShortlinkUniform(uniformId: number) {
     setCurrentOrcamentoId(uniformId);
-    setApiError(null);
-    setIsLinkGenerated(false);
-    setIsCheckingUniforms(true);
-
-    try {
-      const uniformResponse = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes-go/${uniformId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-      });
-
-      if (!uniformResponse.ok) {
-        console.error('Erro ao verificar uniformes existentes:', uniformResponse.status);
-        setExistingUniforms(false);
-      } else {
-        const uniformData = await uniformResponse.json();
-        setExistingUniforms(uniformData && uniformData.data && uniformData.data.length > 0);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar uniformes existentes:', error);
-      setExistingUniforms(false);
-    } finally {
-      setIsCheckingUniforms(false);
+    setIsCheckingUniforms(false);
+    setExistingUniforms(false);
+    setSketches([]);
+    
+    const orcamento = dataOrcamentos?.data.find((o: Orcamento) => o.id === uniformId);
+    if (orcamento?.client_info?.client_email) {
+      setEmail(orcamento.client_info.client_email);
+      setEmailConfirmation(orcamento.client_info.client_email);
+    } else {
+      setEmail('');
+      setEmailConfirmation('');
     }
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/url/${uniformId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!response.ok) return console.error('Erro ao criar link do uniforme:', response.status);
-    const data = await response.json();
-    if (!data.caminho) return console.error(
-      'Erro ao criar link do uniforme: servidor de short URL não disponível'
-    );
-    setLinkUniform(`${window.location.origin}/u${data.caminho}`);
-    setOpenUniformDialog(true);
+    
+    setIsLinkGenerated(false);
+    setApiError(null);
   }
 
   const handleGenerateAndCopyLink = async () => {
@@ -833,12 +857,11 @@ const OrcamentoBackofficeScreen = () => {
                             <Button
                               variant="outlined"
                               onClick={() => {
-                                setOpenLinkDialog(true);
-                                handleLinkOrcamento(row.id);
+                                handleClientEmailDialog(row.id);
                               }}
                               sx={{
                                 position: 'relative',
-                                '&::after': clientesConfigurados[row.id] ? {
+                                '&::after': clientesConfigurados[row.id] || row.client_info?.client_id ? {
                                   content: '""',
                                   position: 'absolute',
                                   top: '5px',
@@ -849,40 +872,109 @@ const OrcamentoBackofficeScreen = () => {
                                   backgroundColor: 'success.main',
                                 } : {}
                               }}
-                              disabled={verificandoCliente[row.id]}
                             >
-                              {verificandoCliente[row.id] ? <CircularProgress size={20} /> : <IconUser />}
+                              <IconUser />
                             </Button>
+                            
                             <Dialog
-                              open={openLinkDialog}
-                              onClose={() => setOpenLinkDialog(false)}
+                              open={openClientEmailDialog}
+                              onClose={handleCloseClientEmailDialog}
                             >
-                              <DialogTitle>Link do Orçamento</DialogTitle>
+                              <DialogTitle>Vincular Cliente ao Orçamento</DialogTitle>
                               <DialogContent>
-                                <DialogContentText>
-                                  {linkOrcamento}
-                                </DialogContentText>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 2, minWidth: '300px' }}>
+                                  {isClientLinked ? (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                      <Typography variant="body1" color="primary">
+                                        Cliente já cadastrado
+                                      </Typography>
+                                      <Typography variant="body2">
+                                        <strong>Email:</strong> {clientEmail}
+                                      </Typography>
+                                      {currentOrcamentoId && (
+                                        <Typography variant="body2">
+                                          <strong>ID do Cliente:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.client_id}
+                                        </Typography>
+                                      )}
+                                      {currentOrcamentoId && (
+                                        <Typography variant="body2">
+                                          <strong>Nome:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.client_name}
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                  ) : (
+                                    <>
+                                      <CustomTextField
+                                        fullWidth
+                                        label="E-mail do Cliente"
+                                        value={clientEmail}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setClientEmail(e.target.value)}
+                                        disabled={isClientLinked}
+                                        type="email"
+                                      />
+                                      <CustomTextField
+                                        fullWidth
+                                        label="Confirme o e-mail"
+                                        value={clientEmailConfirmation}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setClientEmailConfirmation(e.target.value)}
+                                        disabled={isClientLinked}
+                                        type="email"
+                                        error={clientEmailConfirmation !== '' && clientEmail !== clientEmailConfirmation}
+                                        helperText={clientEmailConfirmation !== '' && clientEmail !== clientEmailConfirmation ? 'Os e-mails não coincidem' : ''}
+                                      />
+                                    </>
+                                  )}
+                                   
+                                  {clientEmailError && (
+                                    <Box sx={{ mt: 1, p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
+                                      <Typography color="error" variant="body2">
+                                        {clientEmailError}
+                                      </Typography>
+                                    </Box>
+                                  )}
+                                </Box>
                               </DialogContent>
                               <DialogActions>
-                                <Button
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(linkOrcamento);
-                                    setOpenLinkDialog(false);
-                                  }}
-                                >
-                                  Copiar Link
-                                </Button>
+                                {!isClientLinked ? (
+                                  <>
+                                    <Button
+                                      onClick={handleCloseClientEmailDialog}
+                                    >
+                                      Fechar
+                                    </Button>
+                                    <Button
+                                      variant="contained"
+                                      onClick={handleLinkClientEmail}
+                                      disabled={isLinkingClient || !clientEmail || !REGEX.email.test(clientEmail) || clientEmail !== clientEmailConfirmation}
+                                      startIcon={isLinkingClient && <CircularProgress size={16} />}
+                                    >
+                                      {!isLinkingClient && 'Vincular'}
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <Button
+                                    onClick={handleCloseClientEmailDialog}
+                                  >
+                                    Fechar
+                                  </Button>
+                                )}
                               </DialogActions>
                             </Dialog>
                             <Button
                               variant="outlined"
                               onClick={() => {
-                                setOpenUniformDialog(true);
-                                handleShortlinkUniform(row.id);
+                                // Se já tiver uniforme, redirecionar diretamente
+                                if (row.client_info?.has_uniform) {
+                                  router.push(`/uniforms/${row.id}`);
+                                } else {
+                                  // Senão, abrir o dialog para criar
+                                  setOpenUniformDialog(true);
+                                  handleShortlinkUniform(row.id);
+                                }
                               }}
                               sx={{
                                 position: 'relative',
-                                '&::after': uniformesConfigurados[row.id] ? {
+                                '&::after': uniformesConfigurados[row.id] || row.client_info?.has_uniform ? {
                                   content: '""',
                                   position: 'absolute',
                                   top: '5px',
@@ -893,30 +985,11 @@ const OrcamentoBackofficeScreen = () => {
                                   backgroundColor: 'success.main',
                                 } : {}
                               }}
-                              disabled={verificandoUniformes[row.id]}
+                              disabled={!row.client_info?.client_id}
                             >
-                              {verificandoUniformes[row.id] ? <CircularProgress size={20} /> : <IconShirtSport />}
+                              <IconShirtSport />
                             </Button>
-                            <Button
-                              variant="outlined"
-                              onClick={() => handleBrushClick(row.id)}
-                              disabled={loadingBrushIds[row.id]}
-                              sx={{
-                                position: 'relative',
-                                '&::after': arteFinalConfigurados[row.id] ? {
-                                  content: '""',
-                                  position: 'absolute',
-                                  top: '5px',
-                                  right: '5px',
-                                  width: '10px',
-                                  height: '10px',
-                                  borderRadius: '50%',
-                                  backgroundColor: 'success.main',
-                                } : {}
-                              }}
-                            >
-                              {loadingBrushIds[row.id] ? <CircularProgress size={20} /> : <IconBrush />}
-                            </Button>
+                            
                             <Dialog
                               open={openUniformDialog}
                               onClose={() => setOpenUniformDialog(false)}
@@ -1046,24 +1119,19 @@ const OrcamentoBackofficeScreen = () => {
                                     )}
 
                                     <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                      <CustomTextField
-                                        fullWidth
-                                        label="E-mail para linkar os uniformes"
-                                        value={email}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                                        disabled={isLinkGenerated}
-                                        type="email"
-                                      />
-                                      <CustomTextField
-                                        fullWidth
-                                        label="Confirme o e-mail"
-                                        value={emailConfirmation}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmailConfirmation(e.target.value)}
-                                        disabled={isLinkGenerated}
-                                        type="email"
-                                        error={emailConfirmation !== '' && email !== emailConfirmation}
-                                        helperText={emailConfirmation !== '' && email !== emailConfirmation ? 'Os e-mails não coincidem' : ''}
-                                      />
+                                      <Typography variant="subtitle1" color="primary">
+                                        Informações do Cliente
+                                      </Typography>
+                                      {currentOrcamentoId && (
+                                        <>
+                                          <Typography variant="body2">
+                                            <strong>Nome:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.client_name || 'N/A'}
+                                          </Typography>
+                                          <Typography variant="body2">
+                                            <strong>Email:</strong> {email || 'N/A'}
+                                          </Typography>
+                                        </>
+                                      )}
                                     </Box>
 
                                     {apiError && (
@@ -1092,7 +1160,7 @@ const OrcamentoBackofficeScreen = () => {
                                       <Button
                                         variant="contained"
                                         onClick={handleGenerateAndCopyLink}
-                                        disabled={isGeneratingLink || !email || !REGEX.email.test(email) || email !== emailConfirmation}
+                                        disabled={isGeneratingLink || !email || sketches.length === 0}
                                         startIcon={isGeneratingLink && <CircularProgress size={16} />}
                                       >
                                         {!isGeneratingLink && 'Inserir'}
@@ -1122,8 +1190,26 @@ const OrcamentoBackofficeScreen = () => {
                                 )}
                               </DialogActions>
                             </Dialog>
-
-                            {/* botão da chamada da api */}
+                            <Button
+                              variant="outlined"
+                              onClick={() => handleBrushClick(row.id)}
+                              disabled={loadingBrushIds[row.id]}
+                              sx={{
+                                position: 'relative',
+                                '&::after': arteFinalConfigurados[row.id] ? {
+                                  content: '""',
+                                  position: 'absolute',
+                                  top: '5px',
+                                  right: '5px',
+                                  width: '10px',
+                                  height: '10px',
+                                  borderRadius: '50%',
+                                  backgroundColor: 'success.main',
+                                } : {}
+                              }}
+                            >
+                              {loadingBrushIds[row.id] ? <CircularProgress size={20} /> : <IconBrush />}
+                            </Button>
                             <Button
                               variant="contained"
                               color="primary"
