@@ -86,9 +86,11 @@ const ImpressaoScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
-
+  
   const DesignerRoles = [1, 6, 7];
-
+  const MoverProducaoRoles = [1, 12, 13];
+  
+  const canShowButtonMover = roles.some(role => MoverProducaoRoles.includes(role));
   const unableTipoCorte = roles.some(role => DesignerRoles.includes(role))
 
   const filters = {
@@ -963,7 +965,6 @@ const ImpressaoScreen = () => {
                               </Tooltip>
                             </Grid>
                             <Grid item xs={5} sm={5} md={5} lg={5}>
-
                               <Tooltip title="Lista de Uniformes">
                                 <IconButton onClick={() => handleListaUniformes(row)}>
                                   <IconShirt />
@@ -980,20 +981,24 @@ const ImpressaoScreen = () => {
                                 </IconButton>
                               </Tooltip>
                             </Grid>
-                            <Grid item xs={5} sm={5} md={5} lg={5}>
-                              <Tooltip title="Mover para o Design!">
-                                <IconButton onClick={() => handleVoltarDesign(row)}>
-                                  <IconSquareChevronsLeft />
-                                </IconButton>
-                              </Tooltip>
-                            </Grid>
-                            <Grid item xs={5} sm={5} md={5} lg={5}>
-                              <Tooltip title="Mover para Sublimação!">
-                                <IconButton onClick={() => handleEnviarSublimacao(row)}>
-                                  <IconSquareChevronsRight />
-                                </IconButton>
-                              </Tooltip>
-                            </Grid>
+                            {canShowButtonMover && (
+                              <>
+                                <Grid item xs={5} sm={5} md={5} lg={5}>
+                                  <Tooltip title="Mover para o Design!">
+                                    <IconButton onClick={() => handleVoltarDesign(row)}>
+                                      <IconSquareChevronsLeft />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Grid>
+                                <Grid item xs={5} sm={5} md={5} lg={5}>
+                                  <Tooltip title="Mover para Sublimação!">
+                                    <IconButton onClick={() => handleEnviarSublimacao(row)}>
+                                      <IconSquareChevronsRight />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Grid>
+                              </>
+                            )}
                           </Grid>
                         </TableCell>
                       </TableRow>
