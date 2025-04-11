@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Pedido, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconEye, IconShirt, IconTruckDelivery } from '@tabler/icons-react';
+import { IconEye, IconShirt, IconSquareChevronsLeft, IconTruckDelivery } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -567,7 +567,7 @@ const ExpediçãoScreen = () => {
                             </Tooltip>
                             <Tooltip title="Mover para Costura">
                               <IconButton onClick={() => handleVoltarCostura(row)}>
-                                <IconShirt />
+                                <IconSquareChevronsLeft />
                               </IconButton>
                             </Tooltip>
                           </TableCell>
