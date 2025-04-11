@@ -30,7 +30,6 @@ import {
   TextFieldProps,
   AlertProps,
 } from "@mui/material";
-import { useRouter } from 'next/navigation';
 import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
@@ -44,6 +43,7 @@ import getBrazilTime from '@/utils/brazilTime';
 import DialogExp from './components/expedicaoDialog';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
+import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 
 const ExpediçãoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -110,26 +110,38 @@ const ExpediçãoScreen = () => {
   const handleListaUniformes = (row: ArteFinal) => {
     // provavelmente tem que ver validar se existe uma lista de uniformes nesse pedido
     // unica forma atualmente é pelo 'ocamento_id'
-    console.log("Deletar pedido", row);
   };
 
   // colocar pra jogar pra reposição
-  // const handleEnviarConfeccao = async (row: ArteFinal) => {
-  //   const confirmar = window.confirm('Deseja enviar o pedido N° ' + row.numero_pedido + ' para Confecção?');
+  const handleVoltarCostura = async (row: ArteFinal) => {
+    const confirmar = window.confirm('Deseja voltar o pedido N° ' + row.numero_pedido + ' para Costura?');
 
-  //   if (confirmar) {
-  //     const sucesso = await trocarStatusPedido(row?.id, 14, refetch);
-  //     if (sucesso) {
-  //       // console.log("Pedido enviado com sucesso!");
-  //       alert('sucesso');
-  //     } else {
-  //       console.log("Falha ao enviar pedido.");
-  //     }
-  //   } else {
-  //     console.log("Envio cancelado.");
-  //     alert('Envio cancelado.');
-  //   }
-  // };
+    if (confirmar) {
+      const sucesso = await trocarEstagioPedidoArteFinal(row?.id, "C", refetch);
+      if (sucesso) {
+        console.log("Pedido enviado com sucesso!");
+        setSnackbar({
+          open: true,
+          message: `${'Pedido enviado com sucesso.'}`,
+          severity: 'success'
+        });
+      } else {
+        console.log("Falha ao enviar pedido.");
+        setSnackbar({
+          open: true,
+          message: `${'Erro ao mover pedido.'}`,
+          severity: 'error'
+        });
+      }
+    } else {
+      console.log("Envio cancelado.");
+      setSnackbar({
+        open: true,
+        message: `${'Envio cancelado.'}`,
+        severity: 'warning'
+      });
+    }
+  };
 
   const handleVerDetalhes = (row: ArteFinal) => {
     setSelectedRowSidePanel(null); // Zera antes de atualizar
@@ -551,6 +563,11 @@ const ExpediçãoScreen = () => {
                                 disabled={row.url_trello === null}
                               >
                                 <IconTruckDelivery />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Mover para Costura">
+                              <IconButton onClick={() => handleVoltarCostura(row)}>
+                                <IconShirt />
                               </IconButton>
                             </Tooltip>
                           </TableCell>
