@@ -19,7 +19,7 @@ const BackgroundUpdater = () => {
         const configs = await response.json();
         localStorage.setItem('configs', JSON.stringify(configs));
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao buscar dados de get-config:', error);
       }
     };
     
@@ -43,7 +43,7 @@ const BackgroundUpdater = () => {
         const configsPrazos = await response.json();
         localStorage.setItem('configPrazos', JSON.stringify(configsPrazos));
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao buscar dados de get-config-prazos:', error);
       }
     };
     
@@ -67,7 +67,7 @@ const BackgroundUpdater = () => {
         const clientesConsolidados = await response.json();
         localStorage.setItem('clientesConsolidadosOrcamento', JSON.stringify(clientesConsolidados));
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao buscar dados de clientes-consolidados:', error);
       }
     };
     
@@ -91,7 +91,7 @@ const BackgroundUpdater = () => {
         const produtosConsolidadosOrcamento = await response.json();
         localStorage.setItem('produtosConsolidadosOrcamento', JSON.stringify(produtosConsolidadosOrcamento));
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao buscar dados de produto-orcamento-consolidado:', error);
       }
     };
 
@@ -115,7 +115,7 @@ const BackgroundUpdater = () => {
         const materiais = await response.json();
         localStorage.setItem('materiais', JSON.stringify(materiais.data));
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao buscar dados de material:', error);
       }
     };
 
@@ -139,7 +139,7 @@ const BackgroundUpdater = () => {
         const designers = await response.json();
         localStorage.setItem('designers', JSON.stringify(designers));
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao buscar dados de designers:', error);
       }
     };
 
@@ -163,7 +163,7 @@ const BackgroundUpdater = () => {
         const vendedores = await response.json();
         localStorage.setItem('vendedores', JSON.stringify(vendedores));
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao buscar dados de vendedores:', error);
       }
     };
 
@@ -187,7 +187,7 @@ const BackgroundUpdater = () => {
         const statusPedidos = await response.json();
         localStorage.setItem('pedidosStatus', JSON.stringify(statusPedidos));
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao buscar dados de get-pedido-status:', error);
       }
     };
 
@@ -211,7 +211,7 @@ const BackgroundUpdater = () => {
         const tiposPedidos = await response.json();
         localStorage.setItem('pedidosTipos', JSON.stringify(tiposPedidos));
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao buscar dados de get-pedido-tipos:', error);
       }
     };
 
