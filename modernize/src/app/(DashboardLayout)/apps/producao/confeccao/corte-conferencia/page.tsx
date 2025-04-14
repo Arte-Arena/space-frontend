@@ -25,18 +25,17 @@ import {
   Collapse,
   Box,
   MenuItem,
-  TextField,
   TextFieldProps,
   AlertProps,
   Alert,
   Snackbar,
+  InputAdornment,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
-import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
-import { isSameDay, subDays } from 'date-fns';
+import { format, isSameDay, subDays } from 'date-fns';
 import trocarStatusPedidoCorte from './components/useTrocarStatusPedidoCorte';
 import trocarStatusPedidoConferencia from './components/useTrocarStatusPedidoConferencia';
 import { useThemeMode } from '@/utils/useThemeMode';
@@ -49,21 +48,22 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 import { calcularDataPassadaDiasUteis } from '@/utils/calcDiasUteis';
+import { IconSearch } from '@tabler/icons-react';
 
 const CorteConferenciaScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
-  const [openDrawer, setOpenDrawer] = useState(false);
-  const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
-  const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [query, setQuery] = useState<string>('');
+  const [searchDateStart, setSearchDateStart] = useState<string | null>(null);
+  const [searchDateEnd, setSearchDateEnd] = useState<string | null>(null);
   const [statusFilterCorte, setStatusFilterCorte] = useState<string>("");
   const [statusFilterConferencia, setStatusFilterConferencia] = useState<string>("");
-  const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
+  const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
+  const [openDrawer, setOpenDrawer] = useState(false);
   const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const [open, setOpen] = useState(false);
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    pageSize: 100,
-    page: 0,
-  });
+  const [rowsPerPage, setRowsPerPage] = useState<number>(15);
+  const [page, setPage] = useState(1);
   const [snackbar, setSnackbar] = React.useState<{
     open: boolean;
     message: string;
@@ -82,16 +82,10 @@ const CorteConferenciaScreen = () => {
   const MoverProducaoRoles = [1, 11, 13];
   const canShowButtonMover = roles.some(role => MoverProducaoRoles.includes(role));
 
-  const filters = {
-    numero_pedido: searchNumero,
-    status_corte: statusFilterCorte,
-    status_conferencia: statusFilterConferencia,
-  };
-
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
-    queryKey: ['pedidos'],
+    queryKey: ['pedidos', searchQuery, page, rowsPerPage],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=F`, { // mudar pra fila Corte e Costura no hooks e 
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=F&per_page=${rowsPerPage}&page=${page}&q=${encodeURIComponent(searchQuery)}&data_inicial=${searchDateStart}&data_final=${searchDateEnd}`, { // mudar pra fila Corte e Costura no hooks e 
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -109,6 +103,33 @@ const CorteConferenciaScreen = () => {
   }, [dataPedidos]);
 
   // handles
+  const handleFilter = () => {
+    setPage(1);
+    setSearchQuery(query);
+    refetch();
+  }
+
+  const handleSearch = () => {
+    setSearchQuery(query);
+    setPage(1);
+  };
+
+  const handleSearchKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleTablePageChange = (event: unknown, newPage: number) => {
+    setPage(newPage + 1);
+  };
+
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
+    setPage(1);
+  };
+
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
@@ -255,15 +276,13 @@ const CorteConferenciaScreen = () => {
   }
 
   const handleClearFilters = () => {
-    setSearchNumero('');
+    setSearchQuery('');
+    setQuery('');
+    setSearchDateStart(null);
+    setSearchDateEnd(null);
     setStatusFilterCorte('');
     setStatusFilterConferencia('');
-    setDateFilter({ start: null, end: null });
   };
-
-  const handleDateChange = (field: 'start' | 'end') => (newValue: Date | null) => {
-    setDateFilter((prev) => ({ ...prev, [field]: newValue }));
-  }
 
   const handleToggle = () => {
     setOpen(!open);
@@ -348,7 +367,7 @@ const CorteConferenciaScreen = () => {
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
-      const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
+      const isNumberMatch = !query || String(pedido.numero_pedido).includes(query.trim());
 
       let isCorteMatch = true;
       if (statusFilterCorte && pedido.confeccao_corte_conferencia) {
@@ -360,19 +379,14 @@ const CorteConferenciaScreen = () => {
         isConferenciaMatch = pedido.confeccao_corte_conferencia.status_conferencia === String(statusFilterConferencia);
       }
 
-      const isDateMatch = (
-        (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
-        (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
-      );
+      const pedidoDate = new Date(pedido.data_prevista);
+      const isDateMatch =
+        (!searchDateStart || pedidoDate >= new Date(searchDateStart)) &&
+        (!searchDateEnd || pedidoDate <= new Date(searchDateEnd));
+
       return isNumberMatch && isCorteMatch && isConferenciaMatch && isDateMatch;
     });
-  }, [allPedidos, searchNumero, statusFilterCorte, statusFilterConferencia, dateFilter]);
-
-  const paginatedPedidos = useMemo(() => {
-    const startIndex = paginationModel.page * paginationModel.pageSize;
-    const endIndex = startIndex + paginationModel.pageSize;
-    return filteredPedidos.slice(startIndex, endIndex);
-  }, [filteredPedidos, paginationModel]);
+  }, [allPedidos, query, statusFilterCorte, statusFilterConferencia, searchDateStart, searchDateEnd]);
 
   function formatarDataRelatorio(dataString: string): string {
     let dataUTC;
@@ -462,12 +476,21 @@ const CorteConferenciaScreen = () => {
             <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
               {/* Campo de Número do Pedido */}
               <Grid item>
-                <TextField
+                <CustomTextField
                   label="Número do Pedido"
                   variant="outlined"
                   size="small"
-                  value={searchNumero}
-                  onChange={(e) => setSearchNumero(e.target.value)}
+                  value={query}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
+                  onKeyPress={handleSearchKeyPress}
+                  placeholder="Buscar orçamento..."
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <IconSearch />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Grid>
 
@@ -510,10 +533,10 @@ const CorteConferenciaScreen = () => {
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
                     label="Data Inicial"
-                    value={dateFilter.start}
-                    onChange={handleDateChange('start')}
+                    value={searchDateStart}
+                    onChange={(newDate: Date | null) => setSearchDateStart(newDate ? format(newDate, 'yyyy-MM-dd') : null)}
                     renderInput={(params: TextFieldProps) => (
-                      <TextField
+                      <CustomTextField
                         {...params}
                         error={false}
                         size="small"
@@ -525,15 +548,14 @@ const CorteConferenciaScreen = () => {
                 </LocalizationProvider>
               </Grid>
 
-              {/* DatePicker - Data Final */}
               <Grid item>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
                     label="Data Final"
-                    value={dateFilter.end}
-                    onChange={handleDateChange('end')}
+                    value={searchDateEnd}
+                    onChange={(newDate: Date | null) => setSearchDateEnd(newDate ? format(newDate, 'yyyy-MM-dd') : null)}
                     renderInput={(params: TextFieldProps) => (
-                      <TextField
+                      <CustomTextField
                         {...params}
                         error={false}
                         size="small"
@@ -549,6 +571,11 @@ const CorteConferenciaScreen = () => {
               <Grid item>
                 <Button onClick={handleClearFilters} variant="outlined" size="small">
                   Limpar Filtros
+                </Button>
+              </Grid>
+              <Grid item>
+                <Button onClick={handleFilter} variant="outlined" size="small">
+                  Filtrar Profundamente
                 </Button>
               </Grid>
             </Grid>
@@ -578,7 +605,7 @@ const CorteConferenciaScreen = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {Array.isArray(paginatedPedidos) && paginatedPedidos.map((row) => {
+                    {Array.isArray(filteredPedidos) && filteredPedidos.map((row) => {
                       const listaProdutos: Produto[] = row.lista_produtos
                         ? typeof row.lista_produtos === 'string'
                           ? JSON.parse(row.lista_produtos)
@@ -818,13 +845,13 @@ const CorteConferenciaScreen = () => {
                   </TableBody>
                 </Table>
                 <TablePagination
-                  rowsPerPageOptions={[15, 25, 50, 100, 200]}
                   component="div"
-                  count={filteredPedidos.length || 0}
-                  rowsPerPage={paginationModel.pageSize}
-                  page={paginationModel.page}
-                  onPageChange={(event, newPage) => setPaginationModel({ ...paginationModel, page: newPage })}
-                  onRowsPerPageChange={(event) => setPaginationModel({ ...paginationModel, pageSize: parseInt(event.target.value, 10), page: 0 })}
+                  count={dataPedidos?.total || 0}
+                  page={page - 1}
+                  onPageChange={handleTablePageChange}
+                  rowsPerPage={rowsPerPage}
+                  onRowsPerPageChange={handleRowsPerPageChange}
+                  rowsPerPageOptions={[15, 25, 50]}
                 />
               </TableContainer>
             )}
