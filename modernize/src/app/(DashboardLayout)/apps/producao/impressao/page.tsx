@@ -122,6 +122,14 @@ const ImpressaoScreen = () => {
     setPage(newPage);
   };
 
+  const handleFilter = () => {
+    setPage(1);
+    setSearchQuery(query);
+    setDateFilter({ start: searchDateStart, end: searchDateEnd });
+    // setStatusFilter(statusFilter);
+    refetch();
+  }
+
   const handleSearch = () => {
     setSearchQuery(query);
     setPage(1);
@@ -358,11 +366,14 @@ const ImpressaoScreen = () => {
     }
   }
 
-  // const handleClearFilters = () => {
-  //   setSearchNumero('');
-  //   setStatusFilter('');
-  //   setDateFilter({ start: null, end: null });
-  // };
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setQuery('');
+    setSearchDateStart(null);
+    setSearchDateEnd(null);
+    setDateFilter({ start: null, end: null });
+    setStatusFilter('');
+  };
 
 
   const handleToggle = () => {
@@ -430,27 +441,22 @@ const ImpressaoScreen = () => {
 
   const pedidoStatus: Record<number, { id: number, nome: string; fila: 'I' }> = pedidosStatusFilaI as Record<number, { id: number, nome: string; fila: 'I' }>;
 
-  // Filtro de pedidos
-  // const filteredPedidos = useMemo(() => {
-  //   return allPedidos.filter((pedido) => {
-  //     const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
-  //     const isStatusMatch =
-  //       !filters.pedido_status ||
-  //       pedido.impressao?.status === filters.pedido_status;
+  // filtro frontend
+  const filteredPedidos = useMemo(() => {
+    return allPedidos.filter((pedido) => {
 
-  //     const isDateMatch = (
-  //       (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
-  //       (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
-  //     );
-  //     return isNumberMatch && isStatusMatch && isDateMatch;
-  //   });
-  // }, [allPedidos, filters, dateFilter]);
-
-  // const paginatedPedidos = useMemo(() => {
-  //   const startIndex = page * allPedidos.length;
-  //   const endIndex = startIndex + allPedidos.length;
-  //   return filteredPedidos.slice(startIndex, endIndex);
-  // }, [filteredPedidos, allPedidos]);
+      const isNumberMatch = !query || String(pedido.numero_pedido).includes(query.trim());
+      
+      const isStatusMatch = !statusFilter || String(pedido.impressao?.status) === statusFilter;
+  
+      const pedidoDate = new Date(pedido.data_prevista);
+      const isDateMatch =
+        (!searchDateStart || pedidoDate >= new Date(searchDateStart)) &&
+        (!searchDateEnd || pedidoDate <= new Date(searchDateEnd));
+  
+      return isNumberMatch && isStatusMatch && isDateMatch;
+    });
+  }, [allPedidos, searchDateStart, searchDateEnd, statusFilter, query]);
 
   function formatarDataRelatorio(dataString: string): string {
     let dataUTC;
@@ -620,11 +626,16 @@ const ImpressaoScreen = () => {
             </Grid>
 
             {/* Botão Limpar Filtros */}
-            {/* <Grid item>
+            <Grid item>
               <Button onClick={handleClearFilters} variant="outlined" size="small">
                 Limpar Filtros
               </Button>
-            </Grid> */}
+            </Grid>
+            <Grid item>
+              <Button onClick={handleFilter} variant="outlined" size="small">
+                Filtrar Profundamente
+              </Button>
+            </Grid>
           </Grid>
 
           {isErrorPedidos ? (
@@ -657,7 +668,7 @@ const ImpressaoScreen = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Array.isArray(allPedidos) && allPedidos.map((row) => {
+                  {Array.isArray(filteredPedidos) && filteredPedidos.map((row) => {
                     const listaProdutos: Produto[] = row.lista_produtos
                       ? typeof row.lista_produtos === 'string'
                         ? JSON.parse(row.lista_produtos)
