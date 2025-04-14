@@ -22,7 +22,7 @@ const ApexOrcamentoStatus: React.FC<ApexOrcamentosProps> = ({ aprovados, naoApro
   const options: ApexCharts.ApexOptions = {
     chart: {
       type: 'pie',
-      height: 350,
+      height: 450,
       fontFamily: "'Plus Jakarta Sans', sans-serif",
       foreColor: "#adb0bb",
       toolbar: { show: false }
@@ -60,7 +60,7 @@ const ApexOrcamentoStatus: React.FC<ApexOrcamentosProps> = ({ aprovados, naoApro
 
   return (
     <div>
-      <Chart options={options} series={series} type="pie" height={300} />
+      <Chart options={options} series={series} type="pie" height={450} />
       {/*     
     <div style={{ marginTop: "20px", textAlign: "center" }}>
       <Link href="/apps/vendas/relatorios/quantidade-orcamentos-aprovados" target='_blank'>
