@@ -36,7 +36,7 @@ const ValorTotalPedidosScreen = () => {
 
   // Fetch da API usando react-query
   const { data, isFetching, error } = useQuery({
-    queryKey: ['quantidadeOrcamentosData'],
+    queryKey: ['pedidosTotal'],
     queryFn: async () => {
       if (!accessToken) {
         throw new Error('Token de acesso não disponível');
