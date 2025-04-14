@@ -12,7 +12,7 @@ const VendasRelatoriosOrcamentosComponent = () => {
   }
 
   const { isFetching, error } = useQuery({
-    queryKey: ['quantidadeOrcamentosData'],
+    queryKey: ['quantidadeOrcamentos'],
     queryFn: () =>
       fetch(`${process.env.NEXT_PUBLIC_API}/api/vendas/quantidade-orcamentos`, {
         method: 'GET',
@@ -20,6 +20,22 @@ const VendasRelatoriosOrcamentosComponent = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
+      }).then(async (res) => {
+        if (!res.ok) {
+          // Se a resposta não estiver ok, obtenha o texto para ajudar na depuração
+          const errorText = await res.text();
+          throw new Error(`Erro ${res.status}: ${errorText}`);
+        }
+        // Tente ler a resposta como texto primeiro, para evitar a exceção de JSON vazio
+        const text = await res.text();
+        if (!text) {
+          throw new Error("Resposta vazia da API");
+        }
+        try {
+          return JSON.parse(text);
+        } catch (err) {
+          throw new Error("Falha ao converter resposta para JSON: " + err);
+        }
       }).then((res) => res.json()).then(data => setTotal(data.totalOrcamentos)),
   });
 

@@ -32,7 +32,7 @@ const VendasRelatoriosOrcamentosPorStatus = () => {
 
   // Fetch da API usando react-query
   const { data, isFetching, error } = useQuery({
-    queryKey: ['quantidadeOrcamentosData'],
+    queryKey: ['OrcamentosPorStatus'],
     queryFn: async () => {
       if (!accessToken) {
         throw new Error('Token de acesso não disponível');
