@@ -126,7 +126,7 @@ const OrcamentoBuscarScreen = () => {
   }
 
   const handleSearch = () => {
-    setSearchQuery(query); // Atualiza a busca
+    setSearchQuery(query);
     setPage(1);
   };
 
