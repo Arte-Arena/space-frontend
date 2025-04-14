@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconEye, IconShirt, IconSquareChevronsLeft, IconSquareChevronsRight } from '@tabler/icons-react';
+import { IconEye, IconSearch, IconShirt, IconSquareChevronsLeft, IconSquareChevronsRight } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -30,16 +30,15 @@ import {
   AlertProps,
   Alert,
   Snackbar,
+  InputAdornment,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
-import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
 import { format, isSameDay, subDays } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import { useThemeMode } from '@/utils/useThemeMode';
-import { IconDirectionSign } from '@tabler/icons-react';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import getBrazilTime from '@/utils/brazilTime';
@@ -54,15 +53,15 @@ const SublimacaoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
-  const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
-  const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
-  const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
   const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const [open, setOpen] = useState(false);
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    pageSize: 100,
-    page: 0,
-  });
+  const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [query, setQuery] = useState<string>('');
+  const [searchDateStart, setSearchDateStart] = useState<string | null>(null);
+  const [searchDateEnd, setSearchDateEnd] = useState<string | null>(null);
+  const [rowsPerPage, setRowsPerPage] = useState<number>(15);
+  const [page, setPage] = useState(1);
   const [snackbar, setSnackbar] = React.useState<{
     open: boolean;
     message: string;
@@ -81,16 +80,10 @@ const SublimacaoScreen = () => {
   const MoverProducaoRoles = [1, 11, 13];
   const canShowButtonMover = roles.some(role => MoverProducaoRoles.includes(role));
 
-
-  const filters = {
-    numero_pedido: searchNumero,
-    pedido_status: statusFilter,
-  };
-
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
-    queryKey: ['pedidos'],
+    queryKey: ['pedidos', searchQuery, page, rowsPerPage],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=C`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=C&per_page=${rowsPerPage}&page=${page}&q=${encodeURIComponent(searchQuery)}&data_inicial=${searchDateStart}&data_final=${searchDateEnd}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -108,6 +101,32 @@ const SublimacaoScreen = () => {
   }, [dataPedidos]);
 
   // handles
+  const handleFilter = () => {
+    setPage(1);
+    setSearchQuery(query);
+  }
+
+  const handleSearch = () => {
+    setSearchQuery(query);
+    setPage(1);
+  };
+
+  const handleSearchKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleTablePageChange = (event: unknown, newPage: number) => {
+    setPage(newPage + 1);
+  };
+
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
+    setPage(1);
+  };
+
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
@@ -237,14 +256,12 @@ const SublimacaoScreen = () => {
   }
 
   const handleClearFilters = () => {
-    setSearchNumero('');
+    setSearchQuery('');
+    setQuery('');
+    setSearchDateStart(null);
+    setSearchDateEnd(null);
     setStatusFilter('');
-    setDateFilter({ start: null, end: null });
   };
-
-  const handleDateChange = (field: 'start' | 'end') => (newValue: Date | null) => {
-    setDateFilter((prev) => ({ ...prev, [field]: newValue }));
-  }
 
   const handleToggle = () => {
     setOpen(!open);
@@ -322,23 +339,18 @@ const SublimacaoScreen = () => {
   // Filtro de pedidos
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
-      const isNumberMatch =
-        !filters.numero_pedido ||
-        pedido.numero_pedido.toString().includes(filters.numero_pedido);
+      const isNumberMatch = !query || String(pedido.numero_pedido).includes(query.trim());
 
-      const isStatusMatch =
-        !filters.pedido_status ||
-        pedido.confeccao_costura?.status === filters.pedido_status;
+      const isStatusMatch = !statusFilter || String(pedido.confeccao_costura?.status) === statusFilter;
 
+      const pedidoDate = new Date(pedido.data_prevista);
       const isDateMatch =
-        (!dateFilter.start ||
-          new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
-        (!dateFilter.end ||
-          new Date(pedido.data_prevista) <= new Date(dateFilter.end));
+        (!searchDateStart || pedidoDate >= new Date(searchDateStart)) &&
+        (!searchDateEnd || pedidoDate <= new Date(searchDateEnd));
 
       return isNumberMatch && isStatusMatch && isDateMatch;
     });
-  }, [allPedidos, filters, dateFilter]);
+  }, [allPedidos, query, searchDateStart, searchDateEnd, statusFilter]);
 
   function formatarDataRelatorio(dataString: string): string {
     let dataUTC;
@@ -359,13 +371,6 @@ const SublimacaoScreen = () => {
   const zerarHorario = (data: Date): Date => {
     return new Date(data.getFullYear(), data.getMonth(), data.getDate());
   };
-
-
-  const paginatedPedidos = useMemo(() => {
-    const startIndex = paginationModel.page * paginationModel.pageSize;
-    const endIndex = startIndex + paginationModel.pageSize;
-    return filteredPedidos.slice(startIndex, endIndex);
-  }, [filteredPedidos, paginationModel]);
 
   const BCrumb = [
     {
@@ -435,19 +440,28 @@ const SublimacaoScreen = () => {
             <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
               {/* Campo de Número do Pedido */}
               <Grid item>
-                <TextField
+                <CustomTextField
                   label="Número do Pedido"
                   variant="outlined"
                   size="small"
-                  value={searchNumero}
-                  onChange={(e) => setSearchNumero(e.target.value)}
+                  value={query}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
+                  onKeyPress={handleSearchKeyPress}
+                  placeholder="Buscar orçamento..."
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <IconSearch />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Grid>
 
               {/* Select de Status */}
               <Grid item>
                 <CustomSelect
-                  sx={{ minWidth: '150px' }} // Define uma largura mínima
+                  sx={{ minWidth: '150px' }}
                   value={statusFilter}
                   onChange={(e: { target: { value: React.SetStateAction<string>; }; }) => setStatusFilter(e.target.value)}
                   displayEmpty
@@ -457,7 +471,6 @@ const SublimacaoScreen = () => {
                   {Object.entries(pedidoStatus).map(([id, status]) => (
                     <MenuItem key={id} value={status.nome}>
                       {status.nome}
-                      {/* tem que arrumar esse campo pra filtrar pelo nome */}
                     </MenuItem>
                   ))}
                 </CustomSelect>
@@ -468,10 +481,10 @@ const SublimacaoScreen = () => {
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
                     label="Data Inicial"
-                    value={dateFilter.start}
-                    onChange={handleDateChange('start')}
+                    value={searchDateStart}
+                    onChange={(newDate: Date | null) => setSearchDateStart(newDate ? format(newDate, 'yyyy-MM-dd') : null)}
                     renderInput={(params: TextFieldProps) => (
-                      <TextField
+                      <CustomTextField
                         {...params}
                         error={false}
                         size="small"
@@ -483,15 +496,14 @@ const SublimacaoScreen = () => {
                 </LocalizationProvider>
               </Grid>
 
-              {/* DatePicker - Data Final */}
               <Grid item>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
                     label="Data Final"
-                    value={dateFilter.end}
-                    onChange={handleDateChange('end')}
+                    value={searchDateEnd}
+                    onChange={(newDate: Date | null) => setSearchDateEnd(newDate ? format(newDate, 'yyyy-MM-dd') : null)}
                     renderInput={(params: TextFieldProps) => (
-                      <TextField
+                      <CustomTextField
                         {...params}
                         error={false}
                         size="small"
@@ -507,6 +519,11 @@ const SublimacaoScreen = () => {
               <Grid item>
                 <Button onClick={handleClearFilters} variant="outlined" size="small">
                   Limpar Filtros
+                </Button>
+              </Grid>
+              <Grid item>
+                <Button onClick={handleFilter} variant="outlined" size="small">
+                  Filtrar Profundamente
                 </Button>
               </Grid>
             </Grid>
@@ -535,7 +552,7 @@ const SublimacaoScreen = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {Array.isArray(paginatedPedidos) && paginatedPedidos.map((row) => {
+                    {Array.isArray(filteredPedidos) && filteredPedidos.map((row) => {
                       const listaProdutos: Produto[] = row.lista_produtos
                         ? typeof row.lista_produtos === 'string'
                           ? JSON.parse(row.lista_produtos)
@@ -741,13 +758,13 @@ const SublimacaoScreen = () => {
                   </TableBody>
                 </Table>
                 <TablePagination
-                  rowsPerPageOptions={[15, 25, 50, 100, 200]}
                   component="div"
-                  count={filteredPedidos.length || 0}
-                  rowsPerPage={paginationModel.pageSize}
-                  page={paginationModel.page}
-                  onPageChange={(event, newPage) => setPaginationModel({ ...paginationModel, page: newPage })}
-                  onRowsPerPageChange={(event) => setPaginationModel({ ...paginationModel, pageSize: parseInt(event.target.value, 10), page: 0 })}
+                  count={dataPedidos?.total || 0}
+                  page={page - 1}
+                  onPageChange={handleTablePageChange}
+                  rowsPerPage={rowsPerPage}
+                  onRowsPerPageChange={handleRowsPerPageChange}
+                  rowsPerPageOptions={[15, 25, 50]}
                 />
               </TableContainer>
             )}

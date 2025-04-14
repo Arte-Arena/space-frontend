@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { isSameDay, subDays } from 'date-fns';
+import { format, isSameDay, subDays } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -34,9 +34,10 @@ import {
   TextFieldProps,
   Snackbar,
   AlertProps,
-  Alert
+  Alert,
+  InputAdornment
 } from "@mui/material";
-import { IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconPrinter, IconBrandTrello, IconUserPlus } from '@tabler/icons-react';
+import { IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconPrinter, IconBrandTrello, IconUserPlus, IconSearch } from '@tabler/icons-react';
 import CircularProgress from '@mui/material/CircularProgress';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
@@ -57,13 +58,13 @@ const ArteFinalScreen = () => {
   const [openDialogDesinger, setOpenDialogDesinger] = useState(false);
   const [selectedRowDesinger, setSelectedRowDesinger] = useState<ArteFinal | null>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
-  const [searchNumero, setSearchNumero] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [query, setQuery] = useState<string>('');
+  const [searchDateStart, setSearchDateStart] = useState<string | null>(null);
+  const [searchDateEnd, setSearchDateEnd] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    pageSize: 15,
-    page: 0,
-  });
+  const [rowsPerPage, setRowsPerPage] = useState<number>(15);
+  const [page, setPage] = useState(1);
   const [snackbar, setSnackbar] = React.useState<{
     open: boolean;
     message: string;
@@ -91,10 +92,6 @@ const ArteFinalScreen = () => {
   const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));
   const canShowButtonBackOffice = roles.some(role => BackOfficeRoles.includes(role));
 
-  const filters = {
-    numero_pedido: searchNumero,
-    pedido_status_id: statusFilter,
-  };
 
   useEffect(() => {
     if (configs) {
@@ -105,9 +102,9 @@ const ArteFinalScreen = () => {
   }, [configs]);
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
-    queryKey: ['pedidos'],
+    queryKey: ['pedidos', searchQuery, page, rowsPerPage],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?per_page=${paginationModel.pageSize}&fila=D`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=D&per_page=${rowsPerPage}&page=${page}&q=${encodeURIComponent(searchQuery)}&data_inicial=${searchDateStart}&data_final=${searchDateEnd}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -122,11 +119,33 @@ const ArteFinalScreen = () => {
     }
   }, [dataPedidos]);
 
-  useEffect(() => {
-    if (paginationModel) {
-      refetch();
+  //handles
+  const handleFilter = () => {
+    setPage(1);
+    setSearchQuery(query);
+    refetch();
+  }
+
+  const handleSearch = () => {
+    setSearchQuery(query);
+    setPage(1);
+  };
+
+  const handleSearchKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleSearch();
     }
-  }, [paginationModel.pageSize]);
+  };
+
+  const handleTablePageChange = (event: unknown, newPage: number) => {
+    setPage(newPage + 1);
+  };
+
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
+    setPage(1);
+  };
 
   const handleKeyPressObservacoes = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -439,31 +458,23 @@ const ArteFinalScreen = () => {
 
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
-      const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
-      const isStatusMatch = !filters.pedido_status_id || pedido.pedido_status_id === Number(filters.pedido_status_id);
-      const isDateMatch = (
-        (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
-        (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
-      );
+      const isNumberMatch = !query || String(pedido.numero_pedido).includes(query.trim());
+      const isStatusMatch = !statusFilter || pedido.pedido_status_id === Number(statusFilter);
+      const pedidoDate = new Date(pedido.data_prevista);
+      const isDateMatch =
+        (!searchDateStart || pedidoDate >= new Date(searchDateStart)) &&
+        (!searchDateEnd || pedidoDate <= new Date(searchDateEnd));
       return isNumberMatch && isStatusMatch && isDateMatch;
     });
-  }, [allPedidos, filters, dateFilter]);
-
-  const paginatedPedidos = useMemo(() => {
-    const startIndex = paginationModel.page * paginationModel.pageSize;
-    const endIndex = startIndex + paginationModel.pageSize;
-    return filteredPedidos.slice(startIndex, endIndex);
-  }, [filteredPedidos, paginationModel]);
+  }, [allPedidos, searchDateStart, searchDateEnd, statusFilter, query]);
 
   const handleClearFilters = () => {
-    setSearchNumero('');
+    setSearchQuery('');
+    setQuery('');
+    setSearchDateStart(null);
+    setSearchDateEnd(null);
     setStatusFilter('');
-    setDateFilter({ start: null, end: null });
   };
-
-  const handleDateChange = (field: 'start' | 'end') => (newValue: Date | null) => {
-    setDateFilter((prev) => ({ ...prev, [field]: newValue }));
-  }
 
   function formatarDataSegura(dataISOString: string): string {
     const dataUTC = DateTime.fromISO(dataISOString, { zone: 'utc' });
@@ -502,12 +513,21 @@ const ArteFinalScreen = () => {
         <>
           <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
             <Grid item>
-              <TextField
+              <CustomTextField
                 label="Número do Pedido"
                 variant="outlined"
                 size="small"
-                value={searchNumero}
-                onChange={(e) => setSearchNumero(e.target.value)}
+                value={query}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
+                onKeyPress={handleSearchKeyPress}
+                placeholder="Buscar orçamento..."
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconSearch />
+                    </InputAdornment>
+                  ),
+                }}
               />
             </Grid>
 
@@ -532,16 +552,14 @@ const ArteFinalScreen = () => {
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
                   label="Data Inicial"
-                  value={dateFilter.start}
-                  onChange={handleDateChange('start')}
+                  value={searchDateStart}
+                  onChange={(newDate: Date | null) => setSearchDateStart(newDate ? format(newDate, 'yyyy-MM-dd') : null)}
                   renderInput={(params: TextFieldProps) => (
                     <CustomTextField
                       {...params}
                       error={false}
                       size="small"
-                      sx={{
-                        width: '200px',
-                      }}
+                      sx={{ width: '200px' }}
                     />
                   )}
                   inputFormat="dd/MM/yyyy"
@@ -553,16 +571,14 @@ const ArteFinalScreen = () => {
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
                   label="Data Final"
-                  value={dateFilter.end}
-                  onChange={handleDateChange('end')}
+                  value={searchDateEnd}
+                  onChange={(newDate: Date | null) => setSearchDateEnd(newDate ? format(newDate, 'yyyy-MM-dd') : null)}
                   renderInput={(params: TextFieldProps) => (
                     <CustomTextField
                       {...params}
                       error={false}
                       size="small"
-                      sx={{
-                        width: '200px'
-                      }}
+                      sx={{ width: '200px' }}
                     />
                   )}
                   inputFormat="dd/MM/yyyy"
@@ -570,9 +586,15 @@ const ArteFinalScreen = () => {
               </LocalizationProvider>
             </Grid>
 
+            {/* Botão Limpar Filtros */}
             <Grid item>
               <Button onClick={handleClearFilters} variant="outlined" size="small">
                 Limpar Filtros
+              </Button>
+            </Grid>
+            <Grid item>
+              <Button onClick={handleFilter} variant="outlined" size="small">
+                Filtrar Profundamente
               </Button>
             </Grid>
           </Grid>
@@ -602,8 +624,8 @@ const ArteFinalScreen = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Array.isArray(paginatedPedidos) &&
-                    paginatedPedidos.map((row) => {
+                  {Array.isArray(filteredPedidos) &&
+                    filteredPedidos.map((row) => {
 
                       const listaProdutos: Produto[] = row.lista_produtos
                         ? typeof row.lista_produtos === 'string'
@@ -907,13 +929,13 @@ const ArteFinalScreen = () => {
 
               </Table >
               <TablePagination
-                rowsPerPageOptions={[15, 25, 50, 100, 200]}
                 component="div"
-                count={filteredPedidos.length || 0}
-                rowsPerPage={paginationModel.pageSize}
-                page={paginationModel.page}
-                onPageChange={(event, newPage) => setPaginationModel({ ...paginationModel, page: newPage })}
-                onRowsPerPageChange={(event) => setPaginationModel({ ...paginationModel, pageSize: parseInt(event.target.value, 10), page: 0 })}
+                count={dataPedidos?.total || 0}
+                page={page - 1}
+                onPageChange={handleTablePageChange}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={handleRowsPerPageChange}
+                rowsPerPageOptions={[15, 25, 50]}
               />
             </TableContainer>
           )}

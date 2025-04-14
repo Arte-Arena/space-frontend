@@ -24,14 +24,12 @@ import {
   Collapse,
   Box,
   MenuItem,
-  TextField,
   Select,
   TextFieldProps,
   AlertProps,
   Snackbar,
   Alert,
   Divider,
-  Pagination,
   InputAdornment,
   TablePagination,
 } from "@mui/material";
@@ -94,11 +92,6 @@ const ImpressaoScreen = () => {
   const canShowButtonMover = roles.some(role => MoverProducaoRoles.includes(role));
   const unableTipoCorte = roles.some(role => DesignerRoles.includes(role))
 
-  // const filters = {
-  //   numero_pedido: searchNumero,
-  //   pedido_status: statusFilter,
-  // };
-
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos', searchQuery, page, rowsPerPage],
     queryFn: () =>
@@ -124,7 +117,6 @@ const ImpressaoScreen = () => {
     setPage(1);
     setSearchQuery(query);
     setDateFilter({ start: searchDateStart, end: searchDateEnd });
-    // setStatusFilter(statusFilter);
     refetch();
   }
 
@@ -381,6 +373,7 @@ const ImpressaoScreen = () => {
     setSearchDateEnd(null);
     setDateFilter({ start: null, end: null });
     setStatusFilter('');
+    // pensar em mua forma de validar se apenas os datas foram alterados (useEffect como condição de uma variavel de ser true or false) 
   };
 
 
@@ -1048,17 +1041,15 @@ const ImpressaoScreen = () => {
                   })}
                 </TableBody>
               </Table>
-
               <TablePagination
                 component="div"
                 count={dataPedidos?.total || 0}
-                page={page - 1} 
+                page={page - 1}
                 onPageChange={handleTablePageChange}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleRowsPerPageChange}
-                rowsPerPageOptions={[15, 25, 50]} 
+                rowsPerPageOptions={[15, 25, 50]}
               />
-
             </TableContainer>
           )}
           <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} refetch={refetch} />
