@@ -33,6 +33,7 @@ import {
   Divider,
   Pagination,
   InputAdornment,
+  TablePagination,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
 import { IconBrandTrello } from '@tabler/icons-react';
@@ -60,7 +61,6 @@ const ImpressaoScreen = () => {
   const [query, setQuery] = useState<string>('');
   const [searchDateStart, setSearchDateStart] = useState<string | null>(null);
   const [searchDateEnd, setSearchDateEnd] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });
   const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
@@ -68,6 +68,8 @@ const ImpressaoScreen = () => {
   const [open, setOpen] = useState(false);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
+  const [rowsPerPage, setRowsPerPage] = useState<number>(15);
+  const [page, setPage] = useState(1);
 
   const [snackbar, setSnackbar] = React.useState<{
     open: boolean;
@@ -98,9 +100,9 @@ const ImpressaoScreen = () => {
   // };
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
-    queryKey: ['pedidos', searchQuery, page],
+    queryKey: ['pedidos', searchQuery, page, rowsPerPage],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=I&page=${page}&q=${encodeURIComponent(searchQuery)}&data_inicial=${searchDateStart}&data_final=${searchDateEnd}`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=I&per_page=${rowsPerPage}&page=${page}&q=${encodeURIComponent(searchQuery)}&data_inicial=${searchDateStart}&data_final=${searchDateEnd}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -139,6 +141,16 @@ const ImpressaoScreen = () => {
     if (event.key === 'Enter') {
       handleSearch();
     }
+  };
+
+  const handleTablePageChange = (event: unknown, newPage: number) => {
+    setPage(newPage + 1);
+  };
+
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
+    setPage(1);
   };
 
   const handleKeyPressRolo = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -446,14 +458,14 @@ const ImpressaoScreen = () => {
     return allPedidos.filter((pedido) => {
 
       const isNumberMatch = !query || String(pedido.numero_pedido).includes(query.trim());
-      
+
       const isStatusMatch = !statusFilter || String(pedido.impressao?.status) === statusFilter;
-  
+
       const pedidoDate = new Date(pedido.data_prevista);
       const isDateMatch =
         (!searchDateStart || pedidoDate >= new Date(searchDateStart)) &&
         (!searchDateEnd || pedidoDate <= new Date(searchDateEnd));
-  
+
       return isNumberMatch && isStatusMatch && isDateMatch;
     });
   }, [allPedidos, searchDateStart, searchDateEnd, statusFilter, query]);
@@ -1041,10 +1053,14 @@ const ImpressaoScreen = () => {
                 </TableBody>
               </Table>
 
-              <Pagination
-                count={Math.ceil((dataPedidos?.total || 0) / (dataPedidos?.per_page || 1))}
-                page={page}
-                onChange={handlePageChange}
+              <TablePagination
+                component="div"
+                count={dataPedidos?.total || 0}
+                page={page - 1} 
+                onPageChange={handleTablePageChange}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={handleRowsPerPageChange}
+                rowsPerPageOptions={[15, 25, 50]} 
               />
 
             </TableContainer>
