@@ -120,10 +120,6 @@ const ImpressaoScreen = () => {
     }
   }, [dataPedidos]);
 
-  const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {
-    setPage(newPage);
-  };
-
   const handleFilter = () => {
     setPage(1);
     setSearchQuery(query);
