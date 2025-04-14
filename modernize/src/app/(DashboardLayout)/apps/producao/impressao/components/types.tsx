@@ -1,6 +1,8 @@
 interface ApiResponsePedidosArteFinal {
     data: ArteFinal[];
     total: number;
+    per_page: number;
+    current_page: number;
 }
 
 
