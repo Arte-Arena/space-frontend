@@ -88,9 +88,9 @@ const ArteFinalScreen = () => {
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
   const configs = localStorage.getItem('configs');
 
-  const DesignerRoles = [1, 6];
-  const DesignerCoordanateRole = [1, 7];
-  const BackOfficeRoles = [1, 10];
+  const DesignerRoles = [1, 6, 13];
+  const DesignerCoordanateRole = [1, 7, 13];
+  const BackOfficeRoles = [1, 10, 13];
 
   const canShowButtonAtribuirDesigner = roles.some(role => DesignerCoordanateRole.includes(role));
   const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));
