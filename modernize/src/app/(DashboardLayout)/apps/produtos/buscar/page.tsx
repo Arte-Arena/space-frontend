@@ -17,6 +17,7 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import InputAdornment from '@mui/material/InputAdornment';
 import { IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 
 interface Product {
   id: number;
@@ -34,10 +35,13 @@ const ProdutosBuscarScreen = () => {
   const [query, setQuery] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>(''); // Mantém a query atual usada na API
   const [page, setPage] = useState<number>(1);
+  const router = useRouter();
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
-    throw new Error('Access token is missing');
+    // throw new Error('Access token is missing');
+    console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   const { isFetching, error, data } = useQuery({

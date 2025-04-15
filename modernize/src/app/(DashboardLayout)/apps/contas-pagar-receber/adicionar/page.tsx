@@ -107,7 +107,8 @@ const ContasPagarReceberAdicionarScreen = () => {
 
       if (!response.ok) {
         const errorDetails = await response.text();
-        throw new Error('Failed to create account');
+        // throw new Error('Failed to create account');
+        console.error('Error details:', errorDetails);
       }
       alert('Conta criada com sucesso!');
       setTitulo('');

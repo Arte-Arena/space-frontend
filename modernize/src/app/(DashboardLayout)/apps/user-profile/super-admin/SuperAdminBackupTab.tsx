@@ -26,7 +26,8 @@ const SuperAdminBackupTab = () => {
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
-    throw new Error('Access token is missing');
+    // throw new Error('Access token is missing');
+    console.error('Access token is missing');
   }
 
   const { isFetching, error, data } = useQuery({

@@ -79,14 +79,17 @@ const ImpressaoScreen = () => {
     severity: 'success'
   });
 
-  const router = useRouter();
   const myTheme = useThemeMode()
-
+  const router = useRouter();
   const accessToken = localStorage.getItem('accessToken');
+  if (!accessToken) {
+    console.error('Access token is missing');
+    router.push('/auth/login');
+  }
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
 
-  const DesignerRoles = [1, 6, 7];
+  const DesignerRoles = [1, 6, 7, 13];
   const MoverProducaoRoles = [1, 11, 12, 13];
 
   const canShowButtonMover = roles.some(role => MoverProducaoRoles.includes(role));

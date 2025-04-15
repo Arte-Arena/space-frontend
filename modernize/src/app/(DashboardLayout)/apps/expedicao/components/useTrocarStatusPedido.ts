@@ -18,7 +18,8 @@ const trocarStatusPedido = async (id: number | undefined, status_nome: string | 
       }
     );
 
-    if (!res.ok) throw new Error("Erro ao alterar o status do pedido.");
+    // if (!res.ok) throw new Error("Erro ao alterar o status do pedido.");
+    if (!res.ok) console.error("Erro ao alterar o status do pedido. ", res.text());
     refetch();
     return true;
   } catch (error) {

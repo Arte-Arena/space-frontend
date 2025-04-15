@@ -5,6 +5,7 @@ import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcr
 import { useQuery } from '@tanstack/react-query';
 import Typography from "@mui/material/Typography";
 import theme from '@/utils/theme';
+import { useRouter } from "next/navigation";
 
 // import ApexLine from "@/app/components/charts/ApexLine";
 interface ApiResponse {
@@ -39,10 +40,13 @@ const BCrumb = [
 
 const VendasRelatoriosValoresVendidosPorOrcamento = () => {
   const [produtosVendidos, setProdutosVendidos] = useState<Orcamento[]>([]);
-
+  
+  const router = useRouter();
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
-    throw new Error('Access token is missing');
+    // throw new Error('Access token is missing');
+    console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   const { isFetching, error } = useQuery({

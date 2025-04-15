@@ -75,7 +75,9 @@ const OrcamentoEditarScreen = () => {
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
-    throw new Error('Access token is missing');
+    // throw new Error('Access token is missing');
+    console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   const { isFetching: isFetchingOrcamentos, error: errorOrcamentos, data: dataOrcamentos, refetch } = useQuery({

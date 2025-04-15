@@ -7,6 +7,7 @@ import CustomFormLabel from '@/app/components/forms/theme-elements/CustomFormLab
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import ParentCard from '@/app/components/shared/ParentCard';
 import Typography from '@mui/material/Typography';
+import { useAuth } from '@/utils/useAuth';
 
 const CustoBandeiraScreen = () => {
 
@@ -17,6 +18,14 @@ const CustoBandeiraScreen = () => {
   const [custoPapel, setCustoPapel] = useState(0);
   const [custoImposto, setCustoImposto] = useState(0);
   const [resultado, setResultado] = useState<number | null>(null);
+
+  const isLoggedIn = useAuth();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (altura && largura) {

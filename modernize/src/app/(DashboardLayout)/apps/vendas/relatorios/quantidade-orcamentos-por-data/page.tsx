@@ -7,6 +7,7 @@ import ApexOrcamentos from "@/app/components/charts/quantidadeOrcamentoChart";
 import ParentCard from "@/app/components/shared/ParentCard";
 import { Select, MenuItem, InputLabel, FormControl } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useRouter } from "next/navigation";
 
 interface Orcamento {
   date: string;
@@ -24,12 +25,15 @@ const VendasRelatoriosOrcamentosPorData = () => {
   const [dados, setDados] = useState<Orcamento[]>([]);
   const [filtro, setFiltro] = useState("mes");
   const theme = useTheme(); // Pega o tema atual (light ou dark)
+  const router = useRouter();
 
   // Pega token do localStorage
   const accessToken = typeof window !== "undefined" ? localStorage.getItem('accessToken') : null;
 
   if (!accessToken) {
+    // console.error('Access token is missing');
     console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   // Fetch da API usando react-query

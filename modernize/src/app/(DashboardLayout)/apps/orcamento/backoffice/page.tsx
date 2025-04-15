@@ -12,7 +12,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
-import { Pagination, Stack, Button, Box, Typography, Collapse, FormControlLabel, Checkbox, TextField, useTheme, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText } from '@mui/material';
+import { Pagination, Stack, Button, Box, Typography, Collapse, FormControlLabel, Checkbox, TextField, useTheme, Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { IconPlus, IconSearch, IconLink, IconShirtSport, IconCheck, IconTrash, IconBrush, IconUser } from '@tabler/icons-react';
@@ -22,6 +22,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { IconTruckDelivery } from '@tabler/icons-react';
 import useAprovarPedidoStatus from './components/useAprovarPedidoStatus';
 import { logger } from '@/utils/logger';
+import Link from 'next/link';
 
 interface Pedidos {
   id: number;
@@ -84,11 +85,18 @@ interface Orcamento {
   total_orcamento: number;
   prev_entrega: Date;
   pedidos: Pedidos[];
+  client_info?: {
+    client_id: number | null;
+    client_name: string | null;
+    client_email: string | null;
+    has_uniform: boolean;
+  };
 }
 
 interface Sketch {
   letter: string;
   quantity: number;
+  package: string;
 }
 
 const OrcamentoBackofficeScreen = () => {
@@ -102,8 +110,6 @@ const OrcamentoBackofficeScreen = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
-  const [linkOrcamento, setLinkOrcamento] = useState<string>('');
-  const [openLinkDialog, setOpenLinkDialog] = useState<boolean>(false);
   const [linkUniform, setLinkUniform] = useState<string>('');
   const [openUniformDialog, setOpenUniformDialog] = useState<boolean>(false);
   const [sketches, setSketches] = useState<Sketch[]>([]);
@@ -135,8 +141,15 @@ const OrcamentoBackofficeScreen = () => {
   const [arteFinalConfigurados, setArteFinalConfigurados] = useState<{ [key: number]: boolean }>({});
   const [verificandoArteFinal, setVerificandoArteFinal] = useState<{ [key: number]: boolean }>({});
   const [confirmacaoArteFinalConfigurados, setConfirmacaoArteFinalConfigurados] = useState<{ [key: number]: boolean }>({});
-
-
+  const [currentPackage, setCurrentPackage] = useState<string>('Start');
+  const [email, setEmail] = useState<string>('');
+  const [emailConfirmation, setEmailConfirmation] = useState<string>('');
+  const [clientEmail, setClientEmail] = useState<string>('');
+  const [clientEmailConfirmation, setClientEmailConfirmation] = useState<string>('');
+  const [openClientEmailDialog, setOpenClientEmailDialog] = useState<boolean>(false);
+  const [isLinkingClient, setIsLinkingClient] = useState<boolean>(false);
+  const [isClientLinked, setIsClientLinked] = useState<boolean>(false);
+  const [clientEmailError, setClientEmailError] = useState<string | null>(null);
 
   const theme = useTheme()
 
@@ -144,10 +157,15 @@ const OrcamentoBackofficeScreen = () => {
   const regexPrazo = /Prazo de Produção:\s*\d{1,3}\s*dias úteis/;
   const regexEntrega = /Previsão de Entrega:\s*([\d]{1,2} de [a-zA-Z]+ de \d{4})\s?\(([^)]+)\)/;
   const regexBrinde = /Brinde:\s*\d+\s*un\s*[\w\s]*\s*R\$\s*\d{1,3}(?:,\d{2})*\s*\(R\$\s*\d{1,3}(?:,\d{2})*\)/;
+  const REGEX = {
+    email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+  };
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
-    throw new Error('Access token is missing');
+    // throw new Error('Access token is missing');
+    console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   const verificarClienteCadastrado = async (orcamentoId: number) => {
@@ -179,19 +197,27 @@ const OrcamentoBackofficeScreen = () => {
     setVerificandoUniformes(prev => ({ ...prev, [orcamentoId]: true }));
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${orcamentoId}`, {
+      // Usando o middleware Laravel para verificar uniformes
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes-go/${orcamentoId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${accessToken}`
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        const temConfiguracao = data.length > 0 && data.some(
-          (uniforme: any) => uniforme.configuracoes && uniforme.configuracoes.length > 0
-        );
+        // Verificando se existem jogadores configurados nos esboços
+        const temConfiguracao = data.data && 
+          data.data.length > 0 && 
+          data.data.some((uniforme: any) => 
+            uniforme.sketches && 
+            uniforme.sketches.some((sketch: any) => 
+              sketch.players && sketch.players.length > 0 && 
+              sketch.players.some((player: any) => player.ready)
+            )
+          );
         setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: temConfiguracao }));
       } else {
         setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
@@ -479,70 +505,85 @@ const OrcamentoBackofficeScreen = () => {
   if (errorOrcamentos) return <p>Ocorreu um erro: {errorOrcamentos.message}</p>;
   if (dataOrcamentos) logger.log(dataOrcamentos);
 
-  const handleLinkOrcamento = async (orcamentoId: number) => {
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/url/${orcamentoId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (!data.caminho) {
-        console.log('Erro: servidor de short URL não disponível');
-      } else {
-        setLinkOrcamento(`${window.location.origin}/s${data.caminho}`);
-        setOpenLinkDialog(true);
-      }
+  const handleClientEmailDialog = (orcamentoId: number) => {
+    setCurrentOrcamentoId(orcamentoId);
+    setOpenClientEmailDialog(true);
+    
+    // Verificar se o cliente já está cadastrado através do client_info
+    const orcamento = dataOrcamentos?.data.find((o: Orcamento) => o.id === orcamentoId);
+    if (orcamento?.client_info?.client_id) {
+      setIsClientLinked(true);
+      setClientEmail(orcamento.client_info.client_email || '');
+      setClientEmailConfirmation(orcamento.client_info.client_email || '');
+    } else {
+      setIsClientLinked(false);
+      setClientEmail('');
+      setClientEmailConfirmation('');
     }
-  };
+    
+    setClientEmailError(null);
+  }
 
-  async function handleShortlinkUniform(uniformId: number) {
-    setCurrentOrcamentoId(uniformId);
-    setApiError(null);
-    setIsLinkGenerated(false);
-    setIsCheckingUniforms(true);
-
+  const handleLinkClientEmail = async () => {
+    if (!currentOrcamentoId) return;
+    
     try {
-      const uniformResponse = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes/${uniformId}`, {
-        method: 'GET',
+      setIsLinkingClient(true);
+      setClientEmailError(null);
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/${currentOrcamentoId}/link-client`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
+        body: JSON.stringify({
+          client_email: clientEmail,
+        }),
       });
 
-      const uniformData = await uniformResponse.json();
-
-      if (uniformData && uniformData.length > 0) {
-        setExistingUniforms(true);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setIsClientLinked(true);
+        refetch();
       } else {
-        setExistingUniforms(false);
+        setClientEmailError(data.message || 'Erro ao vincular cliente ao orçamento');
       }
     } catch (error) {
-      console.error('Erro ao verificar uniformes existentes:', error);
+      console.error('Error linking client email:', error);
+      setClientEmailError('Erro ao vincular cliente ao orçamento. Tente novamente.');
     } finally {
-      setIsCheckingUniforms(false);
+      setIsLinkingClient(false);
     }
+  }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/url/${uniformId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+  const handleCloseClientEmailDialog = () => {
+    setOpenClientEmailDialog(false);
+    setClientEmail('');
+    setClientEmailConfirmation('');
+    setIsClientLinked(false);
+    setCurrentOrcamentoId(null);
+    setClientEmailError(null);
+  }
 
-    if (!response.ok) return console.error('Erro ao criar link do uniforme:', response.status);
-    const data = await response.json();
-    if (!data.caminho) return console.error(
-      'Erro ao criar link do uniforme: servidor de short URL não disponível'
-    );
-    setLinkUniform(`${window.location.origin}/u${data.caminho}`);
-    setOpenUniformDialog(true);
+  async function handleShortlinkUniform(uniformId: number) {
+    setCurrentOrcamentoId(uniformId);
+    setIsCheckingUniforms(false);
+    setExistingUniforms(false);
+    setSketches([]);
+    
+    const orcamento = dataOrcamentos?.data.find((o: Orcamento) => o.id === uniformId);
+    if (orcamento?.client_info?.client_email) {
+      setEmail(orcamento.client_info.client_email);
+      setEmailConfirmation(orcamento.client_info.client_email);
+    } else {
+      setEmail('');
+      setEmailConfirmation('');
+    }
+    
+    setIsLinkGenerated(false);
+    setApiError(null);
   }
 
   const handleGenerateAndCopyLink = async () => {
@@ -550,34 +591,33 @@ const OrcamentoBackofficeScreen = () => {
       setIsGeneratingLink(true);
       setApiError(null);
 
-      for (const sketch of sketches) {
-        const uniformData = {
-          orcamento_id: currentOrcamentoId,
-          esboco: sketch.letter,
-          quantidade_jogadores: sketch.quantity,
-          configuracoes: []
-        };
+      const goApiSketches = sketches.map(sketch => ({
+        id: sketch.letter,
+        player_count: sketch.quantity,
+        package_type: sketch.package,
+        players: []
+      }));
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify(uniformData),
-        });
+      const uniformData = {
+        budget_id: currentOrcamentoId,
+        client_email: email,
+        sketches: goApiSketches
+      };
 
-        const data = await response.json();
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes-go`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(uniformData),
+      });
 
-        if (!response.ok) {
-          if (response.status === 422 && data.errors) {
-            setApiError(`Erro: Já existe um esboço ${sketch.letter} para este orçamento.`);
-          } else {
-            setApiError(`Erro ao salvar o esboço ${sketch.letter}: ${data.message || 'Erro desconhecido'}`);
-          }
-          setIsGeneratingLink(false);
-          return;
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        setApiError(errorData.message || 'Erro ao salvar os esboços. Tente novamente.');
+        setIsGeneratingLink(false);
+        return;
       }
 
       await navigator.clipboard.writeText(linkUniform);
@@ -595,6 +635,8 @@ const OrcamentoBackofficeScreen = () => {
     setSketches([]);
     setCurrentLetter('');
     setCurrentQuantity(1);
+    setCurrentPackage('Start');
+    setEmail('');
     setIsLinkGenerated(false);
     setApiError(null);
     setCurrentOrcamentoId(null);
@@ -842,12 +884,11 @@ const OrcamentoBackofficeScreen = () => {
                             <Button
                               variant="outlined"
                               onClick={() => {
-                                setOpenLinkDialog(true);
-                                handleLinkOrcamento(row.id);
+                                handleClientEmailDialog(row.id);
                               }}
                               sx={{
                                 position: 'relative',
-                                '&::after': clientesConfigurados[row.id] ? {
+                                '&::after': clientesConfigurados[row.id] || row.client_info?.client_id ? {
                                   content: '""',
                                   position: 'absolute',
                                   top: '5px',
@@ -858,40 +899,109 @@ const OrcamentoBackofficeScreen = () => {
                                   backgroundColor: 'success.main',
                                 } : {}
                               }}
-                              disabled={verificandoCliente[row.id]}
                             >
-                              {verificandoCliente[row.id] ? <CircularProgress size={20} /> : <IconUser />}
+                              <IconUser />
                             </Button>
+                            
                             <Dialog
-                              open={openLinkDialog}
-                              onClose={() => setOpenLinkDialog(false)}
+                              open={openClientEmailDialog}
+                              onClose={handleCloseClientEmailDialog}
                             >
-                              <DialogTitle>Link do Orçamento</DialogTitle>
+                              <DialogTitle>Vincular Cliente ao Orçamento</DialogTitle>
                               <DialogContent>
-                                <DialogContentText>
-                                  {linkOrcamento}
-                                </DialogContentText>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 2, minWidth: '300px' }}>
+                                  {isClientLinked ? (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                      <Typography variant="body1" color="primary">
+                                        Cliente já cadastrado
+                                      </Typography>
+                                      <Typography variant="body2">
+                                        <strong>Email:</strong> {clientEmail}
+                                      </Typography>
+                                      {currentOrcamentoId && (
+                                        <Typography variant="body2">
+                                          <strong>ID do Cliente:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.client_id}
+                                        </Typography>
+                                      )}
+                                      {currentOrcamentoId && (
+                                        <Typography variant="body2">
+                                          <strong>Nome:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.client_name}
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                  ) : (
+                                    <>
+                                      <CustomTextField
+                                        fullWidth
+                                        label="E-mail do Cliente"
+                                        value={clientEmail}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setClientEmail(e.target.value)}
+                                        disabled={isClientLinked}
+                                        type="email"
+                                      />
+                                      <CustomTextField
+                                        fullWidth
+                                        label="Confirme o e-mail"
+                                        value={clientEmailConfirmation}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setClientEmailConfirmation(e.target.value)}
+                                        disabled={isClientLinked}
+                                        type="email"
+                                        error={clientEmailConfirmation !== '' && clientEmail !== clientEmailConfirmation}
+                                        helperText={clientEmailConfirmation !== '' && clientEmail !== clientEmailConfirmation ? 'Os e-mails não coincidem' : ''}
+                                      />
+                                    </>
+                                  )}
+                                   
+                                  {clientEmailError && (
+                                    <Box sx={{ mt: 1, p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
+                                      <Typography color="error" variant="body2">
+                                        {clientEmailError}
+                                      </Typography>
+                                    </Box>
+                                  )}
+                                </Box>
                               </DialogContent>
                               <DialogActions>
-                                <Button
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(linkOrcamento);
-                                    setOpenLinkDialog(false);
-                                  }}
-                                >
-                                  Copiar Link
-                                </Button>
+                                {!isClientLinked ? (
+                                  <>
+                                    <Button
+                                      onClick={handleCloseClientEmailDialog}
+                                    >
+                                      Fechar
+                                    </Button>
+                                    <Button
+                                      variant="contained"
+                                      onClick={handleLinkClientEmail}
+                                      disabled={isLinkingClient || !clientEmail || !REGEX.email.test(clientEmail) || clientEmail !== clientEmailConfirmation}
+                                      startIcon={isLinkingClient && <CircularProgress size={16} />}
+                                    >
+                                      {!isLinkingClient && 'Vincular'}
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <Button
+                                    onClick={handleCloseClientEmailDialog}
+                                  >
+                                    Fechar
+                                  </Button>
+                                )}
                               </DialogActions>
                             </Dialog>
                             <Button
                               variant="outlined"
                               onClick={() => {
-                                setOpenUniformDialog(true);
-                                handleShortlinkUniform(row.id);
+                                // Se já tiver uniforme, redirecionar diretamente
+                                if (row.client_info?.has_uniform) {
+                                  router.push(`/uniforms/${row.id}`);
+                                } else {
+                                  // Senão, abrir o dialog para criar
+                                  setOpenUniformDialog(true);
+                                  handleShortlinkUniform(row.id);
+                                }
                               }}
                               sx={{
                                 position: 'relative',
-                                '&::after': uniformesConfigurados[row.id] ? {
+                                '&::after': uniformesConfigurados[row.id] || row.client_info?.has_uniform ? {
                                   content: '""',
                                   position: 'absolute',
                                   top: '5px',
@@ -902,30 +1012,11 @@ const OrcamentoBackofficeScreen = () => {
                                   backgroundColor: 'success.main',
                                 } : {}
                               }}
-                              disabled={verificandoUniformes[row.id]}
+                              disabled={!row.client_info?.client_id}
                             >
-                              {verificandoUniformes[row.id] ? <CircularProgress size={20} /> : <IconShirtSport />}
+                              <IconShirtSport />
                             </Button>
-                            <Button
-                              variant="outlined"
-                              onClick={() => handleBrushClick(row.id)}
-                              disabled={loadingBrushIds[row.id]}
-                              sx={{
-                                position: 'relative',
-                                '&::after': arteFinalConfigurados[row.id] ? {
-                                  content: '""',
-                                  position: 'absolute',
-                                  top: '5px',
-                                  right: '5px',
-                                  width: '10px',
-                                  height: '10px',
-                                  borderRadius: '50%',
-                                  backgroundColor: 'success.main',
-                                } : {}
-                              }}
-                            >
-                              {loadingBrushIds[row.id] ? <CircularProgress size={20} /> : <IconBrush />}
-                            </Button>
+                            
                             <Dialog
                               open={openUniformDialog}
                               onClose={() => setOpenUniformDialog(false)}
@@ -938,14 +1029,27 @@ const OrcamentoBackofficeScreen = () => {
                                     <Typography sx={{ ml: 2 }}>Verificando uniformes existentes...</Typography>
                                   </Box>
                                 ) : existingUniforms ? (
-                                  <Box sx={{ mt: 2, p: 1, bgcolor: 'warning.light', borderRadius: 1 }}>
-                                    <Typography variant="body1" color="warning.dark">
-                                      Já existem uniformes cadastrados para este orçamento. Não é possível adicionar ou editar esboços.
-                                    </Typography>
+                                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    <Box sx={{ mt: 2, p: 1, bgcolor: 'warning.light', borderRadius: 1 }}>
+                                      <Typography variant="body1" color="warning.dark">
+                                        Já existem uniformes cadastrados para este orçamento. Não é possível adicionar ou editar esboços.
+                                      </Typography>
+                                    </Box>
                                   </Box>
                                 ) : (
                                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 2 }}>
-                                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                    <Box sx={{ 
+                                      display: 'grid', 
+                                      gridTemplateColumns: '1fr 1fr 1fr auto',
+                                      gap: 2,
+                                      alignItems: 'center',
+                                      '@media (max-width: 900px)': {
+                                        gridTemplateColumns: '1fr 1fr',
+                                        '& > *:last-child': {
+                                          gridColumn: '1 / -1'
+                                        }
+                                      }
+                                    }}>
                                       <CustomTextField
                                         label="Letra do Esboço (A-Z)"
                                         value={currentLetter}
@@ -969,6 +1073,22 @@ const OrcamentoBackofficeScreen = () => {
                                         inputProps={{ min: 1 }}
                                         disabled={isLinkGenerated}
                                       />
+                                      <FormControl fullWidth>
+                                        <InputLabel>Pacote</InputLabel>
+                                        <Select
+                                          value={currentPackage}
+                                          label="Pacote"
+                                          onChange={(e) => setCurrentPackage(e.target.value)}
+                                          disabled={isLinkGenerated}
+                                        >
+                                          <MenuItem value="Start">Start</MenuItem>
+                                          <MenuItem value="Prata">Prata</MenuItem>
+                                          <MenuItem value="Ouro">Ouro</MenuItem>
+                                          <MenuItem value="Diamante">Diamante</MenuItem>
+                                          <MenuItem value="Premium">Premium</MenuItem>
+                                          <MenuItem value="Profissional">Profissional</MenuItem>
+                                        </Select>
+                                      </FormControl>
                                       <Button
                                         variant="contained"
                                         onClick={() => {
@@ -980,9 +1100,10 @@ const OrcamentoBackofficeScreen = () => {
                                             setError('Esta letra já foi utilizada');
                                             return;
                                           }
-                                          setSketches([...sketches, { letter: currentLetter, quantity: currentQuantity }]);
+                                          setSketches([...sketches, { letter: currentLetter, quantity: currentQuantity, package: currentPackage }]);
                                           setCurrentLetter('');
                                           setCurrentQuantity(1);
+                                          setCurrentPackage('Start');
                                           setError('');
                                         }}
                                         disabled={isLinkGenerated}
@@ -998,6 +1119,7 @@ const OrcamentoBackofficeScreen = () => {
                                             <TableRow>
                                               <TableCell>Esboço</TableCell>
                                               <TableCell>Quantidade</TableCell>
+                                              <TableCell>Pacote</TableCell>
                                               <TableCell>Ações</TableCell>
                                             </TableRow>
                                           </TableHead>
@@ -1006,6 +1128,7 @@ const OrcamentoBackofficeScreen = () => {
                                               <TableRow key={sketch.letter}>
                                                 <TableCell>Esboço {sketch.letter}</TableCell>
                                                 <TableCell>{sketch.quantity}</TableCell>
+                                                <TableCell>{sketch.package}</TableCell>
                                                 <TableCell>
                                                   <IconButton
                                                     size="small"
@@ -1022,6 +1145,22 @@ const OrcamentoBackofficeScreen = () => {
                                       </TableContainer>
                                     )}
 
+                                    <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                      <Typography variant="subtitle1" color="primary">
+                                        Informações do Cliente
+                                      </Typography>
+                                      {currentOrcamentoId && (
+                                        <>
+                                          <Typography variant="body2">
+                                            <strong>Nome:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.client_name || 'N/A'}
+                                          </Typography>
+                                          <Typography variant="body2">
+                                            <strong>Email:</strong> {email || 'N/A'}
+                                          </Typography>
+                                        </>
+                                      )}
+                                    </Box>
+
                                     {apiError && (
                                       <Box sx={{ mt: 2, p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
                                         <Typography color="error" variant="body2">
@@ -1033,63 +1172,71 @@ const OrcamentoBackofficeScreen = () => {
                                 )}
                               </DialogContent>
                               <DialogActions>
-                                {!existingUniforms ? (
+                                {isCheckingUniforms ? (
+                                  <Button onClick={() => setOpenUniformDialog(false)}>
+                                    Fechar
+                                  </Button>
+                                ) : !existingUniforms ? (
                                   !isLinkGenerated ? (
-                                    <Button
-                                      onClick={handleGenerateAndCopyLink}
-                                      disabled={isGeneratingLink || sketches.length === 0}
-                                      startIcon={isGeneratingLink && <CircularProgress size={16} />}
-                                    >
-                                      {isGeneratingLink ? 'Gerando...' : sketches.length === 0 ? 'Adicione um esboço' : 'Gerar Link'}
-                                    </Button>
+                                    <>
+                                      <Button
+                                        onClick={() => setOpenUniformDialog(false)}
+                                      >
+                                        Fechar
+                                      </Button>
+                                      <Button
+                                        variant="contained"
+                                        onClick={handleGenerateAndCopyLink}
+                                        disabled={isGeneratingLink || !email || sketches.length === 0}
+                                        startIcon={isGeneratingLink && <CircularProgress size={16} />}
+                                      >
+                                        {!isGeneratingLink && 'Inserir'}
+                                      </Button>
+                                    </>
                                   ) : (
                                     <>
                                       <Typography variant="body2" color="success.main" sx={{ mr: 2 }}>
-                                        Link gerado e copiado!
+                                        Configuração de uniformes inserida com sucesso!
                                       </Typography>
-                                      <Button
-                                        onClick={() => navigator.clipboard.writeText(linkUniform)}
-                                      >
-                                        Copiar novamente
-                                      </Button>
                                     </>
                                   )
                                 ) : (
                                   <>
-                                    {linkCopied ? (
-                                      <>
-                                        <Typography variant="body2" color="success.main" sx={{ mr: 2 }}>
-                                          Link copiado!
-                                        </Typography>
-                                        <Button
-                                          onClick={() => {
-                                            navigator.clipboard.writeText(linkUniform);
-                                            setLinkCopied(true);
-                                          }}
-                                        >
-                                          Copiar novamente
-                                        </Button>
-                                      </>
-                                    ) : (
-                                      <Button
-                                        onClick={() => {
-                                          navigator.clipboard.writeText(linkUniform);
-                                          setLinkCopied(true);
-                                        }}
-                                        variant="outlined"
-                                      >
-                                        Copiar link existente
-                                      </Button>
-                                    )}
+                                    <Button onClick={() => setOpenUniformDialog(false)}>
+                                      Fechar
+                                    </Button>
+                                    <Button 
+                                      variant="contained" 
+                                      color="primary"
+                                      component={Link}
+                                      href={`/uniforms/${currentOrcamentoId}`}
+                                    >
+                                      Visualizar Uniformes
+                                    </Button>
                                   </>
                                 )}
-                                <Button onClick={handleDialogClose}>
-                                  Fechar
-                                </Button>
                               </DialogActions>
                             </Dialog>
-
-                            {/* botão da chamada da api */}
+                            <Button
+                              variant="outlined"
+                              onClick={() => handleBrushClick(row.id)}
+                              disabled={loadingBrushIds[row.id]}
+                              sx={{
+                                position: 'relative',
+                                '&::after': arteFinalConfigurados[row.id] ? {
+                                  content: '""',
+                                  position: 'absolute',
+                                  top: '5px',
+                                  right: '5px',
+                                  width: '10px',
+                                  height: '10px',
+                                  borderRadius: '50%',
+                                  backgroundColor: 'success.main',
+                                } : {}
+                              }}
+                            >
+                              {loadingBrushIds[row.id] ? <CircularProgress size={20} /> : <IconBrush />}
+                            </Button>
                             <Button
                               variant="contained"
                               color="primary"

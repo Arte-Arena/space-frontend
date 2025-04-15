@@ -44,6 +44,7 @@ import DialogExp from './components/expedicaoDialog';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
+import { useAuth } from '@/utils/useAuth';
 
 const ExpediçãoScreen = () => {
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
@@ -73,6 +74,14 @@ const ExpediçãoScreen = () => {
 
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
+
+  const isLoggedIn = useAuth();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+  }, [isLoggedIn]);
 
   const filters = {
     numero_pedido: searchNumero,
@@ -206,7 +215,8 @@ const ExpediçãoScreen = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Erro ao salvar observação");
+        // throw new Error("Erro ao salvar observação");
+        console.error("Erro: ", response.text() || "Erro ao salvar observação");
       }
 
       const data = await response.json();

@@ -3,7 +3,8 @@ const useAprovarPedidoStatus = async (status: string, id: number | string | unde
     const accessToken = typeof window !== "undefined" ? localStorage.getItem('accessToken') : null;
     
     if (!accessToken) {
-        throw new Error('Token de acesso não disponível');
+        // throw new Error('Token de acesso não disponível');
+        console.error('Token de acesso não disponível');
     }
 
     const res = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedidos/pedido-envio-recebimento-aprovado/${id}`, {
@@ -16,7 +17,8 @@ const useAprovarPedidoStatus = async (status: string, id: number | string | unde
     });
 
     if (!res.ok) {
-        throw new Error("Erro ao atualizar o status");
+        // throw new Error("Erro ao atualizar o status");
+        console.error("Erro: ", res.text() || "Erro ao atualizar o status");
     }
     return res.json();
 };

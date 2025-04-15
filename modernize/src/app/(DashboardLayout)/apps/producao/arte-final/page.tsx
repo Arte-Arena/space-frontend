@@ -78,15 +78,19 @@ const ArteFinalScreen = () => {
   const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   const router = useRouter();
-
   const accessToken = localStorage.getItem('accessToken');
+  if (!accessToken) {
+    console.error('Access token is missing');
+    router.push('/auth/login');
+  }
+
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
   const configs = localStorage.getItem('configs');
 
-  const DesignerRoles = [1, 6];
-  const DesignerCoordanateRole = [1, 7];
-  const BackOfficeRoles = [1, 10];
+  const DesignerRoles = [1, 6, 13];
+  const DesignerCoordanateRole = [1, 7, 13];
+  const BackOfficeRoles = [1, 10, 13];
 
   const canShowButtonAtribuirDesigner = roles.some(role => DesignerCoordanateRole.includes(role));
   const canShowButtonDesigner = roles.some(role => DesignerRoles.includes(role));

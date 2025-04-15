@@ -22,6 +22,7 @@ import { IconProgressCheck, IconCircleCheck, IconBan } from '@tabler/icons-react
 import Tooltip from '@mui/material/Tooltip';
 import { useStatusChangeAprovado, useStatusChangeDesaprovado } from '@/utils/PutStatusOrcamentos';
 import { useThemeMode } from "@/utils/useThemeMode";
+import { useRouter } from 'next/navigation';
 
 
 interface Produto {
@@ -112,6 +113,8 @@ const OrcamentoStatusScreen = () => {
     approvedValue: string;
   } | null>(null);
   const mode = useThemeMode();
+  const router = useRouter();
+  
   // busca os dados
   const { isFetching, error, data, refetch } = useFetchOrcamentos(searchQuery, page);
 
@@ -122,7 +125,9 @@ const OrcamentoStatusScreen = () => {
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
-    throw new Error('Access token is missing');
+    // throw new Error('Access token is missing');
+    console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   // renderização dos botoes da tabela

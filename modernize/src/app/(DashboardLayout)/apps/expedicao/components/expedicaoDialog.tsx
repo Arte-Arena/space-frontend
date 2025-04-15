@@ -17,7 +17,6 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { ArteFinal } from "./types";
-import { useRouter } from 'next/navigation';
 import useAprovarPedidoStatus from './useAprovarPedidoStatus';
 import { IconLink, IconTruckDelivery } from "@tabler/icons-react";
 
@@ -50,7 +49,8 @@ const DialogExp: React.FC<DialogExpProps> = ({
   const theme = useTheme()
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
-    throw new Error('Access token is missing');
+    // throw new Error('Access token is missing');
+    console.error("Erro: ","Access token is missing");
   }
 
   const handleSubmmitEntrega = (inputValueEntrega: string) => {
@@ -70,7 +70,8 @@ const DialogExp: React.FC<DialogExpProps> = ({
     )
       .then((res) => {
         if (!res.ok) {
-          throw new Error('Erro ao enviar código de rastreamento'); // Corrigi erro de digitação na mensagem
+          // throw new Error('Erro ao enviar código de rastreamento'); // Corrigi erro de digitação na mensagem
+          console.error("Erro: ", res.text() || "Erro ao enviar código de rastreamento");
         }
         return res.json();
       })
