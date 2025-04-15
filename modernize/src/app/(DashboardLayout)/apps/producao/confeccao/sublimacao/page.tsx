@@ -548,6 +548,7 @@ const SublimacaoScreen = () => {
                       <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
                       <TableCell align='center' sx={{ width: '33%' }}>Produtos</TableCell>
                       <TableCell align='center' sx={{ width: '5%' }}>Data De Entrega</TableCell>
+                      <TableCell align='center' sx={{ width: '5%' }}>Rolo</TableCell>
                       <TableCell align='center' sx={{ width: '25%' }}>Observação</TableCell>
                       <TableCell align='center' sx={{ width: '3%' }}>Tipo</TableCell>
                       <TableCell align='center' sx={{ width: '7%' }}>Status</TableCell>
@@ -631,6 +632,17 @@ const SublimacaoScreen = () => {
                           }} align='center'>
                             {prazoSublimacao.toFormat('dd/MM/yyyy')}
                           </TableCell>
+
+                            <TableCell
+                              sx={{
+                                color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                                textAlign: "left",
+                              }}
+                            >
+                              <Typography variant="body1" textAlign={'center'}>
+                              {row?.rolo || "N/A"}
+                              </Typography>
+                            </TableCell>
 
                           <Tooltip title={row?.observacoes ? row.observacoes : "Adicionar Observação"} placement="left">
                             <TableCell
