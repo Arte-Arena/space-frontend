@@ -41,7 +41,7 @@ const VendasRelatoriosOrcamentosPorDataFiltrada = () => {
   // ========================================================================================= \\
   // Fetch inicial (sem filtro)
   const { data, error } = useQuery({
-    queryKey: ['quantidadeOrcamentosData'],
+    queryKey: ['orcamentosPorDia'],
     queryFn: async () => {
       if (!accessToken) {
         throw new Error('Token de acesso não disponível');

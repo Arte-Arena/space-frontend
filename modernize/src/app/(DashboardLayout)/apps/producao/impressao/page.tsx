@@ -5,7 +5,7 @@ import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { ArteFinal, Produto } from './components/types';
 import CircularProgress from '@mui/material/CircularProgress';
-import { IconEye, IconShirt, IconNeedleThread, IconEraser, IconArrowLeft, IconSquareChevronsRight, IconSquareChevronsLeft } from '@tabler/icons-react';
+import { IconEye, IconShirt, IconEraser, IconSquareChevronsRight, IconSquareChevronsLeft, IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Typography,
@@ -20,26 +20,24 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TablePagination,
   IconButton,
   Collapse,
   Box,
   MenuItem,
-  useTheme,
-  TextField,
   Select,
   TextFieldProps,
   AlertProps,
   Snackbar,
   Alert,
   Divider,
+  InputAdornment,
+  TablePagination,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
-import { GridPaginationModel } from '@mui/x-data-grid';
 import { IconBrandTrello } from '@tabler/icons-react';
 import SidePanel from './components/drawer';
 import { ApiResponsePedidosArteFinal } from './components/types';
-import { isSameDay, subDays } from 'date-fns';
+import { isSameDay, subDays, format } from 'date-fns';
 import trocarStatusPedido from './components/useTrocarStatusPedido';
 import trocarEstagioPedidoArteFinal from './components/useTrocarEstagioPedido';
 import { useThemeMode } from '@/utils/useThemeMode';
@@ -54,22 +52,23 @@ import trocarImpressora from './components/useTrocarImpressora';
 import trocarTipoCorte from './components/useTrocarTipoCorte';
 import trocarRolo from './components/useTrocarRolo';
 import { calcularDataPassadaDiasUteis } from '@/utils/calcDiasUteis';
-import { IconPalette } from '@tabler/icons-react';
 
 const ImpressaoScreen = () => {
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [allPedidos, setAllPedidos] = useState<ArteFinal[]>([]);
-  const [openDrawer, setOpenDrawer] = useState(false);
-  const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
-  const [searchNumero, setSearchNumero] = useState<string>("");  // Filtro de número do pedido
-  const [statusFilter, setStatusFilter] = useState<string>("");  // Filtro de status
-  const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });  // Filtro de data
-  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState<string>('');
+  const [searchDateStart, setSearchDateStart] = useState<string | null>(null);
+  const [searchDateEnd, setSearchDateEnd] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [dateFilter, setDateFilter] = useState<{ start: string | null; end: string | null }>({ start: '', end: '' });
   const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const roloRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
-  const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
-    pageSize: 100,
-    page: 0,
-  });
+  const [open, setOpen] = useState(false);
+  const [openDrawer, setOpenDrawer] = useState(false);
+  const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
+  const [rowsPerPage, setRowsPerPage] = useState<number>(15);
+  const [page, setPage] = useState(1);
+
   const [snackbar, setSnackbar] = React.useState<{
     open: boolean;
     message: string;
@@ -86,22 +85,17 @@ const ImpressaoScreen = () => {
   const accessToken = localStorage.getItem('accessToken');
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
-  
+
   const DesignerRoles = [1, 6, 7];
   const MoverProducaoRoles = [1, 11, 12, 13];
-  
+
   const canShowButtonMover = roles.some(role => MoverProducaoRoles.includes(role));
   const unableTipoCorte = roles.some(role => DesignerRoles.includes(role))
 
-  const filters = {
-    numero_pedido: searchNumero,
-    pedido_status: statusFilter,
-  };
-
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
-    queryKey: ['pedidos'],
+    queryKey: ['pedidos', searchQuery, page, rowsPerPage],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=I`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/producao/get-pedidos-arte-final?fila=I&per_page=${rowsPerPage}&page=${page}&q=${encodeURIComponent(searchQuery)}&data_inicial=${searchDateStart}&data_final=${searchDateEnd}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -118,6 +112,34 @@ const ImpressaoScreen = () => {
       setAllPedidos(dataPedidos.data);
     }
   }, [dataPedidos]);
+
+  const handleFilter = () => {
+    setPage(1);
+    setSearchQuery(query);
+    setDateFilter({ start: searchDateStart, end: searchDateEnd });
+    refetch();
+  }
+
+  const handleSearch = () => {
+    setSearchQuery(query);
+    setPage(1);
+  };
+
+  const handleSearchKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleTablePageChange = (event: unknown, newPage: number) => {
+    setPage(newPage + 1);
+  };
+
+  const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
+    setPage(1);
+  };
 
   const handleKeyPressRolo = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -211,7 +233,6 @@ const ImpressaoScreen = () => {
       });
     }
   }
-
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -346,14 +367,15 @@ const ImpressaoScreen = () => {
   }
 
   const handleClearFilters = () => {
-    setSearchNumero('');
-    setStatusFilter('');
+    setSearchQuery('');
+    setQuery('');
+    setSearchDateStart(null);
+    setSearchDateEnd(null);
     setDateFilter({ start: null, end: null });
+    setStatusFilter('');
+    // pensar em mua forma de validar se apenas os datas foram alterados (useEffect como condição de uma variavel de ser true or false) 
   };
 
-  const handleDateChange = (field: 'start' | 'end') => (newValue: Date | null) => {
-    setDateFilter((prev) => ({ ...prev, [field]: newValue }));
-  }
 
   const handleToggle = () => {
     setOpen(!open);
@@ -420,27 +442,22 @@ const ImpressaoScreen = () => {
 
   const pedidoStatus: Record<number, { id: number, nome: string; fila: 'I' }> = pedidosStatusFilaI as Record<number, { id: number, nome: string; fila: 'I' }>;
 
-  // Filtro de pedidos
+  // filtro frontend
   const filteredPedidos = useMemo(() => {
     return allPedidos.filter((pedido) => {
-      const isNumberMatch = !filters.numero_pedido || pedido.numero_pedido.toString().includes(filters.numero_pedido);
-      const isStatusMatch =
-        !filters.pedido_status ||
-        pedido.impressao?.status === filters.pedido_status;
 
-      const isDateMatch = (
-        (!dateFilter.start || new Date(pedido.data_prevista) >= new Date(dateFilter.start)) &&
-        (!dateFilter.end || new Date(pedido.data_prevista) <= new Date(dateFilter.end))
-      );
+      const isNumberMatch = !query || String(pedido.numero_pedido).includes(query.trim());
+
+      const isStatusMatch = !statusFilter || String(pedido.impressao?.status) === statusFilter;
+
+      const pedidoDate = new Date(pedido.data_prevista);
+      const isDateMatch =
+        (!searchDateStart || pedidoDate >= new Date(searchDateStart)) &&
+        (!searchDateEnd || pedidoDate <= new Date(searchDateEnd));
+
       return isNumberMatch && isStatusMatch && isDateMatch;
     });
-  }, [allPedidos, filters, dateFilter]);
-
-  const paginatedPedidos = useMemo(() => {
-    const startIndex = paginationModel.page * paginationModel.pageSize;
-    const endIndex = startIndex + paginationModel.pageSize;
-    return filteredPedidos.slice(startIndex, endIndex);
-  }, [filteredPedidos, paginationModel]);
+  }, [allPedidos, searchDateStart, searchDateEnd, statusFilter, query]);
 
   function formatarDataRelatorio(dataString: string): string {
     let dataUTC;
@@ -514,7 +531,7 @@ const ImpressaoScreen = () => {
                   const parsedFeriados = JSON.parse(feriados || '[]');
                   const parsedPrazos = JSON.parse(localStoragePrazos || '[]');
                   const diasAntecipaProducao = parsedPrazos.dias_antecipa_producao_impressao;
-                  const dataSeguraRelatorio = formatarDataRelatorio(data); // mes dia e ano
+                  const dataSeguraRelatorio = formatarDataRelatorio(data);
                   const dataRelatorio = data ? dataSeguraRelatorio : '';
                   const dataPrevistaDateTime = DateTime.fromFormat(dataRelatorio, 'MM/dd/yyyy').startOf('day');
                   const prazoRelatoriosImpressao = calcularDataPassadaDiasUteis(dataPrevistaDateTime, diasAntecipaProducao, parsedFeriados);
@@ -535,21 +552,28 @@ const ImpressaoScreen = () => {
       <ParentCard title="Impressão">
         <>
           <Grid container spacing={1} sx={{ alignItems: 'center', mb: 2, flexWrap: 'nowrap' }}>
-            {/* Campo de Número do Pedido */}
             <Grid item>
-              <TextField
+              <CustomTextField
                 label="Número do Pedido"
                 variant="outlined"
                 size="small"
-                value={searchNumero}
-                onChange={(e) => setSearchNumero(e.target.value)}
+                value={query}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
+                onKeyPress={handleSearchKeyPress}
+                placeholder="Buscar orçamento..."
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconSearch />
+                    </InputAdornment>
+                  ),
+                }}
               />
             </Grid>
 
-            {/* Select de Status */}
             <Grid item>
               <Select
-                sx={{ minWidth: '150px' }} // Define uma largura mínima
+                sx={{ minWidth: '150px' }}
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 displayEmpty
@@ -564,19 +588,18 @@ const ImpressaoScreen = () => {
               </Select>
             </Grid>
 
-            {/* DatePicker - Data Inicial */}
             <Grid item>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
                   label="Data Inicial"
-                  value={dateFilter.start}
-                  onChange={handleDateChange('start')}
+                  value={searchDateStart}
+                  onChange={(newDate: Date | null) => setSearchDateStart(newDate ? format(newDate, 'yyyy-MM-dd') : null)}
                   renderInput={(params: TextFieldProps) => (
-                    <TextField
+                    <CustomTextField
                       {...params}
                       error={false}
                       size="small"
-                      sx={{ width: '200px' }} // Define uma largura fixa
+                      sx={{ width: '200px' }}
                     />
                   )}
                   inputFormat="dd/MM/yyyy"
@@ -584,19 +607,18 @@ const ImpressaoScreen = () => {
               </LocalizationProvider>
             </Grid>
 
-            {/* DatePicker - Data Final */}
             <Grid item>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
                   label="Data Final"
-                  value={dateFilter.end}
-                  onChange={handleDateChange('end')}
+                  value={searchDateEnd}
+                  onChange={(newDate: Date | null) => setSearchDateEnd(newDate ? format(newDate, 'yyyy-MM-dd') : null)}
                   renderInput={(params: TextFieldProps) => (
-                    <TextField
+                    <CustomTextField
                       {...params}
                       error={false}
                       size="small"
-                      sx={{ width: '200px' }} // Define uma largura fixa
+                      sx={{ width: '200px' }}
                     />
                   )}
                   inputFormat="dd/MM/yyyy"
@@ -608,6 +630,11 @@ const ImpressaoScreen = () => {
             <Grid item>
               <Button onClick={handleClearFilters} variant="outlined" size="small">
                 Limpar Filtros
+              </Button>
+            </Grid>
+            <Grid item>
+              <Button onClick={handleFilter} variant="outlined" size="small">
+                Filtrar Profundamente
               </Button>
             </Grid>
           </Grid>
@@ -642,7 +669,7 @@ const ImpressaoScreen = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Array.isArray(paginatedPedidos) && paginatedPedidos.map((row) => {
+                  {Array.isArray(filteredPedidos) && filteredPedidos.map((row) => {
                     const listaProdutos: Produto[] = row.lista_produtos
                       ? typeof row.lista_produtos === 'string'
                         ? JSON.parse(row.lista_produtos)
@@ -741,7 +768,6 @@ const ImpressaoScreen = () => {
                           </Box>
                         </TableCell>
 
-                        {/* medida linear */}
                         <TableCell
                           sx={{
                             color: myTheme === "dark" ? "white" : "black",
@@ -972,14 +998,23 @@ const ImpressaoScreen = () => {
                               </Tooltip>
                             </Grid>
                             <Grid item xs={5} sm={5} md={5} lg={5}>
-                              <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
+                              {row.url_trello === null ? (
                                 <IconButton
                                   onClick={() => handleLinkTrello(row)}
                                   disabled={row.url_trello === null}
                                 >
                                   <IconBrandTrello />
                                 </IconButton>
-                              </Tooltip>
+                              ) : (
+                                <Tooltip title={row.url_trello === null ? "Sem Link do Trello" : "Link Trello"}>
+                                  <IconButton
+                                    onClick={() => handleLinkTrello(row)}
+                                    disabled={row.url_trello === null}
+                                  >
+                                    <IconBrandTrello />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
                             </Grid>
                             {canShowButtonMover && (
                               <>
@@ -1005,16 +1040,15 @@ const ImpressaoScreen = () => {
                     );
                   })}
                 </TableBody>
-
               </Table>
               <TablePagination
-                rowsPerPageOptions={[15, 25, 50, 100, 200]}
                 component="div"
-                count={filteredPedidos.length || 0}
-                rowsPerPage={paginationModel.pageSize}
-                page={paginationModel.page}
-                onPageChange={(event, newPage) => setPaginationModel({ ...paginationModel, page: newPage })}
-                onRowsPerPageChange={(event) => setPaginationModel({ ...paginationModel, pageSize: parseInt(event.target.value, 10), page: 0 })}
+                count={dataPedidos?.total || 0}
+                page={page - 1}
+                onPageChange={handleTablePageChange}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={handleRowsPerPageChange}
+                rowsPerPageOptions={[15, 25, 50]}
               />
             </TableContainer>
           )}
