@@ -7,8 +7,6 @@ import { useAuth } from '@/utils/useAuth';
 import VendasRelatoriosOrcamentosPorStatusComponent from '../components/dashboard-index/ConversaoOrcamento';
 import VendasRelatoriosOrcamentosPorDataComponent from '../components/dashboard-index/OrcamentoPorDataMes';
 import { Grid } from '@mui/material';
-import VendasRelatoriosOrcamentosComponent from '../components/dashboard-index/orcamentoQuantidade';
-import VendasRelatoriosQuantidadeOrcamentosComponent from '../components/dashboard-index/orcamentoQuantidadeAprovados';
 import ParentCard from "@/app/components/shared/ParentCard";
 import ValorTotalPedidosComponent from '../components/dashboard-index/ValorTotalPedidos';
 
@@ -47,8 +45,6 @@ export default function Dashboard() {
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '85%', border: '1px solid #394457', padding: 2 }}>
               <VendasRelatoriosOrcamentosPorStatusComponent />
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around' }}>
-                <VendasRelatoriosQuantidadeOrcamentosComponent />
-                <VendasRelatoriosOrcamentosComponent />
               </Box>
             </Box>
           </Grid>
