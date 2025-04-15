@@ -139,7 +139,9 @@ const RastreamentoInternoExpedicaoScreen = () => {
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
-    throw new Error('Access token is missing');
+    // throw new Error('Access token is missing');
+    console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   const handleNovoPedido = () => {
@@ -237,7 +239,8 @@ const RastreamentoInternoExpedicaoScreen = () => {
     )
       .then((res) => {
         if (!res.ok) {
-          throw new Error('Erro ao enviar código de rastreamento'); // Corrigi erro de digitação na mensagem
+          // throw new Error('Erro ao enviar código de rastreamento'); // Corrigi erro de digitação na mensagem
+          console.error('Erro ao enviar código de rastreamento ', res.text()); // Corrigi erro de digitação na mensagem
         }
         return res.json();
       })
@@ -510,14 +513,16 @@ const RastreamentoInternoExpedicaoScreen = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create pedido');
+        // throw new Error('Failed to create pedido');
+        console.error('Failed to create pedido ', response.text());
       }
 
       const data = await response.json();
       if (data.pedido && data.pedido.id) {
         setNavigateTo(`/apps/producao/arte-final/edit/${data.pedido.id}?block_tiny=${data.blockTiny}`);
       } else {
-        throw new Error('Invalid response data');
+        // throw new Error('Invalid response data');
+        console.error('Invalid response data');
       }
     } catch (error) {
       logger.error('Erro ao criar pedido:', error);

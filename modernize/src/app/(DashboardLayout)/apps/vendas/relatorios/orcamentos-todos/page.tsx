@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import CustomToolbar from '@/app/components/DataGridFilters/CustomDataGridFilters';
 import { Tooltip, Typography, Box, TextField, Button, Grid } from "@mui/material";
+import { useRouter } from "next/navigation";
 
 interface Orcamento {
   id_orcamento: number;
@@ -44,11 +45,15 @@ const VendasRelatoriosTodosOrcamentos = () => {
     valor_total: "",
     status: ""
   });  
+  const router = useRouter();
+
 
   const accessToken = localStorage.getItem('accessToken');
 
   if (!accessToken) {
-    throw new Error('Access token is missing');
+    // throw new Error('Access token is missing');
+    console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   const { isFetching, error } = useQuery({

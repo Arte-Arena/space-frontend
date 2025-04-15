@@ -4,6 +4,7 @@ import PageContainer from "@/app/components/container/PageContainer";
 import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
 import { useQuery } from '@tanstack/react-query';
 import Typography from "@mui/material/Typography";
+import { useRouter } from "next/navigation";
 // import ApexLine from "@/app/components/charts/ApexLine";
 
 const BCrumb = [
@@ -27,10 +28,13 @@ const BCrumb = [
 
 const VendasRelatoriosQuantidadeOrcamentos = () => {
   const [total, setTotal] = useState(0);
+  const router = useRouter();
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
-    throw new Error('Access token is missing');
+    // throw new Error('Access token is missing');
+    console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   const { isFetching, error } = useQuery({

@@ -12,8 +12,6 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import InputAdornment from '@mui/material/InputAdornment';
 import { NumericFormat, NumericFormatProps } from 'react-number-format';
 import { useRouter } from 'next/navigation';
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs, { Dayjs } from "dayjs";
 
 interface Orcamento {
   id: number;
@@ -80,7 +78,9 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
-    throw new Error('Access token is missing');
+    // throw new Error('Access token is missing');
+    console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   useEffect(() => {

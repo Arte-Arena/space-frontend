@@ -1,10 +1,12 @@
-import React from "react";
+'use client'
+import React, { useEffect } from "react";
 import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
 import PageContainer from "@/app/components/container/PageContainer";
 import TaskManager from "@/app/components/apps/kanban/TaskManager";
 import { KanbanDataContextProvider } from "@/app/context/kanbancontext/index";
 import BlankCard from "@/app/components/shared/BlankCard";
 import { CardContent } from "@mui/material";
+import { useAuth } from "@/utils/useAuth";
 
 const BCrumb = [
   {
@@ -20,7 +22,16 @@ const BCrumb = [
   },
 ];
 
+
+
 function page() {
+  const isLoggedIn = useAuth();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+  }, [isLoggedIn]);
   return (
     <KanbanDataContextProvider>
       <PageContainer title="Funil de Vendas" description="este é o funil de vendas da Arte Arena">

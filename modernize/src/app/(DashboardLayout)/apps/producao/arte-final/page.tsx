@@ -78,8 +78,12 @@ const ArteFinalScreen = () => {
   const observacoesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   const router = useRouter();
-
   const accessToken = localStorage.getItem('accessToken');
+  if (!accessToken) {
+    console.error('Access token is missing');
+    router.push('/auth/login');
+  }
+
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
   const configs = localStorage.getItem('configs');

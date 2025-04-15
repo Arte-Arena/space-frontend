@@ -12,12 +12,12 @@ interface Orcamento {
 const VendasRelatoriosOrcamentosPorDataComponent = () => {
   const [dados, setDados] = useState<Orcamento[]>([]);
   const [filtro, setFiltro] = useState("mes"); // seta o estado que faz o filtro precisa disso pra funcionar
-  const theme = useTheme(); // Pega o tema atual (light ou dark)
 
   // Pega token do localStorage
   const accessToken = typeof window !== "undefined" ? localStorage.getItem('accessToken') : null;
 
   if (!accessToken) {
+    // console.error('Access token is missing');
     console.error('Access token is missing');
   }
 

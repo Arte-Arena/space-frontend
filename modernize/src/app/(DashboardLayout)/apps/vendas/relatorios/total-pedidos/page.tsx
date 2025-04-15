@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import ApexPedidosTotal from "@/app/components/charts/TotalPedidos";
 import ParentCard from "@/app/components/shared/ParentCard";
 import { useTheme } from '@mui/material/styles';
+import { useRouter } from "next/navigation";
 
 interface Pedidos {
   total_orcamento: number;
@@ -25,13 +26,15 @@ const BCrumb = [
 const ValorTotalPedidosScreen = () => {
   const [dados, setDados] = useState<Pedidos[]>([]);
   const [tipoGrafico, setTipoGrafico] = useState("linha"); // Estado para o tipo de gráfico
-  const theme = useTheme(); // Pega o tema atual (light ou dark)
+  const router = useRouter();
 
   // Pega token do localStorage
   const accessToken = typeof window !== "undefined" ? localStorage.getItem('accessToken') : null;
 
   if (!accessToken) {
+    // throw new Error("Access token is missing");
     console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   // Fetch da API usando react-query

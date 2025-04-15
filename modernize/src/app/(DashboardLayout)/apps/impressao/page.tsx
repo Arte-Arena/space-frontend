@@ -42,7 +42,8 @@ const ImpressaoScreen = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`API request failed with status: ${response.status}`);
+        // throw new Error(`API request failed with status: ${response.status}`);
+        console.error(`API request failed: ${response.text()}`);
       }
 
       const data: { data: Pedido[]; total_count: number; per_page: number } = await response.json();

@@ -79,10 +79,13 @@ const ImpressaoScreen = () => {
     severity: 'success'
   });
 
-  const router = useRouter();
   const myTheme = useThemeMode()
-
+  const router = useRouter();
   const accessToken = localStorage.getItem('accessToken');
+  if (!accessToken) {
+    console.error('Access token is missing');
+    router.push('/auth/login');
+  }
   const designers = localStorage.getItem('designers');
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
 

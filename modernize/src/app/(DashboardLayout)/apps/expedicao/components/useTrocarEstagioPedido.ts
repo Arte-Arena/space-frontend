@@ -15,7 +15,8 @@ const trocarEstagioPedidoArteFinal = async (id: number | undefined, estagio: str
       }
     );
 
-    if (!res.ok) throw new Error("Erro ao alterar o status do pedido.");
+    // if (!res.ok) throw new Error("Erro ao alterar o status do pedido.");
+    if (!res.ok) console.error("Erro ao alterar o status do pedido. ", res.text());
     refetch();
     return true;
   } catch (error) {

@@ -226,8 +226,6 @@ const selectOptimalVehicle = (products: Product[]): string => {
 };
 
 const OrcamentoGerarScreen = () => {
-  const isLoggedIn = useAuth();
-
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get('id') ?? null;
@@ -301,6 +299,15 @@ const OrcamentoGerarScreen = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [checkoutValue, setCheckoutValue] = useState<number | null>(null);
   const [isGeneratingCheckoutLink, setIsGeneratingCheckoutLink] = useState(false);
+
+  const isLoggedIn = useAuth();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+  }, [isLoggedIn]);
+
 
   const accessToken = localStorage.getItem('accessToken');
 

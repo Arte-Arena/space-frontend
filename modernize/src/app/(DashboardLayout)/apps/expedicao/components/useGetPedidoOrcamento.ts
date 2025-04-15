@@ -1,5 +1,6 @@
 import getBrazilTime from "@/utils/brazilTime";
 import { addDays, isAfter, isEqual, isWeekend } from "date-fns";
+import { useRouter } from "next/router";
 import { useState, useEffect, useMemo } from "react";
 
 interface Orcamento {
@@ -56,6 +57,7 @@ const useFetchPedidoOrcamento = (id: number | string) => {
   const [isLoadingPedido, setIsLoading] = useState(true);
   const [errorPedido, setError] = useState<Error | null>(null);
   const [activeStep, setActiveStep] = useState<number | null>(null);
+  const router = useRouter();
 
   const addBusinessDays = (date: Date | number | null, daysToAdd: number | undefined): Date | number | null => {
     if (!date) return null; // Se a data for nula, retorne null imediatamente
@@ -84,7 +86,11 @@ const useFetchPedidoOrcamento = (id: number | string) => {
         setError(null);
 
         const accessToken = localStorage.getItem("accessToken");
-        if (!accessToken) throw new Error("Usuário não autenticado.");
+        // if (!accessToken) throw new Error("Usuário não autenticado.");
+        if (!accessToken) {
+          console.error("Erro: Access token is missing");
+          return;
+        }
 
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API}/api/pedidos/get-pedido-&-orcamento/${id}`,
@@ -97,7 +103,8 @@ const useFetchPedidoOrcamento = (id: number | string) => {
           }
         );
 
-        if (!res.ok) throw new Error("Erro ao buscar orçamentos.");
+        // if (!res.ok) throw new Error("Erro ao buscar orçamentos.");
+        if (!res.ok) console.error("Erro ao buscar orçamentos.", res.text());        
 
         const json = await res.json();
         console.log(json.orcamento);
