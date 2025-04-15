@@ -20,6 +20,9 @@ const BCrumb = [
   },
 ];
 
+
+
+function VendasCrmScreen() {
   const isLoggedIn = useAuth();
 
   useEffect(() => {
@@ -27,8 +30,6 @@ const BCrumb = [
       return;
     }
   }, [isLoggedIn]);
-
-function VendasCrmScreen() {
   return (
     <KanbanDataContextProvider>
       <PageContainer title="CRM" description="CRM da Arte Arena">

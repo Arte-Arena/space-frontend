@@ -22,6 +22,9 @@ const BCrumb = [
   },
 ];
 
+
+
+function page() {
   const isLoggedIn = useAuth();
 
   useEffect(() => {
@@ -29,8 +32,6 @@ const BCrumb = [
       return;
     }
   }, [isLoggedIn]);
-
-function page() {
   return (
     <KanbanDataContextProvider>
       <PageContainer title="Funil de Vendas" description="este é o funil de vendas da Arte Arena">
