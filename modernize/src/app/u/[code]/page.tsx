@@ -19,7 +19,10 @@ export default function U({ params }: PageProps) {
   const router = useRouter();
 
   const accessToken = localStorage.getItem('accessToken');
-  if (!accessToken) throw new Error('Access token is missing');
+  // if (!accessToken) throw new Error('Access token is missing');
+  if (!accessToken) {
+    console.error('Access token is missing');
+  }
 
   const { data, loading: _, error, fetchData } = useFetch<ResponseProps>();
 

@@ -74,10 +74,13 @@ const CorteConferenciaScreen = () => {
     severity: 'success'
   });
 
-  const router = useRouter();
   const myTheme = useThemeMode()
-
+  const router = useRouter();
   const accessToken = localStorage.getItem('accessToken');
+  if (!accessToken) {
+    console.error('Access token is missing');
+    router.push('/auth/login');
+  }
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
   const MoverProducaoRoles = [1, 11, 13];
   const canShowButtonMover = roles.some(role => MoverProducaoRoles.includes(role));

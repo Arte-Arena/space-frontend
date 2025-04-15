@@ -206,7 +206,8 @@ const ExpediçãoScreen = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Erro ao salvar observação");
+        // throw new Error("Erro ao salvar observação");
+        console.error("Erro: ",response.text() || "Erro ao salvar observação");
       }
 
       const data = await response.json();

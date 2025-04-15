@@ -54,7 +54,8 @@ const EncurtadorLink = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Erro ao encurtar a URL");
+        // throw new Error("Erro ao encurtar a URL");
+        console.error("Erro: ",response.text() || "Erro ao encurtar a URL");
       }
 
       const data: ShortUrlResponse = await response.json();

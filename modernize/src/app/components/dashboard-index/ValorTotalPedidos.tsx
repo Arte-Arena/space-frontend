@@ -4,7 +4,6 @@ import PageContainer from "@/app/components/container/PageContainer";
 import { Select, MenuItem, FormControl, InputLabel, SelectChangeEvent } from '@mui/material';
 import ApexPedidosTotal from "@/app/components/charts/TotalPedidos";
 import ParentCard from "@/app/components/shared/ParentCard";
-import { useTheme } from '@mui/material/styles';
 
 interface Pedidos {
   total_orcamento: number;
@@ -16,12 +15,12 @@ interface Pedidos {
 const ValorTotalPedidosComponent = () => {
   const [dados, setDados] = useState<Pedidos[]>([]);
   const [tipoGrafico, setTipoGrafico] = useState("linha"); // Estado para o tipo de gráfico
-  const theme = useTheme(); // Pega o tema atual (light ou dark)
 
   // Pega token do localStorage
   const accessToken = typeof window !== "undefined" ? localStorage.getItem('accessToken') : null;
 
   if (!accessToken) {
+    // console.error('Access token is missing');
     console.error('Access token is missing');
   }
 

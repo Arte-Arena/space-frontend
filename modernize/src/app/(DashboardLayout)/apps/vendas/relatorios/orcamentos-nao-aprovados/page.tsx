@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { Tooltip, Typography, Box, TextField, Grid, Button } from "@mui/material";
 import CustomToolbar from "@/app/components/DataGridFilters/CustomDataGridFilters";
+import { useRouter } from "next/navigation";
 
 interface Orcamento {
   id_orcamento: number;
@@ -44,12 +45,15 @@ const VendasRelatoriosOrcamentosNaoAprovados = () => {
     id_orcamento: "",
     vendedor: "",
     valor_total: "",
-  }); 
+  });
+  const router = useRouter();
 
   const accessToken = localStorage.getItem('accessToken');
 
   if (!accessToken) {
-    throw new Error('Access token is missing');
+    // throw new Error('Access token is missing');
+    console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   const { isFetching, error } = useQuery({
@@ -75,15 +79,15 @@ const VendasRelatoriosOrcamentosNaoAprovados = () => {
         if (!value) return true;
         const rowValue = row[column as keyof Orcamento];
         return rowValue?.toString().toLowerCase().includes(value.toLowerCase());
-      }) && 
-      // Filtro de data
-      (!dateFilter.start || new Date(row.data) >= new Date(dateFilter.start)) &&
-      (!dateFilter.end || new Date(row.data) <= new Date(dateFilter.end)) 
+      }) &&
+        // Filtro de data
+        (!dateFilter.start || new Date(row.data) >= new Date(dateFilter.start)) &&
+        (!dateFilter.end || new Date(row.data) <= new Date(dateFilter.end))
     });
   }, [orcamentosNaoAprovados, filters, dateFilter]);
 
   // Manipula mudanças nos filtros
-  const handleFilterChange = (column: string, value: string ) => {
+  const handleFilterChange = (column: string, value: string) => {
     setFilters((prev) => ({ ...prev, [column]: value }));
   };
 
@@ -195,7 +199,7 @@ const VendasRelatoriosOrcamentosNaoAprovados = () => {
           <Typography variant="h6" component="p" gutterBottom style={{ marginBottom: '2rem' }}>
             Orçamentos Não Aprovados:
           </Typography>
-          
+
           <Box display="flex" gap={2} flexWrap="wrap" >
             <TextField
               label="ID Orçamento"
@@ -238,7 +242,7 @@ const VendasRelatoriosOrcamentosNaoAprovados = () => {
               InputLabelProps={{ shrink: true }}
               onChange={(e) => setDateFilter((prev) => ({ ...prev, end: e.target.value }))}
             />
-            
+
             {/* Botão para limpar os filtros */}
             <Grid item xs={12} sm={4}>
               <Button

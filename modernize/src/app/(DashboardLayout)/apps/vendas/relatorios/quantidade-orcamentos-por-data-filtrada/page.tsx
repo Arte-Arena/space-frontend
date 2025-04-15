@@ -8,6 +8,7 @@ import ApexOrcamentos from "@/app/components/charts/quantidadeOrcamentoChart";
 import ParentCard from "@/app/components/shared/ParentCard";
 import { Typography, Box, TextField, Button, Grid, Select, MenuItem } from "@mui/material";
 import useUsers from '@/utils/SelectUsers';
+import { useRouter } from "next/navigation";
 
 interface Orcamento {
   date: string;
@@ -30,12 +31,15 @@ const VendasRelatoriosOrcamentosPorDataFiltrada = () => {
   const [dataFim, setDataFim] = useState<string>(hoje);
   const [isFetchingData, setIsFetchingData] = useState<boolean>(false);
   const { data: users, error: usersError, isLoading: usersLoading } = useUsers(); 
+  const router = useRouter();
 
   // Pega token do localStorage
   const accessToken = typeof window !== "undefined" ? localStorage.getItem('accessToken') : null;
 
   if (!accessToken) {
+    // console.error('Access token is missing');
     console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   // ========================================================================================= \\

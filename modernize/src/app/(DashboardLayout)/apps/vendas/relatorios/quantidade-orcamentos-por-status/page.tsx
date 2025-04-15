@@ -5,6 +5,7 @@ import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcr
 import { useQuery } from '@tanstack/react-query';
 import ApexOrcamentoStatus from "@/app/components/charts/quantidadeOrcamentoStatus";
 import ParentCard from "@/app/components/shared/ParentCard";
+import { useRouter } from "next/navigation";
 
 interface OrcamentoStatus {
   aprovados: number;
@@ -22,12 +23,15 @@ const VendasRelatoriosOrcamentosPorStatus = () => {
   const [dados, setDados] = useState<OrcamentoStatus | null>(null);
   const [aprovados, setAprovados] = useState<number>(0);
   const [naoAprovados, setNaoAprovados] = useState<number>(0);
+  const router = useRouter();
 
   // Pega token do localStorage
   const accessToken = typeof window !== "undefined" ? localStorage.getItem('accessToken') : null;
 
   if (!accessToken) {
+    // console.error('Access token is missing');
     console.error('Access token is missing');
+    router.push('/auth/login');
   }
 
   // Fetch da API usando react-query

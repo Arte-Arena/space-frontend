@@ -54,7 +54,10 @@ const ContasPagarReceberAdicionarScreen = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch accounts');
+          // throw new Error('Failed to fetch accounts');
+          const errorData = await response.json();
+          setError(errorData.message);
+          console.error("Erro: ", errorData.message);
         }
 
         const data: ApiResponse = await response.json();
@@ -83,7 +86,8 @@ const ContasPagarReceberAdicionarScreen = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete account');
+        // throw new Error('Failed to delete account');
+        console.error("Erro: ", response.text());
       }
 
       setAccounts(accounts.filter((account) => account.id !== accountId));

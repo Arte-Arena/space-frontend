@@ -17,6 +17,7 @@ const VendasRelatoriosOrcamentosPorStatusComponent = () => {
   const accessToken = typeof window !== "undefined" ? localStorage.getItem('accessToken') : null;
 
   if (!accessToken) {
+    // console.error('Access token is missing');
     console.error('Access token is missing');
   }
 
