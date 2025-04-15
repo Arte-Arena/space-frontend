@@ -20,12 +20,21 @@ import {
   Box,
 } from "@mui/material";
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/utils/useAuth';
 
 const ProdutosPacotesUniformesScreen = () => {
   const router = useRouter();
   const accessToken = localStorage.getItem('accessToken');
   const [isAdding, setIsAdding] = useState(false);
   const [loadingStates, setLoadingStates] = useState<Record<string, { editing: boolean; detailing: boolean }>>({});
+
+  const isLoggedIn = useAuth();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+  }, [isLoggedIn]);
 
   const { data: pacotesUniforme, isLoading: isLoadingPacotesUniforme, isError: isErrorPacotesUniforme } = useQuery<ProdutoPacoteUniforme[]>({
     queryKey: ['pacotes-uniforme'],

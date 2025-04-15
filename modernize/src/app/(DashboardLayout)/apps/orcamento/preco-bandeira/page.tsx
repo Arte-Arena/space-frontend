@@ -11,6 +11,7 @@ import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import { IconCopy } from '@tabler/icons-react';
+import { useAuth } from '@/utils/useAuth';
 
 const styles = {
   label: {
@@ -38,6 +39,14 @@ const PrecoBandeiraScreen = () => {
   const [altura, setAltura] = useState(0);
   const [largura, setLargura] = useState(0);
   const [quantidadeTecidoState, setQuantidadeTecidoState] = useState(0);
+
+  const isLoggedIn = useAuth();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (altura && largura) {
