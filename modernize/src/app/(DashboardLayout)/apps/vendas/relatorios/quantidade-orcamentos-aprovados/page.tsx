@@ -38,7 +38,7 @@ const VendasRelatoriosQuantidadeOrcamentos = () => {
   }
 
   const { isFetching, error } = useQuery({
-    queryKey: ['quantidadeOrcamentosData'],
+    queryKey: ['quantidadeOrcamentosAprovados'],
     queryFn: () =>
       fetch(`${process.env.NEXT_PUBLIC_API}/api/vendas/quantidade-orcamentos-aprovados`, {
         method: 'GET',

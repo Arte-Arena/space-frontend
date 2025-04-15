@@ -22,14 +22,17 @@ const ApexPedidosTotal: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos, tipo
   const primary = theme.palette.primary.main;
   const secondary = theme.palette.secondary.main;
 
-  // Função para converter valores monetários em número
   const parseValor = (valor: string | number): number => {
-    if (typeof valor === "string") {
-      // Remove qualquer caractere que não seja número ou ponto decimal
-      const valorLimpo = valor.replace(/[^0-9.]/g, '');
-      return parseFloat(parseFloat(valorLimpo).toFixed(2));
+    if (valor) {
+      if (typeof valor === "string") {
+        const valorLimpo = valor.replace(/[^0-9.]/g, '');
+        return parseFloat(parseFloat(valorLimpo).toFixed(2));
+      } else {
+        return parseFloat(valor.toFixed(2));
+      }
+    } else {
+      return 0;
     }
-    return parseFloat(valor.toFixed(2));
   };
 
   // Agrupar os valores por dia

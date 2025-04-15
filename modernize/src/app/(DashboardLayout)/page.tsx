@@ -42,10 +42,8 @@ export default function Dashboard() {
 
           {/* 2° em pizza */}
           <Grid item xs={12} md={5}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', height: '85%', border: '1px solid #394457', padding: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', height: '85%', border: '1px solid #394457', padding: 2, alignItems: 'center', justifyContent: 'center' }}>
               <VendasRelatoriosOrcamentosPorStatusComponent />
-              <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around' }}>
-              </Box>
             </Box>
           </Grid>
 

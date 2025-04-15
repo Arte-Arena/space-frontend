@@ -8,7 +8,7 @@ interface OrcamentoStatus {
   naoAprovados: number;
 }
 
-const VendasRelatoriosOrcamentosPorStatusComponent = () => {
+const   VendasRelatoriosOrcamentosPorStatusComponent = () => {
   const [dados, setDados] = useState<OrcamentoStatus | null>(null);
   const [aprovados, setAprovados] = useState<number>(0);
   const [naoAprovados, setNaoAprovados] = useState<number>(0);
@@ -58,7 +58,7 @@ const VendasRelatoriosOrcamentosPorStatusComponent = () => {
 
 
   return (
-    <div style={{ marginBottom: '50px' }}>
+    <div>
       {dados ? (
         <ApexOrcamentoStatus aprovados={aprovados} naoAprovados={naoAprovados} />
       ) : (
