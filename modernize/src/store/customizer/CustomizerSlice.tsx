@@ -24,7 +24,7 @@ const initialState: StateType = {
   SidebarWidth: 270,
   MiniSidebarWidth: 87,
   TopbarHeight: 70,
-  isLayout: 'boxed', // This can be full or boxed
+  isLayout: 'full', // This can be full or boxed
   isCollapse: false, // to make sidebar Mini by default
   isSidebarHover: false,
   isMobileSidebar: false,
