@@ -136,10 +136,7 @@ const OrcamentoBackofficeScreen = () => {
   const [navigateTo, setNavigateTo] = useState<string | null>(null);
   const [clientesConfigurados, setClientesConfigurados] = useState<{ [key: number]: boolean }>({});
   const [uniformesConfigurados, setUniformesConfigurados] = useState<{ [key: number]: boolean }>({});
-  const [verificandoCliente, setVerificandoCliente] = useState<{ [key: number]: boolean }>({});
-  const [verificandoUniformes, setVerificandoUniformes] = useState<{ [key: number]: boolean }>({});
   const [arteFinalConfigurados, setArteFinalConfigurados] = useState<{ [key: number]: boolean }>({});
-  const [verificandoArteFinal, setVerificandoArteFinal] = useState<{ [key: number]: boolean }>({});
   const [confirmacaoArteFinalConfigurados, setConfirmacaoArteFinalConfigurados] = useState<{ [key: number]: boolean }>({});
   const [currentPackage, setCurrentPackage] = useState<string>('Start');
   const [email, setEmail] = useState<string>('');
@@ -167,95 +164,6 @@ const OrcamentoBackofficeScreen = () => {
     console.error('Access token is missing');
     router.push('/auth/login');
   }
-
-  const verificarClienteCadastrado = async (orcamentoId: number) => {
-    setVerificandoCliente(prev => ({ ...prev, [orcamentoId]: true }));
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/backoffice/get-cliente-by-orcamento?orcamento_id=${orcamentoId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (response.ok) {
-        setClientesConfigurados(prev => ({ ...prev, [orcamentoId]: true }));
-      } else {
-        setClientesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
-      }
-    } catch (error) {
-      logger.error('Erro ao verificar cliente:', error);
-      setClientesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
-    } finally {
-      setVerificandoCliente(prev => ({ ...prev, [orcamentoId]: false }));
-    }
-  };
-
-  const verificarUniformesConfigurados = async (orcamentoId: number) => {
-    setVerificandoUniformes(prev => ({ ...prev, [orcamentoId]: true }));
-
-    try {
-      // Usando o middleware Laravel para verificar uniformes
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/uniformes-go/${orcamentoId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Verificando se existem jogadores configurados nos esboços
-        const temConfiguracao = data.data && 
-          data.data.length > 0 && 
-          data.data.some((uniforme: any) => 
-            uniforme.sketches && 
-            uniforme.sketches.some((sketch: any) => 
-              sketch.players && sketch.players.length > 0 && 
-              sketch.players.some((player: any) => player.ready)
-            )
-          );
-        setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: temConfiguracao }));
-      } else {
-        setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
-      }
-    } catch (error) {
-      logger.error('Erro ao verificar uniformes:', error);
-      setUniformesConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
-    } finally {
-      setVerificandoUniformes(prev => ({ ...prev, [orcamentoId]: false }));
-    }
-  };
-
-  const verificarPedidoArteFinal = async (orcamentoId: number) => {
-    setVerificandoArteFinal(prev => ({ ...prev, [orcamentoId]: true }));
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/pedidos/get-pedido-arte-final-orcamento/${orcamentoId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const temConfiguracao = data;
-        setArteFinalConfigurados(prev => ({ ...prev, [orcamentoId]: temConfiguracao }));
-      } else {
-        setArteFinalConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
-      }
-    } catch (error) {
-      logger.error('Erro ao verificar pedidos:', error);
-      setArteFinalConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
-    } finally {
-      setVerificandoArteFinal(prev => ({ ...prev, [orcamentoId]: false }));
-    }
-  };
 
   const verificarConfirmacaoPedidoArteFinal = async (orcamentoId: number, numero_pedido: number | null) => {
     if (!numero_pedido) {
@@ -359,9 +267,21 @@ const OrcamentoBackofficeScreen = () => {
   useEffect(() => {
     if (dataOrcamentos && dataOrcamentos.data) {
       dataOrcamentos.data.forEach((orcamento: Orcamento) => {
-        verificarClienteCadastrado(orcamento.id);
-        verificarUniformesConfigurados(orcamento.id);
-        verificarPedidoArteFinal(orcamento.id);
+        setClientesConfigurados(prev => ({ 
+          ...prev, 
+          [orcamento.id]: !!orcamento.client_info?.client_id 
+        }));
+        
+        setUniformesConfigurados(prev => ({ 
+          ...prev, 
+          [orcamento.id]: !!orcamento.client_info?.has_uniform 
+        }));
+        
+        setArteFinalConfigurados(prev => ({ 
+          ...prev, 
+          [orcamento.id]: orcamento.pedidos && orcamento.pedidos.length > 0 
+        }));
+        
         verificarConfirmacaoPedidoArteFinal(orcamento.id, Number(orcamento.pedidos[0]?.numero_pedido) ?? false);
       });
     }
@@ -570,10 +490,12 @@ const OrcamentoBackofficeScreen = () => {
   async function handleShortlinkUniform(uniformId: number) {
     setCurrentOrcamentoId(uniformId);
     setIsCheckingUniforms(false);
-    setExistingUniforms(false);
-    setSketches([]);
     
     const orcamento = dataOrcamentos?.data.find((o: Orcamento) => o.id === uniformId);
+    setExistingUniforms(!!orcamento?.client_info?.has_uniform);
+    
+    setSketches([]);
+    
     if (orcamento?.client_info?.client_email) {
       setEmail(orcamento.client_info.client_email);
       setEmailConfirmation(orcamento.client_info.client_email);
