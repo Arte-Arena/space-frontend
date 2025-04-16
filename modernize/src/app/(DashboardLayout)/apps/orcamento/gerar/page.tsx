@@ -1739,6 +1739,7 @@ Orçamento válido somente hoje.
 
       // console.log('Orçamento salvo com sucesso');
     } catch (error) {
+      alert("Ocorreu um erro ao salvar o orçamento. Tente recarregar a página e gerar novamente")
       console.error("Erro:", error);
     }
   };
