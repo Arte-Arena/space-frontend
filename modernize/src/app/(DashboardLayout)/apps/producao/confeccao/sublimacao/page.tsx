@@ -398,6 +398,9 @@ const SublimacaoScreen = () => {
       <>
         <Breadcrumb title="Produção / Sublimação" items={BCrumb} />
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2, }}>
+          <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
+            <span style={{ fontWeight: 'bold' }}>Total De: </span> {dataPedidos?.total} Pedidos:
+          </Typography>
           <Typography variant="body1" sx={{ fontWeight: 500, alignItems: 'center' }}>
             <span style={{ fontWeight: 'bold', fontSize: 16 }}>Por Dia: </span>
             <Button onClick={handleToggle} variant="outlined" size='small' sx={{ mb: 0, padding: 1, height: '16px', width: "auto" }}>
@@ -636,16 +639,16 @@ const SublimacaoScreen = () => {
                             {prazoSublimacao.toFormat('dd/MM/yyyy')}
                           </TableCell>
 
-                            <TableCell
-                              sx={{
-                                color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                                textAlign: "left",
-                              }}
-                            >
-                              <Typography variant="body1" textAlign={'center'}>
+                          <TableCell
+                            sx={{
+                              color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                              textAlign: "left",
+                            }}
+                          >
+                            <Typography variant="body1" textAlign={'center'}>
                               {row?.rolo || "N/A"}
-                              </Typography>
-                            </TableCell>
+                            </Typography>
+                          </TableCell>
 
                           <Tooltip title={row?.observacoes ? row.observacoes : "Adicionar Observação"} placement="left">
                             <TableCell
