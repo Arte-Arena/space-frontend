@@ -1497,7 +1497,7 @@ const OrcamentoGerarScreen = () => {
     setCheckoutLink(null);
   };
 
-  const gerarOrcamento = () => {
+  const gerarOrcamento = async () => {
     let totalOrçamento = 0;
     let produtosTexto = "";
     let produtosBrindeTexto = "";
@@ -1662,6 +1662,16 @@ Orçamento válido somente hoje.
         "Houve algum problema com o cálculo da previsão de entrega.\n Tente selecionar novamente a opção de entrega.",
       );
 
+    if (
+      clientId &&
+      productsList &&
+      shippingOption &&
+      prazoProducao &&
+      prazoFrete
+    ) {
+      await salvarOrcamento();
+    }
+
     setOrçamentoTexto(textoOrcamento);
     setOpenBudget(true);
   };
@@ -1732,18 +1742,6 @@ Orçamento válido somente hoje.
       console.error("Erro:", error);
     }
   };
-
-  useEffect(() => {
-    if (
-      clientId &&
-      productsList &&
-      shippingOption &&
-      prazoProducao &&
-      prazoFrete
-    ) {
-      salvarOrcamento();
-    }
-  }, [orçamentoTexto]);
 
   const handleCloseSnackbarCopiarOrcamento = () => {
     setOpenSnackbarCopiarOrcamento(false);
