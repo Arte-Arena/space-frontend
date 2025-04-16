@@ -29,7 +29,6 @@ import {
   IconButton,
   Box,
   MenuItem,
-  TextField,
   Select,
   TextFieldProps,
   Snackbar,
@@ -41,7 +40,6 @@ import { IconEdit, IconEye, IconTrash, IconShirt, IconBrush, IconPrinter, IconBr
 import CircularProgress from '@mui/material/CircularProgress';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
-import { GridPaginationModel } from '@mui/x-data-grid';
 import { ArteFinal, Produto } from './components/types';
 import SidePanel from './components/drawer';
 import AssignDesignerDialog from './components/designerDialog';
