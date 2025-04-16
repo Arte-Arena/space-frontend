@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Stack, Button, Typography, Box, Alert } from '@mui/material';
+import { Stack, Button, Typography, Box, Alert, AlertProps, Snackbar } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
 import MenuItem from '@mui/material/MenuItem';
@@ -63,7 +63,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
   const [errorOrcamentoState, setErrorOrcamentoState] = useState<Error | null>(null);
   const [orcamentoState, setOrcamentoState] = useState<Orcamento | null>(null);
   const [formaPagamento, setFormaPagamento] = useState('');
-  const [tipoFaturamento, setTipoFaturamento] = useState('');
+  const [tipoFaturamento, setTipoFaturamento] = useState('a_vista');
   const [qtdParcelas, setQtdParcelas] = useState(1); // Default para "1" no tipo faturado
   const [dataFatura1, setDataFatura1] = useState<Date | null>(new Date());
   const [valorFatura1, setValorFatura1] = useState<string | number | null | undefined>(0);
@@ -75,6 +75,15 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
   const [linkTrello, setLinkTrello] = useState('');
   const [comentarios, setComentarios] = useState('');
   const [isDiaIgual, setIsDiaIgual] = useState(false);
+  const [snackbar, setSnackbar] = React.useState<{
+    open: boolean;
+    message: string;
+    severity: AlertProps['severity'];
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
@@ -82,6 +91,39 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
     console.error('Access token is missing');
     router.push('/auth/login');
   }
+
+  const parseDecimal = (valor: string | number | null | undefined): number => {
+    return parseFloat(valor?.toString().replace(',', '.') || '0');
+  };
+
+  useEffect(() => {
+    // verifica se as somas das faturas batem com o total do orcamento
+    const somaFaturas =
+      (
+        parseDecimal(valorFatura1) +
+        parseDecimal(valorFatura2) +
+        parseDecimal(valorFatura3)
+      ).toFixed(2);
+
+    const totalOrcamento = parseDecimal(orcamento?.total_orcamento).toFixed(2);
+    if (somaFaturas !== totalOrcamento) {
+      setSnackbar({
+        open: true,
+        message: 'O Valor das faturas somadas deve ser o total do orcamento.' + somaFaturas + ' é diferente de ' + orcamento?.total_orcamento,
+        severity: 'warning'
+      });
+    }
+  }, [valorFatura1, valorFatura2, valorFatura3]);
+
+  useEffect(() => {
+    if (orcamentoState?.total_orcamento && tipoFaturamento === 'a_vista') {
+      setValorFatura1(orcamentoState.total_orcamento);
+      setValorFatura2(0);
+      setValorFatura3(0);
+      setQtdParcelas(1);
+    }
+  }, [orcamentoState, tipoFaturamento]);
+
 
   useEffect(() => {
     const fetchOrcamento = async () => {
@@ -135,74 +177,114 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
     if (orcamentoId !== null) {
       // Valida o campo data de entrega
       if (!dataEntrega) {
-        alert('A Data de Entrega é obrigatória.');
+        setSnackbar({
+          open: true,
+          message: 'A Data de Entrega é obrigatória.',
+          severity: 'error'
+        });
         return;
       }
 
       // Valida os campos de data de faturamento e valores de faturamento
       if (qtdParcelas === 1) {
         if (!dataFatura1) {
-          alert('A Data da Fatura #1 é obrigatória.');
+          setSnackbar({
+            open: true,
+            message: 'A Data da Fatura #1 é obrigatória.',
+            severity: 'error'
+          });
           return;
         }
         if (!valorFatura1) {
-          alert('O Valor da Fatura #1 é obrigatório.');
+          setSnackbar({
+            open: true,
+            message: 'O Valor da Fatura #1 é obrigatório.',
+            severity: 'error'
+          });
           return;
         }
       } else if (qtdParcelas === 2) {
         if (!dataFatura1) {
-          alert('A Data da Fatura #1 é obrigatória.');
+          setSnackbar({
+            open: true,
+            message: 'A Data da Fatura #1 é obrigatória.',
+            severity: 'error'
+          });
           return;
         }
         if (!valorFatura1) {
-          alert('O Valor da Fatura #1 é obrigatório.');
+          setSnackbar({
+            open: true,
+            message: 'O Valor da Fatura #1 é obrigatório.',
+            severity: 'error'
+          });
           return;
         }
         if (!dataFatura2) {
-          alert('A Data da Fatura #2 é obrigatória.');
+          setSnackbar({
+            open: true,
+            message: 'A Data da Fatura #2 é obrigatória.',
+            severity: 'error'
+          });
           return;
         }
         if (!valorFatura2) {
-          alert('O Valor da Fatura #2 é obrigatório.');
+          setSnackbar({
+            open: true,
+            message: 'O Valor da Fatura #2 é obrigatório.',
+            severity: 'error'
+          });
           return;
         }
       } else if (qtdParcelas === 3) {
         if (!dataFatura1) {
-          alert('A Data da Fatura #1 é obrigatória.');
+          setSnackbar({
+            open: true,
+            message: 'A Data da Fatura #1 é obrigatória.',
+            severity: 'error'
+          });
           return;
         }
         if (!valorFatura1) {
-          alert('O Valor da Fatura #1 é obrigatório.');
+          setSnackbar({
+            open: true,
+            message: 'O Valor da Fatura #1 é obrigatório.',
+            severity: 'error'
+          });
           return;
         }
         if (!dataFatura2) {
-          alert('A Data da Fatura #2 é obrigatória.');
+          setSnackbar({
+            open: true,
+            message: 'A Data da Fatura #2 é obrigatória.',
+            severity: 'error'
+          });
           return;
         }
         if (!valorFatura2) {
-          alert('O Valor da Fatura #2 é obrigatório.');
+          setSnackbar({
+            open: true,
+            message: 'O Valor da Fatura #2 é obrigatório.',
+            severity: 'error'
+          });
           return;
         }
         if (!dataFatura3) {
-          alert('A Data da Fatura #3 é obrigatória.');
+          setSnackbar({
+            open: true,
+            message: 'A Data da Fatura #3 é obrigatória.',
+            severity: 'error'
+          });
           return;
         }
         if (!valorFatura3) {
-          alert('O Valor da Fatura #3 é obrigatório.');
+          setSnackbar({
+            open: true,
+            message: 'O Valor da Fatura #3 é obrigatório.',
+            severity: 'error'
+          });
           return;
         }
-      }
-
-      // verifica se as somas das faturas batem com o total do orcamento
-      const somaFaturas =
-        (parseFloat(valorFatura1?.toString().replace(',', '.') || '0') +
-          parseFloat(valorFatura2?.toString().replace(',', '.') || '0') +
-          parseFloat(valorFatura3?.toString().replace(',', '.') || '0')).toFixed(2);
-
-      const totalOrcamento = parseFloat(orcamento?.total_orcamento?.toString().replace(',', '.') || '0').toFixed(2);
-      if (somaFaturas !== totalOrcamento) {
-        alert('O Valor das faturas somadas deve ser o total do orcamento.' + somaFaturas + ' != ' + orcamento?.total_orcamento);
-        return;
       }
 
       setIsLoadingOrcamentoState(true);
@@ -244,11 +326,15 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
     }
   };
 
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   return (
     <>
       {!isLoadingOrcamento && !isDiaIgual && (
         <Alert severity="warning" sx={{ mb: 3 }}>
-          Atenção a a data de criação do orçamento não é a data atual!.
+          Atenção a data de criação do orçamento não é a data atual!.
         </Alert>
       )}
 
@@ -301,6 +387,7 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
           >
             <MenuItem value="dinheiro">Dinheiro físico</MenuItem>
             <MenuItem value="pix">PIX</MenuItem>
+            <MenuItem value="boleto">Boleto</MenuItem>
             <MenuItem value="debito">Cartão de Débito</MenuItem>
             <MenuItem value="credito">Cartão de Crédito</MenuItem>
           </CustomSelect>
@@ -408,9 +495,6 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
               </LocalizationProvider>
             </Box>
             <Box flex={1}>
-              <Typography variant='body2' sx={{ margin: 0, padding: 0 }}>
-                Os valores podem ser alterados como quiser!
-              </Typography>
               <CustomFormLabel htmlFor="valor_fatura1">Valor Fatura #1</CustomFormLabel>
               <CustomTextField
                 name="valor_fatura1"
@@ -534,6 +618,45 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
         </Box>
 
         {/* alerta */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+          sx={{
+            '& .MuiPaper-root': {
+              borderRadius: '12px',
+              boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.15)',
+              backdropFilter: 'blur(4px)',
+              backgroundColor: snackbar.severity === 'success'
+                ? 'rgba(46, 125, 50, 0.9)'
+                : snackbar.severity === 'warning'
+                  ? 'rgba(255, 152, 0, 0.9)'
+                  : 'rgba(211, 47, 47, 0.9)'
+            }
+          }}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            variant="filled"
+            icon={false}
+            sx={{
+              width: '100%',
+              alignItems: 'center',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              color: 'common.white',
+              '& .MuiAlert-message': {
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }
+            }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
 
       </Stack>
     </>
