@@ -7,8 +7,9 @@ import { useRouter } from 'next/navigation';
 const SuperAdmin = () => {
   const router = useRouter();
 
-  const accessToken = localStorage.getItem('AccessToken');
+  const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
+    console.error('Access token not found. Redirecting to login page...');
     router.push('/auth/login');
   }
 
