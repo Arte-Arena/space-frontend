@@ -71,6 +71,7 @@ interface Orcamento {
   status_producao_arte_final: string;
   status_aprovacao_esboco: string;
   status_aprovacao_arte_final: string;
+  vendedor_id: number;
 }
 
 const useFetchOrcamentos = (searchQuery: string, page: number) => {
@@ -97,18 +98,17 @@ const OrcamentoBuscarScreen = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [openRow, setOpenRow] = useState<{ [key: number]: boolean }>({});
-  const [vendedores, setVendedores] = useState<
-    { id: number; name: string; email: string; email_verified_at: string | null; created_at: string; updated_at: string }[]
-  >([]);
+  // const [vendedores, setVendedores] = useState<
+  // { id: number; name: string; email: string; email_verified_at: string | null; created_at: string; updated_at: string }[]
+  // >([]);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedVendedores = localStorage.getItem('vendedores');
-      if (storedVendedores) {
-        setVendedores(JSON.parse(storedVendedores));
-      }
-    }
-  }, []);
+  const vendedores = localStorage.getItem('vendedores');
+  const parsedVendedores = typeof vendedores === 'string' ? JSON.parse(vendedores) : vendedores;
+  const usersMap = new Map(
+    Array.isArray(parsedVendedores)
+      ? parsedVendedores.map(vendedores => [vendedores.id, vendedores.name])
+      : []
+  );
 
   const mode = useThemeMode();
 
@@ -189,13 +189,13 @@ const OrcamentoBuscarScreen = () => {
             <Table size='small' sx={{ width: '100%' }}>
               <TableHead sx={{ position: 'sticky', top: '0', zIndex: '10', backgroundColor: mode === 'dark' ? '#2A3447' : '#fff', color: mode === 'dark' ? '#fff' : '#2A3547' }}>
                 <TableRow>
-                  <TableCell></TableCell>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Número do Cliente</TableCell>
-                  <TableCell>Vendedor</TableCell>
-                  <TableCell>Valor Total</TableCell>
-                  <TableCell>Data de Criação</TableCell>
-                  <TableCell>Aprovar</TableCell>
+                  <TableCell align="center"></TableCell>
+                  <TableCell align="center">ID</TableCell>
+                  <TableCell align="center">Número do Cliente</TableCell>
+                  <TableCell align="center">Vendedor</TableCell>
+                  <TableCell align="center">Valor Total</TableCell>
+                  <TableCell align="center">Data de Criação</TableCell>
+                  <TableCell align="center">Aprovar</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -210,10 +210,15 @@ const OrcamentoBuscarScreen = () => {
                   const entrega = texto?.match(regexEntrega);
                   const brinde = texto?.match(regexBrinde);
 
+                  const getUserNameById = (id: number | null | undefined) => {
+                    return id && usersMap.has(id) ? usersMap.get(id) : "";
+                  };
+                  const vendedorNome = getUserNameById(row.vendedor_id);
+
                   return (
                     <React.Fragment key={row.id}>
                       <TableRow>
-                        <TableCell>
+                        <TableCell align='center'>
                           <IconButton
                             aria-label="expand row"
                             size="small"
@@ -222,16 +227,16 @@ const OrcamentoBuscarScreen = () => {
                             {openRow[row.id] ? <KeyboardArrowUpIcon sx={{ fontSize: '25px' }} /> : <KeyboardArrowDownIcon sx={{ fontSize: '25px' }} />}
                           </IconButton>
                         </TableCell>
-                        <TableCell>
+                        <TableCell align='center'>
                           <Link
                             href={`/apps/orcamento/editar/${row.id}`}
                             passHref
-                            style={{ textDecoration: "none" }} // Remove o sublinhado do link
+                            style={{ textDecoration: "none"}} // Remove o sublinhado do link
                           >
                             <Box
                               sx={{
                                 cursor: "pointer",
-                                textAlign: "center",
+                                // textAlign: "center",
                                 position: "relative",
                                 borderRadius: "50%",
                                 backgroundColor: "#5D87FF",
@@ -253,17 +258,19 @@ const OrcamentoBuscarScreen = () => {
                             </Box>
                           </Link>
                         </TableCell>
-                        <TableCell>{row.cliente_octa_number}</TableCell>
-                        <TableCell>
+                        <TableCell align='center'>{row.cliente_octa_number}</TableCell>
+                        <TableCell align='center'>
+
                           {
-                            vendedores.find(vendedor => vendedor.id === row.user_id)?.name || ''
+                            vendedorNome
                           }
+
                         </TableCell>
-                        <TableCell>
+                        <TableCell align='center'>
                           {`R$ ${parseFloat(row.total_orcamento).toFixed(2).replace('.', ',')}`}
                         </TableCell>
-                        <TableCell>{new Date(row.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell>
+                        <TableCell align='center'>{new Date(row.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell align='center'>
                           {row.status === "aprovado" ? (
                             <Stack direction="row" alignItems={"center"} spacing={1}>
                               <Tooltip title="Orçamento Aprovado">
