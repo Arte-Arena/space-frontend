@@ -66,7 +66,7 @@ const ImpressaoScreen = () => {
   const [open, setOpen] = useState(false);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
-  const [rowsPerPage, setRowsPerPage] = useState<number>(15);
+  const [rowsPerPage, setRowsPerPage] = useState<number>(25); // na mipressão é bom colocar 25 por conta da medida linear total
   const [page, setPage] = useState(1);
 
   const [snackbar, setSnackbar] = React.useState<{
