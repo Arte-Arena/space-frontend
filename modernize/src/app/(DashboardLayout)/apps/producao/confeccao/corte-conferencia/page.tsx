@@ -431,6 +431,9 @@ const CorteConferenciaScreen = () => {
       <>
         <Breadcrumb title="Produção / Corte & Conferência" items={BCrumb} />
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', padding: 2, mb: 2, }}>
+          <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
+            <span style={{ fontWeight: 'bold' }}>Total De: </span> {dataPedidos?.total} Pedidos:
+          </Typography>
           <Typography variant="body1" sx={{ fontWeight: 500, alignItems: 'center' }}>
             <span style={{ fontWeight: 'bold', fontSize: 16 }}>Por Dia: </span>
             <Button onClick={handleToggle} variant="outlined" size='small' sx={{ mb: 0, padding: 1, height: '16px', width: "auto" }}>

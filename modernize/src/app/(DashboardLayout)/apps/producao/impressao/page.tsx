@@ -66,7 +66,7 @@ const ImpressaoScreen = () => {
   const [open, setOpen] = useState(false);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<ArteFinal | null>(null);
-  const [rowsPerPage, setRowsPerPage] = useState<number>(15);
+  const [rowsPerPage, setRowsPerPage] = useState<number>(25); // na mipressão é bom colocar 25 por conta da medida linear total
   const [page, setPage] = useState(1);
 
   const [snackbar, setSnackbar] = React.useState<{
@@ -505,7 +505,7 @@ const ImpressaoScreen = () => {
           <span style={{ fontWeight: 'bold' }}>Total Medida Linear:</span> {totalMedidaLinearGlobal.toFixed(2)} Metros
         </Typography>
         <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
-          <span style={{ fontWeight: 'bold' }}>Total De: </span> {allPedidos.length} Pedidos:
+          <span style={{ fontWeight: 'bold' }}>Total De: </span> {dataPedidos?.total} Pedidos:
         </Typography>
         <Typography variant="body1" sx={{ fontWeight: 500, alignItems: 'center' }}>
           <span style={{ fontWeight: 'bold', fontSize: 16 }}>Por Dia: </span>

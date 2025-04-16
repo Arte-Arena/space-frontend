@@ -510,7 +510,7 @@ const ArteFinalScreen = () => {
       <Breadcrumb title="Produção / Arte - Final" items={BCrumb} />
       <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2, p: 2 }}>
         <Typography sx={{ fontSize: '14px', fontWeight: '600' }}>
-          Total de Pedidos: <strong>{allPedidos.length}</strong>.
+          Total de Pedidos: <strong>{dataPedidos?.total}</strong>.
         </Typography>
       </Box>
       <ParentCard title="Arte - Final">
