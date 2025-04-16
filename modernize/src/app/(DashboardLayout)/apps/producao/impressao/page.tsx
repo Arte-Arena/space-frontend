@@ -505,7 +505,7 @@ const ImpressaoScreen = () => {
           <span style={{ fontWeight: 'bold' }}>Total Medida Linear:</span> {totalMedidaLinearGlobal.toFixed(2)} Metros
         </Typography>
         <Typography variant="body1" sx={{ fontWeight: 500, fontSize: 16 }}>
-          <span style={{ fontWeight: 'bold' }}>Total De: </span> {allPedidos.length} Pedidos:
+          <span style={{ fontWeight: 'bold' }}>Total De: </span> {dataPedidos?.total} Pedidos:
         </Typography>
         <Typography variant="body1" sx={{ fontWeight: 500, alignItems: 'center' }}>
           <span style={{ fontWeight: 'bold', fontSize: 16 }}>Por Dia: </span>
