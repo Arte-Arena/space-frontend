@@ -1,6 +1,7 @@
 import React from 'react';
 import { Drawer, Theme, useMediaQuery } from '@mui/material';
 import ChatListing from './ChatListing';
+import ChatListingTest from './ChatListingTest';
 
 interface chatType {
   isMobileSidebarOpen: boolean;
@@ -24,7 +25,7 @@ const ChatSidebar = ({ isMobileSidebarOpen, onSidebarClose }: chatType) => {
         [`& .MuiDrawer-paper`]: { position: 'relative' },
       }}
     >
-      <ChatListing />
+      <ChatListingTest />
     </Drawer>
   );
 };
