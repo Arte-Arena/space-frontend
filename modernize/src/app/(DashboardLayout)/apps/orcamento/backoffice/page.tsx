@@ -90,6 +90,22 @@ interface Orcamento {
     client_name: string | null;
     client_email: string | null;
     has_uniform: boolean;
+    contact: {
+      person_type: string;
+      company_name?: string;
+      cnpj?: string;
+      state_registration?: string;
+      cpf?: string;
+      identity_card?: string;
+      cell_phone?: string;
+      zip_code?: string;
+      address?: string;
+      number?: string;
+      complement?: string;
+      neighborhood?: string;
+      city?: string;
+      state?: string;
+    };
   };
 }
 
@@ -849,6 +865,103 @@ const OrcamentoBackofficeScreen = () => {
                                         <Typography variant="body2">
                                           <strong>Nome:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.client_name}
                                         </Typography>
+                                      )}
+                                      
+                                      {currentOrcamentoId && dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact && (
+                                        <Box sx={{ mt: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2 }}>
+                                          <Typography variant="subtitle2" gutterBottom>
+                                            Informações de Contato
+                                          </Typography>
+                                          
+                                          {/* Person Type */}
+                                          {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type && (
+                                            <Typography variant="body2">
+                                              <strong>Tipo de Pessoa:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'pf' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                                            </Typography>
+                                          )}
+                                          
+                                          {/* Company Information - only displayed for PJ */}
+                                          {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'pj' && (
+                                            <>
+                                              {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.company_name && (
+                                                <Typography variant="body2">
+                                                  <strong>Nome da Empresa:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.company_name}
+                                                </Typography>
+                                              )}
+                                              {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.cnpj && (
+                                                <Typography variant="body2">
+                                                  <strong>CNPJ:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.cnpj}
+                                                </Typography>
+                                              )}
+                                              {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.state_registration && (
+                                                <Typography variant="body2">
+                                                  <strong>Inscrição Estadual:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.state_registration}
+                                                </Typography>
+                                              )}
+                                            </>
+                                          )}
+                                          
+                                          {/* PF Information */}
+                                          {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'pf' && (
+                                            <>
+                                              {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.cpf && (
+                                                <Typography variant="body2">
+                                                  <strong>CPF:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.cpf}
+                                                </Typography>
+                                              )}
+                                              {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.identity_card && (
+                                                <Typography variant="body2">
+                                                  <strong>RG:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.identity_card}
+                                                </Typography>
+                                              )}
+                                            </>
+                                          )}
+                                          
+                                          {/* Contact Information */}
+                                          {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.cell_phone && (
+                                            <Typography variant="body2">
+                                              <strong>Telefone:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.cell_phone}
+                                            </Typography>
+                                          )}
+                                          
+                                          {/* Address Information */}
+                                          <Box sx={{ mt: 1 }}>
+                                            <Typography variant="subtitle2" gutterBottom>
+                                              Endereço
+                                            </Typography>
+                                            
+                                            {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.zip_code && (
+                                              <Typography variant="body2">
+                                                <strong>CEP:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.zip_code}
+                                              </Typography>
+                                            )}
+                                            
+                                            {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.address && (
+                                              <Typography variant="body2">
+                                                <strong>Endereço:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.address}
+                                                {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.number && `, ${dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.number}`}
+                                                {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.complement && ` - ${dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.complement}`}
+                                              </Typography>
+                                            )}
+                                            
+                                            {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.neighborhood && (
+                                              <Typography variant="body2">
+                                                <strong>Bairro:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.neighborhood}
+                                              </Typography>
+                                            )}
+                                            
+                                            {(dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.city || 
+                                             dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.state) && (
+                                              <Typography variant="body2">
+                                                <strong>Cidade/Estado:</strong> 
+                                                {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.city}
+                                                {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.city && 
+                                                 dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.state && ' - '}
+                                                {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.state}
+                                              </Typography>
+                                            )}
+                                          </Box>
+                                        </Box>
                                       )}
                                     </Box>
                                   ) : (
