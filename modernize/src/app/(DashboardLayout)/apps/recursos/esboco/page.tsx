@@ -11,6 +11,8 @@ import {
 import { IconFileTypePng } from '@tabler/icons-react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import esbocoFormatarPNG from './components/esbocoFormatarPNG';
+import PageContainer from '@/app/components/container/PageContainer';
+import ParentCard from '@/app/components/shared/ParentCard';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira",
@@ -18,7 +20,7 @@ const produtos = [
   "Bolachão", "Braçadeira", "Cachecol", "Camisão*", "Caneca Alumínio*", "Caneca Porcelana*",
   "Canga*", "Capa de Barbeiro", "Chinelo de Dedo", "Chinelo Slide", "Chaveiro", "Estandarte",
   "Faixa de Campeão*", "Faixa de Mão", "Flâmula", "Mouse Pad*", "Sacochila", "Shorts Praia",
-  "Shorts Doll", "Tirante", "Toalha", "Uniforme", "Windbanner"
+  "Shorts Doll", "Tirante", "Toalha", "Windbanner"
 ];
 
 const GeradorDeEsbocoScreen = () => {
@@ -143,23 +145,20 @@ const GeradorDeEsbocoScreen = () => {
     });
   };
 
-
-
   const BCrumb = [
     {
       to: "/",
       title: "Home",
     },
     {
-      to: "/apps/produção/",
+      to: "/apps/producao/arte-final",
       title: "produção",
     },
     {
-      to: "/apps/produção/pedidos",
+      to: "/apps/producao/pedidos",
       title: "Pedidos",
     },
   ];
-
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -174,221 +173,228 @@ const GeradorDeEsbocoScreen = () => {
   const isBandeira = form.produto.toLowerCase().includes('bandeira');
 
   return (
-    <Box p={3}>
-      <Breadcrumb title="Produção / Arte - Final" items={BCrumb} />
-      <Typography variant="h5" mb={2}>Criação de esboços</Typography>
-      {/* Linha 1 */}
-      <Grid container spacing={2} mb={2}>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="ID"
-            name="id"
-            fullWidth
-            value={form.id}
-            onChange={handleChange}
-          />
-        </Grid>
+    <PageContainer title="Esboço / Produtos" description="Tela de Esboço dos Produtos | Design">
+      <Breadcrumb title="Design / Esboço - Produtos" items={BCrumb} />
+      <ParentCard title="Esboço">
+        <Box p={4} maxWidth={'85%'} mx="auto">
 
-        <Grid item xs={12} sm={4}>
-          <FormControl fullWidth>
-            <InputLabel>Produto</InputLabel>
-            <Select
-              name="produto"
-              value={form.produto}
-              onChange={(e) => setForm(prev => ({ ...prev, produto: e.target.value }))}
-              label="Produto"
-            >
-              {produtos.map((produto, index) => (
-                <MenuItem key={index} value={produto}>
-                  {produto}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
+          <Typography sx={{ mb: "2em" }} variant="h4" fontWeight="bold" color="orange" gutterBottom>
+            ESBOÇO <span style={{ color: 'white' }}>PROFISSIONAL</span>
+          </Typography>
 
-        <Grid item xs={12} sm={4}>
-          <FormControl fullWidth>
-            <InputLabel>Material</InputLabel>
-            <Select
-              name="material"
-              value={form.material}
-              label="Material"
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, material: e.target.value }))
-              }
-            >
-              {allMateriais.map((material) => (
-                <MenuItem key={material} value={material}>
-                  <ListItemText primary={material} />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-      </Grid>
-
-      {/* Linha 2 */}
-      <Grid container spacing={2} mb={2}>
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Altura (cm)"
-            name="altura"
-            type="number"
-            fullWidth
-            value={form.altura}
-            onChange={handleChange}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Largura (cm)"
-            name="largura"
-            type="number"
-            fullWidth
-            value={form.largura}
-            onChange={handleChange}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Composição"
-            name="composicao"
-            fullWidth
-            value={form.composicao}
-            onChange={handleChange}
-          />
-        </Grid>
-      </Grid>
-
-      {/* Linha 3 */}
-      <Grid container spacing={2} mb={2}>
-        <Grid item xs={12} sm={3}>
-          <TextField
-            label="Opção"
-            name="opcao"
-            fullWidth
-            value={form.opcao}
-            onChange={handleChange}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={3}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="bordaMastro"
-                checked={form.bordaMastro}
-                onChange={handleCheckboxChange}
+          <Grid container spacing={2} mb={2}>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                label="ID"
+                name="id"
+                fullWidth
+                value={form.id}
+                onChange={handleChange}
               />
-            }
-            label="Borda Mastro"
-          />
-        </Grid>
+            </Grid>
 
-        {isBandeira && (
-          <Grid item xs={12} sm={3}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Grid item xs={12} sm={4}>
+              <FormControl fullWidth>
+                <InputLabel>Produto</InputLabel>
+                <Select
+                  name="produto"
+                  value={form.produto}
+                  onChange={(e) => setForm(prev => ({ ...prev, produto: e.target.value }))}
+                  label="Produto"
+                >
+                  {produtos.map((produto, index) => (
+                    <MenuItem key={index} value={produto}>
+                      {produto}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <FormControl fullWidth>
+                <InputLabel>Material</InputLabel>
+                <Select
+                  name="material"
+                  value={form.material}
+                  label="Material"
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, material: e.target.value }))
+                  }
+                >
+                  {allMateriais.map((material) => (
+                    <MenuItem key={material} value={material}>
+                      <ListItemText primary={material} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+
+          {/* Linha 2 */}
+          <Grid container spacing={2} mb={2}>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                label="Altura (cm)"
+                name="altura"
+                type="number"
+                fullWidth
+                value={form.altura}
+                onChange={handleChange}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <TextField
+                label="Largura (cm)"
+                name="largura"
+                type="number"
+                fullWidth
+                value={form.largura}
+                onChange={handleChange}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <TextField
+                label="Composição"
+                name="composicao"
+                fullWidth
+                value={form.composicao}
+                onChange={handleChange}
+              />
+            </Grid>
+          </Grid>
+
+          {/* Linha 3 */}
+          <Grid container spacing={2} mb={2}>
+            <Grid item xs={12} sm={3}>
+              <TextField
+                label="Opção"
+                name="opcao"
+                fullWidth
+                value={form.opcao}
+                onChange={handleChange}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={3}>
               <FormControlLabel
                 control={
                   <Checkbox
-                    name="ilhoses"
-                    checked={form.ilhoses}
+                    name="bordaMastro"
+                    checked={form.bordaMastro}
                     onChange={handleCheckboxChange}
                   />
                 }
-                label="Ilhóses"
+                label="Borda Mastro"
               />
-              {form.ilhoses && (
-                <TextField
-                  label="Quantidade"
-                  name="qtdIlhoses"
-                  type="number"
-                  size="small"
-                  sx={{ 
-                    width: '100px', 
-                    marginLeft: '10px',
-                    'input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button': {
-                      WebkitAppearance: 'none',
-                      margin: 0
-                    },
-                    'input[type=number]': {
-                      MozAppearance: 'textfield'
+            </Grid>
+
+            {isBandeira && (
+              <Grid item xs={12} sm={3}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="ilhoses"
+                        checked={form.ilhoses}
+                        onChange={handleCheckboxChange}
+                      />
                     }
-                  }}
-                  InputProps={{ inputProps: { min: 0, step: 1 } }}
-                  value={form.qtdIlhoses}
-                  onChange={handleChange}
-                />
-              )}
-            </div>
-          </Grid>
-        )}
+                    label="Ilhóses"
+                  />
+                  {form.ilhoses && (
+                    <TextField
+                      label="Quantidade"
+                      name="qtdIlhoses"
+                      type="number"
+                      size="small"
+                      sx={{
+                        width: '100px',
+                        marginLeft: '10px',
+                        'input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button': {
+                          WebkitAppearance: 'none',
+                          margin: 0
+                        },
+                        'input[type=number]': {
+                          MozAppearance: 'textfield'
+                        }
+                      }}
+                      InputProps={{ inputProps: { min: 0, step: 1 } }}
+                      value={form.qtdIlhoses}
+                      onChange={handleChange}
+                    />
+                  )}
+                </div>
+              </Grid>
+            )}
 
-        <Grid item xs={12} sm={3}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="duplaFace"
-                checked={form.duplaFace}
-                onChange={handleCheckboxChange}
+            <Grid item xs={12} sm={3}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="duplaFace"
+                    checked={form.duplaFace}
+                    onChange={handleCheckboxChange}
+                  />
+                }
+                label="Dupla Face"
               />
-            }
-            label="Dupla Face"
-          />
-        </Grid>
-      </Grid>
-      <Box display="flex" alignItems="center" gap={2} mt={3}>
-        <Button
-          variant="outlined"
-          color="primary"
-          onClick={handleExportToPNG}
-          startIcon={<IconFileTypePng />}
-        >
-          Exportar para PNG
-        </Button>
-      </Box>
+            </Grid>
+          </Grid>
+          <Box display="flex" alignItems="center" gap={2} mt={3}>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={handleExportToPNG}
+              startIcon={<IconFileTypePng />}
+            >
+              Exportar para PNG
+            </Button>
+          </Box>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-        sx={{
-          '& .MuiPaper-root': {
-            borderRadius: '12px',
-            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.15)',
-            backdropFilter: 'blur(4px)',
-            backgroundColor: snackbar.severity === 'success'
-              ? 'rgba(46, 125, 50, 0.9)'
-              : 'rgba(211, 47, 47, 0.9)'
-          }
-        }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          variant="filled"
-          icon={false}
-          sx={{
-            width: '100%',
-            alignItems: 'center',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            color: 'common.white',
-            '& .MuiAlert-message': {
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
-            }
-          }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={6000}
+            onClose={handleCloseSnackbar}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            sx={{
+              '& .MuiPaper-root': {
+                borderRadius: '12px',
+                boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.15)',
+                backdropFilter: 'blur(4px)',
+                backgroundColor: snackbar.severity === 'success'
+                  ? 'rgba(46, 125, 50, 0.9)'
+                  : 'rgba(211, 47, 47, 0.9)'
+              }
+            }}
+          >
+            <Alert
+              onClose={handleCloseSnackbar}
+              severity={snackbar.severity}
+              variant="filled"
+              icon={false}
+              sx={{
+                width: '100%',
+                alignItems: 'center',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: 'common.white',
+                '& .MuiAlert-message': {
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }
+              }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
+        </Box>
+      </ParentCard>
+    </PageContainer>
   );
 }
 
