@@ -881,7 +881,7 @@ const OrcamentoBackofficeScreen = () => {
                                           )}
                                           
                                           {/* Company Information - only displayed for PJ */}
-                                          {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'pj' && (
+                                          {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'J' && (
                                             <>
                                               {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.company_name && (
                                                 <Typography variant="body2">
