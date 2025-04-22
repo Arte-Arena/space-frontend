@@ -50,7 +50,7 @@ const VendasRelatoriosOrcamentosPorDataComponent = () => {
   useEffect(() => {
     if (!data || !Array.isArray(data.totalOrcamentos)) return;
 
-    console.log("Dados brutos recebidos:", data);
+    // console.log("Dados brutos recebidos:", data);
 
     // Ordenar os dados por data
     const sortedData = [...data.totalOrcamentos].sort((a, b) =>

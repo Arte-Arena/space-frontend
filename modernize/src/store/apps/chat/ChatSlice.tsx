@@ -1,70 +1,94 @@
-import axios from '../../../utils/axios';
-import { createSlice } from '@reduxjs/toolkit';
-import { AppDispatch } from '../../store';
-import { uniqueId } from 'lodash';
-import { sub } from 'date-fns';
+// src/store/apps/chat/ChatSlice.tsx
+import axios from '../../../utils/axios'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import type { AppDispatch } from '../../store'
+import { uniqueId } from 'lodash'
+import { sub } from 'date-fns'
 
-const API_URL = '/api/data/chat/ChatData';
+// Importa tipo e funcão de mapeamento que você definiu em chat.ts
+import type { ChatsType, OctaChatApi } from '@/app/(DashboardLayout)/types/apps/chat'
+import { mapChat } from '@/app/(DashboardLayout)/types/apps/chat'
 
-interface StateType {
-  chats: any[];
-  chatContent: number;
-  chatSearch: string;
+/** Estado local do slice */
+interface ChatState {
+  chats: ChatsType[]
+  chatContent: string
+  chatSearch: string
 }
 
-const initialState = {
+const initialState: ChatState = {
   chats: [],
-  chatContent: 1,
+  chatContent: '',
   chatSearch: '',
-};
+}
 
-export const ChatSlice = createSlice({
+const chatSlice = createSlice({
   name: 'chat',
   initialState,
   reducers: {
-    getChats: (state, action) => {
-      state.chats = action.payload;
+    /** seta a lista de chats no estado */
+    getChats(state, action: PayloadAction<ChatsType[]>) {
+      state.chats = action.payload
     },
-    SearchChat: (state, action) => {
-      state.chatSearch = action.payload;
+    /** filtra via busca */
+    SearchChat(state, action: PayloadAction<string>) {
+      state.chatSearch = action.payload
     },
-    SelectChat: (state: StateType, action) => {
-      state.chatContent = action.payload;
+    /** seleciona qual chat está aberto */
+    SelectChat(state, action: PayloadAction<string>) {
+      state.chatContent = action.payload
     },
-    sendMsg: (state: StateType, action) => {
-      const conversation = action.payload;
-      const { id, msg } = conversation;
-
+    /** adiciona mensagem — revisado pra usar o modelo correto de ChatsType */
+    sendMsg(
+      state,
+      action: PayloadAction<{ id: string | number; msg: string }>
+    ) {
+      const { id, msg } = action.payload
       const newMessage = {
-        id: id,
-        msg: msg,
+        id: uniqueId(),
+        msg,
         type: 'text',
-        attachments: [],
-        createdAt: sub(new Date(), { seconds: 1 }),
-        senderId: uniqueId(),
-      };
-
+        attachment: [],                // conforme seu MessageType
+        createdAt: sub(new Date(), { seconds: 1 }).toISOString(),
+        senderId: id,
+      }
       state.chats = state.chats.map((chat) =>
-        chat.id === action.payload.id
-          ? {
-              ...chat,
-              ...chat.messages.push(newMessage),
-            }
-          : chat,
-      );
+        chat.id === id
+          ? { ...chat, messages: [...chat.messages, newMessage] }
+          : chat
+      )
     },
   },
-});
+})
 
-export const { SearchChat, getChats, sendMsg, SelectChat } = ChatSlice.actions;
+export const { getChats, SearchChat, SelectChat, sendMsg } = chatSlice.actions
 
+/**
+ * Thunk que faz o fetch real dos chats no Octadesk, mapeia e dispara para o estado
+ */
 export const fetchChats = () => async (dispatch: AppDispatch) => {
   try {
-    const response = await axios.get(`${API_URL}`);
-    dispatch(getChats(response.data));
-  } catch (err: any) {
-    throw new Error(err);
-  }
-};
+    const accessToken = localStorage.getItem('accessToken')
+    if (!accessToken) {
+      throw new Error('Access token is missing')
+    }
 
-export default ChatSlice.reducer;
+    const url = `${process.env.NEXT_PUBLIC_API}/api/octa/get-all-octa-chats`
+    const response = await axios.get<OctaChatApi[]>(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    const mappedChats = response.data.map(mapChat)
+    dispatch(getChats(mappedChats))
+    if (mappedChats.length > 0) {
+      dispatch(SelectChat(String(mappedChats[0].id)))
+    }
+  } catch (err: any) {
+    console.error('Erro ao buscar chats:', err)
+  }
+}
+
+export default chatSlice.reducer
