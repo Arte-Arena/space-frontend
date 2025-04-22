@@ -36,7 +36,8 @@ import {
   IconRoad,
   IconIroning,
   IconCut,
-  IconPalette
+  IconPalette,
+  IconCards
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -277,6 +278,26 @@ const getMenuItems = (): MenuitemsType[] => {
           icon: IconBrush,
           href: "/apps/producao/arte-final",
 
+        },
+        {
+          id: uniqueId(),
+          title: "Recursos",
+          icon: IconCards,
+          children: [
+            {
+              id: uniqueId(),
+              title: "Esboço",
+              icon: IconEye,
+              href: "/apps/recursos/esboco",
+            },
+            // {
+            //   id: uniqueId(),
+            //   title: "",
+            //   icon: IconDeviceFloppy,
+            //   href: "#",
+            //   onClick: createCopyLinkHandler("/apps/recursos/esboco")
+            // },
+          ]
         }
       ]
     },

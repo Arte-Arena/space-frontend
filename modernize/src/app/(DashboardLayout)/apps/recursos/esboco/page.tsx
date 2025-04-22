@@ -8,7 +8,7 @@ import {
   Alert,
   Snackbar
 } from '@mui/material';
-import { IconFileTypePdf, IconFileTypePng } from '@tabler/icons-react';
+import { IconFileTypePng } from '@tabler/icons-react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import esbocoFormatarPNG from './components/esbocoFormatarPNG';
 
@@ -134,11 +134,11 @@ const GeradorDeEsbocoScreen = () => {
       return;
     }
 
-    // ✅ Se tudo estiver certo: gera o PDF e exibe snackbar de sucesso
+    // ✅ Se tudo estiver certo: gera o PNG e exibe snackbar de sucesso
     esbocoFormatarPNG(form);
     setSnackbar({
       open: true,
-      message: 'PDF gerado com sucesso!',
+      message: 'PNG gerado com sucesso!',
       severity: 'success'
     });
   };
