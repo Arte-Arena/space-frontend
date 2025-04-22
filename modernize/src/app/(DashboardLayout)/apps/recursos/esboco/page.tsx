@@ -8,9 +8,9 @@ import {
   Alert,
   Snackbar
 } from '@mui/material';
-import { IconFileTypePdf } from '@tabler/icons-react';
-import esbocoFormatarPDF from './components/esbocoFormatarPDF';
+import { IconFileTypePng } from '@tabler/icons-react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
+import esbocoFormatarPNG from './components/esbocoFormatarPNG';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira",
@@ -70,7 +70,7 @@ const GeradorDeEsbocoScreen = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleExportToPDF = () => {
+  const handleExportToPNG = () => {
     if (!form.id.trim()) {
       setSnackbar({
         open: true,
@@ -134,11 +134,11 @@ const GeradorDeEsbocoScreen = () => {
       return;
     }
 
-    // ✅ Se tudo estiver certo: gera o PDF e exibe snackbar de sucesso
-    esbocoFormatarPDF(form);
+    // ✅ Se tudo estiver certo: gera o PNG e exibe snackbar de sucesso
+    esbocoFormatarPNG(form);
     setSnackbar({
       open: true,
-      message: 'PDF gerado com sucesso!',
+      message: 'PNG gerado com sucesso!',
       severity: 'success'
     });
   };
@@ -340,14 +340,14 @@ const GeradorDeEsbocoScreen = () => {
           />
         </Grid>
       </Grid>
-      <Box textAlign="start" mt={3}>
+      <Box display="flex" alignItems="center" gap={2} mt={3}>
         <Button
           variant="outlined"
           color="primary"
-          onClick={handleExportToPDF}
-          startIcon={<IconFileTypePdf />}
+          onClick={handleExportToPNG}
+          startIcon={<IconFileTypePng />}
         >
-          Exportar para PDF
+          Exportar para PNG
         </Button>
       </Box>
 
