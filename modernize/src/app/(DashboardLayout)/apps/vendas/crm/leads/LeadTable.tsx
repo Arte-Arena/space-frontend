@@ -242,7 +242,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                   <TableCell>
                     <Box sx={{ display: "flex", alignItems: "center" }}>
                       <Typography variant="body1">
-                        {lead.nome}
+                        {lead.nome || "-"}
                         {lead.jaCadastrado && (
                           <Chip
                             label="Já cadastrado"
@@ -254,13 +254,15 @@ const LeadTable: React.FC<LeadTableProps> = ({
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell>{lead.email}</TableCell>
-                  <TableCell>{lead.telefone}</TableCell>
-                  <TableCell>{lead.cpfCnpj}</TableCell>
+                  <TableCell>{lead.email || "-"}</TableCell>
+                  <TableCell>{lead.telefone || "-"}</TableCell>
+                  <TableCell>{lead.cpfCnpj || "-"}</TableCell>
                   <TableCell>
-                    {format(new Date(lead.dataCriacao), "dd/MM/yyyy HH:mm", {
-                      locale: ptBR,
-                    })}
+                    {lead.dataCriacao
+                      ? format(new Date(lead.dataCriacao), "dd/MM/yyyy HH:mm", {
+                          locale: ptBR,
+                        })
+                      : "-"}
                   </TableCell>
                   <TableCell>
                     <Chip
@@ -272,7 +274,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                       }}
                     />
                   </TableCell>
-                  <TableCell>{lead.origem}</TableCell>
+                  <TableCell>{lead.origem || "-"}</TableCell>
                   <TableCell>{lead.idOcta || "-"}</TableCell>
                 </TableRow>
                 <TableRow>
@@ -295,28 +297,39 @@ const LeadTable: React.FC<LeadTableProps> = ({
                             <Typography variant="subtitle1" gutterBottom>
                               Endereço
                             </Typography>
-                            <Typography variant="body2">
-                              {lead.endereco.rua}, {lead.endereco.numero}
-                              {lead.endereco.complemento &&
-                                `, ${lead.endereco.complemento}`}
-                            </Typography>
-                            <Typography variant="body2">
-                              {lead.endereco.bairro}, {lead.endereco.cidade} -{" "}
-                              {lead.endereco.estado}
-                            </Typography>
-                            <Typography variant="body2">
-                              CEP: {lead.endereco.cep}
-                            </Typography>
+                            <Box sx={{ mt: 1 }}>
+                              <Typography variant="body1">
+                                Rua: {lead.endereco?.rua || "-"}
+                              </Typography>
+                              <Typography variant="body1">
+                                Número: {lead.endereco?.numero || "-"}
+                              </Typography>
+                              {lead.endereco?.complemento && (
+                                <Typography variant="body1">
+                                  Complemento: {lead.endereco?.complemento}
+                                </Typography>
+                              )}
+                              <Typography variant="body1">
+                                Bairro: {lead.endereco?.bairro || "-"}
+                              </Typography>
+                              <Typography variant="body1">
+                                Cidade: {lead.endereco?.cidade || "-"}
+                              </Typography>
+                              <Typography variant="body1">
+                                Estado: {lead.endereco?.estado || "-"}
+                              </Typography>
+                              <Typography variant="body1">
+                                CEP: {lead.endereco?.cep || "-"}
+                              </Typography>
+                            </Box>
                           </Box>
                         )}
 
                         {lead.observacoes && (
-                          <Box sx={{ mt: 2 }}>
-                            <Typography variant="subtitle1" gutterBottom>
-                              Observações
-                            </Typography>
-                            <Typography variant="body2">
-                              {lead.observacoes}
+                          <Box sx={{ mt: 3 }}>
+                            <Typography variant="h6">Observações</Typography>
+                            <Typography variant="body1">
+                              {lead.observacoes || "-"}
                             </Typography>
                           </Box>
                         )}

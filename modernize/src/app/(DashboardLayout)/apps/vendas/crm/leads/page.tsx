@@ -56,14 +56,13 @@ const mockLeads = [
   {
     id: "3",
     nome: "Carlos Santos",
-    email: "carlos.santos@email.com",
+    email: "",
     telefone: "(11) 91234-5678",
     cpfCnpj: "111.222.333-44",
     dataCriacao: "2023-10-17T09:15:00Z",
     status: "Convertido",
     jaCadastrado: false,
     origem: "Redes Sociais",
-    idOcta: "OCT-4567",
     endereco: {
       rua: "Rua Augusta",
       numero: "789",
@@ -85,21 +84,13 @@ const mockLeads = [
     jaCadastrado: false,
     origem: "Google Ads",
     idOcta: "OCT-3214",
-    endereco: {
-      rua: "Rua Oscar Freire",
-      numero: "456",
-      bairro: "Jardins",
-      cidade: "São Paulo",
-      estado: "SP",
-      cep: "01426-000",
-    },
     observacoes: "Cliente optou por concorrente devido ao preço.",
   },
   {
     id: "5",
     nome: "Roberto Ferreira",
     email: "roberto.ferreira@email.com",
-    telefone: "(11) 99999-8888",
+    telefone: "",
     cpfCnpj: "222.333.444-55",
     dataCriacao: "2023-10-19T11:30:00Z",
     status: "Novo",
@@ -125,12 +116,10 @@ const mockLeads = [
     dataCriacao: "2023-10-19T11:30:00Z",
     status: "Aprovado",
     jaCadastrado: true,
-    origem: "Feira",
     idOcta: "OCT-6543",
     endereco: {
       rua: "Rua Haddock Lobo",
       numero: "321",
-      complemento: "Sala 101",
       bairro: "Consolação",
       cidade: "São Paulo",
       estado: "SP",
@@ -194,7 +183,7 @@ function LeadsScreen() {
                     : "nome"
           ];
 
-        return value.toLowerCase().includes(searchTerm.toLowerCase());
+        return value && value.toLowerCase().includes(searchTerm.toLowerCase());
       });
 
       setSearchResults(filtered);
