@@ -9,7 +9,6 @@ import {
   Snackbar
 } from '@mui/material';
 import { IconFileTypePdf, IconFileTypePng } from '@tabler/icons-react';
-import esbocoFormatarPDF from './components/esbocoFormatarPDF';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import esbocoFormatarPNG from './components/esbocoFormatarPNG';
 
@@ -69,79 +68,6 @@ const GeradorDeEsbocoScreen = () => {
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
-  };
-
-  const handleExportToPDF = () => {
-    if (!form.id.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Informe o ID do pedido',
-        severity: 'error'
-      });
-      return;
-    }
-
-    if (!form.produto.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Informe o produto',
-        severity: 'error'
-      });
-      return;
-    }
-
-    if (!form.altura.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Informe a altura',
-        severity: 'error'
-      });
-      return;
-    }
-
-    if (!form.largura.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Informe a largura',
-        severity: 'error'
-      });
-      return;
-    }
-
-    if (form.ilhoses && !form.qtdIlhoses.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Informe a quantidade de ilhoses',
-        severity: 'error'
-      });
-      return;
-    }
-
-    if (form.bordaMastro && !form.composicao.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Informe a composição',
-        severity: 'error'
-      });
-      return;
-    }
-
-    if (!form.material.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Informe o material',
-        severity: 'error'
-      });
-      return;
-    }
-
-    // ✅ Se tudo estiver certo: gera o PDF e exibe snackbar de sucesso
-    esbocoFormatarPDF(form);
-    setSnackbar({
-      open: true,
-      message: 'PDF gerado com sucesso!',
-      severity: 'success'
-    });
   };
 
   const handleExportToPNG = () => {
@@ -415,15 +341,6 @@ const GeradorDeEsbocoScreen = () => {
         </Grid>
       </Grid>
       <Box display="flex" alignItems="center" gap={2} mt={3}>
-        <Button
-          variant="outlined"
-          color="primary"
-          onClick={handleExportToPDF}
-          startIcon={<IconFileTypePdf />}
-        >
-          Exportar para PDF
-        </Button>
-
         <Button
           variant="outlined"
           color="primary"
