@@ -91,7 +91,7 @@ interface Orcamento {
     client_email: string | null;
     has_uniform: boolean;
     contact: {
-      person_type: string;
+      person_type: 'F' | 'J';
       company_name?: string;
       cnpj?: string;
       state_registration?: string;
@@ -876,12 +876,12 @@ const OrcamentoBackofficeScreen = () => {
                                           {/* Person Type */}
                                           {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type && (
                                             <Typography variant="body2">
-                                              <strong>Tipo de Pessoa:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'pf' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                                              <strong>Tipo de Pessoa:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'F' ? 'Pessoa Física' : 'Pessoa Jurídica'}
                                             </Typography>
                                           )}
                                           
                                           {/* Company Information - only displayed for PJ */}
-                                          {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'pj' && (
+                                          {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'J' && (
                                             <>
                                               {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.company_name && (
                                                 <Typography variant="body2">
@@ -902,7 +902,7 @@ const OrcamentoBackofficeScreen = () => {
                                           )}
                                           
                                           {/* PF Information */}
-                                          {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'pf' && (
+                                          {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'F' && (
                                             <>
                                               {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.cpf && (
                                                 <Typography variant="body2">
