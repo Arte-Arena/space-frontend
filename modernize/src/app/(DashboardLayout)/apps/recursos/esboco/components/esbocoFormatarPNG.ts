@@ -98,8 +98,9 @@ const esbocoFormatarPNG = async (form: Esboco) => {
           }
   
           .logo {
-            width: 30px;
+            width: 120px;
             align-self: flex-end;
+            margin-bottom: 16px;
           }
   
           .info-box {
@@ -152,7 +153,7 @@ const esbocoFormatarPNG = async (form: Esboco) => {
           </div>
   
           <div class="direita">
-            <img class="logo" src="https://cdn-icons-png.flaticon.com/512/25/25311.png" alt="logo" />
+            <img class="logo" src="/images/logos/logo.png" alt="logo" />
             <div class="info-box">
               ${form.produto ? `<span class="label">PRODUTO:</span><span class="valor">${form.produto}</span>` : ''}
               ${form.altura && form.largura ? `<span class="label">DIMENSÕES:</span><span class="valor">${form.altura} x ${form.largura} M</span>` : ''}
