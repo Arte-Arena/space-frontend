@@ -39,6 +39,7 @@ import {
   IconPalette,
   IconCards
 } from "@tabler/icons-react";
+import { Icon } from "@mui/material";
 
 interface MenuitemsType {
   id?: string;
@@ -290,13 +291,12 @@ const getMenuItems = (): MenuitemsType[] => {
               icon: IconEye,
               href: "/apps/recursos/esboco",
             },
-            // {
-            //   id: uniqueId(),
-            //   title: "",
-            //   icon: IconDeviceFloppy,
-            //   href: "#",
-            //   onClick: createCopyLinkHandler("/apps/recursos/esboco")
-            // },
+            {
+              id: uniqueId(),
+              title: "uniforme",
+              icon: IconShirt,
+              href: "/apps/recursos/uniforme",
+            },
           ]
         }
       ]
