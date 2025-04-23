@@ -40,7 +40,6 @@ import {
   IconCards,
   IconExclamationCircle,
   IconUsers,
-  IconCards
 } from "@tabler/icons-react";
 import { Icon } from "@mui/material";
 
