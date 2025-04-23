@@ -37,7 +37,7 @@ import {
   Close as CloseIcon,
   HelpOutline as HelpOutlineIcon
 } from '@mui/icons-material';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // Opções para os selects
 const SETORES = [
@@ -104,11 +104,14 @@ const ErroForm = () => {
     console.error('Access token is missing');
     router.push('/auth/login');
   }
+
+  const searchParams = useSearchParams();
+  const numero_pedido = searchParams.get('numero_pedido');
   
   // handle submit
   const formik = useFormik({
     initialValues: {
-      numero_pedido: '',
+      numero_pedido: numero_pedido ?? '',
       setor: '',
       link_trello: '',
       detalhes: '',

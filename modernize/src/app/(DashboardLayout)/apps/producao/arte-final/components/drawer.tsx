@@ -1,12 +1,13 @@
 'use client'
 import React, { useEffect, useState } from "react";
-import { Drawer, Box, Typography, IconButton, Card, CardContent, Divider, Table, TableBody, TableRow, TableCell, TableHead, TextField, Button, Snackbar, Alert, AlertProps } from "@mui/material";
+import { Drawer, Box, Typography, IconButton, Card, CardContent, Divider, Table, TableBody, TableRow, TableCell, TableHead, TextField, Button, Snackbar, Alert, AlertProps, Tooltip, Icon } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { ArteFinal, Produto } from "./types";
 import { format } from "date-fns";
 import { useThemeMode } from "@/utils/useThemeMode";
 import trocarMedidaLinear from "./useTrocarMedidaLinear";
-import { IconCheck } from "@tabler/icons-react";
+import { IconCheck, IconExclamationCircle } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
 
 interface SidePanelProps {
   row: ArteFinal | null;
@@ -15,9 +16,10 @@ interface SidePanelProps {
   refetch: () => void;
 }
 
-const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, refetch}) => {
+const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, refetch }) => {
   const designers = localStorage.getItem('designers');
   const theme = useThemeMode();
+  const router = useRouter();
 
   const listaProdutos: Produto[] = row?.lista_produtos
     ? typeof row?.lista_produtos === "string"
@@ -125,19 +127,27 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
   const handleMedidaLinearChange = (produto: Produto, novaMedidaLinear: number) => {
     // Garante que o produto tenha um UID válido
     const produtoAtualizado = { ...produto, uid: produto.uid ?? produto.id };
-  
+
     // Atualiza o estado das medidas lineares
     setMedidasLineares((prevState) => ({
       ...prevState,
       [String(produtoAtualizado.uid)]: novaMedidaLinear,
     }));
-  
+
     // Atualiza o estado dos produtos
     setProdutos((prevProdutos) =>
       prevProdutos.map((p) =>
         p.uid === produtoAtualizado.uid ? { ...p, medida_linear: novaMedidaLinear } : p
       )
     );
+  };
+
+  const handleErrorPedido = () => {
+      const confirm = window.confirm('deseja um erro para o pedido ' + row?.numero_pedido + '?');
+      if (confirm) {
+        window.open(`../../apps/erros/add?numero_pedido=${row?.numero_pedido}`, '_blank');
+      }
+      return;
   };
 
   return (
@@ -152,7 +162,13 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer, r
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={0}>
         <Typography variant="h5" fontWeight="bold">
           Detalhes do Pedido N°{Number(row?.numero_pedido)}
+          <Tooltip title="Adicionar Erro ao pedido">
+            <IconButton onClick={handleErrorPedido} color="primary">
+              <IconExclamationCircle />
+            </IconButton>
+          </Tooltip>
         </Typography>
+
         <IconButton onClick={onCloseDrawer}>
           <CloseIcon />
         </IconButton>
