@@ -83,7 +83,9 @@ const CorteConferenciaScreen = () => {
   }
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
   const MoverProducaoRoles = [1, 11, 13];
+  const CorteRoles = [1, 11, 13, 15];
   const canShowButtonMover = roles.some(role => MoverProducaoRoles.includes(role));
+  const unableActions = roles.some(role => CorteRoles.includes(role));
 
   const { data: dataPedidos, isLoading: isLoadingPedidos, isError: isErrorPedidos, refetch } = useQuery<ApiResponsePedidosArteFinal>({
     queryKey: ['pedidos', searchQuery, page, rowsPerPage],
@@ -733,6 +735,7 @@ const CorteConferenciaScreen = () => {
                             align='center'
                           >
                             <CustomSelect
+                              disabled={!unableActions}
                               style={{
                                 height: '30px',
                                 textAlign: 'center',
@@ -767,6 +770,7 @@ const CorteConferenciaScreen = () => {
                             align='center'
                           >
                             <CustomSelect
+                              disabled={!unableActions}
                               style={{
                                 height: '30px',
                                 textAlign: 'center',

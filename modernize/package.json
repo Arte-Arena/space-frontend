@@ -46,6 +46,7 @@
     "framer-motion": "^10.16.4",
     "fslightbox-react": "^1.7.6",
     "gray-matter": "^4.0.3",
+    "html2canvas": "^1.4.1",
     "i18next": "^23.5.1",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^5.0.2",

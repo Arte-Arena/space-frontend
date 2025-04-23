@@ -95,7 +95,7 @@ const ChatListing = () => {
         </Badge>
         <Box>
           <Typography variant="body1" fontWeight={600}>
-          Mathew Anderson
+            Mathew Anderson
           </Typography>
           <Typography variant="body2">Designer</Typography>
         </Box>
@@ -160,7 +160,10 @@ const ChatListing = () => {
             chats.map((chat) => (
               <ListItemButton
                 key={chat.id}
-                onClick={() => dispatch(SelectChat(chat.id))}
+                onClick={() => {
+                  console.log('[ChatListing] 👉 Clicou em:', chat.id, chat.name)
+                  dispatch(SelectChat(String(chat.id)))
+                }}
                 sx={{
                   mb: 0.5,
                   py: 2,
@@ -175,10 +178,10 @@ const ChatListing = () => {
                       chat.status === "online"
                         ? "success"
                         : chat.status === "busy"
-                        ? "error"
-                        : chat.status === "away"
-                        ? "warning"
-                        : "secondary"
+                          ? "error"
+                          : chat.status === "away"
+                            ? "warning"
+                            : "secondary"
                     }
                     variant="dot"
                     anchorOrigin={{
@@ -206,13 +209,16 @@ const ChatListing = () => {
                   }}
                   sx={{ my: 0 }}
                 />
-                <Box sx={{ flexShrink: "0" }} mt={0.5}>
-                  <Typography variant="body2">
-                    {formatDistanceToNowStrict(new Date(lastActivity(chat)), {
-                      addSuffix: false,
-                    })}
-                  </Typography>
-                </Box>
+                {/* aqui só renderiza se existir a data */}
+                {chat.lastMessageDate && (
+                  <Box sx={{ flexShrink: 0 }} mt={0.5}>
+                    <Typography variant="body2">
+                      {formatDistanceToNowStrict(new Date(chat.lastMessageDate), {
+                        addSuffix: false,
+                      })}
+                    </Typography>
+                  </Box>
+                )}
               </ListItemButton>
             ))
           ) : (
