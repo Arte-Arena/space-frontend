@@ -68,6 +68,39 @@ const GeradorDeEsbocoScreen = () => {
     }
   }, [materiais]);
 
+  useEffect(() => {
+    const alturaM = parseFloat(form.altura || '0');
+    const larguraM = parseFloat(form.largura || '0');
+  
+    const maior = Math.max(alturaM, larguraM);
+    const menor = Math.min(alturaM, larguraM);
+  
+    if (form.ilhoses && alturaM && larguraM) {
+      const ilhosesMaior = (Math.ceil(maior) + 1) * 2;
+      const ilhosesMenor = Math.max(0, (Math.ceil(menor) - 2)) * 2;
+      const totalIlhoses = ilhosesMaior + ilhosesMenor + 2;
+  
+      setForm(prev => ({ ...prev, qtdIlhoses: totalIlhoses.toString() }));
+    }
+  }, [form.altura, form.largura, form.ilhoses]);
+
+
+  useEffect(() => {
+    const alturaM = parseFloat(form.altura || '0');
+    const larguraM = parseFloat(form.largura || '0');
+  
+    const maior = Math.max(alturaM, larguraM);
+    const menor = Math.min(alturaM, larguraM);
+  
+    // Cálculo da composição
+    if (menor >= 1.5) {
+      const partes = Math.ceil(menor / 1.5);
+      setForm(prev => ({ ...prev, composicao: `${partes} Partes` }));
+    } else {
+      setForm(prev => ({ ...prev, composicao: '' }));
+    }
+  }, [form.altura, form.largura]);
+
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
@@ -113,15 +146,6 @@ const GeradorDeEsbocoScreen = () => {
       setSnackbar({
         open: true,
         message: 'Informe a quantidade de ilhoses',
-        severity: 'error'
-      });
-      return;
-    }
-
-    if (form.bordaMastro && !form.composicao.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Informe a composição',
         severity: 'error'
       });
       return;
@@ -236,7 +260,7 @@ const GeradorDeEsbocoScreen = () => {
           <Grid container spacing={2} mb={2}>
             <Grid item xs={12} sm={4}>
               <TextField
-                label="Altura (cm)"
+                label="Altura (m)"
                 name="altura"
                 type="number"
                 fullWidth
@@ -247,7 +271,7 @@ const GeradorDeEsbocoScreen = () => {
 
             <Grid item xs={12} sm={4}>
               <TextField
-                label="Largura (cm)"
+                label="Largura (m)"
                 name="largura"
                 type="number"
                 fullWidth

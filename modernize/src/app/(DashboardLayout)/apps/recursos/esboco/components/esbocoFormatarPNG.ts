@@ -28,6 +28,17 @@ const esbocoFormatarPNG = async (form: Esboco) => {
   iframe.style.height = 'auto';
   document.body.appendChild(iframe);
 
+  const nome = form.produto.trim().replace('*', '');
+  const palavras = nome.split(' ');
+
+  if (palavras.length === 1) {
+    return `<div class="titulo"><span style="color: orange">${palavras[0]}</span></div>`;
+  }
+
+  const primeira = palavras[0];
+  const restante = palavras.slice(1).join(' ');
+
+
   const doc = iframe.contentDocument || iframe.contentWindow?.document;
   if (!doc) return;
 
@@ -81,7 +92,7 @@ const esbocoFormatarPNG = async (form: Esboco) => {
     }
 
     .titulo {
-      font-size: 30px;
+      font-size: 46px;
       font-weight: bold;
       color: #f7931e;
     }
@@ -99,17 +110,17 @@ const esbocoFormatarPNG = async (form: Esboco) => {
     .label {
       font-weight: bold;
       color: #f7931e;
-      font-size: 18px;
+      font-size: 26px;
     }
 
     .value {
-      font-size: 18px;
+      font-size: 26px;
       font-weight: bold;
       color: white;
     }
 
     .selo {
-      font-size: 14px;
+      font-size: 20px;
       text-transform: uppercase;
       display: flex;
       justify-content: space-between;
@@ -127,9 +138,9 @@ const esbocoFormatarPNG = async (form: Esboco) => {
 
     .opcao-destaque {
       position: absolute;
-      bottom: 80px; 
+      bottom: 30px; 
       right: 40px;
-      font-size: 28px; 
+      font-size: 40px; 
       font-weight: bold;
       color: #fdd835;
       text-transform: uppercase;
@@ -148,21 +159,22 @@ const esbocoFormatarPNG = async (form: Esboco) => {
   </div>
 
   <div class="footer">
-    <div class="titulo">Bandeira <span style="color: white">Personalizada</span></div>
+    ${form.produto ? 
+      `<div class="titulo">${primeira} <span style="color: white">${restante}</span></div>` 
+      : `<div class="titulo">${form.produto} </div>`
+    }
 
     <div class="info-grid">
-      ${form.produto ? `<div class="info-box"><div class="label">Produto:</div><div class="value">${form.produto}</div></div>` : ''}
       ${form.altura && form.largura ? `<div class="info-box"><div class="label">Dimensões:</div><div class="value">${form.altura} x ${form.largura} m</div></div>` : ''}
       ${form.material ? `<div class="info-box"><div class="label">Material:</div><div class="value">${form.material}</div></div>` : ''}
       ${form.composicao ? `<div class="info-box"><div class="label">Composição:</div><div class="value">${form.composicao}</div></div>` : ''}
       ${form.ilhoses && form.qtdIlhoses ? `<div class="info-box"><div class="label">Ilhóses:</div><div class="value">${form.qtdIlhoses}</div></div>` : ''}
-      ${form.produto?.toLowerCase().includes('bandeira') ? `<div class="info-box"><div class="label">Borda Mastro:</div><div class="value">BANDEIRA NÃO PRECISA DE BORDA MASTRO</div></div>` : (form.produto ? `<div class="info-box"><div class="label">Borda Mastro:</div><div class="value">${form.bordaMastro ? 'SIM' : 'NÃO'}</div></div>` : '')}
+      ${form.produto?.toLowerCase().includes('bandeira') ? `<div class="info-box"><div class="label">Borda Mastro:</div><div class="value">${form.bordaMastro ? 'SIM' : 'NÃO'}</div></div>` : ''}
       ${form.produto?.toLowerCase().includes('bandeira') ? `<div class="info-box"><div class="label">Dupla Face:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
     </div>
 
     <div class="selo" >
-      <span>• ETIQUETA PRODUTO AUTÊNTICO</span><br/>
-      <span>• SELO DE PRODUTO OFICIAL</span>
+      <span>• ID: ${form.id}</span>
     </div>
 
     <div class="opcao-destaque">OPÇÃO ${form.opcao}</div>
