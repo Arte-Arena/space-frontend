@@ -31,10 +31,6 @@ const esbocoFormatarPNG = async (form: Esboco) => {
   const nome = form.produto.trim().replace('*', '');
   const palavras = nome.split(' ');
 
-  if (palavras.length === 1) {
-    return `<div class="titulo"><span style="color: orange">${palavras[0]}</span></div>`;
-  }
-
   const primeira = palavras[0];
   const restante = palavras.slice(1).join(' ');
 
