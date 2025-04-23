@@ -3,130 +3,96 @@ import React, { useEffect, useState } from "react";
 import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
 import PageContainer from "@/app/components/container/PageContainer";
 import { useAuth } from "@/utils/useAuth";
-import { Box, Typography, Paper } from "@mui/material";
+import { Box, Typography, Paper, CircularProgress } from "@mui/material";
 import LeadSearch from "./LeadSearch";
 import LeadTable from "./LeadTable";
 import { logger } from "@/utils/logger";
 
 type SearchType = "nome" | "celular" | "cpf" | "cnpj" | "idOcta";
 
-const mockLeads = [
-  {
-    id: "1",
-    nome: "João Silva",
-    email: "joao.silva@email.com",
-    telefone: "(11) 98765-4321",
-    cpfCnpj: "123.456.789-00",
-    dataCriacao: "2023-10-15T10:30:00Z",
-    status: "Novo",
-    jaCadastrado: false,
-    origem: "Site",
-    idOcta: "OCT-7532",
-    endereco: {
-      rua: "Rua das Flores",
-      numero: "123",
-      bairro: "Centro",
-      cidade: "São Paulo",
-      estado: "SP",
-      cep: "01234-567",
-    },
-    observacoes: "Cliente interessado em produtos premium.",
-  },
-  {
-    id: "2",
-    nome: "Maria Oliveira",
-    email: "maria.oliveira@email.com",
-    telefone: "(11) 97654-3210",
-    cpfCnpj: "987.654.321-00",
-    dataCriacao: "2023-10-16T14:20:00Z",
-    status: "Em andamento",
-    jaCadastrado: true,
-    origem: "Indicação",
-    idOcta: "OCT-8921",
-    endereco: {
-      rua: "Avenida Paulista",
-      numero: "1000",
-      complemento: "Apto 501",
-      bairro: "Bela Vista",
-      cidade: "São Paulo",
-      estado: "SP",
-      cep: "01310-100",
-    },
-  },
-  {
-    id: "3",
-    nome: "Carlos Santos",
-    email: "",
-    telefone: "(11) 91234-5678",
-    cpfCnpj: "111.222.333-44",
-    dataCriacao: "2023-10-17T09:15:00Z",
-    status: "Convertido",
-    jaCadastrado: false,
-    origem: "Redes Sociais",
-    endereco: {
-      rua: "Rua Augusta",
-      numero: "789",
-      bairro: "Consolação",
-      cidade: "São Paulo",
-      estado: "SP",
-      cep: "01305-000",
-    },
-    observacoes: "Cliente fechou negócio após demonstração do produto.",
-  },
-  {
-    id: "4",
-    nome: "Ana Souza",
-    email: "ana.souza@email.com",
-    telefone: "(11) 98888-7777",
-    cpfCnpj: "444.555.666-77",
-    dataCriacao: "2023-10-18T16:45:00Z",
-    status: "Perdido",
-    jaCadastrado: false,
-    origem: "Google Ads",
-    idOcta: "OCT-3214",
-    observacoes: "Cliente optou por concorrente devido ao preço.",
-  },
-  {
-    id: "5",
-    nome: "Roberto Ferreira",
-    email: "roberto.ferreira@email.com",
-    telefone: "",
-    cpfCnpj: "222.333.444-55",
-    dataCriacao: "2023-10-19T11:30:00Z",
-    status: "Novo",
-    jaCadastrado: true,
-    origem: "Feira",
-    idOcta: "OCT-9876",
-    endereco: {
-      rua: "Rua Haddock Lobo",
-      numero: "321",
-      complemento: "Sala 101",
-      bairro: "Consolação",
-      cidade: "São Paulo",
-      estado: "SP",
-      cep: "01414-000",
-    },
-  },
-  {
-    id: "6",
-    nome: "Roberta Ferreira",
-    email: "roberta.ferreira@email.com",
-    telefone: "(11) 99999-8888",
-    cpfCnpj: "222.333.444-55",
-    dataCriacao: "2023-10-19T11:30:00Z",
-    status: "Aprovado",
-    jaCadastrado: true,
-    idOcta: "OCT-6543",
-    endereco: {
-      rua: "Rua Haddock Lobo",
-      numero: "321",
-      bairro: "Consolação",
-      cidade: "São Paulo",
-      estado: "SP",
-      cep: "01414-000",
-    },
-  },
-];
+type Lead = {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string;
+  cpfCnpj?: string;
+  dataCriacao: string;
+  status: string;
+  jaCadastrado: boolean;
+  origem: string;
+  idOcta?: string;
+  endereco?: {
+    rua: string;
+    numero: string;
+    complemento?: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
+    cep: string;
+  };
+  observacoes?: string;
+  client_info?: {
+    client_id: string;
+    client_name: string;
+    client_email: string;
+    has_uniform: boolean;
+    contact: {
+      person_type: string;
+      identity_card: string;
+      cpf: string;
+      cell_phone: string;
+      zip_code: string;
+      address: string;
+      number: string;
+      complement: string;
+      neighborhood: string;
+      city: string;
+      state: string;
+      company_name: string;
+      cnpj: string;
+      state_registration: string;
+    };
+  };
+};
+
+interface ApiResponse {
+  data: {
+    id: string;
+    nome: string;
+    telefone: string;
+    email: string;
+    origem: string;
+    criado_em: string;
+    existe_em_orcamento: boolean;
+    client_info: {
+      client_id: string;
+      client_name: string;
+      client_email: string;
+      has_uniform: boolean;
+      contact: {
+        person_type: string;
+        identity_card: string;
+        cpf: string;
+        cell_phone: string;
+        zip_code: string;
+        address: string;
+        number: string;
+        complement: string;
+        neighborhood: string;
+        city: string;
+        state: string;
+        company_name: string;
+        cnpj: string;
+        state_registration: string;
+      };
+    } | null;
+  }[];
+  pagination: {
+    current_page: number;
+    total_pages: number;
+    total_items: number;
+  };
+}
 
 const BCrumb = [
   {
@@ -144,61 +110,128 @@ const BCrumb = [
 
 function LeadsScreen() {
   const isLoggedIn = useAuth();
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<Lead[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [leads, setLeads] = useState(mockLeads);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchType, setSearchType] = useState<SearchType>("nome");
   const [isLoadingLeads, setIsLoadingLeads] = useState(false);
-
   const [page, setPage] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
   const rowsPerPage = 25;
 
   useEffect(() => {
     if (!isLoggedIn) return;
-  }, [isLoggedIn]);
+    fetchLeads();
+  }, [isLoggedIn, page]);
+
+  const fetchLeads = async (search = "", searchType: SearchType = "nome") => {
+    setIsLoadingLeads(true);
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const url = new URL(
+        `${process.env.NEXT_PUBLIC_API}/api/vendas/crm/leads`,
+      );
+
+      url.searchParams.append("page", (page + 1).toString());
+      url.searchParams.append("pageSize", rowsPerPage.toString());
+
+      if (search) {
+        url.searchParams.append("search", search);
+        url.searchParams.append("searchType", searchType);
+      }
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result: ApiResponse = await response.json();
+
+      const transformedLeads = result.data.map((item) => {
+        const hasOrcamento = item.existe_em_orcamento;
+        const clientInfo = item.client_info;
+
+        const lead: Lead = {
+          id: item.id,
+          nome: item.nome,
+          email: item.email,
+          telefone: item.telefone,
+          dataCriacao: item.criado_em,
+          status: hasOrcamento ? "Aprovado" : "Novo",
+          jaCadastrado: hasOrcamento,
+          origem: item.origem || "Desconhecida",
+          idOcta: item.id,
+        };
+
+        if (clientInfo) {
+          lead.cpfCnpj =
+            clientInfo.contact.person_type === "F"
+              ? clientInfo.contact.cpf
+              : clientInfo.contact.cnpj;
+
+          lead.endereco = {
+            rua: clientInfo.contact.address,
+            numero: clientInfo.contact.number,
+            complemento: clientInfo.contact.complement,
+            bairro: clientInfo.contact.neighborhood,
+            cidade: clientInfo.contact.city,
+            estado: clientInfo.contact.state,
+            cep: clientInfo.contact.zip_code,
+          };
+
+          lead.client_info = clientInfo;
+        }
+
+        return lead;
+      });
+
+      setLeads(transformedLeads);
+      setTotalItems(result.pagination.total_items);
+    } catch (error) {
+      logger.error("Error fetching leads:", error);
+      setLeads([]);
+    } finally {
+      setIsLoadingLeads(false);
+    }
+  };
 
   const handleSearch = (searchTerm: string, searchType: SearchType) => {
     setIsSearching(true);
     logger.log(`Pesquisando por ${searchType}: ${searchTerm}`);
     setPage(0);
+    setSearchTerm(searchTerm);
+    setSearchType(searchType);
 
-    setTimeout(() => {
+    if (!searchTerm.trim()) {
+      fetchLeads();
       setIsSearching(false);
+      setSearchResults([]);
+      return;
+    }
 
-      if (!searchTerm.trim()) {
-        setSearchResults([]);
-        return;
-      }
-
-      const filtered = mockLeads.filter((lead) => {
-        const value =
-          lead[
-            searchType === "nome"
-              ? "nome"
-              : searchType === "celular"
-                ? "telefone"
-                : searchType === "cpf" || searchType === "cnpj"
-                  ? "cpfCnpj"
-                  : searchType === "idOcta"
-                    ? "idOcta"
-                    : "nome"
-          ];
-
-        return value && value.toLowerCase().includes(searchTerm.toLowerCase());
-      });
-
-      setSearchResults(filtered);
-      setLeads(filtered);
-    }, 1000);
+    fetchLeads(searchTerm, searchType).finally(() => {
+      setIsSearching(false);
+    });
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
+
+    if (searchTerm) {
+      fetchLeads(searchTerm, searchType);
+    }
   };
 
   const getCurrentPageData = () => {
-    const currentLeads = searchResults.length > 0 ? searchResults : leads;
-    const startIndex = page * rowsPerPage;
-    return currentLeads.slice(startIndex, startIndex + rowsPerPage);
+    return leads;
   };
 
   return (
@@ -218,8 +251,29 @@ function LeadsScreen() {
         <LeadSearch onSearch={handleSearch} />
 
         {isSearching ? (
-          <Box sx={{ textAlign: "center", py: 4 }}>
-            <Typography>Buscando...</Typography>
+          <Box
+            sx={{
+              textAlign: "center",
+              py: 4,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: 200,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <CircularProgress color="primary" size={40} />
+              <Typography variant="body2" color="text.secondary">
+                Buscando leads...
+              </Typography>
+            </Box>
           </Box>
         ) : (
           <LeadTable
@@ -227,11 +281,10 @@ function LeadsScreen() {
             isLoading={isLoadingLeads}
             page={page}
             rowsPerPage={rowsPerPage}
-            totalLeads={
-              searchResults.length > 0 ? searchResults.length : leads.length
-            }
+            totalLeads={totalItems}
             onPageChange={handleChangePage}
             onRowsPerPageChange={() => {}}
+            isFiltered={!!searchTerm}
           />
         )}
       </Box>

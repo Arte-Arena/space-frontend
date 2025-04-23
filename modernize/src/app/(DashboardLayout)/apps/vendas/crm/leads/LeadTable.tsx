@@ -16,8 +16,19 @@ import {
   IconButton,
   Theme,
   TablePagination,
+  Divider,
+  Grid,
+  CircularProgress,
 } from "@mui/material";
-import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconUser,
+  IconMail,
+  IconPhone,
+  IconMap,
+  IconNotes,
+} from "@tabler/icons-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -26,7 +37,7 @@ interface Lead {
   nome: string;
   email: string;
   telefone: string;
-  cpfCnpj: string;
+  cpfCnpj?: string;
   dataCriacao: string;
   status: string;
   jaCadastrado: boolean;
@@ -42,6 +53,28 @@ interface Lead {
     cep: string;
   };
   observacoes?: string;
+  client_info?: {
+    client_id: string;
+    client_name: string;
+    client_email: string;
+    has_uniform: boolean;
+    contact: {
+      person_type: string;
+      identity_card: string;
+      cpf: string;
+      cell_phone: string;
+      zip_code: string;
+      address: string;
+      number: string;
+      complement: string;
+      neighborhood: string;
+      city: string;
+      state: string;
+      company_name: string;
+      cnpj: string;
+      state_registration: string;
+    };
+  };
 }
 
 interface LeadTableProps {
@@ -52,6 +85,7 @@ interface LeadTableProps {
   totalLeads: number;
   onPageChange: (event: unknown, newPage: number) => void;
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  isFiltered: boolean;
 }
 
 type StatusColor = "success" | "warning" | "primary" | "error" | "secondary";
@@ -69,6 +103,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
   totalLeads,
   onPageChange,
   onRowsPerPageChange,
+  isFiltered,
 }) => {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [orderBy, setOrderBy] = useState<keyof Lead>("dataCriacao");
@@ -138,8 +173,30 @@ const LeadTable: React.FC<LeadTableProps> = ({
 
   if (isLoading) {
     return (
-      <Paper elevation={1} sx={{ p: 3, textAlign: "center" }}>
-        <Typography>Carregando leads...</Typography>
+      <Paper
+        elevation={1}
+        sx={{
+          p: 4,
+          textAlign: "center",
+          minHeight: 200,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
+          <CircularProgress color="primary" />
+          <Typography variant="body2" color="text.secondary">
+            Carregando leads...
+          </Typography>
+        </Box>
       </Paper>
     );
   }
@@ -147,7 +204,11 @@ const LeadTable: React.FC<LeadTableProps> = ({
   if (!leads || leads.length === 0) {
     return (
       <Paper elevation={1} sx={{ p: 4, textAlign: "center" }}>
-        <Typography variant="body1">Nenhum lead encontrado.</Typography>
+        <Typography variant="body1">
+          {isFiltered
+            ? "Nenhum lead encontrado com os critérios de busca especificados."
+            : "Nenhum lead encontrado."}
+        </Typography>
       </Paper>
     );
   }
@@ -288,51 +349,439 @@ const LeadTable: React.FC<LeadTableProps> = ({
                       unmountOnExit
                     >
                       <Box sx={{ margin: 2, mb: 4 }}>
-                        <Typography variant="h6" gutterBottom component="div">
+                        <Typography
+                          variant="h6"
+                          gutterBottom
+                          component="div"
+                          sx={{
+                            borderBottom: "1px solid",
+                            borderColor: "divider",
+                            pb: 1,
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <IconUser size={20} style={{ marginRight: 8 }} />
                           Detalhes do Lead
                         </Typography>
 
-                        {lead.endereco && (
-                          <Box sx={{ mt: 2 }}>
-                            <Typography variant="subtitle1" gutterBottom>
-                              Endereço
-                            </Typography>
-                            <Box sx={{ mt: 1 }}>
-                              <Typography variant="body1">
-                                Rua: {lead.endereco?.rua || "-"}
-                              </Typography>
-                              <Typography variant="body1">
-                                Número: {lead.endereco?.numero || "-"}
-                              </Typography>
-                              {lead.endereco?.complemento && (
-                                <Typography variant="body1">
-                                  Complemento: {lead.endereco?.complemento}
+                        <Grid container spacing={3} sx={{ mt: 0.5 }}>
+                          {lead.client_info && (
+                            <Grid item xs={12} md={6}>
+                              <Paper
+                                elevation={0}
+                                variant="outlined"
+                                sx={{
+                                  p: 2,
+                                  borderRadius: 2,
+                                  height: "100%",
+                                  backgroundColor: (theme) =>
+                                    theme.palette.mode === "dark"
+                                      ? "rgba(255, 255, 255, 0.05)"
+                                      : "rgba(0, 0, 0, 0.02)",
+                                }}
+                              >
+                                <Typography
+                                  variant="subtitle1"
+                                  gutterBottom
+                                  sx={{
+                                    color: "primary.main",
+                                    fontWeight: "medium",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    pb: 1,
+                                  }}
+                                >
+                                  <IconUser
+                                    size={18}
+                                    style={{ marginRight: 8 }}
+                                  />
+                                  Informações do Cliente
                                 </Typography>
-                              )}
-                              <Typography variant="body1">
-                                Bairro: {lead.endereco?.bairro || "-"}
-                              </Typography>
-                              <Typography variant="body1">
-                                Cidade: {lead.endereco?.cidade || "-"}
-                              </Typography>
-                              <Typography variant="body1">
-                                Estado: {lead.endereco?.estado || "-"}
-                              </Typography>
-                              <Typography variant="body1">
-                                CEP: {lead.endereco?.cep || "-"}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        )}
+                                <Divider sx={{ mb: 2 }} />
 
-                        {lead.observacoes && (
-                          <Box sx={{ mt: 3 }}>
-                            <Typography variant="h6">Observações</Typography>
-                            <Typography variant="body1">
-                              {lead.observacoes || "-"}
-                            </Typography>
-                          </Box>
-                        )}
+                                <Box sx={{ mt: 1 }}>
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    Nome
+                                  </Typography>
+                                  <Typography variant="body1" sx={{ mb: 1.5 }}>
+                                    {lead.client_info.client_name || "-"}
+                                  </Typography>
+
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    Email
+                                  </Typography>
+                                  <Typography
+                                    variant="body1"
+                                    sx={{
+                                      mb: 1.5,
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <IconMail
+                                      size={16}
+                                      style={{ marginRight: 6, opacity: 0.7 }}
+                                    />
+                                    {lead.client_info.client_email || "-"}
+                                  </Typography>
+
+                                  {lead.client_info.contact && (
+                                    <>
+                                      <Divider sx={{ my: 2 }} />
+                                      <Typography
+                                        variant="body1"
+                                        sx={{
+                                          fontWeight: "medium",
+                                          mb: 1.5,
+                                          display: "flex",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <IconPhone
+                                          size={18}
+                                          style={{ marginRight: 8 }}
+                                        />
+                                        Informações de Contato
+                                      </Typography>
+
+                                      <Grid container spacing={2}>
+                                        <Grid item xs={12}>
+                                          <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                          >
+                                            Tipo de Pessoa
+                                          </Typography>
+                                          <Chip
+                                            label={
+                                              lead.client_info.contact
+                                                .person_type === "F"
+                                                ? "Pessoa Física"
+                                                : "Pessoa Jurídica"
+                                            }
+                                            size="small"
+                                            color={
+                                              lead.client_info.contact
+                                                .person_type === "F"
+                                                ? "primary"
+                                                : "secondary"
+                                            }
+                                            sx={{ mt: 0.5, mb: 1.5 }}
+                                          />
+                                        </Grid>
+
+                                        {lead.client_info.contact
+                                          .person_type === "F" && (
+                                          <>
+                                            <Grid item xs={6}>
+                                              <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                              >
+                                                RG
+                                              </Typography>
+                                              <Typography
+                                                variant="body1"
+                                                sx={{ mb: 1.5 }}
+                                              >
+                                                {lead.client_info.contact
+                                                  .identity_card || "-"}
+                                              </Typography>
+                                            </Grid>
+                                            <Grid item xs={6}>
+                                              <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                              >
+                                                CPF
+                                              </Typography>
+                                              <Typography
+                                                variant="body1"
+                                                sx={{ mb: 1.5 }}
+                                              >
+                                                {lead.client_info.contact.cpf ||
+                                                  "-"}
+                                              </Typography>
+                                            </Grid>
+                                          </>
+                                        )}
+
+                                        {lead.client_info.contact
+                                          .person_type === "J" && (
+                                          <>
+                                            <Grid item xs={12}>
+                                              <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                              >
+                                                Razão Social
+                                              </Typography>
+                                              <Typography
+                                                variant="body1"
+                                                sx={{ mb: 1.5 }}
+                                              >
+                                                {lead.client_info.contact
+                                                  .company_name || "-"}
+                                              </Typography>
+                                            </Grid>
+                                            <Grid item xs={6}>
+                                              <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                              >
+                                                CNPJ
+                                              </Typography>
+                                              <Typography
+                                                variant="body1"
+                                                sx={{ mb: 1.5 }}
+                                              >
+                                                {lead.client_info.contact
+                                                  .cnpj || "-"}
+                                              </Typography>
+                                            </Grid>
+                                            <Grid item xs={6}>
+                                              <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                              >
+                                                Inscrição Estadual
+                                              </Typography>
+                                              <Typography
+                                                variant="body1"
+                                                sx={{ mb: 1.5 }}
+                                              >
+                                                {lead.client_info.contact
+                                                  .state_registration || "-"}
+                                              </Typography>
+                                            </Grid>
+                                          </>
+                                        )}
+
+                                        <Grid item xs={12}>
+                                          <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                          >
+                                            Celular
+                                          </Typography>
+                                          <Typography
+                                            variant="body1"
+                                            sx={{
+                                              mb: 1,
+                                              display: "flex",
+                                              alignItems: "center",
+                                            }}
+                                          >
+                                            <IconPhone
+                                              size={16}
+                                              style={{
+                                                marginRight: 6,
+                                                opacity: 0.7,
+                                              }}
+                                            />
+                                            {lead.client_info.contact
+                                              .cell_phone || "-"}
+                                          </Typography>
+                                        </Grid>
+                                      </Grid>
+                                    </>
+                                  )}
+                                </Box>
+                              </Paper>
+                            </Grid>
+                          )}
+
+                          {lead.endereco && (
+                            <Grid item xs={12} md={6}>
+                              <Paper
+                                elevation={0}
+                                variant="outlined"
+                                sx={{
+                                  p: 2,
+                                  borderRadius: 2,
+                                  height: "100%",
+                                  backgroundColor: (theme) =>
+                                    theme.palette.mode === "dark"
+                                      ? "rgba(255, 255, 255, 0.05)"
+                                      : "rgba(0, 0, 0, 0.02)",
+                                }}
+                              >
+                                <Typography
+                                  variant="subtitle1"
+                                  gutterBottom
+                                  sx={{
+                                    color: "primary.main",
+                                    fontWeight: "medium",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    pb: 1,
+                                  }}
+                                >
+                                  <IconMap
+                                    size={18}
+                                    style={{ marginRight: 8 }}
+                                  />
+                                  Endereço
+                                </Typography>
+                                <Divider sx={{ mb: 2 }} />
+
+                                <Box sx={{ mt: 1 }}>
+                                  <Grid container spacing={2}>
+                                    <Grid item xs={9}>
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                      >
+                                        Rua
+                                      </Typography>
+                                      <Typography
+                                        variant="body1"
+                                        sx={{ mb: 1.5 }}
+                                      >
+                                        {lead.endereco?.rua || "-"}
+                                      </Typography>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                      >
+                                        Número
+                                      </Typography>
+                                      <Typography
+                                        variant="body1"
+                                        sx={{ mb: 1.5 }}
+                                      >
+                                        {lead.endereco?.numero || "-"}
+                                      </Typography>
+                                    </Grid>
+
+                                    {lead.endereco?.complemento && (
+                                      <Grid item xs={12}>
+                                        <Typography
+                                          variant="body2"
+                                          color="text.secondary"
+                                        >
+                                          Complemento
+                                        </Typography>
+                                        <Typography
+                                          variant="body1"
+                                          sx={{ mb: 1.5 }}
+                                        >
+                                          {lead.endereco?.complemento}
+                                        </Typography>
+                                      </Grid>
+                                    )}
+
+                                    <Grid item xs={6}>
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                      >
+                                        Bairro
+                                      </Typography>
+                                      <Typography
+                                        variant="body1"
+                                        sx={{ mb: 1.5 }}
+                                      >
+                                        {lead.endereco?.bairro || "-"}
+                                      </Typography>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                      >
+                                        CEP
+                                      </Typography>
+                                      <Typography
+                                        variant="body1"
+                                        sx={{ mb: 1.5 }}
+                                      >
+                                        {lead.endereco?.cep || "-"}
+                                      </Typography>
+                                    </Grid>
+
+                                    <Grid item xs={6}>
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                      >
+                                        Cidade
+                                      </Typography>
+                                      <Typography
+                                        variant="body1"
+                                        sx={{ mb: 1.5 }}
+                                      >
+                                        {lead.endereco?.cidade || "-"}
+                                      </Typography>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                      <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                      >
+                                        Estado
+                                      </Typography>
+                                      <Typography
+                                        variant="body1"
+                                        sx={{ mb: 1.5 }}
+                                      >
+                                        {lead.endereco?.estado || "-"}
+                                      </Typography>
+                                    </Grid>
+                                  </Grid>
+                                </Box>
+                              </Paper>
+                            </Grid>
+                          )}
+
+                          {lead.observacoes && (
+                            <Grid item xs={12}>
+                              <Paper
+                                elevation={0}
+                                variant="outlined"
+                                sx={{
+                                  p: 2,
+                                  borderRadius: 2,
+                                  backgroundColor: (theme) =>
+                                    theme.palette.mode === "dark"
+                                      ? "rgba(255, 255, 255, 0.05)"
+                                      : "rgba(0, 0, 0, 0.02)",
+                                }}
+                              >
+                                <Typography
+                                  variant="subtitle1"
+                                  gutterBottom
+                                  sx={{
+                                    color: "primary.main",
+                                    fontWeight: "medium",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    pb: 1,
+                                  }}
+                                >
+                                  <IconNotes
+                                    size={18}
+                                    style={{ marginRight: 8 }}
+                                  />
+                                  Observações
+                                </Typography>
+                                <Divider sx={{ mb: 2 }} />
+                                <Typography variant="body1">
+                                  {lead.observacoes || "-"}
+                                </Typography>
+                              </Paper>
+                            </Grid>
+                          )}
+                        </Grid>
                       </Box>
                     </Collapse>
                   </TableCell>
