@@ -16,7 +16,7 @@ const ChatData: ChatsType[] = [
     excerpt: 'Theme Developer',
     messages: [
       {
-        createdAt: sub(new Date(), { hours: 1 }),
+        createdAt: sub(new Date(), { hours: 1 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 1,
         type: 'text',
