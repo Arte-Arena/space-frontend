@@ -73,7 +73,7 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
     const fetchConversation = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API}/api/octa/get-octa-chats-msgs/${chatDetails.id}`,
+          `${process.env.NEXT_PUBLIC_API}/api/octa/get-octa-chat-msgs/${chatDetails.id}`,
           {
             headers: {
               'Content-Type': 'application/json',
