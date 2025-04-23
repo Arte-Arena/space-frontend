@@ -14,8 +14,8 @@ const BCrumb = [
 
 export default function Erros() {
   return (
-    <PageContainer title="Erros Screen" description="Tela de Erros Screen">
-      <Breadcrumb title="Erros Screen" items={BCrumb} />
+    <PageContainer title="Tabela de Erros" description="Tabela de Erros">
+      <Breadcrumb title="Tabela de Erros" items={BCrumb} />
       
     </PageContainer>
   );
