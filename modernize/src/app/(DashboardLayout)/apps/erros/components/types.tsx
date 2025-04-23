@@ -12,6 +12,7 @@ interface ArteFinal {
     prazo_arte_final: Date;
     prazo_confeccao: Date;
     lista_produtos: Produto[];
+    confeccao_corte_conferencia: CorteConferencia;
     observacao: string;
     rolo: string;
     estagio?: string | null;
@@ -46,6 +47,28 @@ interface User {
     role_id: number;
 }
 
+interface CorteConferencia {
+    id: number;
+    pedido_arte_final_id: number;
+    status_corte: string;
+    status_conferencia: string;
+    status: string;
+    created_at: Date | null;
+    updated_at: Date | null;
+}
+
+interface Erros {
+    id: number;
+    detalhes: string;
+    numero_pedido: number;
+    setor: string;
+    link_trello: string;
+    solucao: string;
+    status: string;
+    created_at: Date | null;
+    updated_at: Date | null;
+}
+
 interface PedidoStatus {
     id: number;
     nome: string;
@@ -57,4 +80,4 @@ interface PedidoTipo {
     nome: string;
 }
 
-export type { ApiResponsePedidosArteFinal, ArteFinal, Produto, User, PedidoStatus, PedidoTipo };
+export type { ApiResponsePedidosArteFinal, ArteFinal, Produto, User, PedidoStatus, Erros, PedidoTipo };

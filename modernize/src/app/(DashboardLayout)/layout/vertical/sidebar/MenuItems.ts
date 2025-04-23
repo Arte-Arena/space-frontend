@@ -37,8 +37,9 @@ import {
   IconIroning,
   IconCut,
   IconPalette,
+  IconCards,
+  IconExclamationCircle,
   IconUsers,
-  IconCards
 } from "@tabler/icons-react";
 import { Icon } from "@mui/material";
 
@@ -351,6 +352,12 @@ const getMenuItems = (): MenuitemsType[] => {
       title: "Expedição",
       icon: IconRoad,
       href: "/apps/expedicao",
+    },
+    {
+      id: uniqueId(),
+      title: "Erros",
+      icon: IconExclamationCircle,
+      href: "/apps/erros",
     },
     {
       id: uniqueId(),
