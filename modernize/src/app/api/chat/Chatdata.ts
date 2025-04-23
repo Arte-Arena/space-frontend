@@ -16,7 +16,7 @@ const ChatData: ChatsType[] = [
     excerpt: 'Theme Developer',
     messages: [
       {
-        createdAt: sub(new Date(), { hours: 1 }),
+        createdAt: sub(new Date(), { hours: 1 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 1,
         type: 'text',
@@ -30,7 +30,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 30 }),
+        createdAt: sub(new Date(), { minutes: 30 }).toISOString(),
         msg: chance.sentence({ words: 10 }),
         senderId: 1,
         type: 'text',
@@ -38,7 +38,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 6 }),
+        createdAt: sub(new Date(), { minutes: 6 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: uniqueId(),
         type: 'text',
@@ -53,7 +53,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 5 }),
+        createdAt: sub(new Date(), { minutes: 5 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 1,
         type: 'text',
@@ -71,7 +71,7 @@ const ChatData: ChatsType[] = [
     excerpt: 'Doctor',
     messages: [
       {
-        createdAt: sub(new Date(), { hours: 1 }),
+        createdAt: sub(new Date(), { hours: 1 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: uniqueId(),
         type: 'text',
@@ -84,7 +84,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 30 }),
+        createdAt: sub(new Date(), { minutes: 30 }).toISOString(),
         msg: chance.sentence({ words: 10 }),
         senderId: uniqueId(),
         type: 'text',
@@ -92,7 +92,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 6 }),
+        createdAt: sub(new Date(), { minutes: 6 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 2,
         type: 'text',
@@ -107,7 +107,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 1 }),
+        createdAt: sub(new Date(), { minutes: 1 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: uniqueId(),
         type: 'text',
@@ -125,7 +125,7 @@ const ChatData: ChatsType[] = [
     excerpt: 'Hacker',
     messages: [
       {
-        createdAt: sub(new Date(), { hours: 10 }),
+        createdAt: sub(new Date(), { hours: 10 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 1,
         type: 'text',
@@ -136,7 +136,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 30 }),
+        createdAt: sub(new Date(), { minutes: 30 }).toISOString(),
         msg: chance.sentence({ words: 10 }),
         senderId: 1,
         type: 'text',
@@ -144,7 +144,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 6 }),
+        createdAt: sub(new Date(), { minutes: 6 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 3,
         type: 'text',
@@ -152,7 +152,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 6 }),
+        createdAt: sub(new Date(), { minutes: 6 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 3,
         type: 'text',
@@ -171,7 +171,7 @@ const ChatData: ChatsType[] = [
     excerpt: 'Please wait outside of the house',
     messages: [
       {
-        createdAt: sub(new Date(), { hours: 1 }),
+        createdAt: sub(new Date(), { hours: 1 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 1,
         type: 'text',
@@ -179,7 +179,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { hours: 10 }),
+        createdAt: sub(new Date(), { hours: 10 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 4,
         type: 'text',
@@ -190,7 +190,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { hours: 11 }),
+        createdAt: sub(new Date(), { hours: 11 }).toISOString(),
         msg: '/images/blog/blog-img1.jpg',
         senderId: uniqueId(),
         type: 'image',
@@ -198,7 +198,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 6 }),
+        createdAt: sub(new Date(), { minutes: 6 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 4,
         type: 'text',
@@ -206,7 +206,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 1 }),
+        createdAt: sub(new Date(), { minutes: 1 }).toISOString(),
         msg: chance.sentence({ words: 7 }),
         senderId: 3,
         type: 'text',
@@ -224,7 +224,7 @@ const ChatData: ChatsType[] = [
     excerpt: 'Front End Developer',
     messages: [
       {
-        createdAt: sub(new Date(), { hours: 1 }),
+        createdAt: sub(new Date(), { hours: 1 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 1,
         type: 'text',
@@ -238,7 +238,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 30 }),
+        createdAt: sub(new Date(), { minutes: 30 }).toISOString(),
         msg: chance.sentence({ words: 10 }),
         senderId: 1,
         type: 'text',
@@ -246,7 +246,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 6 }),
+        createdAt: sub(new Date(), { minutes: 6 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: uniqueId(),
         type: 'text',
@@ -261,7 +261,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 5 }),
+        createdAt: sub(new Date(), { minutes: 5 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 5,
         type: 'text',
@@ -279,7 +279,7 @@ const ChatData: ChatsType[] = [
     excerpt: 'Graphics Designer',
     messages: [
       {
-        createdAt: sub(new Date(), { hours: 10 }),
+        createdAt: sub(new Date(), { hours: 10 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 1,
         type: 'text',
@@ -298,7 +298,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 5 }),
+        createdAt: sub(new Date(), { minutes: 5 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 1,
         type: 'text',
@@ -306,7 +306,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 2 }),
+        createdAt: sub(new Date(), { minutes: 2 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 6,
         type: 'text',
@@ -324,7 +324,7 @@ const ChatData: ChatsType[] = [
     excerpt: 'Back End Developer',
     messages: [
       {
-        createdAt: sub(new Date(), { hours: 10 }),
+        createdAt: sub(new Date(), { hours: 10 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 1,
         type: 'text',
@@ -335,7 +335,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { hours: 1 }),
+        createdAt: sub(new Date(), { hours: 1 }).toISOString(),
         msg: chance.sentence({ words: 10 }),
         senderId: 1,
         type: 'text',
@@ -343,7 +343,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 15 }),
+        createdAt: sub(new Date(), { minutes: 15 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 7,
         type: 'text',
@@ -351,7 +351,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 10 }),
+        createdAt: sub(new Date(), { minutes: 10 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 7,
         type: 'text',
@@ -369,7 +369,7 @@ const ChatData: ChatsType[] = [
     excerpt: 'Theme Developer',
     messages: [
       {
-        createdAt: sub(new Date(), { hours: 10 }),
+        createdAt: sub(new Date(), { hours: 10 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 1,
         type: 'text',
@@ -381,7 +381,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { hours: 6 }),
+        createdAt: sub(new Date(), { hours: 6 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 3,
         type: 'text',
@@ -389,7 +389,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { hours: 6 }),
+        createdAt: sub(new Date(), { hours: 6 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 1,
         type: 'text',
@@ -397,7 +397,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 1 }),
+        createdAt: sub(new Date(), { minutes: 1 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 8,
         type: 'text',
@@ -415,7 +415,7 @@ const ChatData: ChatsType[] = [
     excerpt: 'Administrator',
     messages: [
       {
-        createdAt: sub(new Date(), { hours: 10 }),
+        createdAt: sub(new Date(), { hours: 10 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 1,
         type: 'text',
@@ -426,7 +426,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { hours: 8 }),
+        createdAt: sub(new Date(), { hours: 8 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 3,
         type: 'text',
@@ -434,7 +434,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { hours: 8 }),
+        createdAt: sub(new Date(), { hours: 8 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 3,
         type: 'text',
@@ -442,7 +442,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 5 }),
+        createdAt: sub(new Date(), { minutes: 5 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 9,
         type: 'text',
@@ -450,7 +450,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 2 }),
+        createdAt: sub(new Date(), { minutes: 2 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 9,
         type: 'text',
@@ -468,7 +468,7 @@ const ChatData: ChatsType[] = [
     excerpt: 'Doctor',
     messages: [
       {
-        createdAt: sub(new Date(), { hours: 10 }),
+        createdAt: sub(new Date(), { hours: 10 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 1,
         type: 'text',
@@ -479,7 +479,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { hours: 11 }),
+        createdAt: sub(new Date(), { hours: 11 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 3,
         type: 'text',
@@ -487,7 +487,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { hours: 6 }),
+        createdAt: sub(new Date(), { hours: 6 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 3,
         type: 'text',
@@ -495,7 +495,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { hours: 6 }),
+        createdAt: sub(new Date(), { hours: 6 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 3,
         type: 'text',
@@ -503,7 +503,7 @@ const ChatData: ChatsType[] = [
         id: uniqueId(),
       },
       {
-        createdAt: sub(new Date(), { minutes: 6 }),
+        createdAt: sub(new Date(), { minutes: 6 }).toISOString(),
         msg: chance.sentence({ words: 5 }),
         senderId: 10,
         type: 'text',

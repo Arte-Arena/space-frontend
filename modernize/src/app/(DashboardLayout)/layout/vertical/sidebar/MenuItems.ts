@@ -38,7 +38,9 @@ import {
   IconCut,
   IconPalette,
   IconCards,
-  IconExclamationCircle
+  IconExclamationCircle,
+  IconUsers,
+  IconCards
 } from "@tabler/icons-react";
 import { Icon } from "@mui/material";
 
@@ -104,7 +106,14 @@ const getMenuItems = (): MenuitemsType[] => {
           id: uniqueId(),
           title: "CRM",
           icon: IconBrandTrello,
-          href: "/apps/vendas/crm",
+          children: [
+            {
+              id: uniqueId(),
+              title: "Leads",
+              icon: IconUsers,
+              href: "/apps/vendas/crm/leads",
+            },
+          ],
         },
         {
           id: uniqueId(),

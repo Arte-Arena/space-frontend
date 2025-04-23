@@ -23,7 +23,7 @@ export interface ChatsType {
   thumb: string
   recent: boolean
   excerpt: string
-  lastMessageDate: string
+  lastMessageDate?: string
   chatHistory?: any[]
   messages: MessageType[]
 }
