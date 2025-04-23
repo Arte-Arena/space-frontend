@@ -1,197 +1,192 @@
 import html2canvas from 'html2canvas';
 
 interface Esboco {
-    id: string;
-    produto: string;
-    material: string;
-    altura: string;
-    largura: string;
-    composicao: string;
-    ilhoses: boolean;
-    qtdIlhoses?: string;
-    bordaMastro: boolean;
-    duplaFace: boolean;
+  id: string;
+  opcao: string;
+  produto: string;
+  material: string;
+  altura: string;
+  largura: string;
+  composicao: string;
+  ilhoses: boolean;
+  qtdIlhoses?: string;
+  bordaMastro: boolean;
+  duplaFace: boolean;
 }
 
 const esbocoFormatarPNG = async (form: Esboco) => {
-    const largura = parseFloat(form.largura || '1');
-    const altura = parseFloat(form.altura || '1');
-    const proporcao = largura / altura;
-    const lineGap = Math.max(1.5, Math.min(4, altura * 1.5));
+  const largura = parseFloat(form.largura || '1');
+  const altura = parseFloat(form.altura || '1');
+  const larguraPx = 1000;
+  const alturaPx = Math.round((altura / largura) * larguraPx);
 
-    // 1. Cria iframe invisível
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'absolute';
-    iframe.style.top = '-9999px';
-    iframe.style.left = '-9999px';
-    iframe.style.width = '1024px';
-    iframe.style.height = `${1024 / proporcao}px`;
-    document.body.appendChild(iframe);
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'absolute';
+  iframe.style.top = '-9999px';
+  iframe.style.left = '-9999px';
+  iframe.style.width = `${larguraPx}px`;
+  iframe.style.height = 'auto';
+  document.body.appendChild(iframe);
 
-    // 2. Acessa o documento interno
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc) return;
+  const doc = iframe.contentDocument || iframe.contentWindow?.document;
+  if (!doc) return;
 
-    // 3. Insere o HTML completo com estilos inline
-    doc.open();
-    doc.write(`
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          body {
-            margin: 0;
-            padding: 0;
-            background: #2c2c2c;
-            font-family: Arial, sans-serif;
-          }
-  
-          .page {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            background: #2c2c2c;
-            color: white;
-          }
-  
-          .left {
-            flex: 4;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 20px;
-            background-color: #3b3b3b;
-            position: relative;
-          }
-  
-          .id {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            font-size: 14px;
-            color: #bfbfbf;
-          }
-  
-          .imagem-simbolo {
-            margin: auto;
-            width: 200px;
-            height: 200px;
-            background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Blank_Flag_icon.svg/1200px-Blank_Flag_icon.svg.png') no-repeat center;
-            background-size: contain;
-            opacity: 0.4;
-          }
-  
-          .aviso-topo, .aviso-baixo {
-            text-align: center;
-            font-size: 12px;
-            font-weight: bold;
-          }
-  
-          .direita {
-            flex: 1;
-            background-color: #1a1a1a;
-            padding: 30px 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-          }
-  
-          .logo {
-            width: 120px;
-            align-self: flex-end;
-            margin-bottom: 16px;
-          }
-  
-          .info-box {
-            margin-top: 20px;
-            padding-left: 10px;
-            display: grid;
-            grid-template-columns: auto 1fr;
-            row-gap: ${lineGap}vh;
-            column-gap: 12px;
-            align-items: center;
-          }
-  
-          .label {
-            justify-self: start;
-            font-weight: bold;
-            color: #f7931e;
-            font-size: 18px;
-          }
-  
-          .valor {
-            white-space: nowrap;
-            justify-self: center;
-            font-weight: bold;
-            font-size: 20px;
-            color: #ffffff;
-          }
-  
-          .opcao {
-            text-align: center;
-            font-weight: bold;
-            font-size: 18px;
-            color: #fdd835;
-            margin-top: 20px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="page">
-          <div class="left">
-            <div class="id">ID: ${form.id}</div>
-            <div class="aviso-topo">
-              <h3>AS CORES PODEM SOFRER UMA VARIAÇÃO DE 20%</h3>
-              <p>IMAGENS MERAMENTE ILUSTRATIVAS</p>
-            </div>
-            <div class="imagem-simbolo"></div>
-            <div class="aviso-baixo">
-              AS BANDEIRAS BRANCAS SE TRATAM DE NOSSA<br />
-              MARCA D'ÁGUA E NÃO SERÃO INCLUSAS NA ARTE FINAL
-            </div>
-          </div>
-  
-          <div class="direita">
-            <img class="logo" src="/images/logos/logo.png" alt="logo" />
-            <div class="info-box">
-              ${form.produto ? `<span class="label">PRODUTO:</span><span class="valor">${form.produto}</span>` : ''}
-              ${form.altura && form.largura ? `<span class="label">DIMENSÕES:</span><span class="valor">${form.altura} x ${form.largura} M</span>` : ''}
-              ${form.ilhoses && form.qtdIlhoses ? `<span class="label">ILHÓSES:</span><span class="valor">${form.qtdIlhoses}</span>` : ''}
-              <span class="label">BORDA MASTRO:</span><span class="valor">${form.bordaMastro ? 'SIM' : 'NÃO'}</span>
-              ${form.composicao ? `<span class="label">COMPOSIÇÃO:</span><span class="valor">${form.composicao}</span>` : ''}
-              <span class="label">DUPLA FACE:</span><span class="valor">${form.duplaFace ? 'SIM' : 'NÃO'}</span>
-              ${form.material ? `<span class="label">MATERIAL:</span><span class="valor">${form.material}</span>` : ''}
-            </div>
-            <div class="opcao">OPÇÃO A</div>
-          </div>
-        </div>
-      </body>
-      </html>
-    `);
-    doc.close();
-
-    // 4. Aguarda renderização
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // 5. Captura o conteúdo do iframe
-    const target = iframe.contentDocument?.body?.firstElementChild;
-    if (!target) {
-        console.error('Falha ao localizar o conteúdo do iframe');
-        return;
+  doc.open();
+  doc.write(`
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff;
+      width: ${larguraPx}px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    const canvas = await html2canvas(target as HTMLElement);
-    const imgData = canvas.toDataURL('image/png');
+    .logo {
+      width: 180px;
+      margin: 20px 0;
+    }
 
-    // 6. Dispara o download
-    const link = document.createElement('a');
-    link.href = imgData;
-    link.download = `esboco-${form.id || Date.now()}.png`;
-    link.click();
+    .mockup-area {
+      width: 100%;
+      height: ${alturaPx}px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 2px dashed #ccc;
+      background-color: #B3B3B3;
+    }
 
-    // 7. Remove iframe
-    iframe.remove();
+    .mockup-area img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+
+    .footer {
+      width: 100%;
+      background: #000;
+      color: #fff;
+      padding: 30px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+    }
+
+    .titulo {
+      font-size: 30px;
+      font-weight: bold;
+      color: #f7931e;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .info-box {
+      text-transform: uppercase;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #f7931e;
+      font-size: 18px;
+    }
+
+    .value {
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .selo {
+      font-size: 14px;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+ 
+    .header {
+      width: 100%;
+      background-color: #B3B3B3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0;
+    }
+
+    .opcao-destaque {
+      position: absolute;
+      bottom: 80px; 
+      right: 40px;
+      font-size: 28px; 
+      font-weight: bold;
+      color: #fdd835;
+      text-transform: uppercase;
+      text-align: right;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img class="logo" src="/images/logos/logo.png" alt="Logo Arte Arena" />
+  </div>
+
+  <div class="mockup-area">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Blank_Flag_icon.svg/1200px-Blank_Flag_icon.svg.png" alt="Mockup" />
+  </div>
+
+  <div class="footer">
+    <div class="titulo">Bandeira <span style="color: white">Personalizada</span></div>
+
+    <div class="info-grid">
+      ${form.produto ? `<div class="info-box"><div class="label">Produto:</div><div class="value">${form.produto}</div></div>` : ''}
+      ${form.altura && form.largura ? `<div class="info-box"><div class="label">Dimensões:</div><div class="value">${form.altura} x ${form.largura} m</div></div>` : ''}
+      ${form.material ? `<div class="info-box"><div class="label">Material:</div><div class="value">${form.material}</div></div>` : ''}
+      ${form.composicao ? `<div class="info-box"><div class="label">Composição:</div><div class="value">${form.composicao}</div></div>` : ''}
+      ${form.ilhoses && form.qtdIlhoses ? `<div class="info-box"><div class="label">Ilhóses:</div><div class="value">${form.qtdIlhoses}</div></div>` : ''}
+      ${form.produto?.toLowerCase().includes('bandeira') ? `<div class="info-box"><div class="label">Borda Mastro:</div><div class="value">BANDEIRA NÃO PRECISA DE BORDA MASTRO</div></div>` : (form.produto ? `<div class="info-box"><div class="label">Borda Mastro:</div><div class="value">${form.bordaMastro ? 'SIM' : 'NÃO'}</div></div>` : '')}
+      ${form.produto?.toLowerCase().includes('bandeira') ? `<div class="info-box"><div class="label">Dupla Face:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+    </div>
+
+    <div class="selo" >
+      <span>• ETIQUETA PRODUTO AUTÊNTICO</span><br/>
+      <span>• SELO DE PRODUTO OFICIAL</span>
+    </div>
+
+    <div class="opcao-destaque">OPÇÃO ${form.opcao}</div>
+  </div>
+</body>
+</html>
+  `);
+  doc.close();
+
+  await new Promise(resolve => setTimeout(resolve, 500));
+  const target = iframe.contentDocument?.body;
+  if (!target) return;
+
+  const contentHeight = target.scrollHeight;
+  iframe.style.height = `${contentHeight}px`;
+
+  const canvas = await html2canvas(target);
+  const imgData = canvas.toDataURL('image/png');
+  const link = document.createElement('a');
+  link.href = imgData;
+  link.download = `esboco-${form.id || Date.now()}.png`;
+  link.click();
+
+  iframe.remove();
 };
 
 export default esbocoFormatarPNG;
