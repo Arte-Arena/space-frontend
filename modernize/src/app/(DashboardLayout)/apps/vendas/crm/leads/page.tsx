@@ -110,7 +110,6 @@ const BCrumb = [
 
 function LeadsScreen() {
   const isLoggedIn = useAuth();
-  const [searchResults, setSearchResults] = useState<Lead[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -158,6 +157,7 @@ function LeadsScreen() {
       const transformedLeads = result.data.map((item) => {
         const hasOrcamento = item.existe_em_orcamento;
         const clientInfo = item.client_info;
+        const isCadastrado = clientInfo !== null;
 
         const lead: Lead = {
           id: item.id,
@@ -166,7 +166,7 @@ function LeadsScreen() {
           telefone: item.telefone,
           dataCriacao: item.criado_em,
           status: hasOrcamento ? "Aprovado" : "Novo",
-          jaCadastrado: hasOrcamento,
+          jaCadastrado: isCadastrado,
           origem: item.origem || "Desconhecida",
           idOcta: item.id,
         };
@@ -213,7 +213,6 @@ function LeadsScreen() {
     if (!searchTerm.trim()) {
       fetchLeads();
       setIsSearching(false);
-      setSearchResults([]);
       return;
     }
 
