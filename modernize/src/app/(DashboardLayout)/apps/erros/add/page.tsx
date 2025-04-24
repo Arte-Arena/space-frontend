@@ -44,12 +44,14 @@ import { IconUserExclamation } from '@tabler/icons-react';
 
 // Opções para os selects
 const SETORES = [
+  'Comercial',
+  'Administrativo',
   'Design',
   'Impressão',
-  'Confeccção',
-  'Qualidade',
+  'Sublimação',
+  'Corte & Conferência',
+  'Costura',
   'Expedição',
-  'Administrativo'
 ];
 
 const STATUS = [
