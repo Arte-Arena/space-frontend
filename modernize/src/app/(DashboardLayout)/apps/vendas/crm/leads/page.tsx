@@ -115,7 +115,7 @@ function LeadsScreen() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchType, setSearchType] = useState<SearchType>("nome");
-  const [isLoadingLeads, setIsLoadingLeads] = useState(false);
+  const [isLoadingLeads, setIsLoadingLeads] = useState(true);
   const [page, setPage] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const rowsPerPage = 25;

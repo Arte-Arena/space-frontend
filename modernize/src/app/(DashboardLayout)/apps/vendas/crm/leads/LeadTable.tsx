@@ -28,6 +28,7 @@ import {
   IconPhone,
   IconMap,
   IconNotes,
+  IconInfoCircle,
 } from "@tabler/icons-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -201,7 +202,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
     );
   }
 
-  if (!leads || leads.length === 0) {
+  if (!isLoading && (!leads || leads.length === 0)) {
     return (
       <Paper elevation={1} sx={{ p: 4, textAlign: "center" }}>
         <Typography variant="body1">
@@ -366,6 +367,51 @@ const LeadTable: React.FC<LeadTableProps> = ({
                         </Typography>
 
                         <Grid container spacing={3} sx={{ mt: 0.5 }}>
+                          {!lead.client_info &&
+                            !lead.endereco &&
+                            !lead.observacoes && (
+                              <Grid item xs={12}>
+                                <Paper
+                                  elevation={0}
+                                  variant="outlined"
+                                  sx={{
+                                    p: 4,
+                                    borderRadius: 2,
+                                    backgroundColor: (theme) =>
+                                      theme.palette.mode === "dark"
+                                        ? "rgba(255, 255, 255, 0.05)"
+                                        : "rgba(0, 0, 0, 0.02)",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      alignItems: "center",
+                                      gap: 2,
+                                    }}
+                                  >
+                                    <IconInfoCircle size={40} color="#1976d2" />
+                                    <Typography
+                                      variant="h6"
+                                      color="text.primary"
+                                    >
+                                      Não há informações detalhadas disponíveis
+                                    </Typography>
+                                    <Typography
+                                      variant="body1"
+                                      color="text.secondary"
+                                    >
+                                      Este lead possui apenas informações
+                                      básicas. Dados adicionais como contato
+                                      completo, endereço e observações não foram
+                                      cadastrados.
+                                    </Typography>
+                                  </Box>
+                                </Paper>
+                              </Grid>
+                            )}
                           {lead.client_info && (
                             <Grid item xs={12} md={6}>
                               <Paper
