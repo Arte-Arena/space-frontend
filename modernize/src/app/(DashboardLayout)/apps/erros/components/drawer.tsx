@@ -12,7 +12,6 @@ interface SidePanelProps {
 }
 
 const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer }) => {
-  const designers = localStorage.getItem('designers');
   const theme = useThemeMode();
   const status = row?.status;
 

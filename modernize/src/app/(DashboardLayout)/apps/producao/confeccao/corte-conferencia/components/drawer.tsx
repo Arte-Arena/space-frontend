@@ -93,7 +93,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
   const handleErrorPedido = () => {
     const confirm = window.confirm('deseja um erro para o pedido ' + row?.numero_pedido + '?');
     if (confirm) {
-      window.open(`../../apps/erros/add?numero_pedido=${row?.numero_pedido}`, '_blank');
+      window.open(`../../../apps/erros/add?numero_pedido=${row?.numero_pedido}`, '_blank');
     }
     return;
   };
