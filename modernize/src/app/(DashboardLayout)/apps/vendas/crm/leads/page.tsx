@@ -64,6 +64,9 @@ interface ApiResponse {
     origem: string;
     criado_em: string;
     existe_em_orcamento: boolean;
+    orcamento_id?: string;
+    orcamento_status?: "aprovado" | "pendente" | null;
+    tem_pedido?: boolean;
     client_info: {
       client_id: string;
       client_name: string;
@@ -159,13 +162,37 @@ function LeadsScreen() {
         const clientInfo = item.client_info;
         const isCadastrado = clientInfo !== null;
 
+        let status: string;
+        if (!hasOrcamento) {
+          status = "Novo";
+        } else {
+          const hasPedido = item.tem_pedido;
+          
+          const lastInteraction = item.criado_em ? new Date(item.criado_em) : null;
+          const now = new Date();
+          
+          if (lastInteraction && (now.getTime() - lastInteraction.getTime()) > 60 * 24 * 60 * 60 * 1000) {
+            status = "Perdido";
+          }
+
+          if (hasPedido) {
+            status = "Convertido";
+          } else if (item.orcamento_status === "aprovado") {
+            status = "Aprovado";
+          } else if (hasOrcamento) {
+            status = "Em andamento";
+          } else {
+            status = "Novo";
+          }
+        }
+
         const lead: Lead = {
           id: item.id,
           nome: item.nome,
           email: item.email,
           telefone: item.telefone,
           dataCriacao: item.criado_em,
-          status: hasOrcamento ? "Aprovado" : "Novo",
+          status: status,
           jaCadastrado: isCadastrado,
           origem: item.origem || "Desconhecida",
           idOcta: item.id,

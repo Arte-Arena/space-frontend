@@ -89,7 +89,7 @@ interface LeadTableProps {
   isFiltered: boolean;
 }
 
-type StatusColor = "success" | "warning" | "primary" | "error" | "secondary";
+type StatusColor = "success" | "warning" | "primary" | "error" | "secondary" | "info";
 
 interface StatusColorProps {
   bg: StatusColor;
@@ -148,13 +148,13 @@ const LeadTable: React.FC<LeadTableProps> = ({
   const getStatusColor = (status: string): StatusColorProps => {
     switch (status.toLowerCase()) {
       case "novo":
-        return { bg: "success", color: "success" };
+        return { bg: "info", color: "info" };
       case "em andamento":
         return { bg: "warning", color: "warning" };
+      case "aprovado":
+        return { bg: "success", color: "success" };
       case "convertido":
         return { bg: "primary", color: "primary" };
-      case "aprovado":
-        return { bg: "secondary", color: "secondary" };
       case "perdido":
         return { bg: "error", color: "error" };
       default:
