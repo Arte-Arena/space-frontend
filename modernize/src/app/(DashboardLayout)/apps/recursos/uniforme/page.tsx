@@ -79,6 +79,14 @@ const GeradorUniformeScreen = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  const tiposTecidoCamisaDisponiveis = ["Dryfit Liso", "Dryfit Sport Star Liso", "DryFit Camb Pro"];
+  const tiposTecidoCalcaoDisponiveis = ["Dryfit Liso", "Dryfit Sport Star Liso", "DryFit Camb Pro"];
+  const tiposGolaDisponiveis = ["Polo", "Careca", "V", "Bayard"];
+  const tiposEscudoCamisaDisponiveis = ["Sublimado", "Patch 3D"];
+  const tiposEscudoCalcaoDisponiveis = ["Sublimado", "Patch 3D"];
+  const tamanhosDisponiveis = ["PP", "P", "M", "G", "GG", "XG", "XXG", "XXXG"];
+  const tiposTecidoMeiaoDisponiveis = ["Helanca Profissional", "Helanca Profissional Premium"];
+
   const BCrumb = [
     {
       to: "/",
@@ -127,7 +135,9 @@ const GeradorUniformeScreen = () => {
               <FormControl fullWidth>
                 <InputLabel>Gola</InputLabel>
                 <Select name="gola" value={form.gola} onChange={handleChange} label="Gola">
-                  <MenuItem value="Bayard">Bayard</MenuItem>
+                  {tiposGolaDisponiveis.map((gola) => (
+                    <MenuItem key={gola} value={gola}>{gola}</MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
@@ -136,7 +146,9 @@ const GeradorUniformeScreen = () => {
               <FormControl fullWidth>
                 <InputLabel>Composição</InputLabel>
                 <Select name="composicao" value={form.composicao} onChange={handleChange} label="Composição">
-                  <MenuItem value="Dry SP">Dry SP</MenuItem>
+                  {tiposTecidoCamisaDisponiveis.map((tecido) => (
+                    <MenuItem key={tecido} value={tecido}>{tecido}</MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
@@ -163,7 +175,9 @@ const GeradorUniformeScreen = () => {
               <FormControl fullWidth>
                 <InputLabel>Escudo</InputLabel>
                 <Select name="escudo" value={form.escudo} onChange={handleChange} label="Escudo">
-                  <MenuItem value="Patch 3D">Patch 3D</MenuItem>
+                  {tiposEscudoCamisaDisponiveis.map((escudo) => (
+                    <MenuItem key={escudo} value={escudo}>{escudo}</MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
