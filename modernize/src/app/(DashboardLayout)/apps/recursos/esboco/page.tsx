@@ -13,6 +13,8 @@ import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcr
 import esbocoFormatarPNG from './components/esbocoFormatarPNG';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
+import FormBandeira from './components/forms/formBandeira';
+import { FormState } from './components/types';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira",
@@ -34,7 +36,7 @@ const GeradorDeEsbocoScreen = () => {
     message: '',
     severity: 'success'
   });
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     id: '',
     produto: '',
     altura: '',
@@ -71,15 +73,15 @@ const GeradorDeEsbocoScreen = () => {
   useEffect(() => {
     const alturaM = parseFloat(form.altura || '0');
     const larguraM = parseFloat(form.largura || '0');
-  
+
     const maior = Math.max(alturaM, larguraM);
     const menor = Math.min(alturaM, larguraM);
-  
+
     if (form.ilhoses && alturaM && larguraM) {
       const ilhosesMaior = (Math.ceil(maior) + 1) * 2;
       const ilhosesMenor = Math.max(0, (Math.ceil(menor) - 2)) * 2;
       const totalIlhoses = ilhosesMaior + ilhosesMenor + 2;
-  
+
       setForm(prev => ({ ...prev, qtdIlhoses: totalIlhoses.toString() }));
     }
   }, [form.altura, form.largura, form.ilhoses]);
@@ -88,10 +90,10 @@ const GeradorDeEsbocoScreen = () => {
   useEffect(() => {
     const alturaM = parseFloat(form.altura || '0');
     const larguraM = parseFloat(form.largura || '0');
-  
+
     const maior = Math.max(alturaM, larguraM);
     const menor = Math.min(alturaM, larguraM);
-  
+
     // Cálculo da composição
     if (menor >= 1.5) {
       const partes = Math.ceil(menor / 1.5);
@@ -168,6 +170,24 @@ const GeradorDeEsbocoScreen = () => {
       severity: 'success'
     });
   };
+
+  // useEffect pra limpar automaticamenete o form mudando o tipo de produto
+  useEffect(() => {
+    if (!isBandeira) {
+      setForm((prev) => ({
+        ...prev,
+        altura: '',
+        largura: '',
+        ilhoses: false,
+        qtdIlhoses: '',
+        bordaMastro: false,
+        composicao: '',
+        duplaFace: false,
+        opcao: ''
+      }));
+    }
+  }, [form.produto]);
+
 
   const BCrumb = [
     {
@@ -256,118 +276,15 @@ const GeradorDeEsbocoScreen = () => {
             </Grid>
           </Grid>
 
-          {/* Linha 2 */}
-          <Grid container spacing={2} mb={2}>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                label="Altura (m)"
-                name="altura"
-                type="number"
-                fullWidth
-                value={form.altura}
-                onChange={handleChange}
-              />
-            </Grid>
+          {form.produto.toLowerCase().includes('bandeira') && (
+            <FormBandeira
+              isBandeira={isBandeira}
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+            />
+          )}
 
-            <Grid item xs={12} sm={4}>
-              <TextField
-                label="Largura (m)"
-                name="largura"
-                type="number"
-                fullWidth
-                value={form.largura}
-                onChange={handleChange}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={4}>
-              <TextField
-                label="Composição"
-                name="composicao"
-                fullWidth
-                value={form.composicao}
-                onChange={handleChange}
-              />
-            </Grid>
-          </Grid>
-
-          {/* Linha 3 */}
-          <Grid container spacing={2} mb={2}>
-            <Grid item xs={12} sm={3}>
-              <TextField
-                label="Opção"
-                name="opcao"
-                fullWidth
-                value={form.opcao}
-                onChange={handleChange}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={3}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="bordaMastro"
-                    checked={form.bordaMastro}
-                    onChange={handleCheckboxChange}
-                  />
-                }
-                label="Borda Mastro"
-              />
-            </Grid>
-
-            {isBandeira && (
-              <Grid item xs={12} sm={3}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        name="ilhoses"
-                        checked={form.ilhoses}
-                        onChange={handleCheckboxChange}
-                      />
-                    }
-                    label="Ilhóses"
-                  />
-                  {form.ilhoses && (
-                    <TextField
-                      label="Quantidade"
-                      name="qtdIlhoses"
-                      type="number"
-                      size="small"
-                      sx={{
-                        width: '100px',
-                        marginLeft: '10px',
-                        'input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button': {
-                          WebkitAppearance: 'none',
-                          margin: 0
-                        },
-                        'input[type=number]': {
-                          MozAppearance: 'textfield'
-                        }
-                      }}
-                      InputProps={{ inputProps: { min: 0, step: 1 } }}
-                      value={form.qtdIlhoses}
-                      onChange={handleChange}
-                    />
-                  )}
-                </div>
-              </Grid>
-            )}
-
-            <Grid item xs={12} sm={3}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="duplaFace"
-                    checked={form.duplaFace}
-                    onChange={handleCheckboxChange}
-                  />
-                }
-                label="Dupla Face"
-              />
-            </Grid>
-          </Grid>
           <Box display="flex" alignItems="center" gap={2} mt={3}>
             <Button
               variant="outlined"
