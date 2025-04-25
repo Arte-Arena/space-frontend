@@ -7,13 +7,12 @@ import ParentCard from "@/app/components/shared/ParentCard";
 import { useThemeMode } from "@/utils/useThemeMode";
 import { Alert, AlertProps, Box, Button, CircularProgress, Grid, IconButton, InputAdornment, MenuItem, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TextFieldProps, Tooltip, Typography } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { IconBrandTrello, IconEye, IconSearch, IconShirt } from "@tabler/icons-react";
+import { IconBrandTrello, IconExclamationCircle, IconEye, IconSearch, IconShirt } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import trocarStatusErro from "./components/useTrocarStatusErro";
-import { format, isSameDay, subDays } from "date-fns";
+import { format } from "date-fns";
 import { calcularDataPassadaDiasUteis } from "@/utils/calcDiasUteis";
-import getBrazilTime from "@/utils/brazilTime";
 import { DateTime } from "luxon";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import SidePanel from "./components/drawer";
@@ -42,6 +41,8 @@ interface ApiResponseErros {
 interface Erros {
   id: number;
   detalhes: string;
+  responsavel: string;
+  prejuizo: number;
   numero_pedido: number;
   setor: string;
   link_trello: string;
@@ -71,6 +72,7 @@ export default function Erros() {
   const [selectedRowSidePanel, setSelectedRowSidePanel] = useState<Erros | null>(null);
   const [openDrawer, setOpenDrawer] = useState(false);
   const detalhesRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+  const solucaoRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const [rowsPerPage, setRowsPerPage] = useState<number>(15);
   const [page, setPage] = useState(1);
   const [snackbar, setSnackbar] = React.useState<{
@@ -189,17 +191,17 @@ export default function Erros() {
     setStatusFilterErro('');
   };
 
-  const handleKeyPressdetalhes = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPresssolucao = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
-      const inputElement = detalhesRefs.current[id];
+      const inputElement = solucaoRefs.current[id];
       const valor = inputElement?.value || '';
-      handleEnviarObservacao(id, valor);
+      handleEnviarSolucao(id, valor);
     }
   };
 
-  const handleEnviarObservacao = async (id: string, obs: string) => {
+  const handleEnviarSolucao = async (id: string, obs: string) => {
     if (!id) {
-      console.error("ID do pedido não encontrado");
+      console.error("ID do erro não encontrado");
       return;
     }
 
@@ -211,7 +213,63 @@ export default function Erros() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API}/api/producao/pedido-obs-change/${id}`, // trocar a URL para a correta
+        `${process.env.NEXT_PUBLIC_API}/api/erros/solucao/${id}`, // trocar a URL para a correta
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ solucao: obs }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erro ao salvar Solução");
+      }
+
+      const data = await response.json();
+      setSnackbar({
+        open: true,
+        message: `${'Solução salva com sucesso.'}`,
+        severity: 'success'
+      });
+      console.log("Solução salva com sucesso:", data);
+
+      refetch();
+    } catch (error) {
+      console.error("Erro ao salvar Solução:", error);
+      setSnackbar({
+        open: true,
+        message: `${'Erro ao salvar Solução.'}`,
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleKeyPressdetalhes = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      const inputElement = detalhesRefs.current[id];
+      const valor = inputElement?.value || '';
+      handleEnviarDetalhes(id, valor);
+    }
+  };
+
+  const handleEnviarDetalhes = async (id: string, obs: string) => {
+    if (!id) {
+      console.error("ID do erro não encontrado");
+      return;
+    }
+
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      console.error("Usuário não autenticado");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API}/api/erros/detalhes/${id}`, // trocar a URL para a correta
         {
           method: "PATCH",
           headers: {
@@ -229,21 +287,26 @@ export default function Erros() {
       const data = await response.json();
       setSnackbar({
         open: true,
-        message: `${'Detalhe salva com sucesso.'}`,
+        message: `${'Detalhes salvos com sucesso.'}`,
         severity: 'success'
       });
-      console.log("Detalhe salva com sucesso:", data);
+      console.log("Detalhes salvos com sucesso:", data);
 
       refetch();
     } catch (error) {
       console.error("Erro ao salvar Detalhe:", error);
+      setSnackbar({
+        open: true,
+        message: `${'Erro ao salvar Detalhe.'}`,
+        severity: 'error'
+      });
     }
   };
 
   const status = [
     'Pendente',
     'Em Análise',
-    'Em Corre o',
+    'Em Correção',
     'Resolvido',
     'Recusado',
   ];
@@ -292,8 +355,6 @@ export default function Erros() {
     return new Date(data.getFullYear(), data.getMonth(), data.getDate());
   };
 
-  console.log("allErros:", allErros);
-  console.log("Filtered:", filteredErros);
   return (
     <PageContainer title="Tabela de Erros" description="Tabela de Erros">
       <>
@@ -310,7 +371,7 @@ export default function Erros() {
                   value={query}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
                   onKeyPress={handleSearchKeyPress}
-                  placeholder="Buscar orçamento..."
+                  placeholder="Buscar erro..."
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -389,6 +450,19 @@ export default function Erros() {
                   Filtrar Profundamente
                 </Button>
               </Grid>
+              <Grid item xs>
+                <Box display="flex" justifyContent="flex-end">
+                  <Tooltip title="Adicionar Erro" placement="top">
+                    <IconButton
+                      color="error"
+                      onClick={() => window.open('../../apps/erros/add', '_blank')}
+                      size="small"
+                    >
+                      <IconExclamationCircle />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Grid>
             </Grid>
 
             {isErrorErros ? (
@@ -408,6 +482,9 @@ export default function Erros() {
                       <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
                       <TableCell align='center' sx={{ width: '5%' }}>Data De Criação</TableCell>
                       <TableCell align='center' sx={{ width: '25%' }}>Detalhes</TableCell>
+                      <TableCell align='center' sx={{ width: '25%' }}>Solução</TableCell>
+                      <TableCell align='center' sx={{ width: '10%' }}>Responsável</TableCell>
+                      <TableCell align='center' sx={{ width: '10%' }}>Prejuizo</TableCell>
                       <TableCell align='center' sx={{ width: '7%' }}>Status</TableCell>
                       <TableCell align='center' sx={{ width: '15%' }}>Ações</TableCell>
                     </TableRow>
@@ -415,22 +492,21 @@ export default function Erros() {
                   <TableBody>
                     {Array.isArray(filteredErros) && filteredErros.map((row) => {
 
-                      console.log("Row:", row);
                       const dataPrevistaSegura = formatarDataSegura(String(row?.created_at));
                       const dataPrevista = row?.created_at ? dataPrevistaSegura : '';
                       const dataPrevistaDateTime = DateTime.fromFormat(dataPrevista, 'MM/dd/yyyy').startOf('day');
                       const feriados = localStorage.getItem('feriados');
                       const parsedFeriados = JSON.parse(feriados || '[]');
                       const prazoCorteConferencia = calcularDataPassadaDiasUteis(dataPrevistaDateTime, 0, parsedFeriados);
-                     
+
                       return (
                         <TableRow
                           key={row.id}
                         >
 
                           <TableCell sx={{
-                            color: myTheme === 'dark' ? 'white' : 'black'
-                          }}>{String(row.numero_pedido)}</TableCell>
+                            color: myTheme === 'dark' ? 'white' : 'black',
+                          }} align='center'>{row.numero_pedido ? String(row.numero_pedido) : "-"}</TableCell>
 
 
                           <TableCell sx={{
@@ -439,6 +515,7 @@ export default function Erros() {
                             {prazoCorteConferencia.toFormat('dd/MM/yyyy')}
                           </TableCell>
 
+                          {/* Detalhes */}
                           <Tooltip title={row?.detalhes ? row.detalhes : "Adicionar Detalhe"} placement="left">
                             <TableCell
                               sx={{
@@ -459,7 +536,7 @@ export default function Erros() {
                                   if (row?.id) {
                                     const inputElement = detalhesRefs.current[row.id];
                                     const valor = inputElement?.value || '';
-                                    handleEnviarObservacao(String(row.id), valor);
+                                    handleEnviarDetalhes(String(row.id), valor);
                                   }
                                 }}
                                 onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -469,6 +546,52 @@ export default function Erros() {
                               />
                             </TableCell>
                           </Tooltip>
+
+                          {/* solucao */}
+                          <Tooltip title={row?.solucao ? row.solucao : "Adicionar Solução"} placement="left">
+                            <TableCell
+                              sx={{
+                                color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
+                                textAlign: "left",
+                              }}
+                            >
+                              <CustomTextField
+                                key={row?.id}
+                                label={row?.solucao ? "Solução" : "Adicionar Solução"}
+                                defaultValue={row?.solucao || ""}
+                                inputRef={(ref: HTMLInputElement | null) => {
+                                  if (row?.id && ref) {
+                                    solucaoRefs.current[row.id] = ref;
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (row?.id) {
+                                    const inputElement = solucaoRefs.current[row.id];
+                                    const valor = inputElement?.value || '';
+                                    handleEnviarSolucao(String(row.id), valor);
+                                  }
+                                }}
+                                onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
+                                  if (row?.id) handleKeyPresssolucao(String(row.id), event);
+                                }}
+                                fullWidth
+                              />
+                            </TableCell>
+                          </Tooltip>
+
+                          {/* Responsavel */}
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black',
+                          }} align='center'>
+                            {row.responsavel ? String(row.responsavel) : "-"}
+                          </TableCell>
+
+                          {/* Prejuizo */}
+                          <TableCell sx={{
+                            color: myTheme === 'dark' ? 'white' : 'black',
+                          }} align='center'>
+                            {row.prejuizo ? String(row.prejuizo) : "-"}
+                          </TableCell>
 
                           <TableCell
                             sx={{
@@ -521,7 +644,7 @@ export default function Erros() {
                                   <IconButton
                                     onClick={() => handleLinkTrello(row)}
                                     disabled={row.link_trello === null}
-                                    sx={{ml: 1}}
+                                    sx={{ ml: 1 }}
                                   >
                                     <IconBrandTrello />
                                   </IconButton>

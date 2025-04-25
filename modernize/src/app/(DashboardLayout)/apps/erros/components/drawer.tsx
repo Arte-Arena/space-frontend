@@ -12,7 +12,6 @@ interface SidePanelProps {
 }
 
 const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer }) => {
-  const designers = localStorage.getItem('designers');
   const theme = useThemeMode();
   const status = row?.status;
 
@@ -28,7 +27,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
       {/* Cabeçalho */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={0}>
         <Typography variant="h5" fontWeight="bold">
-          Detalhes do Pedido N°{Number(row?.numero_pedido)}
+          Detalhes do Erro do Pedido N°{Number(row?.numero_pedido)}
         </Typography>
 
         <IconButton onClick={onCloseDrawer}>
@@ -43,7 +42,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
             <Typography variant="h6" fontWeight="bold">📅 Datas</Typography>
             <Divider sx={{ mb: 1 }} />
             <Typography>
-              <strong>Criação do Pedido:</strong> <span style={{ fontWeight: 500 }}>
+              <strong>Criação do Erro:</strong> <span style={{ fontWeight: 500 }}>
                 {row?.created_at ? format(new Date(row.created_at), "dd/MM/yyyy") : "Data inválida"}
               </span>
             </Typography>
@@ -61,7 +60,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
             <Typography variant="h6" fontWeight="bold">📌 Status</Typography>
             <Divider sx={{ mb: 1 }} />
             <Typography>
-              <strong>Status do Pedido:</strong> <span style={{ fontWeight: 500 }}>{status}</span>
+              <strong>Status do Erro:</strong> <span style={{ fontWeight: 500 }}>{status}</span>
             </Typography>
           </CardContent>
         </Card>

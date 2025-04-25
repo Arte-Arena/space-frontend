@@ -64,6 +64,9 @@ interface ApiResponse {
     origem: string;
     criado_em: string;
     existe_em_orcamento: boolean;
+    orcamento_id?: string;
+    orcamento_status?: "aprovado" | "pendente" | null;
+    tem_pedido?: boolean;
     client_info: {
       client_id: string;
       client_name: string;
@@ -110,7 +113,6 @@ const BCrumb = [
 
 function LeadsScreen() {
   const isLoggedIn = useAuth();
-  const [searchResults, setSearchResults] = useState<Lead[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -158,6 +160,31 @@ function LeadsScreen() {
       const transformedLeads = result.data.map((item) => {
         const hasOrcamento = item.existe_em_orcamento;
         const clientInfo = item.client_info;
+        const isCadastrado = clientInfo !== null;
+
+        let status: string;
+        if (!hasOrcamento) {
+          status = "Novo";
+        } else {
+          const hasPedido = item.tem_pedido;
+          
+          const lastInteraction = item.criado_em ? new Date(item.criado_em) : null;
+          const now = new Date();
+          
+          if (lastInteraction && (now.getTime() - lastInteraction.getTime()) > 60 * 24 * 60 * 60 * 1000) {
+            status = "Perdido";
+          }
+
+          if (hasPedido) {
+            status = "Convertido";
+          } else if (item.orcamento_status === "aprovado") {
+            status = "Aprovado";
+          } else if (hasOrcamento) {
+            status = "Em andamento";
+          } else {
+            status = "Novo";
+          }
+        }
 
         const lead: Lead = {
           id: item.id,
@@ -165,8 +192,8 @@ function LeadsScreen() {
           email: item.email,
           telefone: item.telefone,
           dataCriacao: item.criado_em,
-          status: hasOrcamento ? "Aprovado" : "Novo",
-          jaCadastrado: hasOrcamento,
+          status: status,
+          jaCadastrado: isCadastrado,
           origem: item.origem || "Desconhecida",
           idOcta: item.id,
         };
@@ -213,7 +240,6 @@ function LeadsScreen() {
     if (!searchTerm.trim()) {
       fetchLeads();
       setIsSearching(false);
-      setSearchResults([]);
       return;
     }
 

@@ -41,7 +41,6 @@ import {
   IconExclamationCircle,
   IconUsers,
 } from "@tabler/icons-react";
-import { Icon } from "@mui/material";
 
 interface MenuitemsType {
   id?: string;

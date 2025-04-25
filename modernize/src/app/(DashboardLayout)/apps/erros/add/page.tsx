@@ -35,18 +35,23 @@ import {
   Assignment as AssignmentIcon,
   AddCircle as AddCircleIcon,
   Close as CloseIcon,
-  HelpOutline as HelpOutlineIcon
+  HelpOutline as HelpOutlineIcon,
+  AccessTime
 } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { IconCoin, IconMoneybag } from '@tabler/icons-react';
+import { IconUserExclamation } from '@tabler/icons-react';
 
 // Opções para os selects
 const SETORES = [
+  'Comercial',
+  'Administrativo',
   'Design',
   'Impressão',
-  'Confeccção',
-  'Qualidade',
+  'Sublimação',
+  'Corte & Conferência',
+  'Costura',
   'Expedição',
-  'Administrativo'
 ];
 
 const STATUS = [
@@ -61,15 +66,23 @@ const STATUS = [
 const validationSchema = Yup.object().shape({
 
   numero_pedido: Yup.number()
-    .required('Número do pedido é obrigatório')
+    // .required('Número do pedido é obrigatório')
     .integer('Deve ser um número inteiro')
     .positive('Deve ser um número positivo'),
+
+  prejuizo: Yup.number()
+    .min(0, 'O prejuízo não pode ser negativo')
+    .max(999999.99, 'Valor máximo excedido')
+    .nullable(),
+
+  responsavel: Yup.string()
+    .max(100, 'Máximo de 100 caracteres'),
 
   setor: Yup.string()
     .required('Setor é obrigatório'),
 
   link_trello: Yup.string()
-    .required('Link do Trello é obrigatório')
+    // .required('Link do Trello é obrigatório')
     .url('Deve ser uma URL válida'),
 
   detalhes: Yup.string()
@@ -85,7 +98,6 @@ const validationSchema = Yup.object().shape({
 });
 
 const ErroForm = () => {
-  // const [openDialog, setOpenDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [snackbar, setSnackbar] = React.useState<{
     open: boolean;
@@ -99,7 +111,7 @@ const ErroForm = () => {
   const router = useRouter();
   const theme = useTheme();
   const accessToken = localStorage.getItem('accessToken');
-  
+
   if (!accessToken) {
     console.error('Access token is missing');
     router.push('/auth/login');
@@ -107,12 +119,14 @@ const ErroForm = () => {
 
   const searchParams = useSearchParams();
   const numero_pedido = searchParams.get('numero_pedido');
-  
+
   // handle submit
   const formik = useFormik({
     initialValues: {
       numero_pedido: numero_pedido ?? '',
       setor: '',
+      responsavel: '',
+      prejuizo: null,
       link_trello: '',
       detalhes: '',
       status: 'Pendente',
@@ -122,7 +136,6 @@ const ErroForm = () => {
     onSubmit: async (values) => {
       setIsSubmitting(true);
       try {
-
         const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/erros`, {
           method: 'PUT',
           headers: {
@@ -131,6 +144,7 @@ const ErroForm = () => {
           },
           body: JSON.stringify(values)
         });
+
         if (!response.ok) {
           throw new Error('Erro ao registrar o erro');
         }
@@ -190,7 +204,7 @@ const ErroForm = () => {
 
           <form onSubmit={formik.handleSubmit}>
             <Grid container spacing={3}>
-              {/* Número do Pedido */}
+              {/* Linha 1: Número do Pedido e Setor */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -213,7 +227,6 @@ const ErroForm = () => {
                 />
               </Grid>
 
-              {/* Setor */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -235,7 +248,55 @@ const ErroForm = () => {
                 </TextField>
               </Grid>
 
-              {/* Link do Trello */}
+              {/* Linha 2: Responsável e Prejuízo */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  id="responsavel"
+                  name="responsavel"
+                  label="Responsável"
+                  value={formik.values.responsavel}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.responsavel && Boolean(formik.errors.responsavel)}
+                  helperText={formik.touched.responsavel && formik.errors.responsavel}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <IconUserExclamation color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  id="prejuizo"
+                  name="prejuizo"
+                  label="Prejuízo Financeiro (R$)"
+                  type="number"
+                  value={formik.values.prejuizo ?? ''}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.prejuizo && Boolean(formik.errors.prejuizo)}
+                  helperText={formik.touched.prejuizo && formik.errors.prejuizo}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <IconCoin color="action" />
+                      </InputAdornment>
+                    ),
+                    inputProps: {
+                      step: "0.01",
+                      min: "0"
+                    }
+                  }}
+                />
+              </Grid>
+
+              {/* Linha 3: Link do Trello */}
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -270,7 +331,7 @@ const ErroForm = () => {
                 />
               </Grid>
 
-              {/* Status */}
+              {/* Linha 4: Status */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -336,11 +397,6 @@ const ErroForm = () => {
               <Grid item xs={12}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <Typography variant="subtitle1">Solução Proposta (Opcional)</Typography>
-                  {/* <Tooltip title="Adicionar solução">
-                    <IconButton onClick={handleOpenDialog} color="primary">
-                      <AddCircleIcon />
-                    </IconButton>
-                  </Tooltip> */}
                 </Box>
                 <TextField
                   fullWidth
@@ -390,44 +446,6 @@ const ErroForm = () => {
         </Paper>
       </Container>
 
-      {/* Dialog para Solução Detalhada */}
-      {/* <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <Box display="flex" alignItems="center">
-            <ErrorIcon color="primary" sx={{ mr: 1 }} />
-            <Typography variant="h6">Descreva a Solução</Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="solucao-dialog"
-            name="solucao"
-            label="Solução Detalhada"
-            type="text"
-            fullWidth
-            multiline
-            rows={8}
-            variant="outlined"
-            value={formik.values.solucao}
-            onChange={formik.handleChange}
-            inputProps={{
-              maxLength: 500
-            }}
-            helperText={`${formik.values.solucao.length}/500 caracteres`}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="secondary">
-            Cancelar
-          </Button>
-          <Button onClick={handleCloseDialog} color="primary">
-            Aplicar
-          </Button>
-        </DialogActions>
-      </Dialog> */}
-
       {/* Snackbar de Feedback */}
       <Snackbar
         open={snackbar.open}
@@ -471,3 +489,40 @@ const ErroForm = () => {
 };
 
 export default ErroForm;
+{/* Dialog para Solução Detalhada */ }
+{/* <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+  <DialogTitle>
+    <Box display="flex" alignItems="center">
+      <ErrorIcon color="primary" sx={{ mr: 1 }} />
+      <Typography variant="h6">Descreva a Solução</Typography>
+    </Box>
+  </DialogTitle>
+  <DialogContent>
+    <TextField
+      autoFocus
+      margin="dense"
+      id="solucao-dialog"
+      name="solucao"
+      label="Solução Detalhada"
+      type="text"
+      fullWidth
+      multiline
+      rows={8}
+      variant="outlined"
+      value={formik.values.solucao}
+      onChange={formik.handleChange}
+      inputProps={{
+        maxLength: 500
+      }}
+      helperText={`${formik.values.solucao.length}/500 caracteres`}
+    />
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={handleCloseDialog} color="secondary">
+      Cancelar
+    </Button>
+    <Button onClick={handleCloseDialog} color="primary">
+      Aplicar
+    </Button>
+  </DialogActions>
+</Dialog> */}
