@@ -36,7 +36,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
       {/* Cabeçalho */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={0}>
         <Typography variant="h5" fontWeight="bold">
-          Detalhes do Erro do Pedido N°{Number(row?.numero_pedido)}
+          {row?.numero_pedido ? "Detalhes do Erro do Pedido N°" + row?.numero_pedido : "Detalhes do Erro N°" + row?.id}
           <Tooltip title="Adicionar Erro ao pedido">
             <IconButton onClick={handleErrorPedido} color="primary">
               <IconExclamationCircle />
