@@ -1,16 +1,49 @@
 // ./components/forms/FormBandeira.tsx
 import { TextField, FormControlLabel, Checkbox, Grid } from '@mui/material';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FormState } from '../types';
 
 interface FormProps {
-  isBandeira: boolean;
   form: FormState;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleCheckboxChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  setForm: React.Dispatch<React.SetStateAction<FormState>>;
 }
 
-const FormBandeira: React.FC<FormProps> = ({ isBandeira, form, handleChange, handleCheckboxChange }) => {
+const FormBandeira: React.FC<FormProps> = ({ form, handleChange, handleCheckboxChange, setForm }) => {
+
+useEffect(() => {
+    const alturaM = parseFloat(form.altura || '0');
+    const larguraM = parseFloat(form.largura || '0');
+
+    const maior = Math.max(alturaM, larguraM);
+    const menor = Math.min(alturaM, larguraM);
+
+    if (form.ilhoses && alturaM && larguraM) {
+      const ilhosesMaior = (Math.ceil(maior) + 1) * 2;
+      const ilhosesMenor = Math.max(0, (Math.ceil(menor) - 2)) * 2;
+      const totalIlhoses = ilhosesMaior + ilhosesMenor + 2;
+
+      setForm(prev => ({ ...prev, qtdIlhoses: totalIlhoses.toString() }));
+    }
+  }, [form.altura, form.largura, form.ilhoses]);
+
+
+  useEffect(() => {
+    const alturaM = parseFloat(form.altura || '0');
+    const larguraM = parseFloat(form.largura || '0');
+
+    const maior = Math.max(alturaM, larguraM);
+    const menor = Math.min(alturaM, larguraM);
+
+    // Cálculo da composição
+    if (menor >= 1.5) {
+      const partes = Math.ceil(menor / 1.5);
+      setForm(prev => ({ ...prev, composicao: `${partes} Partes` }));
+    } else {
+      setForm(prev => ({ ...prev, composicao: '' }));
+    }
+  }, [form.altura, form.largura]);
 
   return (
     <>

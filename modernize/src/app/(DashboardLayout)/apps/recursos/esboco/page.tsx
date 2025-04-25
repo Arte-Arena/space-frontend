@@ -278,10 +278,10 @@ const GeradorDeEsbocoScreen = () => {
 
           {form.produto.toLowerCase().includes('bandeira') && (
             <FormBandeira
-              isBandeira={isBandeira}
               form={form}
               handleChange={handleChange}
               handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
             />
           )}
 
