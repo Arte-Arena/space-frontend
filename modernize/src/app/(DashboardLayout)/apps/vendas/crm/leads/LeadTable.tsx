@@ -409,11 +409,11 @@ const LeadTable: React.FC<LeadTableProps> = ({
                                     size={18}
                                     style={{ marginRight: 8 }}
                                   />
-                                  Orçamento em Andamento
+                                  Orçamento disponível
                                 </Typography>
                                 <Divider sx={{ mb: 2, width: "100%" }} />
                                 <Typography variant="body2" sx={{ mb: 2 }}>
-                                  Este lead possui um orçamento em andamento. Você pode acessá-lo para mais detalhes.
+                                  Este lead possui um orçamento disponível. Você pode acessá-lo para mais detalhes.
                                 </Typography>
                                 <Button
                                   variant="contained"
