@@ -5,7 +5,7 @@ import CustomSelect from "@/app/components/forms/theme-elements/CustomSelect";
 import CustomTextField from "@/app/components/forms/theme-elements/CustomTextField";
 import ParentCard from "@/app/components/shared/ParentCard";
 import { useThemeMode } from "@/utils/useThemeMode";
-import { Alert, AlertProps, Box, Button, CircularProgress, Grid, IconButton, InputAdornment, MenuItem, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TextFieldProps, Tooltip, Typography } from "@mui/material";
+import { Alert, AlertProps, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, InputAdornment, MenuItem, Paper, Snackbar, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TextFieldProps, Tooltip, Typography } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { IconBrandTrello, IconExclamationCircle, IconEye, IconSearch, IconShirt } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ import { DateTime } from "luxon";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import SidePanel from "./components/drawer";
 import { useQuery } from "@tanstack/react-query";
+import { TextField } from "@mui/material";
 
 interface ApiResponseErros {
   current_page: number;
@@ -63,6 +64,9 @@ const BCrumb = [
 ];
 
 export default function Erros() {
+  const [openDialogSolucao, setOpenDialogSolucao] = useState(false);
+  const [currentRowSolucao, setCurrentRowSolucao] = useState<Erros | null>(null);
+  const [novaSolucao, setNovaSolucao] = useState('');
   const [allErros, setallErros] = useState<Erros[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [query, setQuery] = useState<string>('');
@@ -115,6 +119,23 @@ export default function Erros() {
   }, [dataErros]);
 
   // handles
+  const handleOpenDialogSolucao = (row: Erros) => {
+    setCurrentRowSolucao(row);
+    setNovaSolucao(row.solucao || '');
+    setOpenDialogSolucao(true);
+  };
+
+  const handleCloseDialogSolucao = () => {
+    setOpenDialogSolucao(false);
+  };
+
+  const handleSalvarSolucao = async () => {
+    if (currentRowSolucao) {
+      await handleEnviarSolucao(String(currentRowSolucao.id), novaSolucao);
+      setOpenDialogSolucao(false);
+    }
+  };
+
   const handleFilter = () => {
     setPage(1);
     setSearchQuery(query);
@@ -311,6 +332,16 @@ export default function Erros() {
     'Recusado',
   ];
 
+  const setorColors: { [key: string]: string } = {
+    'Design': '#1E88E5',           // Azul
+    'Impressão': '#43A047',        // Verde
+    'Sublimação': '#FB8C00',       // Laranja escuro
+    'Costura': '#F4511E',          // Laranja queimado
+    'Corte & Confêrencia': '#8E24AA', // Roxo
+    'Comercial': '#3949AB',        // Azul escuro
+    'Backoffice': '#00897B',       // Verde azulado
+  };
+
   // Filtro de pedidos
   const filteredErros = useMemo(() => {
     return allErros.filter((erro) => {
@@ -479,14 +510,15 @@ export default function Erros() {
                 <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
                   <TableHead>
                     <TableRow>
-                      <TableCell align='center' sx={{ width: '5%' }}>N° Pedido</TableCell>
-                      <TableCell align='center' sx={{ width: '5%' }}>Data De Criação</TableCell>
-                      <TableCell align='center' sx={{ width: '25%' }}>Detalhes</TableCell>
-                      <TableCell align='center' sx={{ width: '25%' }}>Solução</TableCell>
-                      <TableCell align='center' sx={{ width: '10%' }}>Responsável</TableCell>
-                      <TableCell align='center' sx={{ width: '10%' }}>Prejuizo</TableCell>
+                      <TableCell align='center' sx={{ width: '6%' }}>N° Pedido</TableCell>
+                      <TableCell align='center' sx={{ width: '6%' }}>Data De Criação</TableCell>
+                      <TableCell align='center' sx={{ width: '20%' }}>Setores</TableCell>
+                      <TableCell align='center' sx={{ width: '20%' }}>Detalhes</TableCell>
+                      <TableCell align='center' sx={{ width: '12%' }}>Solução</TableCell>
+                      <TableCell align='center' sx={{ width: '9%' }}>Responsável</TableCell>
+                      <TableCell align='center' sx={{ width: '9%' }}>Prejuizo</TableCell>
                       <TableCell align='center' sx={{ width: '7%' }}>Status</TableCell>
-                      <TableCell align='center' sx={{ width: '15%' }}>Ações</TableCell>
+                      <TableCell align='center' sx={{ width: '11%' }}>Ações</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -514,6 +546,35 @@ export default function Erros() {
                           }} align='center'>
                             {prazoCorteConferencia.toFormat('dd/MM/yyyy')}
                           </TableCell>
+
+                          {/* setor */}
+                          <TableCell align='center'>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center' }}>
+                              {(row.setor || '')
+                                .split(',')
+                                .map((setor) => setor.trim())
+                                .filter(Boolean)
+                                .map((setor, index) => (
+                                  <Box
+                                    key={index}
+                                    sx={{
+                                      px: 1.2,
+                                      py: 0.5,
+                                      borderRadius: '12px',
+                                      backgroundColor: setorColors[setor] || '#9E9E9E',
+                                      color: 'white',
+                                      fontSize: '0.75rem',
+                                      fontWeight: 500,
+                                      lineHeight: 1,
+                                      textAlign: 'center',
+                                    }}
+                                  >
+                                    {setor}
+                                  </Box>
+                                ))}
+                            </Box>
+                          </TableCell>
+
 
                           {/* Detalhes */}
                           <Tooltip title={row?.detalhes ? row.detalhes : "Adicionar Detalhe"} placement="left">
@@ -548,34 +609,21 @@ export default function Erros() {
                           </Tooltip>
 
                           {/* solucao */}
-                          <Tooltip title={row?.solucao ? row.solucao : "Adicionar Solução"} placement="left">
+                          <Tooltip title={row?.solucao ? row.solucao : "Adicionar Solução"} placement="top">
                             <TableCell
                               sx={{
                                 color: (theme: any) => theme.palette.mode === 'dark' ? 'white' : 'black',
-                                textAlign: "left",
+                                textAlign: "center",
                               }}
                             >
-                              <CustomTextField
-                                key={row?.id}
-                                label={row?.solucao ? "Solução" : "Adicionar Solução"}
-                                defaultValue={row?.solucao || ""}
-                                inputRef={(ref: HTMLInputElement | null) => {
-                                  if (row?.id && ref) {
-                                    solucaoRefs.current[row.id] = ref;
-                                  }
-                                }}
-                                onBlur={() => {
-                                  if (row?.id) {
-                                    const inputElement = solucaoRefs.current[row.id];
-                                    const valor = inputElement?.value || '';
-                                    handleEnviarSolucao(String(row.id), valor);
-                                  }
-                                }}
-                                onKeyPress={(event: React.KeyboardEvent<HTMLInputElement>) => {
-                                  if (row?.id) handleKeyPresssolucao(String(row.id), event);
-                                }}
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={() => handleOpenDialogSolucao(row)}
                                 fullWidth
-                              />
+                              >
+                                {row.solucao ? "Editar Solução" : "Adicionar Solução"}
+                              </Button>
                             </TableCell>
                           </Tooltip>
 
@@ -668,6 +716,41 @@ export default function Erros() {
                 />
               </TableContainer>
             )}
+            <Dialog open={openDialogSolucao} onClose={handleCloseDialogSolucao} maxWidth="md" fullWidth>
+              <DialogTitle>
+                <Box display="flex" alignItems="center">
+                  <IconExclamationCircle color="primary"/>
+                  <Typography variant="h6">Descreva a Solução</Typography>
+                </Box>
+              </DialogTitle>
+              <DialogContent>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  id="solucao-dialog"
+                  label="Solução Detalhada"
+                  type="text"
+                  fullWidth
+                  multiline
+                  rows={8}
+                  variant="outlined"
+                  value={novaSolucao}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNovaSolucao(e.target.value)}
+                  inputProps={{
+                    maxLength: 500
+                  }}
+                  helperText={`${novaSolucao.length}/500 caracteres`}
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleCloseDialogSolucao} color="secondary">
+                  Cancelar
+                </Button>
+                <Button onClick={handleSalvarSolucao} color="primary">
+                  Aplicar
+                </Button>
+              </DialogActions>
+            </Dialog>
             <SidePanel openDrawer={openDrawer} onCloseDrawer={() => setOpenDrawer(false)} row={selectedRowSidePanel} />
             <Snackbar
               open={snackbar.open}
