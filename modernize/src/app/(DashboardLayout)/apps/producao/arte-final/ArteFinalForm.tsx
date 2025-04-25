@@ -30,8 +30,6 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { IconPlus, IconMinus } from '@tabler/icons-react';
-import { calcularDataFuturaDiasUteis, calcDiasUteisEntreDatas } from '@/utils/calcDiasUteis';
-import { DateTime } from 'luxon';
 
 interface ArteFinalFormProps {
   initialData?: ArteFinal;
