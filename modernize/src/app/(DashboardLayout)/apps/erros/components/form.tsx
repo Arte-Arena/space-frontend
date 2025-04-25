@@ -212,6 +212,9 @@ const ErroForm = () => {
         });
       } finally {
         setIsSubmitting(false);
+        if(id) {
+          router.push('/apps/erros');
+        }
       }
     }
   });
