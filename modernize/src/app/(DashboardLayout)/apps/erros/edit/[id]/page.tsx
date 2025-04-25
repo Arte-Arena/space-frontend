@@ -1,7 +1,7 @@
 import { Container } from "@mui/material";
-import ErroForm from "../components/form";
+import ErroForm from "../../components/form";
 
-const CreateErro = () => {
+const EditErro = () => {
 
   return (
 
@@ -11,4 +11,4 @@ const CreateErro = () => {
   );
 };
 
-export default CreateErro;
+export default EditErro;
