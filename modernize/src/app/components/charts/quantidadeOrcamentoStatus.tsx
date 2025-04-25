@@ -22,37 +22,59 @@ const ApexOrcamentoStatus: React.FC<ApexOrcamentosProps> = ({ aprovados, naoApro
   const options: ApexCharts.ApexOptions = {
     chart: {
       type: 'pie',
-      height: 450,
       fontFamily: "'Plus Jakarta Sans', sans-serif",
-      foreColor: "#adb0bb",
-      toolbar: { show: false }
+      foreColor: '#ADB0BB',
+      toolbar: { show: false },
     },
-    labels: ["Orçamentos Aprovados", "Orçamentos Não Aprovados"],
-    colors: ['#0b73e5', '#ff4d4d'], // Azul para aprovados, vermelho para não aprovados
+    labels: ['Orçamentos Aprovados', 'Orçamentos Não Aprovados'],
+    colors: ['#3E82F7', '#FF4C52'],
     legend: {
+      show: true,
       position: 'bottom',
+      fontSize: '13px',
+      fontWeight: 500,
+      labels: {
+        colors: ['#CBD5E1'],
+      },
+      markers: {
+        width: 12,
+        height: 12,
+        radius: 12,
+      },
+      itemMargin: {
+        horizontal: 12,
+        vertical: 4,
+      },
     },
     dataLabels: {
       enabled: true,
-      formatter: (val: number) => `${Number(val).toFixed(1)}%`, // Exibir porcentagem
-    },
-    title: {
-      text: 'Status dos Orçamentos',
-      align: 'center',
-    },
-    markers: {
-      size: 4,
-      colors: [primary],
-      strokeWidth: 2,
-
-      hover: {
-        size: 7,
+      style: {
+        fontSize: '14px',
+        fontWeight: 600,
+        colors: ['#fff'],
+      },
+      dropShadow: {
+        enabled: false,
       },
     },
     tooltip: {
       theme: 'dark',
-      // style: { fontSize: '14px', fontFamily: 'Arial', color: '#FFFFFF' },
+      y: {
+        formatter: (val: number) => `${val.toFixed(1)}%`,
+      },
     },
+    stroke: {
+      show: false, // ❌ sem contorno ao redor das fatias
+    },
+    responsive: [
+      {
+        breakpoint: 600,
+        options: {
+          chart: { width: 280 },
+          legend: { position: 'bottom' },
+        },
+      },
+    ],
   };
 
   // Série de dados
@@ -60,20 +82,7 @@ const ApexOrcamentoStatus: React.FC<ApexOrcamentosProps> = ({ aprovados, naoApro
 
   return (
     <div>
-      <Chart options={options} series={series} type="pie" height={450} />
-      {/*     
-    <div style={{ marginTop: "20px", textAlign: "center" }}>
-      <Link href="/apps/vendas/relatorios/quantidade-orcamentos-aprovados" target='_blank'>
-        <button style={{ margin: "5px", padding: "10px", backgroundColor: "#0b73e5", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}>
-          Ver Orçamentos Aprovados
-        </button>
-      </Link>
-      <Link href="/apps/vendas/relatorios/orcamentos-nao-aprovados" target='_blank'>
-        <button style={{ margin: "5px", padding: "10px", backgroundColor: "#ff4d4d", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}>
-          Ver Orçamentos Não Aprovados
-        </button>
-      </Link>
-    </div> */}
+      <Chart options={options} series={series} type="pie" height={'auto'} />
     </div>
   );
 };

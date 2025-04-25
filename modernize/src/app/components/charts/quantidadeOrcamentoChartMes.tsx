@@ -21,71 +21,100 @@ const ApexOrcamentosMes: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos }) =
   // Opções do gráfico
   const options: ApexCharts.ApexOptions = {
     chart: {
-      type: 'pie',
-      height: "auto",
+      type: 'area',
       fontFamily: "'Plus Jakarta Sans', sans-serif",
-      foreColor: "#adb0bb",
+      foreColor: '#adb0bb',
       toolbar: { show: false },
+      height: 300,
+      animations: {
+        enabled: true,
+        easing: 'easeinout',
+        speed: 800,
+      },
     },
-    colors: ['#0b73e5'],
-    dataLabels: {
-      enabled: false,
-    },
-    stroke: {
-      width: 7,
-      curve: 'smooth', //'straight' ou 'smooth'\\
-    },
+    colors: ['#3E82F7'],
+    stroke: { curve: 'smooth', width: 1 },
     xaxis: {
-      categories: categories, // Datas
-      title: {
-        text: 'Data',
-      },
+      categories: categories,
       labels: {
+        show: false,
       },
-    },
-    fill: {
-      type: "gradient",
-      gradient: {
-        shade: "dark",
-        gradientToColors: [secondary],
-        shadeIntensity: 1,
-        type: "vertical",
-        opacityFrom: 1,
-        opacityTo: 0.3,
-        stops: [0, 100],
+      // labels: {
+      //   style: {
+      //     colors: '#8898aa',
+      //     fontSize: '12px',
+      //     fontWeight: 500,
+      //   },
+      // },
+      // axisBorder: { color: '#2c3e50' },
+      // axisTicks: { color: '#2c3e50' },
+      axisBorder: {
+        show: false, // remove a linha horizontal
       },
-    },
-    markers: {
-      size: 4,
-      colors: [secondary],
-      strokeWidth: 2,
-
-      hover: {
-        size: 7,
+      axisTicks: {
+        show: false, // remove as marcações
       },
     },
     yaxis: {
       title: {
-        text: 'Número de Orçamentos',
+        text: 'Nº de Orçamentos',
+        style: {
+          color: '#ccc',
+          fontWeight: 500,
+          fontSize: '14px',
+        },
       },
       labels: {
+        style: {
+          colors: '#8898aa',
+          fontSize: '12px',
+        },
       },
     },
-    title: {
-      text: 'Orçamentos no Mês',
-      align: 'center',
-    },
-    legend: {
-      labels: {
-        colors: [primary],
-      },
+    grid: {
+      show: false,
+      // borderColor: '#2c3e50',
+      // strokeDashArray: 4,
     },
     tooltip: {
       theme: 'dark',
+      style: {
+        fontSize: '12px',
+      },
     },
-    grid: {
-      show: true,
-      borderColor: theme.palette.divider,
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shade: 'dark',
+        type: 'vertical',
+        shadeIntensity: 0.7,
+        gradientToColors: ['#3E82F7'], // cor de fundo clara
+        inverseColors: false,
+        opacityFrom: 0.4, // começa mais forte
+        opacityTo: 0,     // vai sumindo
+        stops: [0, 100],
+      },
+    },
+    // markers: {
+    //   size: 1,
+    //   strokeWidth: 2,
+    //   strokeColors: '#fff',
+    //   hover: {
+    //     size: 7,
+    //   },
+    // },
+    title: {
+      text: 'Orçamentos no Mês',
+      align: 'left',
+      style: {
+        fontSize: '16px',
+        color: '#fff',
+        fontWeight: 600,
+      },
+    },
+    legend: { show: false },
+    dataLabels: {
+      enabled: false, // <- desativa os números nos pontos
     },
   };
 
@@ -97,7 +126,7 @@ const ApexOrcamentosMes: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos }) =
       <Chart
         options={options}
         series={series}
-        type="line"
+        type="area"
         height="auto"
         width={"100%"}
       />

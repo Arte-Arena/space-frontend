@@ -1,17 +1,23 @@
-'use client'
+'use client';
 
-import Box from '@mui/material/Box'
+import Box from '@mui/material/Box';
 import { useEffect, useState } from 'react';
 import PageContainer from '@/app/components/container/PageContainer';
 import { useAuth } from '@/utils/useAuth';
 import VendasRelatoriosOrcamentosPorStatusComponent from '../components/dashboard-index/ConversaoOrcamento';
 import VendasRelatoriosOrcamentosPorDataComponent from '../components/dashboard-index/OrcamentoPorDataMes';
-import { Grid } from '@mui/material';
-import ParentCard from "@/app/components/shared/ParentCard";
 import ValorTotalPedidosComponent from '../components/dashboard-index/ValorTotalPedidos';
+import ResumoCard from '../components/dashboard-index/ResumeCards';
+
+import { Grid } from '@mui/material';
+import {
+  IconUsers,
+  IconBuildingStore,
+  IconShoppingCart,
+  IconBox
+} from '@tabler/icons-react';
 
 export default function Dashboard() {
-
   const isLoggedIn = useAuth();
   const [isLoading, setLoading] = useState(true);
 
@@ -26,45 +32,77 @@ export default function Dashboard() {
     return <div>Loading...</div>;
   }
 
-  // aqui deve conter alguns dos charts do space
   return (
-    <PageContainer title="Dashboard" description="this is Dashboard">
-      <ParentCard title="Relatórios">
-        {/* Primeira linha: Um gráfico maior */}
-        <Grid container spacing={2}>
+    <PageContainer title="Dashboard" description="Painel principal do sistema">
+      <Grid container spacing={2}>
 
-          {/* 1° em linha */}
-          <Grid item xs={12} md={7}>
-            <Box sx={{ border: '1px solid #394457', padding: 2, height: '85%' }}>
-              <VendasRelatoriosOrcamentosPorDataComponent />
-            </Box>
-          </Grid>
-
-          {/* 2° em pizza */}
-          <Grid item xs={12} md={5}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', height: '85%', border: '1px solid #394457', padding: 2, alignItems: 'center', justifyContent: 'center' }}>
-              <VendasRelatoriosOrcamentosPorStatusComponent />
-            </Box>
-          </Grid>
-
-          {/* Segunda linha: Três gráficos menores */}
-          <Grid item xs={12} md={12}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-around' }}>
-              <ValorTotalPedidosComponent />
-            </Box>
-            {/* <VendasRelatoriosOrcamentosPorStatusComponent /> */}
-          </Grid>
-
-          {/* <Grid item xs={12} md={4}>
-              <VendasRelatoriosOutroComponente />
+        {/* Linha 1: Cards resumo */}
+        <Grid item xs={12}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={3}>
+              <ResumoCard titulo="Funcionários" valor={12} icone={<IconUsers size={24} />} cor="#1976d2" />
             </Grid>
-            <Grid item xs={12} md={4}>
-              <VendasRelatoriosMaisUmComponente />
-            </Grid> */}
+            <Grid item xs={12} sm={6} md={3}>
+              <ResumoCard titulo="Clientes" valor={58} icone={<IconBuildingStore size={24} />} cor="#2e7d32" />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <ResumoCard titulo="Pedidos" valor={102} icone={<IconShoppingCart size={24} />} cor="#ed6c02" />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <ResumoCard titulo="Produtos" valor={37} icone={<IconBox size={24} />} cor="#6a1b9a" />
+            </Grid>
+          </Grid>
+        </Grid>
 
+        {/* Linha 2: Gráfico maior (em cima) */}
+        <Grid item xs={12}>
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              border: '1px solid #394457',
+              backgroundColor: 'background.paper'
+            }}
+          >
+            <ValorTotalPedidosComponent />
+          </Box>
 
         </Grid>
-      </ParentCard>
+
+        {/* Linha 3: Gráficos menores (embaixo) */}
+        <Grid item xs={12}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={3}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: '1px solid #394457',
+                  backgroundColor: 'background.paper',
+                  height: '100%'
+                }}
+              >
+                <VendasRelatoriosOrcamentosPorStatusComponent />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: '1px solid #394457',
+                  backgroundColor: 'background.paper',
+                  height: '100%'
+                }}
+              >
+                <VendasRelatoriosOrcamentosPorDataComponent />
+              </Box>
+            </Grid>
+          </Grid>
+        </Grid>
+      </Grid>
     </PageContainer>
-  )
+
+  );
 }
