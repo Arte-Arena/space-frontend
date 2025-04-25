@@ -19,6 +19,7 @@ import {
   Divider,
   Grid,
   CircularProgress,
+  Button,
 } from "@mui/material";
 import {
   IconChevronDown,
@@ -29,9 +30,11 @@ import {
   IconMap,
   IconNotes,
   IconInfoCircle,
+  IconFileInvoice,
 } from "@tabler/icons-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useRouter } from "next/navigation";
 
 interface Lead {
   id: string;
@@ -44,6 +47,8 @@ interface Lead {
   jaCadastrado: boolean;
   origem: string;
   idOcta?: string;
+  orcamento_id?: string;
+  orcamento_status?: "aprovado" | "pendente" | null;
   endereco?: {
     rua: string;
     numero: string;
@@ -106,6 +111,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
   onRowsPerPageChange,
   isFiltered,
 }) => {
+  const router = useRouter();
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [orderBy, setOrderBy] = useState<keyof Lead>("dataCriacao");
   const [order, setOrder] = useState<"asc" | "desc">("desc");
@@ -114,6 +120,10 @@ const LeadTable: React.FC<LeadTableProps> = ({
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
+  };
+
+  const handleNavigateToOrcamento = (orcamentoId: string) => {
+    router.push(`/apps/orcamento/${orcamentoId}`);
   };
 
   const sortedLeads = React.useMemo(() => {
@@ -367,6 +377,56 @@ const LeadTable: React.FC<LeadTableProps> = ({
                         </Typography>
 
                         <Grid container spacing={3} sx={{ mt: 0.5 }}>
+                          {lead.orcamento_id && (
+                            <Grid item xs={12}>
+                              <Paper
+                                elevation={0}
+                                variant="outlined"
+                                sx={{
+                                  p: 2,
+                                  borderRadius: 2,
+                                  backgroundColor: (theme) =>
+                                    theme.palette.mode === "dark"
+                                      ? "rgba(255, 255, 255, 0.05)"
+                                      : "rgba(0, 0, 0, 0.02)",
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  alignItems: "flex-start",
+                                }}
+                              >
+                                <Typography
+                                  variant="subtitle1"
+                                  gutterBottom
+                                  sx={{
+                                    color: "primary.main",
+                                    fontWeight: "medium",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    pb: 1,
+                                  }}
+                                >
+                                  <IconFileInvoice
+                                    size={18}
+                                    style={{ marginRight: 8 }}
+                                  />
+                                  Orçamento em Andamento
+                                </Typography>
+                                <Divider sx={{ mb: 2, width: "100%" }} />
+                                <Typography variant="body2" sx={{ mb: 2 }}>
+                                  Este lead possui um orçamento em andamento. Você pode acessá-lo para mais detalhes.
+                                </Typography>
+                                <Button
+                                  variant="contained"
+                                  color="primary"
+                                  startIcon={<IconFileInvoice size={18} />}
+                                  onClick={() => handleNavigateToOrcamento(lead.orcamento_id!)}
+                                >
+                                  Ver Orçamento
+                                </Button>
+                              </Paper>
+                            </Grid>
+                          )}
+                          
                           {!lead.client_info &&
                             !lead.endereco &&
                             !lead.observacoes && (
