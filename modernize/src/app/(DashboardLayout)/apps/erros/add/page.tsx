@@ -18,46 +18,49 @@ import {
   InputAdornment,
   Divider,
   Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   IconButton,
   Tooltip,
   AlertProps,
   useTheme,
-  ThemeProvider
+  ThemeProvider,
+  FormControl,
+  InputLabel,
+  Select,
+  Checkbox,
+  ListItemText,
+  Collapse,
 } from '@mui/material';
 import {
   Error as ErrorIcon,
   CheckCircle as CheckCircleIcon,
   Link as LinkIcon,
   Assignment as AssignmentIcon,
-  AddCircle as AddCircleIcon,
-  Close as CloseIcon,
   HelpOutline as HelpOutlineIcon,
-  AccessTime
 } from '@mui/icons-material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { IconCoin, IconMoneybag } from '@tabler/icons-react';
-import { IconUserExclamation } from '@tabler/icons-react';
+import { IconCoin, IconUser } from '@tabler/icons-react';
 
 // Opções para os selects
-const SETORES = [
-  'Design',
-  'Impressão',
-  'Confeccção',
-  'Qualidade',
-  'Expedição',
-  'Administrativo'
+const SETORES_OPTIONS = [
+  { label: 'Design', hex: '#1E88E5' },
+  { label: 'Impressão', hex: '#43A047' },
+  { label: 'Sublimação', hex: '#FB8C00' },
+  { label: 'Corte & Confêrencia', hex: '#8E24AA' },
+  { label: 'Costura', hex: '#F4511E' },
+  { label: 'Expedição', hex: '#3949AB' },
+  { label: 'Comercial', hex: '#00897B' },
+  { label: 'Administrativo', hex: '#D81B60' },
+  { label: 'Backoffice', hex: '#5E35B1' },
 ];
 
-const STATUS = [
-  'Pendente',
-  'Em Análise',
-  'Em Correção',
-  'Resolvido',
-  'Recusado'
+const STATUS_OPTIONS = [
+  { label: 'Pendente', color: 'error', hex: '#e53935' },
+  { label: 'Em Análise', color: 'info', hex: '#1e88e5' },
+  { label: 'Em Correção', color: 'warning', hex: '#fb8c00' },
+  { label: 'Resolvido', color: 'primary', hex: '#43a047' },
+  { label: 'Recusado', color: 'default', hex: '#4a1b9a' },
 ];
 
 // Schema de validação
@@ -76,7 +79,9 @@ const validationSchema = Yup.object().shape({
   responsavel: Yup.string()
     .max(100, 'Máximo de 100 caracteres'),
 
-  setor: Yup.string()
+  setor: Yup.array()
+    .of(Yup.string().required())
+    .min(1, 'Selecione pelo menos um setor')
     .required('Setor é obrigatório'),
 
   link_trello: Yup.string()
@@ -96,6 +101,7 @@ const validationSchema = Yup.object().shape({
 });
 
 const ErroForm = () => {
+  const [mostrarSolucao, setMostrarSolucao] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [snackbar, setSnackbar] = React.useState<{
     open: boolean;
@@ -122,7 +128,7 @@ const ErroForm = () => {
   const formik = useFormik({
     initialValues: {
       numero_pedido: numero_pedido ?? '',
-      setor: '',
+      setor: [] as string[],
       responsavel: '',
       prejuizo: null,
       link_trello: '',
@@ -168,14 +174,6 @@ const ErroForm = () => {
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
-
-  // const handleOpenDialog = () => {
-  //   setOpenDialog(true);
-  // };
-
-  // const handleCloseDialog = () => {
-  //   setOpenDialog(false);
-  // };
 
   return (
     <ThemeProvider theme={theme}>
@@ -226,25 +224,51 @@ const ErroForm = () => {
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  id="setor"
-                  name="setor"
-                  label="Setor"
-                  select
-                  value={formik.values.setor}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.setor && Boolean(formik.errors.setor)}
-                  helperText={formik.touched.setor && formik.errors.setor}
-                >
-                  {SETORES.map((option) => (
-                    <MenuItem key={option} value={option}>
-                      {option}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                <FormControl fullWidth error={formik.touched.setor && Boolean(formik.errors.setor)}>
+                  <InputLabel id="setor-label">Setores</InputLabel>
+                  <Select
+                    labelId="setor-label"
+                    id="setor"
+                    name="setor"
+                    multiple
+                    value={formik.values.setor}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {(selected as string[]).map((value) => {
+                          const setorOption = SETORES_OPTIONS.find((s) => s.label === value);
+                          return (
+                            <Chip
+                              key={value}
+                              label={value}
+                              size="small"
+                              sx={{
+                                backgroundColor: setorOption?.hex || '#9e9e9e',
+                                color: 'white',
+                                fontWeight: 500,
+                              }}
+                            />
+                          );
+                        })}
+                      </Box>
+                    )}
+                  >
+                    {SETORES_OPTIONS.map((option) => (
+                      <MenuItem key={option.label} value={option.label}>
+                        <Checkbox checked={formik.values.setor.includes(option.label)} />
+                        <ListItemText primary={option.label} />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {formik.touched.setor && formik.errors.setor && (
+                    <Typography variant="caption" color="error">
+                      {formik.errors.setor}
+                    </Typography>
+                  )}
+                </FormControl>
               </Grid>
+
 
               {/* Linha 2: Responsável e Prejuízo */}
               <Grid item xs={12} md={6}>
@@ -261,7 +285,7 @@ const ErroForm = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <IconUserExclamation color="action" />
+                        <IconUser size={20} color="white" />
                       </InputAdornment>
                     ),
                   }}
@@ -283,7 +307,7 @@ const ErroForm = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <IconCoin color="action" />
+                        <IconCoin size={20} color="white" />
                       </InputAdornment>
                     ),
                     inputProps: {
@@ -291,6 +315,7 @@ const ErroForm = () => {
                       min: "0"
                     }
                   }}
+                  
                 />
               </Grid>
 
@@ -343,17 +368,23 @@ const ErroForm = () => {
                   error={formik.touched.status && Boolean(formik.errors.status)}
                   helperText={formik.touched.status && formik.errors.status}
                 >
-                  {STATUS.map((option) => (
-                    <MenuItem key={option} value={option}>
-                      <Chip
-                        label={option}
+                  {STATUS_OPTIONS.map((option) => (
+                    <MenuItem key={option.label} value={option.label}>
+                      {/* <Chip
+                        label={option.label}
                         size="small"
-                        color={
-                          option === 'Resolvido' ? 'success' :
-                            option === 'Pendente' ? 'error' :
-                              option === 'Em Correção' ? 'warning' : 'default'
-                        }
+                        color={option.color as any}
                         sx={{ mr: 1 }}
+                      /> */}
+                      <Chip
+                        label={option.label}
+                        size="small"
+                        sx={{
+                          mr: 1,
+                          backgroundColor: option.hex,
+                          color: 'white',
+                          fontWeight: 500
+                        }}
                       />
                     </MenuItem>
                   ))}
@@ -393,28 +424,37 @@ const ErroForm = () => {
 
               {/* Solução (Opcional) */}
               <Grid item xs={12}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'start', mb: 1 }}>
                   <Typography variant="subtitle1">Solução Proposta (Opcional)</Typography>
+                  <IconButton
+                    size="small"
+                    onClick={() => setMostrarSolucao(!mostrarSolucao)}
+                  >
+                    {mostrarSolucao ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  </IconButton>
                 </Box>
-                <TextField
-                  fullWidth
-                  id="solucao"
-                  name="solucao"
-                  multiline
-                  rows={3}
-                  value={formik.values.solucao}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.solucao && Boolean(formik.errors.solucao)}
-                  helperText={
-                    formik.touched.solucao && formik.errors.solucao
-                      ? formik.errors.solucao
-                      : `${formik.values.solucao.length}/500 caracteres`
-                  }
-                  inputProps={{
-                    maxLength: 500
-                  }}
-                />
+
+                <Collapse in={mostrarSolucao} timeout="auto" unmountOnExit>
+                  <TextField
+                    fullWidth
+                    id="solucao"
+                    name="solucao"
+                    multiline
+                    rows={3}
+                    value={formik.values.solucao}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.solucao && Boolean(formik.errors.solucao)}
+                    helperText={
+                      formik.touched.solucao && formik.errors.solucao
+                        ? formik.errors.solucao
+                        : `${formik.values.solucao.length}/500 caracteres`
+                    }
+                    inputProps={{
+                      maxLength: 500
+                    }}
+                  />
+                </Collapse>
               </Grid>
 
               {/* Botões de Ação */}
@@ -487,40 +527,3 @@ const ErroForm = () => {
 };
 
 export default ErroForm;
-{/* Dialog para Solução Detalhada */ }
-{/* <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-  <DialogTitle>
-    <Box display="flex" alignItems="center">
-      <ErrorIcon color="primary" sx={{ mr: 1 }} />
-      <Typography variant="h6">Descreva a Solução</Typography>
-    </Box>
-  </DialogTitle>
-  <DialogContent>
-    <TextField
-      autoFocus
-      margin="dense"
-      id="solucao-dialog"
-      name="solucao"
-      label="Solução Detalhada"
-      type="text"
-      fullWidth
-      multiline
-      rows={8}
-      variant="outlined"
-      value={formik.values.solucao}
-      onChange={formik.handleChange}
-      inputProps={{
-        maxLength: 500
-      }}
-      helperText={`${formik.values.solucao.length}/500 caracteres`}
-    />
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={handleCloseDialog} color="secondary">
-      Cancelar
-    </Button>
-    <Button onClick={handleCloseDialog} color="primary">
-      Aplicar
-    </Button>
-  </DialogActions>
-</Dialog> */}
