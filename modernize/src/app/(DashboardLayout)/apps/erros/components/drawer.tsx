@@ -4,6 +4,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Erros, Produto } from "./types";
 import { format } from "date-fns";
 import { useThemeMode } from "@/utils/useThemeMode";
+import { IconExclamationCircle } from "@tabler/icons-react";
 
 interface SidePanelProps {
   row: Erros | null;
@@ -14,6 +15,14 @@ interface SidePanelProps {
 const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer }) => {
   const theme = useThemeMode();
   const status = row?.status;
+
+  const handleErrorPedido = () => {
+    const confirm = window.confirm('deseja editar o erro ' + row?.id + '?');
+    if (confirm) {
+      window.open(`../apps/erros/edit/${row?.id}`, '_blank');
+    }
+    return;
+  };
 
   return (
     <Drawer
@@ -28,6 +37,11 @@ const SidePanel: React.FC<SidePanelProps> = ({ row, openDrawer, onCloseDrawer })
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={0}>
         <Typography variant="h5" fontWeight="bold">
           Detalhes do Erro do Pedido N°{Number(row?.numero_pedido)}
+          <Tooltip title="Adicionar Erro ao pedido">
+            <IconButton onClick={handleErrorPedido} color="primary">
+              <IconExclamationCircle />
+            </IconButton>
+          </Tooltip>
         </Typography>
 
         <IconButton onClick={onCloseDrawer}>
