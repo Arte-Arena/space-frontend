@@ -13,8 +13,9 @@ import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcr
 import esbocoFormatarPNG from './components/esbocoFormatarPNG';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
-import FormBandeira from './components/forms/formBandeira';
+import FormBandeira from './components/forms/Bandeiras/formBandeiraOfficial';
 import { FormState } from './components/types';
+import FormBandeiraCarro from './components/forms/Bandeiras/formBandeiraCarro';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira",
@@ -50,58 +51,26 @@ const GeradorDeEsbocoScreen = () => {
     opcao: '',
   });
 
-  const materiais = localStorage.getItem('materiais');
+  // const materiais = localStorage.getItem('materiais');
 
-  useEffect(() => {
-    if (materiais) {
-      try {
-        const materiaisArray = JSON.parse(materiais);
-        if (Array.isArray(materiaisArray)) {
-          const materialNames = materiaisArray.map((material) => material.descricao);
-          setAllMateriais(materialNames);
-        } else {
-          console.error('Dados inválidos recebidos de materiais:', materiaisArray);
-        }
-      } catch (error) {
-        console.error('Erro ao analisar JSON de materiais:', error);
-      }
-    } else {
-      console.warn('Os dados de materiais não foram encontrados.');
-    }
-  }, [materiais]);
+  // useEffect(() => {
+  //   if (materiais) {
+  //     try {
+  //       const materiaisArray = JSON.parse(materiais);
+  //       if (Array.isArray(materiaisArray)) {
+  //         const materialNames = materiaisArray.map((material) => material.descricao);
+  //         setAllMateriais(materialNames);
+  //       } else {
+  //         console.error('Dados inválidos recebidos de materiais:', materiaisArray);
+  //       }
+  //     } catch (error) {
+  //       console.error('Erro ao analisar JSON de materiais:', error);
+  //     }
+  //   } else {
+  //     console.warn('Os dados de materiais não foram encontrados.');
+  //   }
+  // }, [materiais]);
 
-  useEffect(() => {
-    const alturaM = parseFloat(form.altura || '0');
-    const larguraM = parseFloat(form.largura || '0');
-
-    const maior = Math.max(alturaM, larguraM);
-    const menor = Math.min(alturaM, larguraM);
-
-    if (form.ilhoses && alturaM && larguraM) {
-      const ilhosesMaior = (Math.ceil(maior) + 1) * 2;
-      const ilhosesMenor = Math.max(0, (Math.ceil(menor) - 2)) * 2;
-      const totalIlhoses = ilhosesMaior + ilhosesMenor + 2;
-
-      setForm(prev => ({ ...prev, qtdIlhoses: totalIlhoses.toString() }));
-    }
-  }, [form.altura, form.largura, form.ilhoses]);
-
-
-  useEffect(() => {
-    const alturaM = parseFloat(form.altura || '0');
-    const larguraM = parseFloat(form.largura || '0');
-
-    const maior = Math.max(alturaM, larguraM);
-    const menor = Math.min(alturaM, larguraM);
-
-    // Cálculo da composição
-    if (menor >= 1.5) {
-      const partes = Math.ceil(menor / 1.5);
-      setForm(prev => ({ ...prev, composicao: `${partes} Partes` }));
-    } else {
-      setForm(prev => ({ ...prev, composicao: '' }));
-    }
-  }, [form.altura, form.largura]);
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -173,19 +142,17 @@ const GeradorDeEsbocoScreen = () => {
 
   // useEffect pra limpar automaticamenete o form mudando o tipo de produto
   useEffect(() => {
-    if (!isBandeira) {
       setForm((prev) => ({
         ...prev,
-        altura: '',
-        largura: '',
+        // altura: '',
+        // largura: '',
+        opcao: '',
         ilhoses: false,
         qtdIlhoses: '',
         bordaMastro: false,
         composicao: '',
         duplaFace: false,
-        opcao: ''
       }));
-    }
   }, [form.produto]);
 
 
@@ -227,7 +194,7 @@ const GeradorDeEsbocoScreen = () => {
           </Typography>
 
           <Grid container spacing={2} mb={2}>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 label="ID"
                 name="id"
@@ -237,7 +204,7 @@ const GeradorDeEsbocoScreen = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <FormControl fullWidth>
                 <InputLabel>Produto</InputLabel>
                 <Select
@@ -255,29 +222,39 @@ const GeradorDeEsbocoScreen = () => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth>
-                <InputLabel>Material</InputLabel>
-                <Select
-                  name="material"
-                  value={form.material}
-                  label="Material"
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, material: e.target.value }))
-                  }
-                >
-                  {allMateriais.map((material) => (
-                    <MenuItem key={material} value={material}>
-                      <ListItemText primary={material} />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+            <Grid item xs={12} sm={3}>
+              <TextField
+                label="Altura (m)"
+                name="altura"
+                type="number"
+                fullWidth
+                value={form.altura}
+                onChange={handleChange}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={3}>
+              <TextField
+                label="Largura (m)"
+                name="largura"
+                type="number"
+                fullWidth
+                value={form.largura}
+                onChange={handleChange}
+              />
             </Grid>
           </Grid>
 
-          {form.produto.toLowerCase().includes('bandeira') && (
+          {form.produto.toLowerCase().includes('bandeira oficial') && (
             <FormBandeira
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+          {form.produto.toLowerCase().includes('bandeira de carro') && (
+            <FormBandeiraCarro
               form={form}
               handleChange={handleChange}
               handleCheckboxChange={handleCheckboxChange}

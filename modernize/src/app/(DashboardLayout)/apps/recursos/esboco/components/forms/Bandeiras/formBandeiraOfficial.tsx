@@ -1,7 +1,7 @@
 // ./components/forms/FormBandeira.tsx
-import { TextField, FormControlLabel, Checkbox, Grid } from '@mui/material';
+import { TextField, FormControlLabel, Checkbox, Grid, FormControl, InputLabel, MenuItem, SelectChangeEvent, Select } from '@mui/material';
 import React, { useEffect } from 'react';
-import { FormState } from '../types';
+import { FormState } from '../../types';
 
 interface FormProps {
   form: FormState;
@@ -10,9 +10,9 @@ interface FormProps {
   setForm: React.Dispatch<React.SetStateAction<FormState>>;
 }
 
-const FormBandeira: React.FC<FormProps> = ({ form, handleChange, handleCheckboxChange, setForm }) => {
+const FormBandeiraOfficial: React.FC<FormProps> = ({ form, handleChange, handleCheckboxChange, setForm }) => {
 
-useEffect(() => {
+  useEffect(() => {
     const alturaM = parseFloat(form.altura || '0');
     const larguraM = parseFloat(form.largura || '0');
 
@@ -45,29 +45,29 @@ useEffect(() => {
     }
   }, [form.altura, form.largura]);
 
+  const handleSelectChange = (name: string) => (event: SelectChangeEvent<unknown>, _child: React.ReactNode) => {
+    const { value } = event.target;
+    setForm(prev => ({ ...prev, [name]: value as string }));
+  };
+
   return (
     <>
       <Grid container spacing={2} mb={2}>
         <Grid item xs={12} sm={4}>
-          <TextField
-            label="Altura (m)"
-            name="altura"
-            type="number"
-            fullWidth
-            value={form.altura}
-            onChange={handleChange}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={4}>
-          <TextField
-            label="Largura (m)"
-            name="largura"
-            type="number"
-            fullWidth
-            value={form.largura}
-            onChange={handleChange}
-          />
+          <FormControl fullWidth>
+            <InputLabel>Material</InputLabel>
+            <Select
+              value={form.material}
+              label="Material"
+              onChange={handleSelectChange('material')}
+            >
+              {['TACTEL', 'OXFORD', 'CETIM'].map((material) => (
+                <MenuItem key={material} value={material}>
+                  {material}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Grid>
 
         <Grid item xs={12} sm={4}>
@@ -79,10 +79,8 @@ useEffect(() => {
             onChange={handleChange}
           />
         </Grid>
-      </Grid>
 
-      {/* Linha 3 */}
-      <Grid container spacing={2} mb={2}>
+        {/* Linha 3 */}
         <Grid item xs={12} sm={3}>
           <TextField
             label="Opção"
@@ -92,7 +90,9 @@ useEffect(() => {
             onChange={handleChange}
           />
         </Grid>
+      </Grid>
 
+      <Grid container spacing={2} mb={2}>
         <Grid item xs={12} sm={3}>
           <FormControlLabel
             control={
@@ -160,4 +160,4 @@ useEffect(() => {
   );
 };
 
-export default FormBandeira;
+export default FormBandeiraOfficial;
