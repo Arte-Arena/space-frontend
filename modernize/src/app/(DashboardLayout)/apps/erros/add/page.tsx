@@ -53,7 +53,7 @@ const SETORES_OPTIONS = [
   { label: 'Comercial', hex: '#00897B' },
   { label: 'Administrativo', hex: '#D81B60' },
   { label: 'Backoffice', hex: '#5E35B1' },
-];
+
 
 const STATUS_OPTIONS = [
   { label: 'Pendente', color: 'error', hex: '#e53935' },
