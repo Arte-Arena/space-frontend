@@ -60,7 +60,7 @@ const ApexPedidosTotal: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos, tipo
   // Configuração do gráfico
   const options: ApexCharts.ApexOptions = {
     chart: {
-      type: tipoGrafico === "linha" ? "line" : "bar",
+      type: tipoGrafico === "linha" ? "area" : "bar",
       height: 350,
       fontFamily: "'Plus Jakarta Sans', sans-serif",
       foreColor: "#adb0bb",
@@ -71,21 +71,30 @@ const ApexPedidosTotal: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos, tipo
       type: "gradient",
       gradient: {
         shade: "dark",
-        gradientToColors: [primary],
-        shadeIntensity: 1,
         type: "vertical",
-        opacityFrom: 1,
-        opacityTo: 0.3,
-        stops: [0, 200],
+        shadeIntensity: 1,
+        gradientToColors: [primary],
+        opacityFrom: 0.5,
+        opacityTo: 0.1,
+        stops: [0, 100],
       },
     },
     stroke: {
-      width: tipoGrafico === "linha" ? 2 : 0,
+      width: tipoGrafico === "linha" ? 1 : 0,
       curve: 'smooth',
     },
     xaxis: {
       categories: tipoGrafico === "linha" ? categoriasDia : categoriasMes,
       title: { text: tipoGrafico === "linha" ? "Data" : "Mês" },
+      labels: {
+        show: false,
+      },
+      axisBorder: {
+        show: false, // remove a linha horizontal
+      },
+      axisTicks: {
+        show: false, // remove as marcações
+      },
     },
     yaxis: {
       title: { text: "Total de Orçamentos (R$)" },
@@ -94,7 +103,10 @@ const ApexPedidosTotal: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos, tipo
     tooltip: {
       theme: 'dark',
     },
-    grid: { show: true, borderColor: theme.palette.divider },
+    grid: { show: false, borderColor: theme.palette.divider },
+    dataLabels: {
+      enabled: false, // <- desativa os números nos pontos
+    },
   };
 
   // Definir os dados do gráfico
@@ -105,7 +117,7 @@ const ApexPedidosTotal: React.FC<ApexOrcamentosProps> = ({ totalOrcamentos, tipo
       <Chart
         options={options}
         series={series}
-        type={tipoGrafico === "linha" ? "line" : "bar"}
+        type={tipoGrafico === "linha" ? "area" : "bar"}
         height={350}
         width={"100%"}
       />

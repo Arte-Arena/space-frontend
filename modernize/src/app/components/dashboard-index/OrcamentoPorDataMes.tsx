@@ -78,7 +78,7 @@ const VendasRelatoriosOrcamentosPorDataComponent = () => {
   }, [data, filtro]);
 
   return (
-    <div style={{ marginBottom: '50px' }}>
+    <div>
       {dados.length > 0 ? (
         <ApexOrcamentosMes totalOrcamentos={dados} />
       ) : (
