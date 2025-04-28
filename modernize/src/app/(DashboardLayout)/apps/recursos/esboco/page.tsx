@@ -5,7 +5,10 @@ import {
   Button,
   AlertProps,
   Alert,
-  Snackbar
+  Snackbar,
+  LinearProgress,
+  Backdrop,
+  CircularProgress
 } from '@mui/material';
 import { IconFileTypePng } from '@tabler/icons-react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
@@ -16,6 +19,7 @@ import FormBandeira from './components/forms/Bandeiras/formBandeiraOfficial';
 import { FormState } from './components/types';
 import FormBandeiraCarro from './components/forms/Bandeiras/formBandeiraCarro';
 import FormAlmofada from './components/forms/Bandeiras/formAlmofada';
+import FormAlmofadaPescoco from './components/forms/Bandeiras/formAlmofadaPescoco';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira",
@@ -27,7 +31,8 @@ const produtos = [
 ];
 
 const GeradorDeEsbocoScreen = () => {
-  const [snackbar, setSnackbar] = React.useState<{
+  const [loading, setLoading] = useState<boolean>(false);
+  const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     severity: AlertProps['severity'];
@@ -56,7 +61,7 @@ const GeradorDeEsbocoScreen = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleExportToPNG = () => {
+  const handleExportToPNG = async () => {
     if (!form.id.trim()) {
       setSnackbar({
         open: true,
@@ -75,23 +80,23 @@ const GeradorDeEsbocoScreen = () => {
       return;
     }
 
-    if (!form.altura.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Informe a altura',
-        severity: 'error'
-      });
-      return;
-    }
+    // if (!form.altura.trim()) {
+    //   setSnackbar({
+    //     open: true,
+    //     message: 'Informe a altura',
+    //     severity: 'error'
+    //   });
+    //   return;
+    // }
 
-    if (!form.largura.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Informe a largura',
-        severity: 'error'
-      });
-      return;
-    }
+    // if (!form.largura.trim()) {
+    //   setSnackbar({
+    //     open: true,
+    //     message: 'Informe a largura',
+    //     severity: 'error'
+    //   });
+    //   return;
+    // }
 
     if (form.ilhoses && !form.qtdIlhoses.trim()) {
       setSnackbar({
@@ -112,12 +117,24 @@ const GeradorDeEsbocoScreen = () => {
     }
 
     // ✅ Se tudo estiver certo: gera o PNG e exibe snackbar de sucesso
-    esbocoFormatarPNG(form);
-    setSnackbar({
-      open: true,
-      message: 'PNG gerado com sucesso!',
-      severity: 'success'
-    });
+    try {
+      setLoading(true); // <<-- mostra o loading
+      await esbocoFormatarPNG(form); // <<-- espera a criação do PNG
+      setSnackbar({
+        open: true,
+        message: 'PNG gerado com sucesso!',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error(error);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao gerar o PNG!',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false); // <<-- termina o loading
+    }
   };
 
   // useEffect pra limpar automaticamenete o form mudando o tipo de produto
@@ -134,6 +151,25 @@ const GeradorDeEsbocoScreen = () => {
       composicao: '',
       duplaFace: false,
     }));
+  }, [form.produto]);
+
+  useEffect(() => {
+    if (form.produto.toLowerCase().includes("almofada de pescoço") ||
+      form.produto.toLowerCase().includes("shorts") ||
+      form.produto.toLowerCase().includes("chinelo")) {
+      setForm((prev) => ({
+        ...prev,
+        id: '',
+        haste: '',
+        estampa: '',
+        opcao: '',
+        ilhoses: false,
+        qtdIlhoses: '',
+        bordaMastro: false,
+        composicao: '',
+        duplaFace: false,
+      }));
+    }
   }, [form.produto]);
 
 
@@ -182,7 +218,7 @@ const GeradorDeEsbocoScreen = () => {
                 onChange={handleChange}
               />
             </Grid>
-          
+
             <Grid item xs={12} sm={1.5}>
               <TextField
                 label="Opção"
@@ -219,6 +255,7 @@ const GeradorDeEsbocoScreen = () => {
                 fullWidth
                 value={form.altura}
                 onChange={handleChange}
+                disabled={form.produto.toLowerCase().includes("almofada de pescoço")}
               />
             </Grid>
 
@@ -230,12 +267,22 @@ const GeradorDeEsbocoScreen = () => {
                 fullWidth
                 value={form.largura}
                 onChange={handleChange}
+                disabled={form.produto.toLowerCase().includes("almofada de pescoço")}
               />
             </Grid>
           </Grid>
-          
+
           {form.produto.toLowerCase() === 'almofada' && (
             <FormAlmofada
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+          
+          {form.produto.toLowerCase() === 'almofada de pescoço' && (
+            <FormAlmofadaPescoco
               form={form}
               handleChange={handleChange}
               handleCheckboxChange={handleCheckboxChange}
@@ -251,7 +298,7 @@ const GeradorDeEsbocoScreen = () => {
               setForm={setForm}
             />
           )}
-          
+
           {form.produto.toLowerCase().includes('bandeira de carro') && (
             <FormBandeiraCarro
               form={form}
@@ -267,10 +314,19 @@ const GeradorDeEsbocoScreen = () => {
               color="primary"
               onClick={handleExportToPNG}
               startIcon={<IconFileTypePng />}
+              disabled={loading}
             >
-              Exportar para PNG
+              {loading ? 'Gerando...' : 'Exportar para PNG'}
             </Button>
           </Box>
+
+          {/* Barra de progresso no topo */}
+          {loading && <LinearProgress sx={{ position: 'fixed', top: 0, left: 0, width: '100%', zIndex: 9999 }} />}
+
+          {/* OU se preferir um backdrop com spinner */}
+          {/* <Backdrop open={loading} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+            <CircularProgress color="inherit" />
+          </Backdrop> */}
 
           <Snackbar
             open={snackbar.open}

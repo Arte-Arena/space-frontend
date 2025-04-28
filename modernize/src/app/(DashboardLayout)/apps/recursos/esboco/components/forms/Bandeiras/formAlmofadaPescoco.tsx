@@ -10,11 +10,11 @@ interface FormProps {
   setForm: React.Dispatch<React.SetStateAction<FormState>>;
 }
 
-const FormAlmofada: React.FC<FormProps> = ({ form, handleChange, handleCheckboxChange, setForm }) => {
+const FormAlmofadaPescoco: React.FC<FormProps> = ({ form, handleChange, handleCheckboxChange, setForm }) => {
   const [disableDuplaFace, setDisableDuplaFace] = useState(false);
 
   // Tecido fixo entre BEMBER e TACTEL
-  const tecidos = ["Tactel"];
+  const tecidos = ["Tactel", "Helastano"];
 
   const handleSelectChange = (name: string) => (event: SelectChangeEvent<unknown>, _child: React.ReactNode) => {
     const { value } = event.target;
@@ -72,4 +72,4 @@ const FormAlmofada: React.FC<FormProps> = ({ form, handleChange, handleCheckboxC
   );
 };
 
-export default FormAlmofada;
+export default FormAlmofadaPescoco;

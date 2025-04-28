@@ -2,8 +2,8 @@ import html2canvas from 'html2canvas';
 import { FormState } from './types';
 
 const esbocoFormatarPNG = async (form: FormState) => {
-  const largura = parseFloat(form.largura || '1');
-  const altura = parseFloat(form.altura || '1');
+  const largura = parseFloat(form.largura || form.altura || '5');
+  const altura = parseFloat(form.altura || form.largura || '5');
   const larguraPx = 1000;
   const alturaPx = Math.round((altura / largura) * larguraPx);
 
@@ -142,25 +142,27 @@ const esbocoFormatarPNG = async (form: FormState) => {
   </div>
 
   <div class="footer">
-    ${form.produto ? 
-      `<div class="titulo">${primeira} <span style="color: white">${restante}</span></div>` 
+    ${form.produto ?
+      `<div class="titulo">${primeira} <span style="color: white">${restante}</span></div>`
       : `<div class="titulo">${form.produto} </div>`
     }
 
     <div class="info-grid">
+      ${form.altura && !form.largura ? `<div class="info-box"><div class="label">Altura:</div><div class="value">${form.altura} m</div></div>` : ''}
+      ${form.largura && !form.altura ? `<div class="info-box"><div class="label">Largura:</div><div class="value">${form.largura} m</div></div>` : ''}
       ${form.altura && form.largura ? `<div class="info-box"><div class="label">Dimensões:</div><div class="value">${form.altura} x ${form.largura} m</div></div>` : ''}
       ${form.material ? `<div class="info-box"><div class="label">Material:</div><div class="value">${form.material}</div></div>` : ''}
       ${form.composicao ? `<div class="info-box"><div class="label">Composição:</div><div class="value">${form.composicao}</div></div>` : ''}
       ${form.ilhoses && form.qtdIlhoses ? `<div class="info-box"><div class="label">Ilhóses:</div><div class="value">${form.qtdIlhoses}</div></div>` : ''}
       ${form.produto?.toLowerCase().includes('bandeira oficial') ? `<div class="info-box"><div class="label">Borda Mastro:</div><div class="value">${form.bordaMastro ? 'SIM' : 'NÃO'}</div></div>` : ''}
       ${(form.produto?.toLowerCase()
-        .includes('bandeira') || 
-        form.produto?.toLowerCase().includes('cachecol') || 
-        form.produto?.toLowerCase().includes('cachecol') || 
-        form.produto?.toLowerCase().includes('estandarte') || 
-        form.produto?.toLowerCase().includes('almofada') || 
-        form.produto?.toLowerCase().includes('flâmula')) 
-        ? `<div class="info-box"><div class="label">Dupla Face:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      .includes('bandeira') ||
+      form.produto?.toLowerCase().includes('cachecol') ||
+      form.produto?.toLowerCase().includes('cachecol') ||
+      form.produto?.toLowerCase().includes('estandarte') ||
+      form.produto?.toLowerCase().includes('almofada') ||
+      form.produto?.toLowerCase().includes('flâmula'))
+      ? `<div class="info-box"><div class="label">Dupla Face:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
       ${form.haste ? `<div class="info-box"><div class="label">Haste:</div><div class="value">${form.haste}</div></div>` : ''}
       ${form.estampa ? `<div class="info-box"><div class="label">Estampa:</div><div class="value">${form.estampa}</div></div>` : ''}
     </div>
