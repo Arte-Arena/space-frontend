@@ -53,7 +53,7 @@ const FormBandeiraOfficial: React.FC<FormProps> = ({ form, handleChange, handleC
   return (
     <>
       <Grid container spacing={2} mb={2}>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
           <FormControl fullWidth>
             <InputLabel>Material</InputLabel>
             <Select
@@ -70,7 +70,7 @@ const FormBandeiraOfficial: React.FC<FormProps> = ({ form, handleChange, handleC
           </FormControl>
         </Grid>
 
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
           <TextField
             label="Composição"
             name="composicao"
@@ -80,20 +80,7 @@ const FormBandeiraOfficial: React.FC<FormProps> = ({ form, handleChange, handleC
           />
         </Grid>
 
-        {/* Linha 3 */}
-        <Grid item xs={12} sm={3}>
-          <TextField
-            label="Opção"
-            name="opcao"
-            fullWidth
-            value={form.opcao}
-            onChange={handleChange}
-          />
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={2} mb={2}>
-        <Grid item xs={12} sm={3}>
+        <Grid item xs={12} sm={1.5}>
           <FormControlLabel
             control={
               <Checkbox
@@ -103,6 +90,19 @@ const FormBandeiraOfficial: React.FC<FormProps> = ({ form, handleChange, handleC
               />
             }
             label="Borda Mastro"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={1.5}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="duplaFace"
+                checked={form.duplaFace}
+                onChange={handleCheckboxChange}
+              />
+            }
+            label="Dupla Face"
           />
         </Grid>
 
@@ -143,18 +143,7 @@ const FormBandeiraOfficial: React.FC<FormProps> = ({ form, handleChange, handleC
           </div>
         </Grid>
 
-        <Grid item xs={12} sm={3}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="duplaFace"
-                checked={form.duplaFace}
-                onChange={handleCheckboxChange}
-              />
-            }
-            label="Dupla Face"
-          />
-        </Grid>
+
       </Grid>
     </>
   );

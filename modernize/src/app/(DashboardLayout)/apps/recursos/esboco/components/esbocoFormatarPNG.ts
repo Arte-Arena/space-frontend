@@ -1,20 +1,7 @@
 import html2canvas from 'html2canvas';
+import { FormState } from './types';
 
-interface Esboco {
-  id: string;
-  opcao: string;
-  produto: string;
-  material: string;
-  altura: string;
-  largura: string;
-  composicao: string;
-  ilhoses: boolean;
-  qtdIlhoses?: string;
-  bordaMastro: boolean;
-  duplaFace: boolean;
-}
-
-const esbocoFormatarPNG = async (form: Esboco) => {
+const esbocoFormatarPNG = async (form: FormState) => {
   const largura = parseFloat(form.largura || '1');
   const altura = parseFloat(form.altura || '1');
   const larguraPx = 1000;
@@ -165,8 +152,17 @@ const esbocoFormatarPNG = async (form: Esboco) => {
       ${form.material ? `<div class="info-box"><div class="label">Material:</div><div class="value">${form.material}</div></div>` : ''}
       ${form.composicao ? `<div class="info-box"><div class="label">Composição:</div><div class="value">${form.composicao}</div></div>` : ''}
       ${form.ilhoses && form.qtdIlhoses ? `<div class="info-box"><div class="label">Ilhóses:</div><div class="value">${form.qtdIlhoses}</div></div>` : ''}
-      ${form.produto?.toLowerCase().includes('bandeira') ? `<div class="info-box"><div class="label">Borda Mastro:</div><div class="value">${form.bordaMastro ? 'SIM' : 'NÃO'}</div></div>` : ''}
-      ${form.produto?.toLowerCase().includes('bandeira') ? `<div class="info-box"><div class="label">Dupla Face:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${form.produto?.toLowerCase().includes('bandeira oficial') ? `<div class="info-box"><div class="label">Borda Mastro:</div><div class="value">${form.bordaMastro ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${(form.produto?.toLowerCase()
+        .includes('bandeira') || 
+        form.produto?.toLowerCase().includes('cachecol') || 
+        form.produto?.toLowerCase().includes('cachecol') || 
+        form.produto?.toLowerCase().includes('estandarte') || 
+        form.produto?.toLowerCase().includes('almofada') || 
+        form.produto?.toLowerCase().includes('flâmula')) 
+        ? `<div class="info-box"><div class="label">Dupla Face:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${form.haste ? `<div class="info-box"><div class="label">Haste:</div><div class="value">${form.haste}</div></div>` : ''}
+      ${form.estampa ? `<div class="info-box"><div class="label">Estampa:</div><div class="value">${form.estampa}</div></div>` : ''}
     </div>
 
     <div class="selo" >

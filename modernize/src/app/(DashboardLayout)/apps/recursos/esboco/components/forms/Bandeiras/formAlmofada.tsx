@@ -10,11 +10,11 @@ interface FormProps {
   setForm: React.Dispatch<React.SetStateAction<FormState>>;
 }
 
-const FormBandeiraCarro: React.FC<FormProps> = ({ form, handleChange, handleCheckboxChange, setForm }) => {
+const FormAlmofada: React.FC<FormProps> = ({ form, handleChange, handleCheckboxChange, setForm }) => {
   const [disableDuplaFace, setDisableDuplaFace] = useState(false);
 
   // Tecido fixo entre BEMBER e TACTEL
-  const tecidos = ["Bember", "Tactel"];
+  const tecidos = ["Tactel"];
 
   useEffect(() => {
     setForm(prev => ({ ...prev, haste: '42cm' }));
@@ -37,7 +37,7 @@ const FormBandeiraCarro: React.FC<FormProps> = ({ form, handleChange, handleChec
   return (
     <>
       <Grid container spacing={2} mb={2}>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
           <FormControl fullWidth>
             <InputLabel>Material</InputLabel>
             <Select
@@ -56,36 +56,28 @@ const FormBandeiraCarro: React.FC<FormProps> = ({ form, handleChange, handleChec
 
         <Grid item xs={12} sm={3}>
           <TextField
-            label="Composição"
-            name="composicao"
-            value={form.composicao}
-            onChange={handleChange}
+            label="Estampa"
+            name="estampa"
             fullWidth
+            aria-readonly={true}
+            value="SUBLIMADA"
           />
         </Grid>
 
-        <Grid item xs={12} sm={2}>
-          <TextField
-            label="Haste"
-            name="haste"
-            fullWidth
-            disabled
-            value="42cm"
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={2} sx={{ marginLeft: '5px' }}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="duplaFace"
-                checked={form.duplaFace}
-                onChange={handleCheckboxChange}
-                disabled={disableDuplaFace}
-              />
-            }
-            label="Dupla Face"
-          />
+        <Grid item xs={12} sm={4} sx={{ marginLeft: '5px' }}>
+          <FormControl fullWidth>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="duplaFace"
+                  checked={form.duplaFace}
+                  onChange={handleCheckboxChange}
+                  disabled={disableDuplaFace}
+                />
+              }
+              label="Dupla Face"
+            />
+          </FormControl>
         </Grid>
 
       </Grid>
@@ -93,4 +85,4 @@ const FormBandeiraCarro: React.FC<FormProps> = ({ form, handleChange, handleChec
   );
 };
 
-export default FormBandeiraCarro;
+export default FormAlmofada;

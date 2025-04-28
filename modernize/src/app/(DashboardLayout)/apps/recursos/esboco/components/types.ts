@@ -6,9 +6,11 @@ export interface FormState {
     ilhoses: boolean;
     qtdIlhoses: string;
     bordaMastro: boolean;
+    haste: string;
     composicao: string;
     duplaFace: boolean;
     material: string;
+    estampa: string;
     opcao: string;
   }
   

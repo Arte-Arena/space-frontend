@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, TextField, MenuItem, FormControlLabel, Checkbox, Typography, Grid, Select, InputLabel, FormControl,
-  ListItemText,
   Button,
   AlertProps,
   Alert,
@@ -16,6 +15,7 @@ import ParentCard from '@/app/components/shared/ParentCard';
 import FormBandeira from './components/forms/Bandeiras/formBandeiraOfficial';
 import { FormState } from './components/types';
 import FormBandeiraCarro from './components/forms/Bandeiras/formBandeiraCarro';
+import FormAlmofada from './components/forms/Bandeiras/formAlmofada';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira",
@@ -27,7 +27,6 @@ const produtos = [
 ];
 
 const GeradorDeEsbocoScreen = () => {
-  const [allMateriais, setAllMateriais] = useState<string[]>([]);
   const [snackbar, setSnackbar] = React.useState<{
     open: boolean;
     message: string;
@@ -47,30 +46,11 @@ const GeradorDeEsbocoScreen = () => {
     bordaMastro: false,
     composicao: '',
     duplaFace: false,
+    haste: '',
+    estampa: '',
     material: '',
     opcao: '',
   });
-
-  // const materiais = localStorage.getItem('materiais');
-
-  // useEffect(() => {
-  //   if (materiais) {
-  //     try {
-  //       const materiaisArray = JSON.parse(materiais);
-  //       if (Array.isArray(materiaisArray)) {
-  //         const materialNames = materiaisArray.map((material) => material.descricao);
-  //         setAllMateriais(materialNames);
-  //       } else {
-  //         console.error('Dados inválidos recebidos de materiais:', materiaisArray);
-  //       }
-  //     } catch (error) {
-  //       console.error('Erro ao analisar JSON de materiais:', error);
-  //     }
-  //   } else {
-  //     console.warn('Os dados de materiais não foram encontrados.');
-  //   }
-  // }, [materiais]);
-
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -142,17 +122,18 @@ const GeradorDeEsbocoScreen = () => {
 
   // useEffect pra limpar automaticamenete o form mudando o tipo de produto
   useEffect(() => {
-      setForm((prev) => ({
-        ...prev,
-        // altura: '',
-        // largura: '',
-        opcao: '',
-        ilhoses: false,
-        qtdIlhoses: '',
-        bordaMastro: false,
-        composicao: '',
-        duplaFace: false,
-      }));
+    setForm((prev) => ({
+      ...prev,
+      id: '',
+      haste: '',
+      estampa: '',
+      opcao: '',
+      ilhoses: false,
+      qtdIlhoses: '',
+      bordaMastro: false,
+      composicao: '',
+      duplaFace: false,
+    }));
   }, [form.produto]);
 
 
@@ -181,8 +162,6 @@ const GeradorDeEsbocoScreen = () => {
     setForm(prev => ({ ...prev, [name]: checked }));
   };
 
-  const isBandeira = form.produto.toLowerCase().includes('bandeira');
-
   return (
     <PageContainer title="Esboço / Produtos" description="Tela de Esboço dos Produtos | Design">
       <Breadcrumb title="Design / Esboço - Produtos" items={BCrumb} />
@@ -194,12 +173,22 @@ const GeradorDeEsbocoScreen = () => {
           </Typography>
 
           <Grid container spacing={2} mb={2}>
-            <Grid item xs={12} sm={3}>
+            <Grid item xs={12} sm={1.5}>
               <TextField
                 label="ID"
                 name="id"
                 fullWidth
                 value={form.id}
+                onChange={handleChange}
+              />
+            </Grid>
+          
+            <Grid item xs={12} sm={1.5}>
+              <TextField
+                label="Opção"
+                name="opcao"
+                fullWidth
+                value={form.opcao}
                 onChange={handleChange}
               />
             </Grid>
@@ -244,6 +233,15 @@ const GeradorDeEsbocoScreen = () => {
               />
             </Grid>
           </Grid>
+          
+          {form.produto.toLowerCase() === 'almofada' && (
+            <FormAlmofada
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
 
           {form.produto.toLowerCase().includes('bandeira oficial') && (
             <FormBandeira
@@ -253,6 +251,7 @@ const GeradorDeEsbocoScreen = () => {
               setForm={setForm}
             />
           )}
+          
           {form.produto.toLowerCase().includes('bandeira de carro') && (
             <FormBandeiraCarro
               form={form}
@@ -317,3 +316,144 @@ const GeradorDeEsbocoScreen = () => {
 }
 
 export default GeradorDeEsbocoScreen;
+
+
+
+// ALMOFADA:
+// DIMENSÕES (...)
+// TECIDO (TACTEL)
+// FACES (UMA OU DUPLA FACE)
+// ESTAMPA (SUBLIMADA)
+
+// ALMOFADA DE PESCOÇO:
+// TECIDO (TACTEL, HELASTANO)
+// FACES (UMA OU DUPLA FACE)
+// ESTAMPA (SUBLIMADA)
+
+// BANDANA:
+// DIMENSÕES (...)
+// TECIDO (TACTEL, STAR LISO, OXFORD)
+// ESTAMPA (SUBLIMADA)
+
+// BANDEIRA DE CARRO
+// DIMENSÕES (...)
+// DUPLA FACE (NÃO, SIM)
+// TECIDO (BEMBER, TACTEL)
+// HASTE (42CM)
+
+// BANDEIRA DE MESA
+// DIMENSÕES (...)
+// DUPLA FACE (NÃO, SIM)
+// TECIDO (TACTEL)
+// N° DE HASTES (1, 2, 3)
+// MATERIAL DA HASTE (PLÁSTICO, MADEIRA)
+// TAMANHO DA HASTE (30CM)
+
+// BANDEIRA OFICIAL
+// DIMENSÕES (...)
+// DUPLA FACE (NÃO, SIM)
+// TECIDO (TACTEL, OXFORD, CETIM)
+// ILHÓSES (NECESSÁRIO DISCUTIR*)
+// PARTES (CALCULO BASEADO EM 1,5M*)
+
+// BANDEIRA POLÍTICA
+// DIMENSÕES (TAMANHOS FIXOS*)
+// DUPLA FACE (NÃO, SIM)
+// HASTE (TAMANHOS FIXOS*)
+// TECIDO (BEMBER)
+
+// BOLACHÃO
+// DIMENSÕES (1X1; 1,5X1,5; 2X2,3X3)
+// TECIDO (TACTEL)
+// ILHOSES (TAMANHOS FIXOS*)
+
+// BRAÇADEIRA DE CAPITÃO
+// DIMENSÕES (ADULTO 38X7CM, INFANTIL 30X7CM, PERSONALIZÁVEL)
+// MATERIAL (NEOPRENE)
+// FECHAMENTO (VELCRO)
+
+// CACHECOL
+// DIMENSÕES (130 X 18CM)
+// TECIDO (CHIMPA)
+// DUPLA FACE (NÃO, SIM)
+// FRANJAS (...*)
+
+// CANGA
+// DIMENSÕES (...)
+// TECIDO (STAR LISO, TACTEL)
+// ESTAMPA (SUBLIMADA)
+
+// CHINELO DE DEDO
+// COR DO SOLADO (BRANCO, PRETO, AZUL MARINHO, AZUL CLARO, ROSA, ROXO, VERMELHO, VERDE, AMARELO)
+// COR DA TIRA (IGUAL AO SOLADO OBRIGATORIAMENTE)
+// ESTAMPA (SUBLIMADA)
+
+// CHINELO SLIDE
+// COR DO SOLADO (BRANCO, PRETO, ROSA, AZUL, VERMELHO)
+// ESTAMPA (SUBLIMADA)
+
+// CORDÃO DE CHAVEIRO
+// DIMENSÕES APÓS A DOBRA (45CM)
+// LARGURA (2CM)
+// MATERIAL (FITA NÃO ALVEJADA)
+
+// ESTANDARTE
+// DIMENSÕES (...)
+// TECIDO (TACTEL, CETIM, OXFORD)
+// DUPLA FACE (NÃO, SIM)
+// FRANJA (...*)
+
+// FAIXA DE CAMPEÃO
+// DIMENSÕES (155 X 15CM)
+// TECIDO (TACTEL, CETIM, OXFORD)
+// ESTAMPA (SUBLIMADA)
+
+// FAIXA DE MÃO
+// DIMENSÕES (70 X 20CM, 100 X 25CM)
+// MATERIAL (TACTEL)
+// ESTAMPA (SUBLIMADA)
+
+// FLÂMULA
+// DIMENSÕES (...)
+// TECIDO (CETIM, TACTEL, OXFORD)
+// DUPLA FACE (NÃO, SIM)
+// FRANJA (...*)
+
+// MOUSEPAD
+// DIMENSÕES (...)
+// MATERIAL (NEOPLEX)
+
+// SACOCHILA
+// DIMENSÕES (40 X 30CM)
+// TECIDO (MICROFIBRA)
+// ESTAMPA (SUBLIMADA)
+// FRENTE E VERSO (NÃO, SIM)
+
+// SHORTS PRAIA
+// TECIDO (TACTEL)
+// CORDÃO (NÃO, PRETO, BRANCO)
+// BOLSOS (NÃO, SIM)
+// ESTAMPA (SUBLIMADA)
+
+// SHORTS DOLL
+// TECIDO (TACTEL)
+// CORDÃO (NÃO, PRETO, BRANCO)
+// BOLSOS (NÃO, SIM)
+// ESTAMPA (SUBLIMADA)
+
+// TIRANTE
+// COMPRIMENTO (140CM)
+// LARGURA (3, 4, 5CM)
+// MATERIAL (FITA NÃO ALVEJADA)
+
+// TOALHA
+// DIMENSÕES (140 X 70CM)
+// TECIDO (ATOALHADO)
+// ESTAMPA (SUBLIMADA)
+
+// WINDBANNER
+// DIMENSÃO (2M, 3M, 4M)
+// TECIDO (MICROFIBRA)
+// MODELO (FACA, VELA, GOTA, PENA)
+// ESTAMPA (SUBLIMADA)
+// BASE (NÃO, SIM)
