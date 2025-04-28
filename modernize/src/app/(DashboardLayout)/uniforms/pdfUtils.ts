@@ -82,6 +82,56 @@ const addWrappedText = (
   return y + (textLines.length - 1) * 5; // Retorna a nova posição Y
 };
 
+const sortByShirtSize = (players: Player[]): Player[] => {
+  const sizeOrder: Record<string, number> = {
+    'PP': 1,
+    'P': 2,
+    'M': 3,
+    'G': 4,
+    'GG': 5,
+    'XG': 6,
+    'XGG': 6,
+    'XXG': 7,
+    '2XL': 7,
+    'XXXG': 8, 
+    '3XL': 8,
+    '4XL': 9,
+    '5XL': 10,
+
+    '2': 101,
+    '4': 102,
+    '6': 103,
+    '8': 104,
+    '10': 105,
+    '12': 106,
+    '14': 107,
+    '16': 108,
+
+    '2T': 101,
+    '4T': 102,
+    '6T': 103,
+    '8T': 104,
+    '10T': 105,
+    '12T': 106,
+    '14T': 107,
+    '16T': 108,
+  };
+
+  return [...players].sort((a, b) => {
+    const sizeA = a.shirt_size?.trim().toUpperCase() || '';
+    const sizeB = b.shirt_size?.trim().toUpperCase() || '';
+    
+    if (sizeOrder[sizeA] !== undefined && sizeOrder[sizeB] !== undefined) {
+      return sizeOrder[sizeA] - sizeOrder[sizeB];
+    }
+    
+    if (sizeOrder[sizeA] !== undefined) return -1;
+    if (sizeOrder[sizeB] !== undefined) return 1;
+    
+    return sizeA.localeCompare(sizeB);
+  });
+};
+
 export const generateUniformPDF = (uniformData: UniformData): void => {
   // Verificar se há algum esboço sem jogadores
   const hasEmptySketches = uniformData.sketches.some(
@@ -123,6 +173,8 @@ export const generateUniformPDF = (uniformData: UniformData): void => {
     // Criar uma página para cada gênero neste esboço
     Object.entries(playersByGender).forEach(
       ([gender, players], genderIndex) => {
+        const sortedPlayers = sortByShirtSize(players);
+        
         // Adiciona uma nova página para todas exceto a primeira página
         if (pageCount > 0) {
           doc.addPage();
@@ -152,7 +204,7 @@ export const generateUniformPDF = (uniformData: UniformData): void => {
         ); // Posição Y reduzida
 
         doc.setFontSize(10); // Reduzido de 12 para 10
-        doc.text(`Total de jogadores: ${players.length}`, 14, 29); // Posição Y reduzida
+        doc.text(`Total de jogadores: ${sortedPlayers.length}`, 14, 29); // Posição Y reduzida
 
         // Adicionar data e hora de geração
         doc.setFontSize(8);
@@ -184,8 +236,8 @@ export const generateUniformPDF = (uniformData: UniformData): void => {
 
         // Calcular a altura total da tabela com base na última linha da tabela
         const lastRowY =
-          players.length > 0
-            ? startY + 4 + (players.length - 1) * rowHeight + 4 // Última linha + 4px de espaço para a borda inferior
+          sortedPlayers.length > 0
+            ? startY + 4 + (sortedPlayers.length - 1) * rowHeight + 4 // Última linha + 4px de espaço para a borda inferior
             : startY; // Se não houver jogadores, a altura é apenas o cabeçalho
 
         // Desenhar linhas verticais da tabela
@@ -216,7 +268,7 @@ export const generateUniformPDF = (uniformData: UniformData): void => {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8); // Fonte menor para os dados
 
-        players.forEach((player, index) => {
+        sortedPlayers.forEach((player, index) => {
           const rowY = startY + 4 + index * rowHeight; // 4 pixels de espaço após o cabeçalho
 
           // Número
@@ -241,14 +293,14 @@ export const generateUniformPDF = (uniformData: UniformData): void => {
           addWrappedText(doc, observations, colStarts[5] + 2, rowY, obsWidth);
 
           // Linha horizontal após cada linha de dados, exceto a última
-          if (index < players.length - 1) {
+          if (index < sortedPlayers.length - 1) {
             doc.line(14, rowY + 4, 196, rowY + 4);
           }
         });
 
         // Linha horizontal final da tabela (linha inferior)
-        if (players.length > 0) {
-          const lastRowY = startY + 4 + (players.length - 1) * rowHeight;
+        if (sortedPlayers.length > 0) {
+          const lastRowY = startY + 4 + (sortedPlayers.length - 1) * rowHeight;
           doc.line(14, lastRowY + 4, 196, lastRowY + 4);
         }
 
