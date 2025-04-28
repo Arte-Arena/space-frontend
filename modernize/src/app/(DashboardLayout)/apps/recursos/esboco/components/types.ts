@@ -12,6 +12,9 @@ export interface FormState {
     haste: string;
     franja: string;
     modelo: string;
+    corSolado: string;
+    corTira: string;
+    cordao: string;
     composicao: string;
     duplaFace: boolean;
     fechamento: string;

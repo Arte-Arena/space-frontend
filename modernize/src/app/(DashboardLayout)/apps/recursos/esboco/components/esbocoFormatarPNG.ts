@@ -194,6 +194,10 @@ const esbocoFormatarPNG = async (form: FormState) => {
       ${isDuplaFace ? `<div class="info-box"><div class="label">Dupla Face:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
       ${isFrenteVerso ? `<div class="info-box"><div class="label">Frente e Verso:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
       ${form.produto?.toLowerCase().includes('windbanner') ? `<div class="info-box"><div class="label">Base:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${form.produto?.toLowerCase().includes('short') ? `<div class="info-box"><div class="label">Bolso:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${form.corSolado ? `<div class="info-box"><div class="label">Cor do Solado:</div><div class="value">${form.corSolado}</div></div>` : ''}
+      ${form.corTira ? `<div class="info-box"><div class="label">Cor da Tira:</div><div class="value">${form.corTira}</div></div>` : ''}
+      ${form.cordao ? `<div class="info-box"><div class="label">Cordão:</div><div class="value">${form.cordao}</div></div>` : ''}
       ${form.modelo ? `<div class="info-box"><div class="label">Modelo:</div><div class="value">${form.modelo}</div></div>` : ''}
       ${form.haste ? `<div class="info-box"><div class="label">Haste:</div><div class="value">${form.haste}</div></div>` : ''}
       ${form.qntHastes ? `<div class="info-box"><div class="label">N° de Hastes:</div><div class="value">${form.qntHastes}</div></div>` : ''}

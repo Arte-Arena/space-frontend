@@ -27,6 +27,8 @@ import FormBolacao from './components/forms/Bandeiras/FormBolacao';
 import FormBracadeirasCap from './components/forms/Bandeiras/FormBracadeirasCap';
 import FormCachecol from './components/forms/Bandeiras/FormCachecol';
 import FormularioTresAtributos from './components/forms/Bandeiras/Form3Atributos';
+import FormularioQuatroAtributos from './components/forms/Bandeiras/Form4Atributos';
+import FormChineloShorts from './components/forms/Bandeiras/FormChineloShorts';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira",
@@ -54,6 +56,7 @@ const GeradorDeEsbocoScreen = () => {
     dimensao: '',
     altura: '',
     largura: '',
+    material: '',
     ilhoses: false,
     qtdIlhoses: '',
     bordaMastro: false,
@@ -66,7 +69,9 @@ const GeradorDeEsbocoScreen = () => {
     franja: '',
     estampa: '',
     fechamento: '',
-    material: '',
+    corSolado: '',
+    corTira: '',
+    cordao: '',
     opcao: '',
   });
 
@@ -76,6 +81,15 @@ const GeradorDeEsbocoScreen = () => {
     form.produto.toLowerCase() === 'toalha' ||
     form.produto.toLowerCase() === 'windbanner' ||
     form.produto.toLowerCase().includes('faixa');
+
+
+  const is4AtributosForm =
+    form.produto.toLowerCase() === ('estandarte') ||
+    form.produto.toLowerCase() === 'flâmula';
+
+  const isChineloShortsForm =
+    form.produto.toLowerCase().includes('shorts') ||
+    form.produto.toLowerCase().includes('chinelo');
 
 
   const handleCloseSnackbar = () => {
@@ -159,6 +173,9 @@ const GeradorDeEsbocoScreen = () => {
       bordaMastro: false,
       composicao: '',
       duplaFace: false,
+      corSolado: '',
+      corTira: '',
+      cordao: '',
       largura: '',
       altura: '',
     }));
@@ -211,7 +228,8 @@ const GeradorDeEsbocoScreen = () => {
     form.produto.toLowerCase().includes("almofada de pescoço") ||
     form.produto.toLowerCase().includes("bolachão") ||
     form.produto.toLowerCase().includes("sacochila") ||
-    // form.produto.toLowerCase().includes("toalha") ||
+    form.produto.toLowerCase().includes("chinelo") ||
+    form.produto.toLowerCase().includes("short") ||
     form.produto.toLowerCase().includes("faixa");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -397,6 +415,24 @@ const GeradorDeEsbocoScreen = () => {
             />
           )}
 
+          {is4AtributosForm && (
+            <FormularioQuatroAtributos
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {isChineloShortsForm && (
+            <FormChineloShorts
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
           <Box display="flex" alignItems="center" gap={2} mt={3}>
             <Button
               variant="outlined"
@@ -549,12 +585,6 @@ export default GeradorDeEsbocoScreen;
 // LARGURA (2CM)
 // MATERIAL (FITA NÃO ALVEJADA)
 
-// ESTANDARTE
-// DIMENSÕES (...)
-// TECIDO (TACTEL, CETIM, OXFORD)
-// DUPLA FACE (NÃO, SIM)
-// FRANJA (...*)
-
 // FAIXA DE CAMPEÃO
 // DIMENSÕES (155 X 15CM)
 // TECIDO (TACTEL, CETIM, OXFORD)
@@ -564,6 +594,12 @@ export default GeradorDeEsbocoScreen;
 // DIMENSÕES (70 X 20CM, 100 X 25CM)
 // MATERIAL (TACTEL)
 // ESTAMPA (SUBLIMADA)
+
+// ESTANDARTE
+// DIMENSÕES (...)
+// TECIDO (TACTEL, CETIM, OXFORD)
+// DUPLA FACE (NÃO, SIM)
+// FRANJA (...*)
 
 // FLÂMULA
 // DIMENSÕES (...)
