@@ -11,7 +11,6 @@ interface FormProps {
 }
 
 const FormBandana: React.FC<FormProps> = ({ form, handleChange, handleCheckboxChange, setForm }) => {
-  const [disableDuplaFace, setDisableDuplaFace] = useState(false);
 
   // Tecido fixo entre BEMBER e TACTEL
   const tecidos = ["Tactel", "Star Liso", "Oxford"];

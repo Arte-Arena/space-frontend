@@ -11,14 +11,12 @@ interface FormProps {
 }
 
 const FormBolacao: React.FC<FormProps> = ({ form, handleChange, handleCheckboxChange, setForm }) => {
-  const [dimensoes, setDimensoes] = useState('');
   const tecidos = ["Tactel"];
-  const dimensoesConst = ["1X1", "1.5X1.5", "2X2", "3X3"];
+  const dimensoesConst = ["","1X1", "1.5X1.5", "2X2", "3X3"];
 
   const handleChangeDimensoes = (event: SelectChangeEvent<string>) => {
     const { value } = event.target;
     setForm(prev => ({ ...prev, dimensao: value }));
-    setDimensoes(value); // || value === "2X2" || value === "3X3"
     if (value === "1X1") {
       setForm(prev => ({ ...prev, largura: '1', altura: '1' }));
     }
@@ -79,7 +77,7 @@ const FormBolacao: React.FC<FormProps> = ({ form, handleChange, handleCheckboxCh
             <InputLabel>Dimensões</InputLabel>
             <Select
               label="Dimensões"
-              value={dimensoes}
+              value={form.dimensao}
               onChange={handleChangeDimensoes}
             >
               {dimensoesConst.map((dimensao) => (

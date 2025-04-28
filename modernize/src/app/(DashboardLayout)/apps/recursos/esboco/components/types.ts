@@ -11,6 +11,7 @@ export interface FormState {
     qntHastes: string;
     haste: string;
     franja: string;
+    modelo: string;
     composicao: string;
     duplaFace: boolean;
     fechamento: string;

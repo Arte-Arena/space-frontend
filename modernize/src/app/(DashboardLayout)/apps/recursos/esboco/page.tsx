@@ -26,6 +26,7 @@ import FormBandeiraPolitica from './components/forms/Bandeiras/formBandeiraPolit
 import FormBolacao from './components/forms/Bandeiras/FormBolacao';
 import FormBracadeirasCap from './components/forms/Bandeiras/FormBracadeirasCap';
 import FormCachecol from './components/forms/Bandeiras/FormCachecol';
+import FormularioTresAtributos from './components/forms/Bandeiras/Form3Atributos';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira",
@@ -60,6 +61,7 @@ const GeradorDeEsbocoScreen = () => {
     duplaFace: false,
     materialHaste: '',
     qntHastes: '',
+    modelo: '',
     haste: '',
     franja: '',
     estampa: '',
@@ -67,6 +69,14 @@ const GeradorDeEsbocoScreen = () => {
     material: '',
     opcao: '',
   });
+
+  const isTresAtributosForm =
+    form.produto.toLowerCase().includes('canga') ||
+    form.produto.toLowerCase() === 'sacochila' ||
+    form.produto.toLowerCase() === 'toalha' ||
+    form.produto.toLowerCase() === 'windbanner' ||
+    form.produto.toLowerCase().includes('faixa');
+
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -142,14 +152,15 @@ const GeradorDeEsbocoScreen = () => {
       qntHastes: '',
       materialHaste: '',
       estampa: '',
+      modelo: '',
       fechamento: '',
       ilhoses: false,
       qtdIlhoses: '',
       bordaMastro: false,
       composicao: '',
       duplaFace: false,
-      // largura: '',
-      // altura: '',
+      largura: '',
+      altura: '',
     }));
   }, [form.produto]);
 
@@ -177,7 +188,7 @@ const GeradorDeEsbocoScreen = () => {
       setForm(prev => ({ ...prev, altura: '130', largura: '18' }));
     }
     if (form.produto === "Bandeira de Mesa") {
-      setForm((prev) => ({ ...prev, haste: '30'}));
+      setForm((prev) => ({ ...prev, haste: '30' }));
     }
   }, [form.produto]);
 
@@ -195,6 +206,13 @@ const GeradorDeEsbocoScreen = () => {
       title: "Pedidos",
     },
   ];
+
+  const disableDimensao =
+    form.produto.toLowerCase().includes("almofada de pescoço") ||
+    form.produto.toLowerCase().includes("bolachão") ||
+    form.produto.toLowerCase().includes("sacochila") ||
+    // form.produto.toLowerCase().includes("toalha") ||
+    form.produto.toLowerCase().includes("faixa");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -263,10 +281,7 @@ const GeradorDeEsbocoScreen = () => {
                 fullWidth
                 value={form.altura}
                 onChange={handleChange}
-                disabled={
-                  form.produto.toLowerCase().includes("almofada de pescoço")
-                  || form.produto.toLowerCase().includes("bolachão")
-                }
+                disabled={disableDimensao}
               />
             </Grid>
 
@@ -278,10 +293,7 @@ const GeradorDeEsbocoScreen = () => {
                 fullWidth
                 value={form.largura}
                 onChange={handleChange}
-                disabled={
-                  form.produto.toLowerCase().includes("almofada de pescoço")
-                  || form.produto.toLowerCase().includes("bolachão")
-                }
+                disabled={disableDimensao}
               />
             </Grid>
           </Grid>
@@ -376,6 +388,15 @@ const GeradorDeEsbocoScreen = () => {
             />
           )}
 
+          {isTresAtributosForm && (
+            <FormularioTresAtributos
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
           <Box display="flex" alignItems="center" gap={2} mt={3}>
             <Button
               variant="outlined"
@@ -442,6 +463,11 @@ const GeradorDeEsbocoScreen = () => {
 export default GeradorDeEsbocoScreen;
 
 
+// "4_atributos": ["Estandarte", "Flâmula"],
+// "3_atributos": ["Canga", "Faixa de Campeão", "Faixa de Mão", "Sacochila", "Toalha", "Windbanner"],
+// "2_atributos_estampa": ["Chinelo de Dedo", "Chinelo Slide", "Shorts Praia/Doll"],
+// "2_atributos_material": ["Mousepad", "Cordão de Chaveiro", "Tirante"]
+
 
 // ALMOFADA:#
 // DIMENSÕES (...)
@@ -498,7 +524,7 @@ export default GeradorDeEsbocoScreen;
 // MATERIAL (NEOPRENE)
 // FECHAMENTO (VELCRO)
 
-// CACHECOL
+// CACHECOL#
 // DIMENSÕES (130 X 18CM)
 // TECIDO (CHIMPA)
 // DUPLA FACE (NÃO, SIM)
@@ -555,13 +581,7 @@ export default GeradorDeEsbocoScreen;
 // ESTAMPA (SUBLIMADA)
 // FRENTE E VERSO (NÃO, SIM)
 
-// SHORTS PRAIA
-// TECIDO (TACTEL)
-// CORDÃO (NÃO, PRETO, BRANCO)
-// BOLSOS (NÃO, SIM)
-// ESTAMPA (SUBLIMADA)
-
-// SHORTS DOLL
+// SHORTS PRAIA | SHORTS DOLL
 // TECIDO (TACTEL)
 // CORDÃO (NÃO, PRETO, BRANCO)
 // BOLSOS (NÃO, SIM)

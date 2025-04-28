@@ -2,8 +2,22 @@ import html2canvas from 'html2canvas';
 import { FormState } from './types';
 
 const esbocoFormatarPNG = async (form: FormState) => {
-// separar produtos que tem largura e altura de metros e os de centimetros para exibir corretamente
+  // separar produtos que tem largura e altura de metros e os de centimetros para exibir corretamente
+  
+  const isFrenteVerso = form.produto?.toLowerCase().includes('sacochila');
+    // form.produto?.toLowerCase().includes('bandeira') ||
+    // form.produto?.toLowerCase().includes('cachecol') ||
+    // form.produto?.toLowerCase().includes('toalha');
+   const isDuplaFace = 
+   form.produto?.toLowerCase().includes('bandeira') ||
+   form.produto?.toLowerCase().includes('cachecol') ||
+   form.produto?.toLowerCase().includes('cachecol') ||
+   form.produto?.toLowerCase().includes('estandarte') ||
+   form.produto?.toLowerCase().includes('almofada') ||
+   form.produto?.toLowerCase().includes('flâmula');
 
+
+  
   let largura = parseFloat(form.largura || form.altura || '5'); //posteriormente adicionar 15% da largura a mais
   let altura = parseFloat(form.altura || form.largura || '5');
 
@@ -177,14 +191,10 @@ const esbocoFormatarPNG = async (form: FormState) => {
       ${form.composicao ? `<div class="info-box"><div class="label">Composição:</div><div class="value">${form.composicao}</div></div>` : ''}
       ${form.ilhoses && form.qtdIlhoses ? `<div class="info-box"><div class="label">Ilhóses:</div><div class="value">${form.qtdIlhoses}</div></div>` : ''}
       ${form.produto?.toLowerCase().includes('bandeira oficial') ? `<div class="info-box"><div class="label">Borda Mastro:</div><div class="value">${form.bordaMastro ? 'SIM' : 'NÃO'}</div></div>` : ''}
-      ${(form.produto?.toLowerCase()
-      .includes('bandeira') ||
-      form.produto?.toLowerCase().includes('cachecol') ||
-      form.produto?.toLowerCase().includes('cachecol') ||
-      form.produto?.toLowerCase().includes('estandarte') ||
-      form.produto?.toLowerCase().includes('almofada') ||
-      form.produto?.toLowerCase().includes('flâmula'))
-      ? `<div class="info-box"><div class="label">Dupla Face:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${isDuplaFace ? `<div class="info-box"><div class="label">Dupla Face:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${isFrenteVerso ? `<div class="info-box"><div class="label">Frente e Verso:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${form.produto?.toLowerCase().includes('windbanner') ? `<div class="info-box"><div class="label">Base:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${form.modelo ? `<div class="info-box"><div class="label">Modelo:</div><div class="value">${form.modelo}</div></div>` : ''}
       ${form.haste ? `<div class="info-box"><div class="label">Haste:</div><div class="value">${form.haste}</div></div>` : ''}
       ${form.qntHastes ? `<div class="info-box"><div class="label">N° de Hastes:</div><div class="value">${form.qntHastes}</div></div>` : ''}
       ${form.materialHaste ? `<div class="info-box"><div class="label">Material da Haste:</div><div class="value">${form.materialHaste}</div></div>` : ''}
