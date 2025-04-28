@@ -17,6 +17,7 @@ const FormBolacao: React.FC<FormProps> = ({ form, handleChange, handleCheckboxCh
 
   const handleChangeDimensoes = (event: SelectChangeEvent<string>) => {
     const { value } = event.target;
+    setForm(prev => ({ ...prev, dimensao: value }));
     setDimensoes(value); // || value === "2X2" || value === "3X3"
     if (value === "1X1") {
       setForm(prev => ({ ...prev, largura: '1', altura: '1' }));
@@ -31,12 +32,6 @@ const FormBolacao: React.FC<FormProps> = ({ form, handleChange, handleCheckboxCh
       setForm(prev => ({ ...prev, largura: '3', altura: '3' }));
     }
   };
-
-  useEffect(() => {
-    if (form.produto === 'Bolachão') {
-      setForm(prev => ({ ...prev, estampa: 'SUBLIMADA' }));
-    }
-  }, []);
 
   const handleSelectChange = (name: string) => (event: SelectChangeEvent<unknown>, _child: React.ReactNode) => {
     const { value } = event.target;

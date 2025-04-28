@@ -1,6 +1,7 @@
 export interface FormState {
     id: string;
     produto: string;
+    dimensao: string;
     altura: string;
     largura: string;
     ilhoses: boolean;
@@ -9,8 +10,10 @@ export interface FormState {
     materialHaste: string;
     qntHastes: string;
     haste: string;
+    franja: string;
     composicao: string;
     duplaFace: boolean;
+    fechamento: string;
     material: string;
     estampa: string;
     opcao: string;

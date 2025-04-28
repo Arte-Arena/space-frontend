@@ -24,6 +24,8 @@ import FormBandana from './components/forms/Bandeiras/formBandana';
 import FormBandeiraMesa from './components/forms/Bandeiras/formBandeiraMesa';
 import FormBandeiraPolitica from './components/forms/Bandeiras/formBandeiraPolitica';
 import FormBolacao from './components/forms/Bandeiras/FormBolacao';
+import FormBracadeirasCap from './components/forms/Bandeiras/FormBracadeirasCap';
+import FormCachecol from './components/forms/Bandeiras/FormCachecol';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira",
@@ -48,6 +50,7 @@ const GeradorDeEsbocoScreen = () => {
   const [form, setForm] = useState<FormState>({
     id: '',
     produto: '',
+    dimensao: '',
     altura: '',
     largura: '',
     ilhoses: false,
@@ -58,7 +61,9 @@ const GeradorDeEsbocoScreen = () => {
     materialHaste: '',
     qntHastes: '',
     haste: '',
+    franja: '',
     estampa: '',
+    fechamento: '',
     material: '',
     opcao: '',
   });
@@ -85,24 +90,6 @@ const GeradorDeEsbocoScreen = () => {
       });
       return;
     }
-
-    // if (!form.altura.trim()) {
-    //   setSnackbar({
-    //     open: true,
-    //     message: 'Informe a altura',
-    //     severity: 'error'
-    //   });
-    //   return;
-    // }
-
-    // if (!form.largura.trim()) {
-    //   setSnackbar({
-    //     open: true,
-    //     message: 'Informe a largura',
-    //     severity: 'error'
-    //   });
-    //   return;
-    // }
 
     if (form.ilhoses && !form.qtdIlhoses.trim()) {
       setSnackbar({
@@ -143,26 +130,19 @@ const GeradorDeEsbocoScreen = () => {
     }
   };
 
-  useEffect(() => {
-    if (form.produto === "Bandeira de Mesa") {
-      setForm((prev) => ({
-        ...prev,
-        haste: '30',
-      }));
-    }
-  }, [form.produto]);
-
-
   // useEffect pra limpar automaticamenete o form mudando o tipo de produto
   useEffect(() => {
     setForm((prev) => ({
       ...prev,
       id: '',
       opcao: '',
+      dimensao: '',
       haste: '',
+      franja: '',
       qntHastes: '',
       materialHaste: '',
       estampa: '',
+      fechamento: '',
       ilhoses: false,
       qtdIlhoses: '',
       bordaMastro: false,
@@ -182,6 +162,22 @@ const GeradorDeEsbocoScreen = () => {
         largura: '',
         altura: '',
       }));
+    }
+  }, [form.produto]);
+
+
+  useEffect(() => {
+    if (form.produto.includes('Braçadeira')) {
+      setForm(prev => ({ ...prev, fechamento: 'VELCRO' }));
+    }
+    if (form.produto === 'Bolachão') {
+      setForm(prev => ({ ...prev, estampa: 'SUBLIMADA' }));
+    }
+    if (form.produto === 'Cachecol') {
+      setForm(prev => ({ ...prev, altura: '130', largura: '18' }));
+    }
+    if (form.produto === "Bandeira de Mesa") {
+      setForm((prev) => ({ ...prev, haste: '30'}));
     }
   }, [form.produto]);
 
@@ -362,6 +358,24 @@ const GeradorDeEsbocoScreen = () => {
             />
           )}
 
+          {form.produto.toLowerCase().includes('braçadeira') && (
+            <FormBracadeirasCap
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {form.produto.toLowerCase().includes('cachecol') && (
+            <FormCachecol
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
           <Box display="flex" alignItems="center" gap={2} mt={3}>
             <Button
               variant="outlined"
@@ -479,7 +493,7 @@ export default GeradorDeEsbocoScreen;
 // TECIDO (TACTEL)
 // ILHOSES (TAMANHOS FIXOS*)
 
-// BRAÇADEIRA DE CAPITÃO
+// BRAÇADEIRA DE CAPITÃO#
 // DIMENSÕES (ADULTO 38X7CM, INFANTIL 30X7CM, PERSONALIZÁVEL)
 // MATERIAL (NEOPRENE)
 // FECHAMENTO (VELCRO)

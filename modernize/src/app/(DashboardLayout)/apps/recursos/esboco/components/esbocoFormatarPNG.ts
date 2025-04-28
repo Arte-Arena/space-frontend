@@ -2,8 +2,21 @@ import html2canvas from 'html2canvas';
 import { FormState } from './types';
 
 const esbocoFormatarPNG = async (form: FormState) => {
-  const largura = parseFloat(form.largura || form.altura || '5'); //posteriormente adicionar 15% da largura a mais
-  const altura = parseFloat(form.altura || form.largura || '5');
+// separar produtos que tem largura e altura de metros e os de centimetros para exibir corretamente
+
+  let largura = parseFloat(form.largura || form.altura || '5'); //posteriormente adicionar 15% da largura a mais
+  let altura = parseFloat(form.altura || form.largura || '5');
+
+  // if(form.dimensao) {
+  //   largura = 5;
+  //   altura = 5;
+  // }
+
+  if(form.produto.includes('Cachecol')) {
+    largura = 5;
+    altura = 5;
+  }
+
   const larguraPx = 1000;
   const alturaPx = Math.round((altura / largura) * larguraPx);
 
@@ -148,9 +161,18 @@ const esbocoFormatarPNG = async (form: FormState) => {
     }
 
     <div class="info-grid">
-      ${form.altura && !form.largura ? `<div class="info-box"><div class="label">Altura:</div><div class="value">${form.altura} m</div></div>` : ''}
-      ${form.largura && !form.altura ? `<div class="info-box"><div class="label">Largura:</div><div class="value">${form.largura} m</div></div>` : ''}
-      ${form.altura && form.largura ? `<div class="info-box"><div class="label">Dimensões:</div><div class="value">${form.altura} x ${form.largura} m</div></div>` : ''}
+      ${
+        form.dimensao
+          ? `<div class="info-box">
+              <div class="label">Dimensões:</div>
+              <div class="value">${form.dimensao}</div>
+            </div>`
+          : `
+            ${form.altura && !form.largura ? `<div class="info-box"><div class="label">Altura:</div><div class="value">${form.altura} m</div></div>` : ''}
+            ${form.largura && !form.altura ? `<div class="info-box"><div class="label">Largura:</div><div class="value">${form.largura} m</div></div>` : ''}
+            ${form.altura && form.largura ? `<div class="info-box"><div class="label">Dimensões:</div><div class="value">${form.altura} x ${form.largura} m</div></div>` : ''}
+          `
+      }
       ${form.material ? `<div class="info-box"><div class="label">Material:</div><div class="value">${form.material}</div></div>` : ''}
       ${form.composicao ? `<div class="info-box"><div class="label">Composição:</div><div class="value">${form.composicao}</div></div>` : ''}
       ${form.ilhoses && form.qtdIlhoses ? `<div class="info-box"><div class="label">Ilhóses:</div><div class="value">${form.qtdIlhoses}</div></div>` : ''}
@@ -167,6 +189,8 @@ const esbocoFormatarPNG = async (form: FormState) => {
       ${form.qntHastes ? `<div class="info-box"><div class="label">N° de Hastes:</div><div class="value">${form.qntHastes}</div></div>` : ''}
       ${form.materialHaste ? `<div class="info-box"><div class="label">Material da Haste:</div><div class="value">${form.materialHaste}</div></div>` : ''}
       ${form.estampa ? `<div class="info-box"><div class="label">Estampa:</div><div class="value">${form.estampa}</div></div>` : ''}
+      ${form.fechamento ? `<div class="info-box"><div class="label">Fechamento:</div><div class="value">${form.fechamento}</div></div>` : ''}
+      ${form.franja ? `<div class="info-box"><div class="label">Franjas:</div><div class="value">${form.franja}</div></div>` : ''}
     </div>
 
     <div class="selo" >
