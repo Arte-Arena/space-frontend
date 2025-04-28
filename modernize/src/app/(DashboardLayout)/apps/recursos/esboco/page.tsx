@@ -20,6 +20,9 @@ import { FormState } from './components/types';
 import FormBandeiraCarro from './components/forms/Bandeiras/formBandeiraCarro';
 import FormAlmofada from './components/forms/Bandeiras/formAlmofada';
 import FormAlmofadaPescoco from './components/forms/Bandeiras/formAlmofadaPescoco';
+import FormBandana from './components/forms/Bandeiras/formBandana';
+import FormBandeiraMesa from './components/forms/Bandeiras/formBandeiraMesa';
+import FormBandeiraPolitica from './components/forms/Bandeiras/formBandeiraPolitica';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira",
@@ -51,6 +54,8 @@ const GeradorDeEsbocoScreen = () => {
     bordaMastro: false,
     composicao: '',
     duplaFace: false,
+    materialHaste: '',
+    qntHastes: '',
     haste: '',
     estampa: '',
     material: '',
@@ -137,19 +142,33 @@ const GeradorDeEsbocoScreen = () => {
     }
   };
 
+  useEffect(() => {
+    if (form.produto === "Bandeira de Mesa") {
+      setForm((prev) => ({
+        ...prev,
+        haste: '30',
+      }));
+    }
+  }, [form.produto]);
+
+
   // useEffect pra limpar automaticamenete o form mudando o tipo de produto
   useEffect(() => {
     setForm((prev) => ({
       ...prev,
       id: '',
-      haste: '',
-      estampa: '',
       opcao: '',
+      haste: '',
+      qntHastes: '',
+      materialHaste: '',
+      estampa: '',
       ilhoses: false,
       qtdIlhoses: '',
       bordaMastro: false,
       composicao: '',
       duplaFace: false,
+      // largura: '',
+      // altura: '',
     }));
   }, [form.produto]);
 
@@ -159,15 +178,8 @@ const GeradorDeEsbocoScreen = () => {
       form.produto.toLowerCase().includes("chinelo")) {
       setForm((prev) => ({
         ...prev,
-        id: '',
-        haste: '',
-        estampa: '',
-        opcao: '',
-        ilhoses: false,
-        qtdIlhoses: '',
-        bordaMastro: false,
-        composicao: '',
-        duplaFace: false,
+        largura: '',
+        altura: '',
       }));
     }
   }, [form.produto]);
@@ -280,9 +292,27 @@ const GeradorDeEsbocoScreen = () => {
               setForm={setForm}
             />
           )}
-          
+
           {form.produto.toLowerCase() === 'almofada de pescoço' && (
             <FormAlmofadaPescoco
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {form.produto.toLowerCase().includes('bandana') && (
+            <FormBandana
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {form.produto.toLowerCase().includes('bandeira de mesa') && (
+            <FormBandeiraMesa
               form={form}
               handleChange={handleChange}
               handleCheckboxChange={handleCheckboxChange}
@@ -301,6 +331,15 @@ const GeradorDeEsbocoScreen = () => {
 
           {form.produto.toLowerCase().includes('bandeira de carro') && (
             <FormBandeiraCarro
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {form.produto.toLowerCase().includes('bandeira política') && (
+            <FormBandeiraPolitica
               form={form}
               handleChange={handleChange}
               handleCheckboxChange={handleCheckboxChange}
@@ -375,29 +414,31 @@ export default GeradorDeEsbocoScreen;
 
 
 
-// ALMOFADA:
+// ALMOFADA:#
 // DIMENSÕES (...)
 // TECIDO (TACTEL)
 // FACES (UMA OU DUPLA FACE)
 // ESTAMPA (SUBLIMADA)
 
-// ALMOFADA DE PESCOÇO:
+// ALMOFADA DE PESCOÇO:#
 // TECIDO (TACTEL, HELASTANO)
 // FACES (UMA OU DUPLA FACE)
 // ESTAMPA (SUBLIMADA)
 
-// BANDANA:
+// BALACLAVA:
+
+// BANDANA:#
 // DIMENSÕES (...)
 // TECIDO (TACTEL, STAR LISO, OXFORD)
 // ESTAMPA (SUBLIMADA)
 
-// BANDEIRA DE CARRO
+// BANDEIRA DE CARRO#
 // DIMENSÕES (...)
 // DUPLA FACE (NÃO, SIM)
 // TECIDO (BEMBER, TACTEL)
 // HASTE (42CM)
 
-// BANDEIRA DE MESA
+// BANDEIRA DE MESA#
 // DIMENSÕES (...)
 // DUPLA FACE (NÃO, SIM)
 // TECIDO (TACTEL)
@@ -405,7 +446,7 @@ export default GeradorDeEsbocoScreen;
 // MATERIAL DA HASTE (PLÁSTICO, MADEIRA)
 // TAMANHO DA HASTE (30CM)
 
-// BANDEIRA OFICIAL
+// BANDEIRA OFICIAL#
 // DIMENSÕES (...)
 // DUPLA FACE (NÃO, SIM)
 // TECIDO (TACTEL, OXFORD, CETIM)
@@ -413,10 +454,10 @@ export default GeradorDeEsbocoScreen;
 // PARTES (CALCULO BASEADO EM 1,5M*)
 
 // BANDEIRA POLÍTICA
-// DIMENSÕES (TAMANHOS FIXOS*)
-// DUPLA FACE (NÃO, SIM)
-// HASTE (TAMANHOS FIXOS*)
+// DIMENSÕES (TAMANHOS FIXOS*)// pergnutar pra ele quais são os tamanhos fixos.
 // TECIDO (BEMBER)
+// DUPLA FACE (NÃO, SIM)
+// HASTE (TAMANHOS FIXOS*)// perguntar pra ele quais são os tamanhos fixos. 
 
 // BOLACHÃO
 // DIMENSÕES (1X1; 1,5X1,5; 2X2,3X3)

@@ -2,7 +2,7 @@ import html2canvas from 'html2canvas';
 import { FormState } from './types';
 
 const esbocoFormatarPNG = async (form: FormState) => {
-  const largura = parseFloat(form.largura || form.altura || '5');
+  const largura = parseFloat(form.largura || form.altura || '5'); //posteriormente adicionar 15% da largura a mais
   const altura = parseFloat(form.altura || form.largura || '5');
   const larguraPx = 1000;
   const alturaPx = Math.round((altura / largura) * larguraPx);
@@ -164,6 +164,8 @@ const esbocoFormatarPNG = async (form: FormState) => {
       form.produto?.toLowerCase().includes('flâmula'))
       ? `<div class="info-box"><div class="label">Dupla Face:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
       ${form.haste ? `<div class="info-box"><div class="label">Haste:</div><div class="value">${form.haste}</div></div>` : ''}
+      ${form.qntHastes ? `<div class="info-box"><div class="label">N° de Hastes:</div><div class="value">${form.qntHastes}</div></div>` : ''}
+      ${form.materialHaste ? `<div class="info-box"><div class="label">Material da Haste:</div><div class="value">${form.materialHaste}</div></div>` : ''}
       ${form.estampa ? `<div class="info-box"><div class="label">Estampa:</div><div class="value">${form.estampa}</div></div>` : ''}
     </div>
 
