@@ -1,22 +1,36 @@
 import html2canvas from 'html2canvas';
+import { FormState } from './types';
 
-interface Esboco {
-  id: string;
-  opcao: string;
-  produto: string;
-  material: string;
-  altura: string;
-  largura: string;
-  composicao: string;
-  ilhoses: boolean;
-  qtdIlhoses?: string;
-  bordaMastro: boolean;
-  duplaFace: boolean;
-}
+const esbocoFormatarPNG = async (form: FormState) => {
+  // separar produtos que tem largura e altura de metros e os de centimetros para exibir corretamente
+  
+  const isFrenteVerso = form.produto?.toLowerCase().includes('sacochila');
+    // form.produto?.toLowerCase().includes('bandeira') ||
+    // form.produto?.toLowerCase().includes('cachecol') ||
+    // form.produto?.toLowerCase().includes('toalha');
+   const isDuplaFace = 
+   form.produto?.toLowerCase().includes('bandeira') ||
+   form.produto?.toLowerCase().includes('cachecol') ||
+   form.produto?.toLowerCase().includes('cachecol') ||
+   form.produto?.toLowerCase().includes('estandarte') ||
+   form.produto?.toLowerCase().includes('almofada') ||
+   form.produto?.toLowerCase().includes('flâmula');
 
-const esbocoFormatarPNG = async (form: Esboco) => {
-  const largura = parseFloat(form.largura || '1');
-  const altura = parseFloat(form.altura || '1');
+
+  
+  let largura = parseFloat(form.largura || form.altura || '5'); //posteriormente adicionar 15% da largura a mais
+  let altura = parseFloat(form.altura || form.largura || '5');
+
+  // if(form.dimensao) {
+  //   largura = 5;
+  //   altura = 5;
+  // }
+
+  if(form.produto.includes('Cachecol')) {
+    largura = 5;
+    altura = 5;
+  }
+
   const larguraPx = 1000;
   const alturaPx = Math.round((altura / largura) * larguraPx);
 
@@ -155,18 +169,42 @@ const esbocoFormatarPNG = async (form: Esboco) => {
   </div>
 
   <div class="footer">
-    ${form.produto ? 
-      `<div class="titulo">${primeira} <span style="color: white">${restante}</span></div>` 
+    ${form.produto ?
+      `<div class="titulo">${primeira} <span style="color: white">${restante}</span></div>`
       : `<div class="titulo">${form.produto} </div>`
     }
 
     <div class="info-grid">
-      ${form.altura && form.largura ? `<div class="info-box"><div class="label">Dimensões:</div><div class="value">${form.altura} x ${form.largura} m</div></div>` : ''}
+      ${
+        form.dimensao
+          ? `<div class="info-box">
+              <div class="label">Dimensões:</div>
+              <div class="value">${form.dimensao}</div>
+            </div>`
+          : `
+            ${form.altura && !form.largura ? `<div class="info-box"><div class="label">Altura:</div><div class="value">${form.altura} m</div></div>` : ''}
+            ${form.largura && !form.altura ? `<div class="info-box"><div class="label">Largura:</div><div class="value">${form.largura} m</div></div>` : ''}
+            ${form.altura && form.largura ? `<div class="info-box"><div class="label">Dimensões:</div><div class="value">${form.altura} x ${form.largura} m</div></div>` : ''}
+          `
+      }
       ${form.material ? `<div class="info-box"><div class="label">Material:</div><div class="value">${form.material}</div></div>` : ''}
       ${form.composicao ? `<div class="info-box"><div class="label">Composição:</div><div class="value">${form.composicao}</div></div>` : ''}
       ${form.ilhoses && form.qtdIlhoses ? `<div class="info-box"><div class="label">Ilhóses:</div><div class="value">${form.qtdIlhoses}</div></div>` : ''}
-      ${form.produto?.toLowerCase().includes('bandeira') ? `<div class="info-box"><div class="label">Borda Mastro:</div><div class="value">${form.bordaMastro ? 'SIM' : 'NÃO'}</div></div>` : ''}
-      ${form.produto?.toLowerCase().includes('bandeira') ? `<div class="info-box"><div class="label">Dupla Face:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${form.produto?.toLowerCase().includes('bandeira oficial') ? `<div class="info-box"><div class="label">Borda Mastro:</div><div class="value">${form.bordaMastro ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${isDuplaFace ? `<div class="info-box"><div class="label">Dupla Face:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${isFrenteVerso ? `<div class="info-box"><div class="label">Frente e Verso:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${form.produto?.toLowerCase().includes('windbanner') ? `<div class="info-box"><div class="label">Base:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${form.produto?.toLowerCase().includes('short') ? `<div class="info-box"><div class="label">Bolso:</div><div class="value">${form.duplaFace ? 'SIM' : 'NÃO'}</div></div>` : ''}
+      ${form.corSolado ? `<div class="info-box"><div class="label">Cor do Solado:</div><div class="value">${form.corSolado}</div></div>` : ''}
+      ${form.corTira ? `<div class="info-box"><div class="label">Cor da Tira:</div><div class="value">${form.corTira}</div></div>` : ''}
+      ${form.cordao ? `<div class="info-box"><div class="label">Cordão:</div><div class="value">${form.cordao}</div></div>` : ''}
+      ${form.modelo ? `<div class="info-box"><div class="label">Modelo:</div><div class="value">${form.modelo}</div></div>` : ''}
+      ${form.haste ? `<div class="info-box"><div class="label">Haste:</div><div class="value">${form.haste}</div></div>` : ''}
+      ${form.qntHastes ? `<div class="info-box"><div class="label">N° de Hastes:</div><div class="value">${form.qntHastes}</div></div>` : ''}
+      ${form.materialHaste ? `<div class="info-box"><div class="label">Material da Haste:</div><div class="value">${form.materialHaste}</div></div>` : ''}
+      ${form.estampa ? `<div class="info-box"><div class="label">Estampa:</div><div class="value">${form.estampa}</div></div>` : ''}
+      ${form.fechamento ? `<div class="info-box"><div class="label">Fechamento:</div><div class="value">${form.fechamento}</div></div>` : ''}
+      ${form.franja ? `<div class="info-box"><div class="label">Franjas:</div><div class="value">${form.franja}</div></div>` : ''}
     </div>
 
     <div class="selo" >

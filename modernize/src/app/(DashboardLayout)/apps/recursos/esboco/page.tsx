@@ -2,17 +2,33 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, TextField, MenuItem, FormControlLabel, Checkbox, Typography, Grid, Select, InputLabel, FormControl,
-  ListItemText,
   Button,
   AlertProps,
   Alert,
-  Snackbar
+  Snackbar,
+  LinearProgress,
+  Backdrop,
+  CircularProgress
 } from '@mui/material';
 import { IconFileTypePng } from '@tabler/icons-react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import esbocoFormatarPNG from './components/esbocoFormatarPNG';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
+import FormBandeira from './components/forms/Bandeiras/formBandeiraOfficial';
+import { FormState } from './components/types';
+import FormBandeiraCarro from './components/forms/Bandeiras/formBandeiraCarro';
+import FormAlmofada from './components/forms/Bandeiras/formAlmofada';
+import FormAlmofadaPescoco from './components/forms/Bandeiras/formAlmofadaPescoco';
+import FormBandana from './components/forms/Bandeiras/formBandana';
+import FormBandeiraMesa from './components/forms/Bandeiras/formBandeiraMesa';
+import FormBandeiraPolitica from './components/forms/Bandeiras/formBandeiraPolitica';
+import FormBolacao from './components/forms/Bandeiras/FormBolacao';
+import FormBracadeirasCap from './components/forms/Bandeiras/FormBracadeirasCap';
+import FormCachecol from './components/forms/Bandeiras/FormCachecol';
+import FormularioTresAtributos from './components/forms/Bandeiras/Form3Atributos';
+import FormularioQuatroAtributos from './components/forms/Bandeiras/Form4Atributos';
+import FormChineloShorts from './components/forms/Bandeiras/FormChineloShorts';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira",
@@ -24,8 +40,8 @@ const produtos = [
 ];
 
 const GeradorDeEsbocoScreen = () => {
-  const [allMateriais, setAllMateriais] = useState<string[]>([]);
-  const [snackbar, setSnackbar] = React.useState<{
+  const [loading, setLoading] = useState<boolean>(false);
+  const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     severity: AlertProps['severity'];
@@ -34,78 +50,53 @@ const GeradorDeEsbocoScreen = () => {
     message: '',
     severity: 'success'
   });
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     id: '',
     produto: '',
+    dimensao: '',
     altura: '',
     largura: '',
+    material: '',
     ilhoses: false,
     qtdIlhoses: '',
     bordaMastro: false,
     composicao: '',
     duplaFace: false,
-    material: '',
+    materialHaste: '',
+    qntHastes: '',
+    modelo: '',
+    haste: '',
+    franja: '',
+    estampa: '',
+    fechamento: '',
+    corSolado: '',
+    corTira: '',
+    cordao: '',
     opcao: '',
   });
 
-  const materiais = localStorage.getItem('materiais');
-
-  useEffect(() => {
-    if (materiais) {
-      try {
-        const materiaisArray = JSON.parse(materiais);
-        if (Array.isArray(materiaisArray)) {
-          const materialNames = materiaisArray.map((material) => material.descricao);
-          setAllMateriais(materialNames);
-        } else {
-          console.error('Dados inválidos recebidos de materiais:', materiaisArray);
-        }
-      } catch (error) {
-        console.error('Erro ao analisar JSON de materiais:', error);
-      }
-    } else {
-      console.warn('Os dados de materiais não foram encontrados.');
-    }
-  }, [materiais]);
-
-  useEffect(() => {
-    const alturaM = parseFloat(form.altura || '0');
-    const larguraM = parseFloat(form.largura || '0');
-  
-    const maior = Math.max(alturaM, larguraM);
-    const menor = Math.min(alturaM, larguraM);
-  
-    if (form.ilhoses && alturaM && larguraM) {
-      const ilhosesMaior = (Math.ceil(maior) + 1) * 2;
-      const ilhosesMenor = Math.max(0, (Math.ceil(menor) - 2)) * 2;
-      const totalIlhoses = ilhosesMaior + ilhosesMenor + 2;
-  
-      setForm(prev => ({ ...prev, qtdIlhoses: totalIlhoses.toString() }));
-    }
-  }, [form.altura, form.largura, form.ilhoses]);
+  const isTresAtributosForm =
+    form.produto.toLowerCase().includes('canga') ||
+    form.produto.toLowerCase() === 'sacochila' ||
+    form.produto.toLowerCase() === 'toalha' ||
+    form.produto.toLowerCase() === 'windbanner' ||
+    form.produto.toLowerCase().includes('faixa');
 
 
-  useEffect(() => {
-    const alturaM = parseFloat(form.altura || '0');
-    const larguraM = parseFloat(form.largura || '0');
-  
-    const maior = Math.max(alturaM, larguraM);
-    const menor = Math.min(alturaM, larguraM);
-  
-    // Cálculo da composição
-    if (menor >= 1.5) {
-      const partes = Math.ceil(menor / 1.5);
-      setForm(prev => ({ ...prev, composicao: `${partes} Partes` }));
-    } else {
-      setForm(prev => ({ ...prev, composicao: '' }));
-    }
-  }, [form.altura, form.largura]);
+  const is4AtributosForm =
+    form.produto.toLowerCase() === ('estandarte') ||
+    form.produto.toLowerCase() === 'flâmula';
+
+  const isChineloShortsForm =
+    form.produto.toLowerCase().includes('shorts') ||
+    form.produto.toLowerCase().includes('chinelo');
+
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleExportToPNG = () => {
+  const handleExportToPNG = async () => {
     if (!form.id.trim()) {
       setSnackbar({
         open: true,
@@ -119,24 +110,6 @@ const GeradorDeEsbocoScreen = () => {
       setSnackbar({
         open: true,
         message: 'Informe o produto',
-        severity: 'error'
-      });
-      return;
-    }
-
-    if (!form.altura.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Informe a altura',
-        severity: 'error'
-      });
-      return;
-    }
-
-    if (!form.largura.trim()) {
-      setSnackbar({
-        open: true,
-        message: 'Informe a largura',
         severity: 'error'
       });
       return;
@@ -161,13 +134,80 @@ const GeradorDeEsbocoScreen = () => {
     }
 
     // ✅ Se tudo estiver certo: gera o PNG e exibe snackbar de sucesso
-    esbocoFormatarPNG(form);
-    setSnackbar({
-      open: true,
-      message: 'PNG gerado com sucesso!',
-      severity: 'success'
-    });
+    try {
+      setLoading(true); // <<-- mostra o loading
+      await esbocoFormatarPNG(form); // <<-- espera a criação do PNG
+      setSnackbar({
+        open: true,
+        message: 'PNG gerado com sucesso!',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error(error);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao gerar o PNG!',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false); // <<-- termina o loading
+    }
   };
+
+  // useEffect pra limpar automaticamenete o form mudando o tipo de produto
+  useEffect(() => {
+    setForm((prev) => ({
+      ...prev,
+      id: '',
+      opcao: '',
+      dimensao: '',
+      haste: '',
+      franja: '',
+      qntHastes: '',
+      materialHaste: '',
+      estampa: '',
+      modelo: '',
+      fechamento: '',
+      ilhoses: false,
+      qtdIlhoses: '',
+      bordaMastro: false,
+      composicao: '',
+      duplaFace: false,
+      corSolado: '',
+      corTira: '',
+      cordao: '',
+      largura: '',
+      altura: '',
+    }));
+  }, [form.produto]);
+
+  useEffect(() => {
+    if (form.produto.toLowerCase().includes("almofada de pescoço") ||
+      form.produto.toLowerCase().includes("shorts") ||
+      form.produto.toLowerCase().includes("chinelo")) {
+      setForm((prev) => ({
+        ...prev,
+        largura: '',
+        altura: '',
+      }));
+    }
+  }, [form.produto]);
+
+
+  useEffect(() => {
+    if (form.produto.includes('Braçadeira')) {
+      setForm(prev => ({ ...prev, fechamento: 'VELCRO' }));
+    }
+    if (form.produto === 'Bolachão') {
+      setForm(prev => ({ ...prev, estampa: 'SUBLIMADA' }));
+    }
+    if (form.produto === 'Cachecol') {
+      setForm(prev => ({ ...prev, altura: '130', largura: '18' }));
+    }
+    if (form.produto === "Bandeira de Mesa") {
+      setForm((prev) => ({ ...prev, haste: '30' }));
+    }
+  }, [form.produto]);
 
   const BCrumb = [
     {
@@ -184,6 +224,14 @@ const GeradorDeEsbocoScreen = () => {
     },
   ];
 
+  const disableDimensao =
+    form.produto.toLowerCase().includes("almofada de pescoço") ||
+    form.produto.toLowerCase().includes("bolachão") ||
+    form.produto.toLowerCase().includes("sacochila") ||
+    form.produto.toLowerCase().includes("chinelo") ||
+    form.produto.toLowerCase().includes("short") ||
+    form.produto.toLowerCase().includes("faixa");
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -193,8 +241,6 @@ const GeradorDeEsbocoScreen = () => {
     const { name, checked } = e.target;
     setForm(prev => ({ ...prev, [name]: checked }));
   };
-
-  const isBandeira = form.produto.toLowerCase().includes('bandeira');
 
   return (
     <PageContainer title="Esboço / Produtos" description="Tela de Esboço dos Produtos | Design">
@@ -207,7 +253,7 @@ const GeradorDeEsbocoScreen = () => {
           </Typography>
 
           <Grid container spacing={2} mb={2}>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={1.5}>
               <TextField
                 label="ID"
                 name="id"
@@ -217,7 +263,17 @@ const GeradorDeEsbocoScreen = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={1.5}>
+              <TextField
+                label="Opção"
+                name="opcao"
+                fullWidth
+                value={form.opcao}
+                onChange={handleChange}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={3}>
               <FormControl fullWidth>
                 <InputLabel>Produto</InputLabel>
                 <Select
@@ -235,30 +291,7 @@ const GeradorDeEsbocoScreen = () => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth>
-                <InputLabel>Material</InputLabel>
-                <Select
-                  name="material"
-                  value={form.material}
-                  label="Material"
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, material: e.target.value }))
-                  }
-                >
-                  {allMateriais.map((material) => (
-                    <MenuItem key={material} value={material}>
-                      <ListItemText primary={material} />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-
-          {/* Linha 2 */}
-          <Grid container spacing={2} mb={2}>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 label="Altura (m)"
                 name="altura"
@@ -266,10 +299,11 @@ const GeradorDeEsbocoScreen = () => {
                 fullWidth
                 value={form.altura}
                 onChange={handleChange}
+                disabled={disableDimensao}
               />
             </Grid>
 
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 label="Largura (m)"
                 name="largura"
@@ -277,107 +311,147 @@ const GeradorDeEsbocoScreen = () => {
                 fullWidth
                 value={form.largura}
                 onChange={handleChange}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={4}>
-              <TextField
-                label="Composição"
-                name="composicao"
-                fullWidth
-                value={form.composicao}
-                onChange={handleChange}
+                disabled={disableDimensao}
               />
             </Grid>
           </Grid>
 
-          {/* Linha 3 */}
-          <Grid container spacing={2} mb={2}>
-            <Grid item xs={12} sm={3}>
-              <TextField
-                label="Opção"
-                name="opcao"
-                fullWidth
-                value={form.opcao}
-                onChange={handleChange}
-              />
-            </Grid>
+          {form.produto.toLowerCase() === 'almofada' && (
+            <FormAlmofada
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
 
-            <Grid item xs={12} sm={3}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="bordaMastro"
-                    checked={form.bordaMastro}
-                    onChange={handleCheckboxChange}
-                  />
-                }
-                label="Borda Mastro"
-              />
-            </Grid>
+          {form.produto.toLowerCase() === 'almofada de pescoço' && (
+            <FormAlmofadaPescoco
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
 
-            {isBandeira && (
-              <Grid item xs={12} sm={3}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        name="ilhoses"
-                        checked={form.ilhoses}
-                        onChange={handleCheckboxChange}
-                      />
-                    }
-                    label="Ilhóses"
-                  />
-                  {form.ilhoses && (
-                    <TextField
-                      label="Quantidade"
-                      name="qtdIlhoses"
-                      type="number"
-                      size="small"
-                      sx={{
-                        width: '100px',
-                        marginLeft: '10px',
-                        'input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button': {
-                          WebkitAppearance: 'none',
-                          margin: 0
-                        },
-                        'input[type=number]': {
-                          MozAppearance: 'textfield'
-                        }
-                      }}
-                      InputProps={{ inputProps: { min: 0, step: 1 } }}
-                      value={form.qtdIlhoses}
-                      onChange={handleChange}
-                    />
-                  )}
-                </div>
-              </Grid>
-            )}
+          {form.produto.toLowerCase().includes('bandana') && (
+            <FormBandana
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
 
-            <Grid item xs={12} sm={3}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="duplaFace"
-                    checked={form.duplaFace}
-                    onChange={handleCheckboxChange}
-                  />
-                }
-                label="Dupla Face"
-              />
-            </Grid>
-          </Grid>
+          {form.produto.toLowerCase().includes('bandeira de mesa') && (
+            <FormBandeiraMesa
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {form.produto.toLowerCase().includes('bandeira oficial') && (
+            <FormBandeira
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {form.produto.toLowerCase().includes('bandeira de carro') && (
+            <FormBandeiraCarro
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {form.produto.toLowerCase().includes('bandeira política') && (
+            <FormBandeiraPolitica
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {form.produto.toLowerCase().includes('bolachão') && (
+            <FormBolacao
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {form.produto.toLowerCase().includes('braçadeira') && (
+            <FormBracadeirasCap
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {form.produto.toLowerCase().includes('cachecol') && (
+            <FormCachecol
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {isTresAtributosForm && (
+            <FormularioTresAtributos
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {is4AtributosForm && (
+            <FormularioQuatroAtributos
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {isChineloShortsForm && (
+            <FormChineloShorts
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
           <Box display="flex" alignItems="center" gap={2} mt={3}>
             <Button
               variant="outlined"
               color="primary"
               onClick={handleExportToPNG}
               startIcon={<IconFileTypePng />}
+              disabled={loading}
             >
-              Exportar para PNG
+              {loading ? 'Gerando...' : 'Exportar para PNG'}
             </Button>
           </Box>
+
+          {/* Barra de progresso no topo */}
+          {loading && <LinearProgress sx={{ position: 'fixed', top: 0, left: 0, width: '100%', zIndex: 9999 }} />}
+
+          {/* OU se preferir um backdrop com spinner */}
+          {/* <Backdrop open={loading} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+            <CircularProgress color="inherit" />
+          </Backdrop> */}
 
           <Snackbar
             open={snackbar.open}
@@ -423,3 +497,145 @@ const GeradorDeEsbocoScreen = () => {
 }
 
 export default GeradorDeEsbocoScreen;
+
+
+// "4_atributos": ["Estandarte", "Flâmula"],
+// "3_atributos": ["Canga", "Faixa de Campeão", "Faixa de Mão", "Sacochila", "Toalha", "Windbanner"],
+// "2_atributos_estampa": ["Chinelo de Dedo", "Chinelo Slide", "Shorts Praia/Doll"],
+// "2_atributos_material": ["Mousepad", "Cordão de Chaveiro", "Tirante"]
+
+
+// ALMOFADA:#
+// DIMENSÕES (...)
+// TECIDO (TACTEL)
+// FACES (UMA OU DUPLA FACE)
+// ESTAMPA (SUBLIMADA)
+
+// ALMOFADA DE PESCOÇO:#
+// TECIDO (TACTEL, HELASTANO)
+// FACES (UMA OU DUPLA FACE)
+// ESTAMPA (SUBLIMADA)
+
+// BALACLAVA:
+
+// BANDANA:#
+// DIMENSÕES (...)
+// TECIDO (TACTEL, STAR LISO, OXFORD)
+// ESTAMPA (SUBLIMADA)
+
+// BANDEIRA DE CARRO#
+// DIMENSÕES (...)
+// DUPLA FACE (NÃO, SIM)
+// TECIDO (BEMBER, TACTEL)
+// HASTE (42CM)
+
+// BANDEIRA DE MESA#
+// DIMENSÕES (...)
+// DUPLA FACE (NÃO, SIM)
+// TECIDO (TACTEL)
+// N° DE HASTES (1, 2, 3)
+// MATERIAL DA HASTE (PLÁSTICO, MADEIRA)
+// TAMANHO DA HASTE (30CM)
+
+// BANDEIRA OFICIAL#
+// DIMENSÕES (...)
+// DUPLA FACE (NÃO, SIM)
+// TECIDO (TACTEL, OXFORD, CETIM)
+// ILHÓSES (NECESSÁRIO DISCUTIR*)
+// PARTES (CALCULO BASEADO EM 1,5M*)
+
+// BANDEIRA POLÍTICA#
+// DIMENSÕES (TAMANHOS FIXOS*)// pergnutar pra ele quais são os tamanhos fixos.
+// TECIDO (BEMBER)
+// DUPLA FACE (NÃO, SIM)
+// HASTE (TAMANHOS FIXOS*)// perguntar pra ele quais são os tamanhos fixos. 
+
+// BOLACHÃO#
+// DIMENSÕES (1X1; 1,5X1,5; 2X2,3X3)
+// TECIDO (TACTEL)
+// ILHOSES (TAMANHOS FIXOS*)
+
+// BRAÇADEIRA DE CAPITÃO#
+// DIMENSÕES (ADULTO 38X7CM, INFANTIL 30X7CM, PERSONALIZÁVEL)
+// MATERIAL (NEOPRENE)
+// FECHAMENTO (VELCRO)
+
+// CACHECOL#
+// DIMENSÕES (130 X 18CM)
+// TECIDO (CHIMPA)
+// DUPLA FACE (NÃO, SIM)
+// FRANJAS (...*)
+
+// CANGA
+// DIMENSÕES (...)
+// TECIDO (STAR LISO, TACTEL)
+// ESTAMPA (SUBLIMADA)
+
+// CHINELO DE DEDO
+// COR DO SOLADO (BRANCO, PRETO, AZUL MARINHO, AZUL CLARO, ROSA, ROXO, VERMELHO, VERDE, AMARELO)
+// COR DA TIRA (IGUAL AO SOLADO OBRIGATORIAMENTE)
+// ESTAMPA (SUBLIMADA)
+
+// CHINELO SLIDE
+// COR DO SOLADO (BRANCO, PRETO, ROSA, AZUL, VERMELHO)
+// ESTAMPA (SUBLIMADA)
+
+// CORDÃO DE CHAVEIRO
+// DIMENSÕES APÓS A DOBRA (45CM)
+// LARGURA (2CM)
+// MATERIAL (FITA NÃO ALVEJADA)
+
+// FAIXA DE CAMPEÃO
+// DIMENSÕES (155 X 15CM)
+// TECIDO (TACTEL, CETIM, OXFORD)
+// ESTAMPA (SUBLIMADA)
+
+// FAIXA DE MÃO
+// DIMENSÕES (70 X 20CM, 100 X 25CM)
+// MATERIAL (TACTEL)
+// ESTAMPA (SUBLIMADA)
+
+// ESTANDARTE
+// DIMENSÕES (...)
+// TECIDO (TACTEL, CETIM, OXFORD)
+// DUPLA FACE (NÃO, SIM)
+// FRANJA (...*)
+
+// FLÂMULA
+// DIMENSÕES (...)
+// TECIDO (CETIM, TACTEL, OXFORD)
+// DUPLA FACE (NÃO, SIM)
+// FRANJA (...*)
+
+// MOUSEPAD
+// DIMENSÕES (...)
+// MATERIAL (NEOPLEX)
+
+// SACOCHILA
+// DIMENSÕES (40 X 30CM)
+// TECIDO (MICROFIBRA)
+// ESTAMPA (SUBLIMADA)
+// FRENTE E VERSO (NÃO, SIM)
+
+// SHORTS PRAIA | SHORTS DOLL
+// TECIDO (TACTEL)
+// CORDÃO (NÃO, PRETO, BRANCO)
+// BOLSOS (NÃO, SIM)
+// ESTAMPA (SUBLIMADA)
+
+// TIRANTE
+// COMPRIMENTO (140CM)
+// LARGURA (3, 4, 5CM)
+// MATERIAL (FITA NÃO ALVEJADA)
+
+// TOALHA
+// DIMENSÕES (140 X 70CM)
+// TECIDO (ATOALHADO)
+// ESTAMPA (SUBLIMADA)
+
+// WINDBANNER
+// DIMENSÃO (2M, 3M, 4M)
+// TECIDO (MICROFIBRA)
+// MODELO (FACA, VELA, GOTA, PENA)
+// ESTAMPA (SUBLIMADA)
+// BASE (NÃO, SIM)
