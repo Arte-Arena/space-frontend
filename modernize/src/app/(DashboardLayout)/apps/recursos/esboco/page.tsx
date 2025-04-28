@@ -23,6 +23,7 @@ import FormAlmofadaPescoco from './components/forms/Bandeiras/formAlmofadaPescoc
 import FormBandana from './components/forms/Bandeiras/formBandana';
 import FormBandeiraMesa from './components/forms/Bandeiras/formBandeiraMesa';
 import FormBandeiraPolitica from './components/forms/Bandeiras/formBandeiraPolitica';
+import FormBolacao from './components/forms/Bandeiras/FormBolacao';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira",
@@ -184,7 +185,6 @@ const GeradorDeEsbocoScreen = () => {
     }
   }, [form.produto]);
 
-
   const BCrumb = [
     {
       to: "/",
@@ -267,7 +267,10 @@ const GeradorDeEsbocoScreen = () => {
                 fullWidth
                 value={form.altura}
                 onChange={handleChange}
-                disabled={form.produto.toLowerCase().includes("almofada de pescoço")}
+                disabled={
+                  form.produto.toLowerCase().includes("almofada de pescoço")
+                  || form.produto.toLowerCase().includes("bolachão")
+                }
               />
             </Grid>
 
@@ -279,7 +282,10 @@ const GeradorDeEsbocoScreen = () => {
                 fullWidth
                 value={form.largura}
                 onChange={handleChange}
-                disabled={form.produto.toLowerCase().includes("almofada de pescoço")}
+                disabled={
+                  form.produto.toLowerCase().includes("almofada de pescoço")
+                  || form.produto.toLowerCase().includes("bolachão")
+                }
               />
             </Grid>
           </Grid>
@@ -340,6 +346,15 @@ const GeradorDeEsbocoScreen = () => {
 
           {form.produto.toLowerCase().includes('bandeira política') && (
             <FormBandeiraPolitica
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
+
+          {form.produto.toLowerCase().includes('bolachão') && (
+            <FormBolacao
               form={form}
               handleChange={handleChange}
               handleCheckboxChange={handleCheckboxChange}
@@ -453,13 +468,13 @@ export default GeradorDeEsbocoScreen;
 // ILHÓSES (NECESSÁRIO DISCUTIR*)
 // PARTES (CALCULO BASEADO EM 1,5M*)
 
-// BANDEIRA POLÍTICA
+// BANDEIRA POLÍTICA#
 // DIMENSÕES (TAMANHOS FIXOS*)// pergnutar pra ele quais são os tamanhos fixos.
 // TECIDO (BEMBER)
 // DUPLA FACE (NÃO, SIM)
 // HASTE (TAMANHOS FIXOS*)// perguntar pra ele quais são os tamanhos fixos. 
 
-// BOLACHÃO
+// BOLACHÃO#
 // DIMENSÕES (1X1; 1,5X1,5; 2X2,3X3)
 // TECIDO (TACTEL)
 // ILHOSES (TAMANHOS FIXOS*)
