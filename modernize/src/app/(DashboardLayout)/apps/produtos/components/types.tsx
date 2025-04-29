@@ -52,3 +52,58 @@ export interface ProdutoFormValues {
     produto_seo_description: string;
     produto_slug: string;
 }
+
+export interface Produto {
+    id: string;
+    nome: string;
+    codigo: string;
+    preco: string | number | null;
+    preco_promocional: string;
+    preco_custo: string;
+    preco_custo_medio: string;
+    peso_liquido: string;
+    peso_bruto: string;
+    tipoEmbalagem: string;
+    alturaEmbalagem: string;
+    comprimentoEmbalagem: string;
+    larguraEmbalagem: string;
+    diametroEmbalagem: string;
+    unidade: string;
+    gtin: string;
+    gtin_embalagem: string;
+    localizacao: string;
+    situacao: string;
+    tipo: string;
+    tipo_variacao: string;
+    ncm: string;
+    origem: string;
+    estoque_minimo: string;
+    estoque_maximo: string;
+    id_fornecedor: string;
+    nome_fornecedor: string;
+    codigo_fornecedor: string;
+    codigo_pelo_fornecedor: string;
+    unidade_por_caixa: string;
+    classe_ipi: string;
+    valor_ipi_fixo: string;
+    cod_lista_servicos: string;
+    descricao_complementar: string;
+    garantia: string;
+    cest: string;
+    obs: string;
+    variacoes: string;
+    id_Produto_Pai: string;
+    sob_encomenda: string;
+    dias_preparacao: string;
+    marca: string;
+    qtd_volumes: string;
+    categoria: string;
+    anexos: string;
+    imagens_externas: string;
+    classe_produto: string;
+    seo_title: string;
+    seo_keywords: string;
+    link_video: string;
+    seo_description: string;
+    slug: string;
+}
