@@ -157,33 +157,36 @@ const ProdutosBuscarScreen = () => {
       <Breadcrumb title="Produtos / Buscar" subtitle="Gerencie Produtos da Arte Arena / Buscar" />
       <ParentCard title="Buscar Produto">
         <>
-          <Tabs
-            value={selectedTab}
-            onChange={handleTabChange}
-            sx={{
-              mb: 2,
-              '& .MuiTabs-flexContainer': {
-                justifyContent: 'space-between',
-              },
-            }}
-          >
-            {categoryData.map((c, i) => (
-              <Tab
-                key={i}
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    {c.categoria ?? 'Sem Categoria'}
+          {categoryData.length > 0 && (
 
-                    {loadingCats || isFetching ? (
-                      <CircularProgress size={16} color="inherit" />
-                    ) : (
-                      `(${c.count})`
-                    )}
-                  </Box>
-                }
-              />
-            ))}
-          </Tabs>
+            <Tabs
+              value={selectedTab}
+              onChange={handleTabChange}
+              sx={{
+                mb: 2,
+                '& .MuiTabs-flexContainer': {
+                  justifyContent: 'space-between',
+                },
+              }}
+            >
+              {categoryData.map((c, i) => (
+                <Tab
+                  key={i}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      {c.categoria ?? 'Sem Categoria'}
+
+                      {loadingCats || isFetching ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : (
+                        `(${c.count})`
+                      )}
+                    </Box>
+                  }
+                />
+              ))}
+            </Tabs>
+          )}
 
           <Divider sx={{ mb: 2 }} />
 
