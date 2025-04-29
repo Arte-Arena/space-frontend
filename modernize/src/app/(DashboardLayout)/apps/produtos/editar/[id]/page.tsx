@@ -7,7 +7,7 @@ import ProdutoForm from '../../components/produtosForm'
 
 const EditarProduto: NextPage = () => {
   return (
-    <PageContainer>
+    <PageContainer title='Editar Produto' description='Editar Produto'>
       <Breadcrumb title="Editar Produto" />
       <ParentCard title="Editar Produto">
         <>
