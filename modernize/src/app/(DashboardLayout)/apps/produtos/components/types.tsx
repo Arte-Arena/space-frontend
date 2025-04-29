@@ -2,7 +2,7 @@ export interface ProdutoFormValues {
     produto_id: string;
     produto_nome: string;
     produto_codigo: string;
-    produto_preco: string;
+    produto_preco: string | number | null;
     produto_preco_promocional: string;
     produto_preco_custo: string;
     produto_preco_custo_medio: string;
