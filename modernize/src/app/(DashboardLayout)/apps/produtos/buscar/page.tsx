@@ -12,6 +12,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { Backdrop, Box, Divider, LinearProgress, Tab, Tabs } from '@mui/material';
 import { Pagination, Stack, Button, Link, Typography, Grid } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -32,13 +33,22 @@ interface Product {
   peso: number;
 }
 
+interface CategoryCount {
+  categoria: string;
+  count: number;
+}
+
 const ProdutosBuscarScreen = () => {
   const [query, setQuery] = useState<string>('');
   const [cat, setCat] = useState<string>('');
   const [preco, setPreco] = useState<string>('');
   const [peso, setPeso] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Mantém a query atual usada na API
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [categoryData, setCategoryData] = useState<CategoryCount[]>([]);
+  const [loadingCats, setLoadingCats] = useState(true);
+  const [errorCats, setErrorCats] = useState<string | null>(null);
   const router = useRouter();
 
   const accessToken = localStorage.getItem('accessToken');
@@ -48,24 +58,70 @@ const ProdutosBuscarScreen = () => {
     router.push('/auth/login');
   }
 
-  const { isFetching, error, data, refetch } = useQuery({
-    queryKey: ['repoData', searchQuery, page],
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API}/api/produto/categories`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      },
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        return res.json() as Promise<CategoryCount[]>;
+      })
+      .then(data => {
+        setCategoryData(data);
+        // inicializa o filtro com a primeira categoria
+        if (data.length > 0) {
+          setCat(data[0].categoria);
+        }
+      })
+      .catch(err => setErrorCats(err.message))
+      .finally(() => setLoadingCats(false));
+  }, [accessToken, router]);
+
+
+
+  const { data, isFetching, error, refetch } = useQuery({
+    queryKey: ['produtos', searchQuery, page, cat, preco, peso],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/produto?q=${encodeURIComponent(searchQuery)}&page=${page}&cat=${cat}&preco=${preco}&peso=${peso}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }).then((res) => res.json()),
+      fetch(
+        `${process.env.NEXT_PUBLIC_API}/api/produto?` +
+        `q=${encodeURIComponent(searchQuery)}` +
+        `&page=${page}` +
+        `&cat=${encodeURIComponent(cat)}` +
+        `&preco=${encodeURIComponent(preco)}` +
+        `&peso=${encodeURIComponent(peso)}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      ).then(res => {
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        return res.json() as Promise<any>;
+      }),
   });
+
+  const handleTabChange = (_: any, newValue: number) => {
+    setSelectedTab(newValue);
+    const maybeCat = categoryData[newValue].categoria;
+    if (maybeCat === null) {
+      // sem filtro de texto → devolve todos sem categoria
+      setCat('');
+    } else {
+      setCat(maybeCat);
+    }
+    setPage(1);
+  };
 
   const handleCleanSearch = () => {
     setQuery('');
     setCat('');
     setPeso('');
     setPreco('');
-    setPage(1); 
+    setPage(1);
     setSearchQuery('');
     // refetch();
   };
@@ -93,14 +149,47 @@ const ProdutosBuscarScreen = () => {
     window.open(`/apps/produtos/editar/${productId}`, '_blank');
   };
 
-  if (isFetching) return <CircularProgress />;
-  if (error) return <p>Ocorreu um erro: {error.message}</p>;
+  if (errorCats) return <p>Erro categorias: {errorCats}</p>;
+  if (error) return <p>Erro produtos: {(error as Error).message}</p>;
 
   return (
     <PageContainer title="Produtos / Buscar" description="Produtos da Arte Arena">
       <Breadcrumb title="Produtos / Buscar" subtitle="Gerencie Produtos da Arte Arena / Buscar" />
       <ParentCard title="Buscar Produto">
         <>
+          {categoryData.length > 0 && (
+
+            <Tabs
+              value={selectedTab}
+              onChange={handleTabChange}
+              sx={{
+                mb: 2,
+                '& .MuiTabs-flexContainer': {
+                  justifyContent: 'space-between',
+                },
+              }}
+            >
+              {categoryData.map((c, i) => (
+                <Tab
+                  key={i}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      {c.categoria ?? 'Sem Categoria'}
+
+                      {loadingCats || isFetching ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : (
+                        `(${c.count})`
+                      )}
+                    </Box>
+                  }
+                />
+              ))}
+            </Tabs>
+          )}
+
+          <Divider sx={{ mb: 2 }} />
+
           {/* Campo de busca com botão */}
           <Grid container spacing={2} alignItems="center" mb={2}>
             {/* 1️⃣ Primeiro campo ocupa 4/12 colunas */}
@@ -122,7 +211,7 @@ const ProdutosBuscarScreen = () => {
             </Grid>
 
             {/* 2️⃣,3️⃣,4️⃣ Próximos campos ocupam 2/12 colunas cada */}
-            <Grid item xs={12} sm={2}>
+            {/* <Grid item xs={12} sm={2}>
               <CustomTextField
                 fullWidth
                 onKeyPress={handleSearchKeyPress}
@@ -136,8 +225,9 @@ const ProdutosBuscarScreen = () => {
                     </InputAdornment>
                   )
                 }}
-              />
+              /> 
             </Grid>
+              */}
             <Grid item xs={12} sm={2}>
               <CustomTextField
                 fullWidth
@@ -252,16 +342,27 @@ const ProdutosBuscarScreen = () => {
           </TableContainer>
 
           {/* Paginação */}
-          <Stack spacing={2} mt={2} alignItems="center">
-            <Pagination
-              count={Math.ceil(data.total / data.per_page)}
-              page={data.current_page}
-              onChange={handlePageChange}
+          {data && (
+            <Stack spacing={2} mt={2} alignItems="center">
+              <Pagination
+                count={Math.ceil(data.total / data.per_page)}
+                page={data.current_page}
+                onChange={handlePageChange}
+              />
+            </Stack>
+          )}
+          {(isFetching || loadingCats) && (
+            <LinearProgress
+              sx={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100%',
+                zIndex: 9999,
+              }}
             />
-          </Stack>
-
+          )}
         </>
-
       </ParentCard>
     </PageContainer>
   );
