@@ -40,6 +40,7 @@ import {
   IconCards,
   IconExclamationCircle,
   IconUsers,
+  IconShoppingCart,
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -396,7 +397,7 @@ const getMenuItems = (): MenuitemsType[] => {
             {
               id: uniqueId(),
               title: "Adicionar Produto",
-              icon: IconBrandProducthunt,
+              icon: IconShoppingCart,
               href: "/apps/produtos/adicionar"
             },
             {

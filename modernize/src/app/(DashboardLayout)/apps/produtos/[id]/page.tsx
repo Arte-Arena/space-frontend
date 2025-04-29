@@ -8,12 +8,15 @@ import {
   Tab,
   Typography,
   CircularProgress,
+  Stack,
+  Button,
 } from '@mui/material';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import SectionCard from '../components/sectionCard';
 import { Produto } from '../components/types';
 import DadosComplementares from '../components/dadosComplementares';
 import DadosGerais from '../components/dadosGerais';
+import { IconEdit } from '@tabler/icons-react';
 
 
 function TabPanel(props: { children?: React.ReactNode; value: number; index: number }) {
@@ -94,6 +97,17 @@ export default function ProdutoDetailPage() {
           }
         </TabPanel>
       ))}
+
+      <Stack direction="row" justifyContent="flex-end" mt={2}>
+        <Button
+          variant="contained"
+          color="primary"
+          endIcon={<IconEdit />}
+          href={`../produtos/editar/${id}`}
+        >
+          Editar
+        </Button>
+      </Stack>
     </Box>
   );
 }
