@@ -95,14 +95,14 @@ export default function ProdutoForm() {
   ];
 
   const sections = [
-    { title: '📦 Informações Básicas', fields: ['produto_nome','produto_codigo','produto_preco','produto_tipo','produto_categoria','produto_marca','produto_localizacao','produto_situacao'] },
-    { title: '💰 Valores', fields: ['produto_preco_promocional','produto_preco_custo','produto_preco_custo_medio','produto_valor_ipi_fixo'] },
-    { title: '🏷️ Fornecedor', fields: ['produto_id_fornecedor','produto_nome_fornecedor','produto_codigo_fornecedor','produto_codigo_pelo_fornecedor','produto_unidade_por_caixa'] },
-    { title: '📦 Embalagem', fields: ['produto_tipo_Embalagem','produto_altura_Embalagem','produto_comprimento_Embalagem','produto_largura_Embalagem','produto_diametro_Embalagem','produto_gtin_embalagem'] },
-    { title: '🔢 Estoque', fields: ['produto_estoque_minimo','produto_estoque_maximo','produto_peso_liquido','produto_peso_bruto','produto_gtin'] },
-    { title: '⚙️ Definições Técnicas', fields: ['produto_ncm','produto_origem','produto_classe_ipi','produto_valor_ipi_fixo','produto_cod_lista_servicos','produto_cest'] },
-    { title: '🌎 SEO e Mídia', fields: ['produto_seo_title','produto_seo_keywords','produto_seo_description','produto_slug','produto_link_video','produto_anexos','produto_imagens_externas'] },
-    { title: '🧩 Outras Informações', fields: ['produto_variacoes','produto_tipo_variacao','produto_id_Produto_Pai','produto_sob_encomenda','produto_dias_preparacao','produto_obs','produto_descricao_complementar','produto_garantia','produto_classe_produto','produto_qtd_volumes'] }
+    { title: '📦 Informações Básicas', fields: ['produto_nome', 'produto_codigo', 'produto_preco', 'produto_tipo', 'produto_categoria', 'produto_marca', 'produto_localizacao', 'produto_situacao'] },
+    { title: '💰 Valores', fields: ['produto_preco_promocional', 'produto_preco_custo', 'produto_preco_custo_medio', 'produto_valor_ipi_fixo'] },
+    { title: '🏷️ Fornecedor', fields: ['produto_id_fornecedor', 'produto_nome_fornecedor', 'produto_codigo_fornecedor', 'produto_codigo_pelo_fornecedor', 'produto_unidade_por_caixa'] },
+    { title: '📦 Embalagem', fields: ['produto_tipo_Embalagem', 'produto_altura_Embalagem', 'produto_comprimento_Embalagem', 'produto_largura_Embalagem', 'produto_diametro_Embalagem', 'produto_gtin_embalagem'] },
+    { title: '🔢 Estoque', fields: ['produto_estoque_minimo', 'produto_estoque_maximo', 'produto_peso_liquido', 'produto_peso_bruto', 'produto_gtin'] },
+    { title: '⚙️ Definições Técnicas', fields: ['produto_ncm', 'produto_origem', 'produto_classe_ipi', 'produto_valor_ipi_fixo', 'produto_cod_lista_servicos', 'produto_cest'] },
+    { title: '🌎 SEO e Mídia', fields: ['produto_seo_title', 'produto_seo_keywords', 'produto_seo_description', 'produto_slug', 'produto_link_video', 'produto_anexos', 'produto_imagens_externas'] },
+    { title: '🧩 Outras Informações', fields: ['produto_variacoes', 'produto_tipo_variacao', 'produto_id_Produto_Pai', 'produto_sob_encomenda', 'produto_dias_preparacao', 'produto_obs', 'produto_descricao_complementar', 'produto_garantia', 'produto_classe_produto', 'produto_qtd_volumes'] }
   ];
 
   // Validação por etapa
@@ -121,7 +121,7 @@ export default function ProdutoForm() {
   // Snackbar helpers
   const showSnackbar = (message: string, severity: 'success' | 'error') => setSnackbar({ open: true, message, severity });
   const handleCloseSnackbar = () => setSnackbar(prev => ({ ...prev, open: false }));
-  
+
   const accessToken = localStorage.getItem('accessToken');
   if (!accessToken) {
     console.error('Access token is missing');
@@ -130,25 +130,38 @@ export default function ProdutoForm() {
 
   // Carrega dados no modo edição
   useEffect(() => {
-    if (isEditing) {
-      axios.get(`${process.env.NEXT_PUBLIC_API}/api/produtos/${params.id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
+    if (!isEditing) return;
+
+    axios.get(`${process.env.NEXT_PUBLIC_API}/api/produto/${params.id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+      .then(({ data }) => {
+        // console.log(data);
+        const produtoData = data.produto ?? data;
+        // Mapeia campos da API para initialValues
+        const novoVals: Partial<ProdutoFormValues> = {};
+        Object.keys(initialValues).forEach(key => {
+          const campo = key.replace(/^produto_/, '');
+          // API usa camelCase ou snake_case, convertendo primeiro letra para minúscula
+          const valor = produtoData[campo] ?? produtoData[campo.charAt(0).toLowerCase() + campo.slice(1)];
+          novoVals[key as keyof ProdutoFormValues] = valor != null ? String(valor) : '';
+        });
+        // Garante ID separado
+        novoVals['produto_id'] = String(produtoData.id ?? '');
+        setInitialValues(prev => ({ ...prev, ...novoVals }));
       })
-        .then(({ data }) => setInitialValues(prev => ({ ...prev, ...data.produto, produto_id: data.produto.id })))
-        .catch(err => { console.error(err); showSnackbar('Erro ao carregar produto.', 'error'); });
-    }
-  }, [isEditing, params.id]);
+      .catch(error => showSnackbar('Erro ao carregar produto.', 'error'));
+  }, [isEditing, params.id, accessToken]);
 
 
   return (
-    <Box sx={{ p:3, maxWidth:1600, margin:'0 auto' }}>
+    <Box sx={{ p: 3, maxWidth: 1600, margin: '0 auto' }}>
       <Typography variant="h4" mb={3}>{isEditing ? 'Editar Produto' : 'Novo Produto'}</Typography>
 
-      <Stepper activeStep={activeStep} alternativeLabel sx={{ mb:4 }}>
+      <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
         {sections.map(({ title }) => (
           <Step key={title}><StepLabel>{title}</StepLabel></Step>
         ))}
@@ -192,7 +205,7 @@ export default function ProdutoForm() {
       >
         {({ values, errors, touched, handleChange, handleBlur, isSubmitting, validateForm, setTouched }) => (
           <Form>
-            <Card sx={{ mb:4 }}>
+            <Card sx={{ mb: 4 }}>
               <CardContent>
                 <Grid container spacing={2}>
                   {sections[activeStep].fields.map(field => {
@@ -203,8 +216,8 @@ export default function ProdutoForm() {
                         <TextField
                           fullWidth
                           name={name}
-                          label={name.replace('produto_','').split('_')
-                            .map(w => w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(' ')}
+                          label={name.replace('produto_', '').split('_')
+                            .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')}
                           type={isPreco ? 'number' : 'text'}
                           value={values[name]}
                           onChange={handleChange}
@@ -212,8 +225,8 @@ export default function ProdutoForm() {
                           error={Boolean(touched[name] && errors[name])}
                           helperText={touched[name] && errors[name] ? errors[name] : ''}
                           InputProps={isPreco ? {
-                            startAdornment:<InputAdornment position="start">R$</InputAdornment>,
-                            inputProps:{ step:'0.01', min:0 }
+                            startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                            inputProps: { step: '0.01', min: 0 }
                           } : undefined}
                         />
                       </Grid>
@@ -223,7 +236,7 @@ export default function ProdutoForm() {
               </CardContent>
             </Card>
 
-            <Box sx={{ display:'flex', justifyContent:'space-between', mt:2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
               <Button
                 variant="outlined"
                 disabled={activeStep === 0 || isSubmitting}
@@ -257,18 +270,20 @@ export default function ProdutoForm() {
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical:'top', horizontal:'right' }}
-        sx={{ '& .MuiPaper-root':{
-          borderRadius:'12px', boxShadow:'0px 4px 20px rgba(0,0,0,0.15)', backdropFilter:'blur(4px)',
-          backgroundColor: snackbar.severity === 'success' ? 'rgba(46,125,50,0.9)' : 'rgba(211,47,47,0.9)'
-        } }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        sx={{
+          '& .MuiPaper-root': {
+            borderRadius: '12px', boxShadow: '0px 4px 20px rgba(0,0,0,0.15)', backdropFilter: 'blur(4px)',
+            backgroundColor: snackbar.severity === 'success' ? 'rgba(46,125,50,0.9)' : 'rgba(211,47,47,0.9)'
+          }
+        }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity={snackbar.severity}
           variant="filled"
           icon={false}
-          sx={{ width:'100%', alignItems:'center', fontSize:'0.875rem', fontWeight:500, color:'common.white', '& .MuiAlert-message':{ display:'flex', alignItems:'center', gap:1 } }}
+          sx={{ width: '100%', alignItems: 'center', fontSize: '0.875rem', fontWeight: 500, color: 'common.white', '& .MuiAlert-message': { display: 'flex', alignItems: 'center', gap: 1 } }}
         >{snackbar.message}</Alert>
       </Snackbar>
     </Box>

@@ -15,7 +15,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { Pagination, Stack, Button } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import { IconSearch } from '@tabler/icons-react';
+import { IconPencil, IconPencilCheck, IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
@@ -73,6 +73,10 @@ const ProdutosBuscarScreen = () => {
 
   const handleDeleteProduct = async (productId: number) => {
     console.log(`handleDeleteProduct: ${productId}`);
+  };
+  const handleEditProduct = async (productId: number) => {
+    console.log(`handleEditProduct: ${productId}`);
+    window.open(`/apps/produtos/editar/${productId}`, '_blank');
   };
 
   if (isFetching) return <CircularProgress />;
@@ -139,6 +143,9 @@ const ProdutosBuscarScreen = () => {
                   <TableCell>{product.comprimento}</TableCell>
                   <TableCell>{product.peso}</TableCell>
                   <TableCell>
+                    <IconButton onClick={() => handleEditProduct(product.id)}>
+                      <IconPencil />
+                    </IconButton>
                     <IconButton onClick={() => handleDeleteProduct(product.id)}>
                       <DeleteIcon />
                     </IconButton>
