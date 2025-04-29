@@ -1,0 +1,75 @@
+'use client'
+import { TextField, FormControlLabel, Checkbox, Grid, MenuItem, FormControl, InputLabel, Select, SelectChangeEvent } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { FormState } from '../../types';
+
+interface FormProps {
+  form: FormState;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleCheckboxChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  setForm: React.Dispatch<React.SetStateAction<FormState>>;
+}
+
+const FormAlmofada: React.FC<FormProps> = ({ form, handleChange, handleCheckboxChange, setForm }) => {
+  const [disableDuplaFace, setDisableDuplaFace] = useState(false);
+
+  // Tecido fixo entre BEMBER e TACTEL
+  const tecidos = ["Tactel"];
+
+  const handleSelectChange = (name: string) => (event: SelectChangeEvent<unknown>, _child: React.ReactNode) => {
+    const { value } = event.target;
+    setForm(prev => ({ ...prev, [name]: value as string }));
+  };
+
+  return (
+    <>
+      <Grid container spacing={2} mb={2}>
+        <Grid item xs={12} sm={3}>
+          <FormControl fullWidth>
+            <InputLabel>Material</InputLabel>
+            <Select
+              value={form.material}
+              label="Material"
+              onChange={handleSelectChange('material')}
+            >
+              {tecidos.map((material) => (
+                <MenuItem key={material} value={material}>
+                  {material}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={3}>
+          <TextField
+            label="Estampa"
+            name="estampa"
+            fullWidth
+            aria-readonly={true}
+            value="SUBLIMADA"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={4} sx={{ marginLeft: '5px' }}>
+          <FormControl fullWidth>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="duplaFace"
+                  checked={form.duplaFace}
+                  onChange={handleCheckboxChange}
+                  disabled={disableDuplaFace}
+                />
+              }
+              label="Dupla Face"
+            />
+          </FormControl>
+        </Grid>
+
+      </Grid>
+    </>
+  );
+};
+
+export default FormAlmofada;

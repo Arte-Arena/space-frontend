@@ -86,7 +86,6 @@ const ValorTotalPedidosComponent = () => {
 
       {/* Passando dados para o gráfico */}
       <div style={{ marginBottom: '50px' }}>
-        <ParentCard title="Total dos Pedidos">
           {dados.length > 0 ? (
             <>
               <ApexPedidosTotal totalOrcamentos={dados} tipoGrafico={tipoGrafico} />
@@ -94,7 +93,6 @@ const ValorTotalPedidosComponent = () => {
           ) : (
             <div>Sem dados disponíveis para exibir.</div>
           )}
-        </ParentCard>
       </div>
     </PageContainer>
   );

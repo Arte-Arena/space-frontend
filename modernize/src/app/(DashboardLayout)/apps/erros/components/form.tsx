@@ -144,7 +144,9 @@ const ErroForm = () => {
           console.log('Dados recebidos:', data);
           formik.setValues({
             numero_pedido: data.numero_pedido ?? '',
-            setor: Array.isArray(data.setor) ? data.setor : (data.setor ? [data.setor] : []),
+            setor: Array.isArray(data.setor)
+              ? data.setor
+              : (typeof data.setor === 'string' ? data.setor.split(',').map((s: string) => s.trim()) : []),
             responsavel: data.responsavel ?? '',
             prejuizo: data.prejuizo ?? null,
             link_trello: data.link_trello ?? '',
@@ -210,6 +212,9 @@ const ErroForm = () => {
         });
       } finally {
         setIsSubmitting(false);
+        if(id) {
+          router.push('/apps/erros');
+        }
       }
     }
   });

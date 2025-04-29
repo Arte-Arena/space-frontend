@@ -638,7 +638,7 @@ export default function Erros() {
                           <TableCell sx={{
                             color: myTheme === 'dark' ? 'white' : 'black',
                           }} align='center'>
-                            {row.prejuizo ? String(row.prejuizo) : "-"}
+                            {row.prejuizo ? "R$ " + row.prejuizo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : "-"}
                           </TableCell>
 
                           <TableCell

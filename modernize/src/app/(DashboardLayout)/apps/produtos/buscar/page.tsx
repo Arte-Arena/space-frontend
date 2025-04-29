@@ -12,10 +12,10 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Pagination, Stack, Button } from '@mui/material';
+import { Pagination, Stack, Button, Link, Typography } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import { IconSearch } from '@tabler/icons-react';
+import { IconPencil, IconPencilCheck, IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
@@ -74,6 +74,10 @@ const ProdutosBuscarScreen = () => {
   const handleDeleteProduct = async (productId: number) => {
     console.log(`handleDeleteProduct: ${productId}`);
   };
+  const handleEditProduct = async (productId: number) => {
+    console.log(`handleEditProduct: ${productId}`);
+    window.open(`/apps/produtos/editar/${productId}`, '_blank');
+  };
 
   if (isFetching) return <CircularProgress />;
   if (error) return <p>Ocorreu um erro: {error.message}</p>;
@@ -85,78 +89,93 @@ const ProdutosBuscarScreen = () => {
 
         <>
 
-        {/* Campo de busca com botão */}
-        <Stack spacing={2} direction="row" alignItems="center" mb={2}>
-          <CustomTextField
-            fullWidth
-            value={query}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
-            onKeyPress={handleSearchKeyPress}
-            placeholder="Buscar produto..."
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <IconSearch />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSearch}
-            startIcon={<IconSearch />}
-          >
-            Buscar
-          </Button>
-        </Stack>
+          {/* Campo de busca com botão */}
+          <Stack spacing={2} direction="row" alignItems="center" mb={2}>
+            <CustomTextField
+              fullWidth
+              value={query}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setQuery(event.target.value)}
+              onKeyPress={handleSearchKeyPress}
+              placeholder="Buscar produto..."
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <IconSearch />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSearch}
+              startIcon={<IconSearch />}
+            >
+              Buscar
+            </Button>
+          </Stack>
 
-        {/* Tabela */}
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Nome</TableCell>
-                <TableCell>Categoria</TableCell>
-                <TableCell>Código</TableCell>
-                <TableCell>Preço</TableCell>
-                <TableCell>Altura</TableCell>
-                <TableCell>Largura</TableCell>
-                <TableCell>Comprimento</TableCell>
-                <TableCell>Peso</TableCell>
-                <TableCell>Ações</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data?.data.map((product: Product) => (
-                <TableRow key={product.id}>
-                  <TableCell>{product.nome}</TableCell>
-                  <TableCell>{product.categoria}</TableCell>
-                  <TableCell>{product.codigo}</TableCell>
-                  <TableCell>{product.preco}</TableCell>
-                  <TableCell>{product.altura}</TableCell>
-                  <TableCell>{product.largura}</TableCell>
-                  <TableCell>{product.comprimento}</TableCell>
-                  <TableCell>{product.peso}</TableCell>
-                  <TableCell>
-                    <IconButton onClick={() => handleDeleteProduct(product.id)}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
+          {/* Tabela */}
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Nome</TableCell>
+                  <TableCell>Categoria</TableCell>
+                  <TableCell>Código</TableCell>
+                  <TableCell>Preço</TableCell>
+                  <TableCell>Altura</TableCell>
+                  <TableCell>Largura</TableCell>
+                  <TableCell>Comprimento</TableCell>
+                  <TableCell>Peso</TableCell>
+                  <TableCell>Ações</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {data?.data.map((product: Product) => (
+                  <TableRow key={product.id}>
+                    <TableCell>
+                      <Link
+                        component={Link}
+                        href={`/apps/produtos/${product.id}`}
+                        underline="hover"
+                        target="_blank"
+                        sx={{ fontWeight: '500' }}
+                      >
+                        <Typography variant="body2" component="span" color="text.primary">
+                          {product.nome}
+                        </Typography>
+                      </Link>
+                    </TableCell>
+                    <TableCell>{product.categoria}</TableCell>
+                    <TableCell>{product.codigo}</TableCell>
+                    <TableCell>{product.preco}</TableCell>
+                    <TableCell>{product.altura}</TableCell>
+                    <TableCell>{product.largura}</TableCell>
+                    <TableCell>{product.comprimento}</TableCell>
+                    <TableCell>{product.peso}</TableCell>
+                    <TableCell>
+                      <IconButton onClick={() => handleEditProduct(product.id)}>
+                        <IconPencil />
+                      </IconButton>
+                      <IconButton onClick={() => handleDeleteProduct(product.id)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
 
-        {/* Paginação */}
-        <Stack spacing={2} mt={2} alignItems="center">
-          <Pagination
-            count={Math.ceil(data.total / data.per_page)}
-            page={data.current_page}
-            onChange={handlePageChange}
-          />
-        </Stack>
+          {/* Paginação */}
+          <Stack spacing={2} mt={2} alignItems="center">
+            <Pagination
+              count={Math.ceil(data.total / data.per_page)}
+              page={data.current_page}
+              onChange={handlePageChange}
+            />
+          </Stack>
 
         </>
 

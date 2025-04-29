@@ -21,6 +21,8 @@ type Lead = {
   jaCadastrado: boolean;
   origem: string;
   idOcta?: string;
+  orcamento_id?: string;
+  orcamento_status?: "aprovado" | "pendente" | null;
   endereco?: {
     rua: string;
     numero: string;
@@ -63,7 +65,6 @@ interface ApiResponse {
     email: string;
     origem: string;
     criado_em: string;
-    existe_em_orcamento: boolean;
     orcamento_id?: string;
     orcamento_status?: "aprovado" | "pendente" | null;
     tem_pedido?: boolean;
@@ -158,7 +159,7 @@ function LeadsScreen() {
       const result: ApiResponse = await response.json();
 
       const transformedLeads = result.data.map((item) => {
-        const hasOrcamento = item.existe_em_orcamento;
+        const hasOrcamento = item.orcamento_id;
         const clientInfo = item.client_info;
         const isCadastrado = clientInfo !== null;
 
@@ -196,6 +197,8 @@ function LeadsScreen() {
           jaCadastrado: isCadastrado,
           origem: item.origem || "Desconhecida",
           idOcta: item.id,
+          orcamento_id: item.orcamento_id,
+          orcamento_status: item.orcamento_status,
         };
 
         if (clientInfo) {
