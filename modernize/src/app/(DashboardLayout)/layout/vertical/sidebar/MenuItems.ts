@@ -395,6 +395,12 @@ const getMenuItems = (): MenuitemsType[] => {
             },
             {
               id: uniqueId(),
+              title: "Adicionar Produto",
+              icon: IconBrandProducthunt,
+              href: "/apps/produtos/adicionar"
+            },
+            {
+              id: uniqueId(),
               title: "Pacotes de Uniformes",
               icon: IconShirt,
               href: "/apps/produtos/pacotes-uniformes"
