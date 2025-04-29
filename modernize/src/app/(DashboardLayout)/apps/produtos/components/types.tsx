@@ -8,11 +8,11 @@ export interface ProdutoFormValues {
     produto_preco_custo_medio: string;
     produto_peso_liquido: string;
     produto_peso_bruto: string;
-    produto_tipoEmbalagem: string;
-    produto_alturaEmbalagem: string;
-    produto_comprimentoEmbalagem: string;
-    produto_larguraEmbalagem: string;
-    produto_diametroEmbalagem: string;
+    produto_tipo_Embalagem: string;
+    produto_altura_Embalagem: string;
+    produto_comprimento_Embalagem: string;
+    produto_largura_Embalagem: string;
+    produto_diametro_Embalagem: string;
     produto_unidade: string;
     produto_gtin: string;
     produto_gtin_embalagem: string;
@@ -37,7 +37,7 @@ export interface ProdutoFormValues {
     produto_cest: string;
     produto_obs: string;
     produto_variacoes: string;
-    produto_idProdutoPai: string;
+    produto_id_Produto_Pai: string;
     produto_sob_encomenda: string;
     produto_dias_preparacao: string;
     produto_marca: string;
