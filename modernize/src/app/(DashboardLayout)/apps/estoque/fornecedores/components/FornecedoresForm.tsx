@@ -62,7 +62,7 @@ const validationSchema = Yup.object().shape({
   bairro: Yup.string().required('Bairro é obrigatório'),
   cidade: Yup.string().required('Cidade é obrigatória'),
   uf: Yup.string().required('UF é obrigatório'),
-  produtos_fornecidos: Yup.array()
+  produtos: Yup.array()
     .min(1, 'Selecione ao menos um produto')
     .of(
       Yup.object().shape({
@@ -86,7 +86,6 @@ const GenericClienteForm: React.FC = () => {
 
   const [isCepLoading, setIsCepLoading] = useState(false);
   const [produtosInputValue, setProdutosInputValue] = useState<string | undefined>('');
-  const [produtosId, setProdutosId] = useState<number | "">("");
   const [currentPageProdutos, setCurrentPageProdutos] = useState(1);
   const [searchQueryProdutos, setSearchQueryProdutos] = useState<string>("");
   const [isLoadingProdutos, setIsLoadingProdutos] = useState(false);
@@ -121,7 +120,7 @@ const GenericClienteForm: React.FC = () => {
       bairro: '',
       cidade: '',
       uf: '',
-      produtos_fornecidos: [],
+      produtos: [],
     },
     validationSchema,
     enableReinitialize: true,
@@ -130,17 +129,25 @@ const GenericClienteForm: React.FC = () => {
       try {
         const { tipo_pessoa, ...payload } = values;
         const url = id
-          ? `${process.env.NEXT_PUBLIC_API}/clientes/${id}`
-          : `${process.env.NEXT_PUBLIC_API}/clientes`;
+          ? `${process.env.NEXT_PUBLIC_API}/api/fornecedor/${id}`
+          : `${process.env.NEXT_PUBLIC_API}/api/fornecedor`;
         const method = id ? 'PUT' : 'POST';
 
         const res = await fetch(url, {
           method,
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          },
           body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error('Erro ao salvar');
-        router.push('/clientes');
+        router.push('/apps/estoque/fornecedores');
+        setSnackbar({
+          open: true,
+          message: 'Dados enviados com sucesso!',
+          severity: 'success',
+        });
       } catch (err) {
         console.error(err);
         setSnackbar({
@@ -150,11 +157,6 @@ const GenericClienteForm: React.FC = () => {
         });
       } finally {
         setSubmitting(false);
-        setSnackbar({
-          open: true,
-          message: 'Dados enviados com sucesso!',
-          severity: 'success',
-        });
       }
     },
   });
@@ -168,14 +170,14 @@ const GenericClienteForm: React.FC = () => {
       try {
         const res = await fetch(`/api/fornecedores/${id}`);
         const fornecedor: FornecedorForm = await res.json();
-        // pré-enche todos os campos do form, incluindo produtos_fornecidos
+        // pré-enche todos os campos do form, incluindo produtos
         formik.setValues({
           ...fornecedor,
-          produtos_fornecidos: fornecedor.produtos_fornecidos
+          produtos: fornecedor.produtos
         });
 
         setAllProdutos(prev => {
-          const selecionados = fornecedor.produtos_fornecidos;
+          const selecionados = fornecedor.produtos;
           const novos = selecionados.filter(
             p => !prev.some(existing => existing.id === p.id)
           );
@@ -205,41 +207,6 @@ const GenericClienteForm: React.FC = () => {
     const produtosArray = JSON.parse(dataProdutos) as Produto[];
     setAllProdutos(produtosArray);
   }, [dataProdutos]);
-
-  useEffect(() => {
-    if (!dataProdutos) {
-      console.warn("Os dados de produtos não foram encontrados.")
-      return
-    }
-    const produtosArray = JSON.parse(dataProdutos) as Produto[]
-    setAllProdutos(produtosArray)
-
-    // caso venha do editar, preenche os campos.
-    // if (id) {
-    //   const p = produtosArray.find(p => p.id === Number(id))
-    //   if (p) {
-    //     formik.setValues({
-    //       nome: p.nome,
-    //       preco: p.preco,
-    //       largura: p.largura,
-    //       comprimento: p.comprimento,
-    //       peso: p.peso,
-    //       prazo: String(p.prazo),
-    //       type: String(p.type),
-    //       // … qualquer outro campo do seu form …
-    //     })
-    //   }
-    // }
-
-  }, [dataProdutos]);
-
-  const handleChangeProdutosConsolidadosInput = (
-    event: React.ChangeEvent<{}>,
-    value: any | null,
-  ) => {
-    setProdutosId(value ? value.id : "");
-    setProdutosInputValue(value ? value.nome : "");
-  };
 
   const handleKeyPressProdutos = (event: React.KeyboardEvent) => {
     if (event.key === "Enter") {
@@ -624,13 +591,16 @@ const GenericClienteForm: React.FC = () => {
             options={allProdutos}
             getOptionLabel={(opt) => `${opt.nome}${opt.preco ? ` - R$ ${opt.preco}` : ''}`}
             filterSelectedOptions
-            value={formik.values.produtos_fornecidos}
+            value={formik.values.produtos}
             onChange={(_, newValue) => {
-              formik.setFieldValue('produtos_fornecidos', newValue);
+              formik.setFieldValue('produtos', newValue);
             }}
             onKeyDown={handleKeyPressProdutos}
             inputValue={produtosInputValue}
-            onInputChange={(_, v) => setProdutosInputValue(v)}
+            onInputChange={(_, v) => {
+              setSearchQueryProdutos(v);
+              setProdutosInputValue(v);
+            }}
             renderTags={(value, getTagProps) =>
               value.map((option, idx) => {
                 const tagProps = getTagProps({ index: idx });

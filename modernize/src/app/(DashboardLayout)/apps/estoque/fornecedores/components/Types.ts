@@ -38,7 +38,7 @@ export interface FornecedorForm {
     bairro: string;
     cidade: string;
     uf: string;
-    produtos_fornecidos: Produto[];
+    produtos: Produto[];
 }
 
 export interface Produto {
