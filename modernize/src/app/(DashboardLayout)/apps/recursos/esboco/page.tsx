@@ -448,11 +448,6 @@ const GeradorDeEsbocoScreen = () => {
           {/* Barra de progresso no topo */}
           {loading && <LinearProgress sx={{ position: 'fixed', top: 0, left: 0, width: '100%', zIndex: 9999 }} />}
 
-          {/* OU se preferir um backdrop com spinner */}
-          {/* <Backdrop open={loading} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-            <CircularProgress color="inherit" />
-          </Backdrop> */}
-
           <Snackbar
             open={snackbar.open}
             autoHideDuration={6000}
