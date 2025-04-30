@@ -3,7 +3,7 @@ import FornecedoresForm from '@/app/(DashboardLayout)/apps/estoque/fornecedores/
 import PageContainer from '@/app/components/container/PageContainer';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 
-export default function FornecedoresCadastroPage() {
+export default function FornecedoresCadastroscreen() {
   return (
     <PageContainer title="Cadastro de Fornecedores" description="Cadastro de Fornecedores">
       <Breadcrumb title="Cadastro de Fornecedores" subtitle='Cadastro de Fornecedores' />
