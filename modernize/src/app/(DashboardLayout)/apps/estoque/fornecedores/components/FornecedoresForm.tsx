@@ -8,17 +8,21 @@ import CustomTextField from '@/app/components/forms/theme-elements/CustomTextFie
 import {
   Alert,
   AlertProps,
+  Autocomplete,
   Box,
   Button,
   Card,
   CardContent,
+  Chip,
   CircularProgress,
+  Divider,
   Snackbar,
   Stack,
   Typography,
 } from '@mui/material';
 import { IconUser, IconBuilding } from '@tabler/icons-react';
-import { FornecedorForm, ViaCEPResponse } from './Types';
+import { FornecedorForm, Produto, ViaCEPResponse } from './Types';
+
 
 
 const validationSchema = Yup.object().shape({
@@ -58,20 +62,37 @@ const validationSchema = Yup.object().shape({
   bairro: Yup.string().required('Bairro é obrigatório'),
   cidade: Yup.string().required('Cidade é obrigatória'),
   uf: Yup.string().required('UF é obrigatório'),
-  produtos_fornecidos: Yup.string().required('Produtos Fornecidos é obrigatório'),
+  produtos_fornecidos: Yup.array()
+    .min(1, 'Selecione ao menos um produto')
+    .of(
+      Yup.object().shape({
+        id: Yup.number().required(),
+        nome: Yup.string().required(),
+      })
+    )
+    .required('Produtos Fornecidos é obrigatório'),
 });
 
 const GenericClienteForm: React.FC = () => {
   const router = useRouter();
   const params = useSearchParams();
   const id = params.get('id');
+  const dataProdutos = localStorage.getItem("produtosConsolidadosOrcamento");
+  const accessToken = localStorage.getItem("accessToken");
+  if (!accessToken) {
+    router.push('/login');
+    return null;
+  }
 
+  const [isCepLoading, setIsCepLoading] = useState(false);
+  const [produtosInputValue, setProdutosInputValue] = useState<string | undefined>('');
+  const [produtosId, setProdutosId] = useState<number | "">("");
+  const [currentPageProdutos, setCurrentPageProdutos] = useState(1);
+  const [searchQueryProdutos, setSearchQueryProdutos] = useState<string>("");
+  const [isLoadingProdutos, setIsLoadingProdutos] = useState(false);
+  const [allProdutos, setAllProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState<boolean>(Boolean(id));
   const [submitting, setSubmitting] = useState<boolean>(false);
-  const [isCepLoading, setIsCepLoading] = useState<{ [key: string]: boolean }>({
-    cep: false,
-    cep_cobranca: false
-  });
   const [snackbar, setSnackbar] = React.useState<{
     open: boolean;
     message: string;
@@ -122,27 +143,157 @@ const GenericClienteForm: React.FC = () => {
         router.push('/clientes');
       } catch (err) {
         console.error(err);
+        setSnackbar({
+          open: true,
+          message: 'Erro ao enviar os Dados',
+          severity: 'error',
+        });
       } finally {
         setSubmitting(false);
+        setSnackbar({
+          open: true,
+          message: 'Dados enviados com sucesso!',
+          severity: 'success',
+        });
       }
     },
   });
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API}/clientes/${id}`);
-        if (!res.ok) throw new Error('Não encontrado');
-        const data: FornecedorForm = await res.json();
-        formik.setValues(data);
+        const res = await fetch(`/api/fornecedores/${id}`);
+        const fornecedor: FornecedorForm = await res.json();
+        // pré-enche todos os campos do form, incluindo produtos_fornecidos
+        formik.setValues({
+          ...fornecedor,
+          produtos_fornecidos: fornecedor.produtos_fornecidos
+        });
+
+        setAllProdutos(prev => {
+          const selecionados = fornecedor.produtos_fornecidos;
+          const novos = selecionados.filter(
+            p => !prev.some(existing => existing.id === p.id)
+          );
+          return [...novos, ...prev];
+        });
       } catch (err) {
         console.error(err);
+        setSnackbar({
+          open: true,
+          message: 'Erro ao carregar os dados do fornecedor.',
+          severity: 'error',
+        });
       } finally {
+        setSnackbar({
+          open: true,
+          message: 'Dados carregados com sucesso!',
+          severity: 'success',
+        });
         setLoading(false);
       }
     })();
   }, [id]);
+
+
+  useEffect(() => {
+    if (!dataProdutos) return;
+    const produtosArray = JSON.parse(dataProdutos) as Produto[];
+    setAllProdutos(produtosArray);
+  }, [dataProdutos]);
+
+  useEffect(() => {
+    if (!dataProdutos) {
+      console.warn("Os dados de produtos não foram encontrados.")
+      return
+    }
+    const produtosArray = JSON.parse(dataProdutos) as Produto[]
+    setAllProdutos(produtosArray)
+
+    // caso venha do editar, preenche os campos.
+    // if (id) {
+    //   const p = produtosArray.find(p => p.id === Number(id))
+    //   if (p) {
+    //     formik.setValues({
+    //       nome: p.nome,
+    //       preco: p.preco,
+    //       largura: p.largura,
+    //       comprimento: p.comprimento,
+    //       peso: p.peso,
+    //       prazo: String(p.prazo),
+    //       type: String(p.type),
+    //       // … qualquer outro campo do seu form …
+    //     })
+    //   }
+    // }
+
+  }, [dataProdutos]);
+
+  const handleChangeProdutosConsolidadosInput = (
+    event: React.ChangeEvent<{}>,
+    value: any | null,
+  ) => {
+    setProdutosId(value ? value.id : "");
+    setProdutosInputValue(value ? value.nome : "");
+  };
+
+  const handleKeyPressProdutos = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter") {
+      setCurrentPageProdutos(1);
+      setAllProdutos([]);
+      handleSearchProdutos();
+    }
+  };
+
+  // const handleBlurProduto = () => {
+  //   setCurrentPageProdutos(1);
+  //   setAllProdutos([]);
+  //   handleSearchProdutos();
+  // };
+
+  const handleSearchProdutos = () => {
+    setIsLoadingProdutos(true);
+    fetch(
+      `${process.env.NEXT_PUBLIC_API}/api/search-produtos-consolidados?search=${searchQueryProdutos}&page=${currentPageProdutos}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Dados recebidos [Produtos]:", data);
+        if (Array.isArray(data.data) && data.data.length === 0) {
+          console.log("Sem opções disponíveis para essa busca [Produtos]");
+          setAllProdutos([
+            {
+              id: 1,
+              nome: searchQueryProdutos,
+              preco: 0,
+              quantidade: 0,
+              prazo: 0,
+              peso: 0,
+              comprimento: 0,
+              largura: 0,
+              altura: 0,
+              type: " ",
+            },
+          ]);
+        } else {
+          // console.log('Opções encontradas [busca de Produtos]');
+          setAllProdutos(data.data);
+        }
+      })
+      .catch((error) => console.error("Erro ao buscar Produtos:", error))
+      .finally(() => setIsLoadingProdutos(false));
+  };
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -168,14 +319,14 @@ const GenericClienteForm: React.FC = () => {
     }
   };
 
-  const handleCEPChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const formatted = formatCEP(e.target.value);
+  const handleCEPChange = async (cep: string) => {
+    const formatted = formatCEP(cep);
     const cepField = 'cep';
 
     formik.setFieldValue('cep', formatted);
 
     if (!/^\d{5}-\d{3}$/.test(formatted)) return;
-    setIsCepLoading(prev => ({ ...prev, [cepField]: true }));
+    setIsCepLoading(true);
     try {
       const address = await fetchAddressByCEP(formatted);
       if (address) {
@@ -195,9 +346,9 @@ const GenericClienteForm: React.FC = () => {
         open: true,
         message: `${'Erro ao buscar o endereço. Tente novamente.'}`,
         severity: 'error'
-      });      
+      });
     } finally {
-      setIsCepLoading(prev => ({ ...prev, [cepField]: false }));
+      setIsCepLoading(false);
     }
   };
 
@@ -375,6 +526,8 @@ const GenericClienteForm: React.FC = () => {
             helperText={formik.touched.celular && formik.errors.celular}
           />
 
+          <Divider sx={{ my: 6 }} />
+
           <Typography variant="h6" mt={2}>
             Endereço
           </Typography>
@@ -384,13 +537,14 @@ const GenericClienteForm: React.FC = () => {
             name="cep"
             value={formik.values.cep}
             onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-              formik.handleChange(e); // 1. Chama o handler padrão do Formik
-              handleCEPChange(e);    // 2. Chama sua função customizada
+              const v = formatCEP(e.target.value);
+              formik.setFieldValue('cep', v);
+              handleCEPChange(v);
             }}
             error={!!(formik.touched.cep && formik.errors.cep)}
             helperText={formik.touched.cep && formik.errors.cep}
             InputProps={{
-              endAdornment: isCepLoading.cep && (
+              endAdornment: isCepLoading && (
                 <CircularProgress size={20} color="inherit" />
               ),
             }}
@@ -455,18 +609,49 @@ const GenericClienteForm: React.FC = () => {
             ))}
           </CustomTextField>
 
+          <Divider sx={{ my: 6 }} />
 
           <Typography variant="h6" mt={2}>
             Produtos Fornecidos
           </Typography>
-          <CustomTextField
+
+          <Autocomplete
+            multiple
+            disablePortal
             fullWidth
-            label="Produtos Fornecidos"
-            name="produtos_fornecidos"
+            id="produtos-multi"
+            loading={isLoadingProdutos}
+            options={allProdutos}
+            getOptionLabel={(opt) => `${opt.nome}${opt.preco ? ` - R$ ${opt.preco}` : ''}`}
+            filterSelectedOptions
             value={formik.values.produtos_fornecidos}
-            onChange={formik.handleChange}
-            error={!!(formik.touched.produtos_fornecidos && formik.errors.produtos_fornecidos)}
-            helperText={formik.touched.produtos_fornecidos && formik.errors.produtos_fornecidos}
+            onChange={(_, newValue) => {
+              formik.setFieldValue('produtos_fornecidos', newValue);
+            }}
+            onKeyDown={handleKeyPressProdutos}
+            inputValue={produtosInputValue}
+            onInputChange={(_, v) => setProdutosInputValue(v)}
+            renderTags={(value, getTagProps) =>
+              value.map((option, idx) => {
+                const tagProps = getTagProps({ index: idx });
+                return (
+                  <Chip
+                    {...tagProps}
+                    label={`${option.nome} - R$ ${option.preco}`}
+                  />
+                );
+              })
+            }
+            renderInput={(params) => (
+              <CustomTextField
+                {...params}
+                placeholder="Selecione produtos"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: isCepLoading && <CircularProgress size={20} />,
+                }}
+              />
+            )}
           />
 
           <Box display="flex" justifyContent="flex-end" mt={3}>
