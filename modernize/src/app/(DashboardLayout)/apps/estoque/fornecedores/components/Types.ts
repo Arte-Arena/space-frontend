@@ -38,7 +38,20 @@ export interface FornecedorForm {
     bairro: string;
     cidade: string;
     uf: string;
-    produtos_fornecidos: [];
+    produtos: Produto[];
+}
+
+export interface Produto {
+  id: number;
+  nome: string | null;
+  preco: number;
+  quantidade: number;
+  prazo: number;
+  peso: number;
+  comprimento: number;
+  largura: number;
+  altura: number;
+  type: string;
 }
 
 export interface ViaCEPResponse {

@@ -1,5 +1,5 @@
 import { Container } from "@mui/material";
-import ErroForm from "../components/form";
+import ErroForm from "../components/erroForm";
 
 const CreateErro = () => {
 
