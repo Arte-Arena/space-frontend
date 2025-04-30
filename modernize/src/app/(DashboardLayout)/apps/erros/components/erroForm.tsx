@@ -53,9 +53,12 @@ const SETORES_OPTIONS = [
   { label: 'Corte & Confêrencia', hex: '#8E24AA' },
   { label: 'Costura', hex: '#F4511E' },
   { label: 'Expedição', hex: '#3949AB' },
+  { label: 'Produção', hex: '#7B1FA2' },
+  { label: 'Transportadora', hex: '#455A64' },
   { label: 'Comercial', hex: '#00897B' },
   { label: 'Administrativo', hex: '#D81B60' },
   { label: 'Backoffice', hex: '#5E35B1' },
+  { label: 'Cliente', hex: '#5A67D8' },
 ];
 
 const STATUS_OPTIONS = [
