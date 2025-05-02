@@ -41,6 +41,10 @@ import {
   IconExclamationCircle,
   IconUsers,
   IconShoppingCart,
+  IconCubePlus,
+  IconUserPentagon,
+  IconUserPlus,
+  IconZoomInArea,
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -381,6 +385,34 @@ const getMenuItems = (): MenuitemsType[] => {
           title: "Estoque",
           icon: IconStack3,
           href: "/apps/estoque",
+          children: [
+            {
+              id: uniqueId(),
+              title: "Adicionar Produto",
+              icon: IconCubePlus,
+              href: "/apps/estoque/adicionar-produto",
+            },
+            {
+              id: uniqueId(),
+              title: "Fornecedores",
+              icon: IconUserPentagon,
+              href: "/apps/estoque/fornecedores",
+              children: [
+                {
+                  id: uniqueId(),
+                  title: "Adicionar Fornecedor",
+                  icon: IconUserPlus,
+                  href: "/apps/estoque/fornecedores/cadastro",
+                },
+                {
+                  id: uniqueId(),
+                  title: "Fornecedores",
+                  icon: IconZoomInArea,
+                  href: "/apps/estoque/fornecedores",
+                }
+              ]
+            },
+          ],
         },
         {
           id: uniqueId(),

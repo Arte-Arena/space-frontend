@@ -41,6 +41,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { IconCoin, IconUser } from '@tabler/icons-react';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import ptBR from 'date-fns/locale/pt-BR';
 
 // Opções para os selects
 const SETORES_OPTIONS = [
@@ -50,9 +53,12 @@ const SETORES_OPTIONS = [
   { label: 'Corte & Confêrencia', hex: '#8E24AA' },
   { label: 'Costura', hex: '#F4511E' },
   { label: 'Expedição', hex: '#3949AB' },
+  { label: 'Produção', hex: '#7B1FA2' },
+  { label: 'Transportadora', hex: '#455A64' },
   { label: 'Comercial', hex: '#00897B' },
   { label: 'Administrativo', hex: '#D81B60' },
   { label: 'Backoffice', hex: '#5E35B1' },
+  { label: 'Cliente', hex: '#5A67D8' },
 ];
 
 const STATUS_OPTIONS = [
@@ -96,7 +102,10 @@ const validationSchema = Yup.object().shape({
     .required('Status é obrigatório'),
 
   solucao: Yup.string()
-    .max(500, 'Máximo de 500 caracteres')
+    .max(500, 'Máximo de 500 caracteres'),
+
+  data_erro: Yup.date()
+    .typeError('Data inválida'),
 
 });
 
@@ -152,7 +161,10 @@ const ErroForm = () => {
             link_trello: data.link_trello ?? '',
             detalhes: data.detalhes ?? '',
             status: data.status ?? 'Pendente',
-            solucao: data.solucao ?? ''
+            solucao: data.solucao ?? '',
+            data_erro: data.data_erro
+              ? new Date(data.data_erro)// converte string pra Date
+              : new Date(),
           });
         } catch (error) {
           console.error(error);
@@ -179,7 +191,8 @@ const ErroForm = () => {
       link_trello: '',
       detalhes: '',
       status: 'Pendente',
-      solucao: ''
+      solucao: '',
+      data_erro: new Date(),
     },
     validationSchema: validationSchema,
     onSubmit: async (values) => {
@@ -212,7 +225,7 @@ const ErroForm = () => {
         });
       } finally {
         setIsSubmitting(false);
-        if(id) {
+        if (id) {
           router.push('/apps/erros');
         }
       }
@@ -436,6 +449,34 @@ const ErroForm = () => {
                     </MenuItem>
                   ))}
                 </TextField>
+              </Grid>
+
+              {/* Linha 5: Data do Erro */}
+              <Grid item xs={12} md={6}>
+                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
+                  <DatePicker
+                    label="Data do Erro"
+                    value={formik.values.data_erro}
+                    onChange={(newDate) => {
+                      if (newDate) {
+                        const zeroTime = new Date(newDate);
+                        zeroTime.setHours(0, 0, 0, 0);
+                        formik.setFieldValue('data_erro', zeroTime);
+                      } else {
+                        formik.setFieldValue('data_erro', null);
+                      }
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        fullWidth
+                        name="data_erro"
+                        error={formik.touched.data_erro && Boolean(formik.errors.data_erro)}
+                        helperText={formik.touched.data_erro && typeof formik.errors.data_erro === 'string' ? formik.errors.data_erro : undefined}
+                      />
+                    )}
+                  />
+                </LocalizationProvider>
               </Grid>
 
               {/* Divider */}
