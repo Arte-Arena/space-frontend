@@ -141,12 +141,14 @@ const GenericFornecedorForm: React.FC = () => {
           body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error('Erro ao salvar');
-        router.push('/apps/estoque/fornecedores');
         setSnackbar({
           open: true,
           message: 'Dados enviados com sucesso!',
           severity: 'success',
         });
+        if (id) {
+          router.push('/apps/estoque/fornecedores');
+        }
       } catch (err) {
         console.error(err);
         setSnackbar({
