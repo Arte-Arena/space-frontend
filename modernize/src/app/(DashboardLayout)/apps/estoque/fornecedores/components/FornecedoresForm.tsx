@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
@@ -26,29 +26,29 @@ import { FornecedorForm, Produto, ViaCEPResponse } from './Types';
 
 
 const validationSchema = Yup.object().shape({
-  tipo_pessoa: Yup.string().oneOf(['F', 'J']).required(),
-  nome: Yup.string().when('tipo_pessoa', {
-    is: 'F',
-    then: Yup.string().required('Nome é obrigatório'),
+  tipo_pessoa: Yup.string().oneOf(['PF', 'PJ']).required(),
+  nome_completo: Yup.string().nullable().when('tipo_pessoa', {
+    is: 'PF',
+    then: Yup.string().required('Nome_completo é obrigatório'),
   }),
-  rg: Yup.string().when('tipo_pessoa', {
-    is: 'F',
+  rg: Yup.string().nullable().when('tipo_pessoa', {
+    is: 'PF',
     then: Yup.string().required('RG é obrigatório'),
   }),
-  cpf: Yup.string().when('tipo_pessoa', {
-    is: 'F',
+  cpf: Yup.string().nullable().when('tipo_pessoa', {
+    is: 'PF',
     then: Yup.string().required('CPF é obrigatório'),
   }),
   razao_social: Yup.string().when('tipo_pessoa', {
-    is: 'J',
+    is: 'PJ',
     then: Yup.string().required('Razão Social é obrigatória'),
   }),
   cnpj: Yup.string().when('tipo_pessoa', {
-    is: 'J',
+    is: 'PJ',
     then: Yup.string().required('CNPJ é obrigatório'),
   }),
   inscricao_estadual: Yup.string().when('tipo_pessoa', {
-    is: 'J',
+    is: 'PJ',
     then: Yup.string().required('Inscrição Estadual é obrigatória'),
   }),
   email: Yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
@@ -73,10 +73,10 @@ const validationSchema = Yup.object().shape({
     .required('Produtos Fornecidos é obrigatório'),
 });
 
-const GenericClienteForm: React.FC = () => {
+const GenericFornecedorForm: React.FC = () => {
   const router = useRouter();
-  const params = useSearchParams();
-  const id = params.get('id');
+  const params = useParams();
+  const id = params.id;
   const dataProdutos = localStorage.getItem("produtosConsolidadosOrcamento");
   const accessToken = localStorage.getItem("accessToken");
   if (!accessToken) {
@@ -104,8 +104,8 @@ const GenericClienteForm: React.FC = () => {
 
   const formik = useFormik<FornecedorForm>({
     initialValues: {
-      tipo_pessoa: 'F',
-      nome: '',
+      tipo_pessoa: 'PJ',
+      nome_completo: '',
       rg: '',
       cpf: '',
       razao_social: '',
@@ -132,7 +132,6 @@ const GenericClienteForm: React.FC = () => {
           ? `${process.env.NEXT_PUBLIC_API}/api/fornecedor/${id}`
           : `${process.env.NEXT_PUBLIC_API}/api/fornecedor`;
         const method = id ? 'PUT' : 'POST';
-
         const res = await fetch(url, {
           method,
           headers: {
@@ -168,12 +167,33 @@ const GenericClienteForm: React.FC = () => {
     }
     (async () => {
       try {
-        const res = await fetch(`/api/fornecedores/${id}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API}/api/fornecedor/${id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
         const fornecedor: FornecedorForm = await res.json();
         // pré-enche todos os campos do form, incluindo produtos
         formik.setValues({
-          ...fornecedor,
-          produtos: fornecedor.produtos
+          tipo_pessoa: fornecedor.tipo_pessoa ?? 'PJ',
+          nome_completo: fornecedor.nome_completo ?? '',
+          rg: fornecedor.rg ?? '',
+          cpf: fornecedor.cpf ?? '',
+          razao_social: fornecedor.razao_social ?? '',
+          cnpj: fornecedor.cnpj ?? '',
+          inscricao_estadual: fornecedor.inscricao_estadual ?? '',
+          email: fornecedor.email ?? '',
+          celular: fornecedor.celular ?? '',
+          cep: fornecedor.cep ?? '',
+          endereco: fornecedor.endereco ?? '',
+          numero: fornecedor.numero ?? '',
+          complemento: fornecedor.complemento ?? '',
+          bairro: fornecedor.bairro ?? '',
+          cidade: fornecedor.cidade ?? '',
+          uf: fornecedor.uf ?? '',
+          produtos: fornecedor.produtos ?? [],
         });
 
         setAllProdutos(prev => {
@@ -201,6 +221,11 @@ const GenericClienteForm: React.FC = () => {
     })();
   }, [id]);
 
+  useEffect(() => {
+    console.log('tipo_pessoa agora é', formik.values.tipo_pessoa);
+  }, [formik.values.tipo_pessoa]);
+
+
 
   useEffect(() => {
     if (!dataProdutos) return;
@@ -216,11 +241,11 @@ const GenericClienteForm: React.FC = () => {
     }
   };
 
-  // const handleBlurProduto = () => {
-  //   setCurrentPageProdutos(1);
-  //   setAllProdutos([]);
-  //   handleSearchProdutos();
-  // };
+  const handleBlurProduto = () => {
+    setCurrentPageProdutos(1);
+    setAllProdutos([]);
+    handleSearchProdutos();
+  };
 
   const handleSearchProdutos = () => {
     setIsLoadingProdutos(true);
@@ -330,14 +355,14 @@ const GenericClienteForm: React.FC = () => {
   return (
     <Box maxWidth={'80%'} mx="auto" mt={4}>
       <Typography variant="h5" mb={3}>
-        {id ? 'Editar Cliente' : 'Cadastrar Cliente'}
+        {id ? 'Editar Fornecedor' : 'Cadastrar Fornecedor'}
       </Typography>
 
       <form onSubmit={formik.handleSubmit} noValidate>
         <Stack spacing={2}>
           <Box>
-            <Typography variant="subtitle1" gutterBottom>
-              Tipo de Cliente
+            <Typography variant="h6" gutterBottom mb={1}>
+              Tipo de Fornecedor
             </Typography>
             <Stack direction="row" spacing={2}>
               <Card
@@ -345,23 +370,31 @@ const GenericClienteForm: React.FC = () => {
                   flex: 1,
                   cursor: 'pointer',
                   border: (theme) =>
-                    `2px solid ${formik.values.tipo_pessoa === 'F' ? theme.palette.primary.main : 'transparent'}`,
+                    `2px solid ${formik.values.tipo_pessoa === 'PF' ? theme.palette.primary.main : 'transparent'}`,
                   '&:hover': { borderColor: 'primary.main' },
                 }}
-                onClick={() => formik.setFieldValue('tipo_pessoa', 'F')}
+                onClick={() => {
+                  formik.setFieldValue('tipo_pessoa', 'PF');
+                  if (!id) {
+                    formik.setFieldValue('razao_social', '');
+                    formik.setFieldValue('cnpj', '');
+                    formik.setFieldValue('inscricao_estadual', '');
+                  }
+                  console.log(formik.values);
+                }}
               >
                 <CardContent>
                   <Stack spacing={1} alignItems="center">
                     <IconUser
                       size={40}
                       color={
-                        formik.values.tipo_pessoa === 'F' ? '#1976d2' : '#757575'
+                        formik.values.tipo_pessoa === 'PF' ? '#1976d2' : '#757575'
                       }
                     />
                     <Typography
                       variant="h6"
                       color={
-                        formik.values.tipo_pessoa === 'F'
+                        formik.values.tipo_pessoa === 'PF'
                           ? 'primary'
                           : 'text.secondary'
                       }
@@ -369,7 +402,7 @@ const GenericClienteForm: React.FC = () => {
                       Pessoa Física
                     </Typography>
                     <Typography variant="body2" color="text.secondary" textAlign="center">
-                      Para clientes individuais, com CPF
+                      Para Fornecedores individuais, com CPF
                     </Typography>
                   </Stack>
                 </CardContent>
@@ -380,23 +413,31 @@ const GenericClienteForm: React.FC = () => {
                   flex: 1,
                   cursor: 'pointer',
                   border: (theme) =>
-                    `2px solid ${formik.values.tipo_pessoa === 'J' ? theme.palette.primary.main : 'transparent'}`,
+                    `2px solid ${formik.values.tipo_pessoa === 'PJ' ? theme.palette.primary.main : 'transparent'}`,
                   '&:hover': { borderColor: 'primary.main' },
                 }}
-                onClick={() => formik.setFieldValue('tipo_pessoa', 'J')}
+                onClick={() => {
+                  formik.setFieldValue('tipo_pessoa', 'PJ')
+                  if (!id) {
+                    formik.setFieldValue('nome_completo', '');
+                    formik.setFieldValue('rg', '');
+                    formik.setFieldValue('cpf', '');
+                  }
+                  console.log(formik.values);
+                }}
               >
                 <CardContent>
                   <Stack spacing={1} alignItems="center">
                     <IconBuilding
                       size={40}
                       color={
-                        formik.values.tipo_pessoa === 'J' ? '#1976d2' : '#757575'
+                        formik.values.tipo_pessoa === 'PJ' ? '#1976d2' : '#757575'
                       }
                     />
                     <Typography
                       variant="h6"
                       color={
-                        formik.values.tipo_pessoa === 'J'
+                        formik.values.tipo_pessoa === 'PJ'
                           ? 'primary'
                           : 'text.secondary'
                       }
@@ -412,22 +453,22 @@ const GenericClienteForm: React.FC = () => {
             </Stack>
           </Box>
 
-          {formik.values.tipo_pessoa === 'F' ? (
+          {formik.values.tipo_pessoa === 'PF' ? (
             <>
               <CustomTextField
                 fullWidth
-                label="Nome Completo"
-                name="nome"
-                value={formik.values.nome}
+                label="Nome_completo Completo"
+                name="nome_completo"
+                value={formik.values.nome_completo}
                 onChange={formik.handleChange}
-                error={!!(formik.touched.nome && formik.errors.nome)}
-                helperText={formik.touched.nome && formik.errors.nome}
+                error={!!(formik.touched.nome_completo && formik.errors.nome_completo)}
+                helperText={formik.touched.nome_completo && formik.errors.nome_completo}
               />
               <CustomTextField
                 fullWidth
                 label="CPF"
                 name="cpf"
-                value={formik.values.cpf}
+                value={formik.values.cpf || ''}
                 onChange={formik.handleChange}
                 error={!!(formik.touched.cpf && formik.errors.cpf)}
                 helperText={formik.touched.cpf && formik.errors.cpf}
@@ -436,7 +477,7 @@ const GenericClienteForm: React.FC = () => {
                 fullWidth
                 label="RG"
                 name="rg"
-                value={formik.values.rg}
+                value={formik.values.rg || ''}
                 onChange={formik.handleChange}
                 error={!!(formik.touched.rg && formik.errors.rg)}
                 helperText={formik.touched.rg && formik.errors.rg}
@@ -592,10 +633,14 @@ const GenericClienteForm: React.FC = () => {
             getOptionLabel={(opt) => `${opt.nome}${opt.preco ? ` - R$ ${opt.preco}` : ''}`}
             filterSelectedOptions
             value={formik.values.produtos}
+            isOptionEqualToValue={(option, value) =>
+              option.id === value.id && option.type === value.type
+            }
             onChange={(_, newValue) => {
               formik.setFieldValue('produtos', newValue);
             }}
             onKeyDown={handleKeyPressProdutos}
+            onBlur={handleBlurProduto}
             inputValue={produtosInputValue}
             onInputChange={(_, v) => {
               setSearchQueryProdutos(v);
@@ -628,7 +673,11 @@ const GenericClienteForm: React.FC = () => {
             <Button
               type="submit"
               variant="contained"
-              disabled={submitting || !formik.isValid}
+              disabled={submitting}
+              onClick={() => {
+                console.log('isValid?', formik.isValid, 'errors:', formik.errors);
+              }}
+            // disabled={submitting || !formik.isValid}
             >
               {submitting ? <CircularProgress size={24} /> : id ? 'Atualizar' : 'Salvar'}
             </Button>
@@ -678,4 +727,4 @@ const GenericClienteForm: React.FC = () => {
   );
 };
 
-export default GenericClienteForm;
+export default GenericFornecedorForm;

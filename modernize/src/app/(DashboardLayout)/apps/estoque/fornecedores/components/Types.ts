@@ -23,12 +23,12 @@ export interface Fornecedor {
 
 export interface FornecedorForm {
     tipo_pessoa: string;
-    nome: string;
-    rg: string;
-    cpf: string;
-    razao_social: string;
-    cnpj: string;
-    inscricao_estadual: string;
+    nome_completo: string  | null;
+    rg: string | null;
+    cpf: string  | null;
+    razao_social: string  | null;
+    cnpj: string  | null;
+    inscricao_estadual: string  | null;
     email: string;
     celular: string;
     cep: string;
