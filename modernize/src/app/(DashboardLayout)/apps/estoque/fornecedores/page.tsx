@@ -5,16 +5,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { Box, Button, Grid, IconButton, InputAdornment, LinearProgress, Link, Pagination, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextFieldProps, Typography } from '@mui/material';
+import { Button, Grid, InputAdornment, LinearProgress, Pagination, Stack } from '@mui/material';
 import CustomTextField from '@/app/components/forms/theme-elements/CustomTextField';
-import { IconEyeDollar, IconPencil, IconSearch, IconWeight } from '@tabler/icons-react';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { IconSearch } from '@tabler/icons-react';
 import { LoadingButton } from '@mui/lab';
 import { Fornecedor } from './components/Types';
 import FornecedoresTable from './components/FornecedorTable';
-import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { format, parseISO } from 'date-fns';
 
 export default function EstoqueScreen() {
   const [query, setQuery] = useState<string>('');
