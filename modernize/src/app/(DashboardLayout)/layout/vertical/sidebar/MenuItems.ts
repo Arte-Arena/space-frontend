@@ -388,9 +388,21 @@ const getMenuItems = (): MenuitemsType[] => {
           children: [
             {
               id: uniqueId(),
+              title: "Material",
+              icon: IconCubePlus,
+              href: "/apps/estoque",
+            },
+            {
+              id: uniqueId(),
               title: "Adicionar Produto",
               icon: IconCubePlus,
               href: "/apps/estoque/adicionar-produto",
+            },
+            {
+              id: uniqueId(),
+              title: "Ordem de compra",
+              icon: IconCubePlus,
+              href: "/apps/estoque/ordem-compra",
             },
             {
               id: uniqueId(),
