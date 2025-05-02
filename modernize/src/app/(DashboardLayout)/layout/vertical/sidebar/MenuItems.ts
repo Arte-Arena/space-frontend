@@ -406,9 +406,9 @@ const getMenuItems = (): MenuitemsType[] => {
                 },
                 {
                   id: uniqueId(),
-                  title: "Buscar Fornecedor",
+                  title: "Fornecedores",
                   icon: IconZoomInArea,
-                  href: "/apps/estoque/fornecedores/buscar",
+                  href: "/apps/estoque/fornecedores",
                 }
               ]
             },

@@ -80,8 +80,6 @@ const ProdutosBuscarScreen = () => {
       .finally(() => setLoadingCats(false));
   }, [accessToken, router]);
 
-
-
   const { data, isFetching, error, refetch } = useQuery({
     queryKey: ['produtos', searchQuery, page, cat, preco, peso],
     queryFn: () =>
@@ -108,7 +106,6 @@ const ProdutosBuscarScreen = () => {
     setSelectedTab(newValue);
     const maybeCat = categoryData[newValue].categoria;
     if (maybeCat === null) {
-      // sem filtro de texto → devolve todos sem categoria
       setCat('');
     } else {
       setCat(maybeCat);
@@ -127,7 +124,7 @@ const ProdutosBuscarScreen = () => {
   };
   const handleSearch = () => {
     setSearchQuery(query);
-    setPage(1); // Reseta para a primeira página ao realizar uma nova busca
+    setPage(1); 
     refetch();
   };
 

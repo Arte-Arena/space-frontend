@@ -212,7 +212,7 @@ export default function Erros() {
     setStatusFilterErro('');
   };
 
-  const handleKeyPresssolucao = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPressSolucao = (id: string, event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       const inputElement = solucaoRefs.current[id];
       const valor = inputElement?.value || '';
