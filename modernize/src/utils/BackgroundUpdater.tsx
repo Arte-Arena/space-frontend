@@ -255,8 +255,11 @@ const BackgroundUpdater = () => {
   }, []);
 
   // Fetch fornecedores only if the user has a specific role
-  const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
-  const needsFetch = roles.some(role => [1, 2, 3, 4, 10].includes(role));
+  let needsFetch = false;
+  if (typeof window !== 'undefined') {
+    const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
+    needsFetch = roles.some(role => [1, 2, 3, 4, 10].includes(role));
+  }
 
   useEffect(() => {
     if (!needsFetch) {

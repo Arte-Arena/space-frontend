@@ -36,6 +36,7 @@ export default function EstoqueScreen() {
         `&page=${page}` +
         `&data_inicial=${searchDateStart}&data_final=${searchDateEnd}`,
         {
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${accessToken}`,

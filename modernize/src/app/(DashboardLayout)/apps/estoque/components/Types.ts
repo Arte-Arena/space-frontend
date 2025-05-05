@@ -67,3 +67,22 @@ export interface ViaCEPResponse {
   siafi: string;
   erro?: boolean;
 }
+
+
+export interface Estoque {
+  id: number;
+  nome: string;
+  descricao: string;
+  quantidade: number;
+  estoque_min: number;
+  estoque_max: number;
+  // variacoes: Variacao[];
+  variacoes: [];
+  fornecedores: Fornecedor[];
+  unidade_medida: string;
+  categoria: string;
+  produto_id: number;
+  produto_table: string;
+  created_at: Date;
+  updated_at: Date;
+}
