@@ -1,5 +1,6 @@
 export interface Fornecedor {
   id: number;
+  fornecedor_id: number;
   tipo_pessoa: string;
   nome_completo: string;
   rg: string;
@@ -57,6 +58,7 @@ export interface Produto {
 export interface ProdutoForm {
   id: number;
   nome: string | null;
+  preco: number;
   type: string;
 }
 
@@ -116,5 +118,6 @@ export interface Variacoes {
   franjas:  string;
   altura: string;
   largura: string;
+  comprimento: string;
   preco: string;
 } 

@@ -199,7 +199,7 @@ const GenericFornecedorForm: React.FC = () => {
         });
 
         setAllProdutos(prev => {
-          const selecionados = fornecedor.produtos;
+          const selecionados = fornecedor?.produtos ?? [];
           const novos = selecionados.filter(
             p => !prev.some(existing => existing.id === p.id)
           );

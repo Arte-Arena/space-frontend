@@ -147,7 +147,7 @@ export default function Estoque() {
                           </Stack>
                         </TableCell>
                         <TableCell align="center">
-                          <Button size="small" onClick={() => router.push(`/apps/estoque/${item.id}`)}>
+                          <Button size="small" onClick={() => router.push(`/apps/estoque/item/${item.id}`)}>
                             Ver
                           </Button>
                           <IconButton aria-label="edit" onClick={() => { window.location.href = `/apps/estoque/editar/${item.id}`; }}>
