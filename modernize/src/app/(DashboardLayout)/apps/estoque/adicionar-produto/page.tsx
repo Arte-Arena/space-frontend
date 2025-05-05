@@ -45,7 +45,7 @@ const AdicionarProdutoEstoqueScreen: React.FC = () => {
         console.log("Dados recebidos :", data);
       })
       .catch((error) => console.error("Erro ao buscar Produtos:", error))
-      .finally(() => setIsLoading(false));
+      .finally(() => {setIsLoading(false); router.push('../estoque');});
   };
 
   return (

@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
 import { Fornecedor, Produto } from './Types';
+import NotificationSnackbar from '../../../../../utils/snackbar';
 
 export interface EstoqueData {
   nome: string;
@@ -348,26 +349,7 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
                   />
                 )}
               />
-              {values.produto_id ? values.produto_table : ''}
             </Grid>
-
-            {/* <Grid item xs={12} sm={6}>
-              <TextField
-                label="Produto ID"
-                type="number"
-                value={values.produto_id}
-                onChange={handleChange('produto_id')}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Tabela do Produto"
-                value={values.produto_table}
-                onChange={handleChange('produto_table')}
-                fullWidth
-              />
-            </Grid> */}
           </Grid>
           <Box textAlign="center" mt={4}>
             <Button variant="contained" size="large" type="submit">
@@ -375,6 +357,13 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
             </Button>
           </Box>
         </form>
+        <NotificationSnackbar
+          open={snackbar.open}
+          message={snackbar.message}
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          autoHideDuration={900}
+        />
       </Box>
     </Container>
   );
