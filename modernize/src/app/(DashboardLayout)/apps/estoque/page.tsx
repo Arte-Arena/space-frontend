@@ -104,6 +104,7 @@ export default function Estoque() {
                       <TableCell align="center">ID</TableCell>
                       <TableCell align="center">Nome</TableCell>
                       <TableCell align="center">Categoria</TableCell>
+                      <TableCell align="center">Preço</TableCell>
                       <TableCell align="center">Quantidade</TableCell>
                       <TableCell align="center">Mínimo</TableCell>
                       <TableCell align="center">Máximo</TableCell>
@@ -114,15 +115,16 @@ export default function Estoque() {
                   </TableHead>
                   <TableBody>
                     {data.data.map(item => (
-                      <TableRow key={item.id} hover>
-                        <TableCell align="center" width={'10%'}>{item.id}</TableCell>
+                      <TableRow key={item.id}>
+                        <TableCell align="center" width={'2%'}>{item.id}</TableCell>
                         <TableCell align="center" width={'10%'}>{item.nome}</TableCell>
                         <TableCell align="center" width={'10%'}>{item.categoria}</TableCell>
+                        <TableCell align="center" width={'5%'}>{item.preco_produto ?? '-'}</TableCell>
                         <TableCell align="center" width={'10%'}>{item.quantidade}</TableCell>
                         <TableCell align="center" width={'10%'}>{item.estoque_min}</TableCell>
                         <TableCell align="center" width={'10%'}>{item.estoque_max}</TableCell>
                         <TableCell align="center" width={'10%'}>{item.unidade_medida}</TableCell>
-                        <TableCell align="center">
+                        <TableCell align="center" width={'20%'}>
                           <Stack direction="row" spacing={0.5} justifyContent="center" flexWrap="wrap">
                             {item.fornecedores?.map(f => (
                               <Chip
@@ -135,7 +137,7 @@ export default function Estoque() {
                                   px: 1,
                                   py: 0.5,
                                   borderRadius: '8px',
-                                  maxWidth: 100,
+                                  maxWidth: '90%',
                                   whiteSpace: 'nowrap',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',

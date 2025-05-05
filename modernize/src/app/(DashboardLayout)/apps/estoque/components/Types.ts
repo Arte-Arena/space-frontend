@@ -54,6 +54,12 @@ export interface Produto {
   type: string;
 }
 
+export interface ProdutoForm {
+  id: number;
+  nome: string | null;
+  type: string;
+}
+
 export interface ViaCEPResponse {
   cep: string;
   logradouro: string;
@@ -76,13 +82,39 @@ export interface Estoque {
   quantidade: number;
   estoque_min: number;
   estoque_max: number;
-  // variacoes: Variacao[];
-  variacoes: [];
+  variacoes: Variacoes[];
   fornecedores: Fornecedor[];
   unidade_medida: string;
   categoria: string;
   produto_id: number;
   produto_table: string;
+  preco_produto: string;
   created_at: Date;
   updated_at: Date;
 }
+
+export interface EstoqueData {
+  nome: string;
+  descricao: string;
+  variacoes: Variacoes[];
+  unidade_medida: string;
+  quantidade: number;
+  estoque_min: number;
+  estoque_max: number;
+  categoria: string;
+  fornecedores: Fornecedor[];
+  produto_id: number | '';
+  produto_table: string;
+  produtos?: Produto[];
+}
+
+
+export interface Variacoes {
+  color: string;
+  material: string;
+  tamanhos: string;
+  franjas:  string;
+  altura: string;
+  largura: string;
+  preco: string;
+} 
