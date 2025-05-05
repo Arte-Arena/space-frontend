@@ -36,6 +36,7 @@ export default function EstoqueScreen() {
         `&page=${page}` +
         `&data_inicial=${searchDateStart}&data_final=${searchDateEnd}`,
         {
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${accessToken}`,
@@ -57,7 +58,7 @@ export default function EstoqueScreen() {
   };
   const handleSearch = () => {
     setSearchQuery(query);
-    setPage(1); // Reseta para a primeira página ao realizar uma nova busca
+    setPage(1);
     refetch();
   };
 
@@ -69,14 +70,6 @@ export default function EstoqueScreen() {
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {
     setPage(newPage);
-  };
-
-  const handleDeleteforncedor = async (forncedorId: number) => {
-    console.log(`handleDeleteforncedor: ${forncedorId}`);
-  };
-  const handleEditforncedor = async (forncedorId: number) => {
-    console.log(`handleEditforncedor: ${forncedorId}`);
-    window.open(`/apps/Fornecedor/editar/${forncedorId}`, '_blank');
   };
 
   if (error) return <p>Erro na pagina de Fornecedores: {(error as Error).message}</p>;

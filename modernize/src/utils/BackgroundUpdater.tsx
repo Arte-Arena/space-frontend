@@ -22,9 +22,9 @@ const BackgroundUpdater = () => {
         console.error('Erro ao buscar dados de get-config:', error);
       }
     };
-    
+
     fetchDataConfigs();
-    
+
     const intervalConfigs = setInterval(fetchDataConfigs, 900000);
     return () => clearInterval(intervalConfigs);
   }, []);
@@ -46,9 +46,9 @@ const BackgroundUpdater = () => {
         console.error('Erro ao buscar dados de get-config-prazos:', error);
       }
     };
-    
+
     fetchDataConfigsPrazos();
-    
+
     const intervalConfigsPrazos = setInterval(fetchDataConfigsPrazos, 900000);
     return () => clearInterval(intervalConfigsPrazos);
   }, []);
@@ -70,13 +70,13 @@ const BackgroundUpdater = () => {
         console.error('Erro ao buscar dados de clientes-consolidados:', error);
       }
     };
-    
+
     fetchDataClientes();
-    
+
     const intervalIdClientes = setInterval(fetchDataClientes, 900000);
     return () => clearInterval(intervalIdClientes);
   }, []);
-  
+
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
     const fetchDataProdutos = async () => {
@@ -253,6 +253,47 @@ const BackgroundUpdater = () => {
     const intervalId = setInterval(fetchFeriados, 900000);
     return () => clearInterval(intervalId);
   }, []);
+
+  // Fetch fornecedores only if the user has a specific role
+  let needsFetch = false;
+  if (typeof window !== 'undefined') {
+    const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
+    needsFetch = roles.some(role => [1, 2, 3, 4, 10].includes(role));
+  }
+
+  useEffect(() => {
+    if (!needsFetch) {
+      return;
+    }
+    const accessToken = localStorage.getItem('accessToken') || '';
+    const fetchDataFornecedores = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API}/api/search-fornecedores`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error(`Erro ao buscar fornecedores: ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        localStorage.setItem('fornecedores', JSON.stringify(data.data));
+      } catch (err) {
+        console.error('Erro ao buscar fornecedores:', err);
+      }
+    };
+    fetchDataFornecedores();
+    const intervalId = setInterval(fetchDataFornecedores, 900000);
+
+    return () => clearInterval(intervalId);
+  }, [needsFetch]);
 
 
   return null;

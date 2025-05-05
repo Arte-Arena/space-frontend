@@ -384,19 +384,29 @@ const getMenuItems = (): MenuitemsType[] => {
           id: uniqueId(),
           title: "Estoque",
           icon: IconStack3,
-          href: "/apps/estoque",
           children: [
             {
               id: uniqueId(),
-              title: "Adicionar Produto",
+              title: "Itens",
+              icon: IconCubePlus,
+              href: "/apps/estoque",
+            },
+            {
+              id: uniqueId(),
+              title: "Adicionar Item",
               icon: IconCubePlus,
               href: "/apps/estoque/adicionar-produto",
             },
             {
               id: uniqueId(),
+              title: "Ordem de compra",
+              icon: IconCubePlus,
+              href: "/apps/estoque/ordem-compra",
+            },
+            {
+              id: uniqueId(),
               title: "Fornecedores",
               icon: IconUserPentagon,
-              href: "/apps/estoque/fornecedores",
               children: [
                 {
                   id: uniqueId(),
@@ -406,7 +416,7 @@ const getMenuItems = (): MenuitemsType[] => {
                 },
                 {
                   id: uniqueId(),
-                  title: "Fornecedores",
+                  title: "Lista de Fornecedores",
                   icon: IconZoomInArea,
                   href: "/apps/estoque/fornecedores",
                 }
