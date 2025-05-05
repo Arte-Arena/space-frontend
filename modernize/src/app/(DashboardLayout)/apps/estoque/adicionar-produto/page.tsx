@@ -7,9 +7,16 @@ import EstoqueForm from '../components/estoqueForm'; // Import the form componen
 import { useRouter } from 'next/navigation';
 import { LinearProgress } from '@mui/material';
 import { Fornecedor } from '../components/Types';
+import NotificationSnackbar from '@/utils/snackbar';
 
 const AdicionarProdutoEstoqueScreen: React.FC = () => {
-  const [isLoading, setIsLoading] = React.useState(false);  
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [snackbar, setSnackbar] = React.useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error" | "info" | "warning";
+  }>({ open: false, message: '', severity: 'success' });
+
   const router = useRouter();
   const accessToken = localStorage.getItem("accessToken");
   if (!accessToken) {
@@ -17,14 +24,16 @@ const AdicionarProdutoEstoqueScreen: React.FC = () => {
     return null;
   }
 
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
+
   const handleSubmit = (values: any) => {
     setIsLoading(true);
-    
+
     const payload = {
       ...values,
       fornecedores: (values.fornecedores as Array<string | Fornecedor>).map(f =>
-        // Se veio string (freeSolo), usamos só o texto;
-        // Senão, pegamos apenas nome_completo do objeto Fornecedor
         typeof f === 'string'
           ? { nome_completo: f }
           : { fornecedor_id: f.id, nome_completo: f.nome_completo, tipo_pessoa: f.tipo_pessoa, email: f.email, celular: f.celular }
@@ -41,11 +50,22 @@ const AdicionarProdutoEstoqueScreen: React.FC = () => {
     })
       .then((response) => response.json())
       .then((data) => {
+        setSnackbar({
+          open: true,
+          message: 'Produto adicionado ao estoque com sucesso!',
+          severity: 'success',
+        });
         console.log("Dados enviados [Produtos]:", values);
         console.log("Dados recebidos :", data);
       })
-      .catch((error) => console.error("Erro ao buscar Produtos:", error))
-      .finally(() => {setIsLoading(false); router.push('../estoque');});
+      .catch((error) => {
+        console.error("Erro ao buscar Produtos:", error); setSnackbar({
+          open: true,
+          message: error.message || 'Falha ao adicionar produto.',
+          severity: 'error',
+        });
+      })
+      .finally(() => { setIsLoading(false); router.push('../estoque'); });
   };
 
   return (
@@ -68,6 +88,13 @@ const AdicionarProdutoEstoqueScreen: React.FC = () => {
           )}
         </>
       </ParentCard>
+      <NotificationSnackbar
+        open={snackbar.open}
+        message={snackbar.message}
+        severity={snackbar.severity}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        autoHideDuration={900}
+      />
     </PageContainer>
   );
 };

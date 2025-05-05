@@ -75,16 +75,6 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
     produto_id: initialValues.produto_id ?? '',
     produto_table: initialValues.produto_table || '',
   });
-  const [snackbar, setSnackbar] = React.useState<{
-    open: boolean;
-    message: string;
-    severity: AlertProps['severity'];
-  }>({
-    open: false,
-    message: '',
-    severity: 'success'
-  });
-
 
 
   const handleChange = (field: keyof EstoqueData) => (
@@ -104,8 +94,8 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
     const produtosArray = JSON.parse(dataProdutos) as Produto[];
     setAllProdutos(produtosArray);
   }, [dataProdutos]);
-  
-  
+
+
   useEffect(() => {
     if (!dataFornecedores) return;
     const fornecedoresArray = JSON.parse(dataFornecedores) as Fornecedor[];
@@ -357,13 +347,6 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
             </Button>
           </Box>
         </form>
-        <NotificationSnackbar
-          open={snackbar.open}
-          message={snackbar.message}
-          severity={snackbar.severity}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          autoHideDuration={900}
-        />
       </Box>
     </Container>
   );
