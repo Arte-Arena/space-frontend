@@ -116,6 +116,12 @@ const getMenuItems = (): MenuitemsType[] => {
               icon: IconUsers,
               href: "/apps/vendas/crm/leads",
             },
+            {
+              id: uniqueId(),
+              title: "Quadro",
+              icon: IconBrandTrello,
+              href: "/apps/vendas/crm/quadro",
+            },
           ],
         },
         {
