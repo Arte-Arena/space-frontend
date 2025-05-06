@@ -47,7 +47,7 @@ const CreateBoardDialog: React.FC<CreateBoardDialogProps> = ({
         <TextField
           autoFocus
           margin="dense"
-          label="Nome do Quadro"
+          label="Nome do quadro"
           type="text"
           fullWidth
           value={boardName}

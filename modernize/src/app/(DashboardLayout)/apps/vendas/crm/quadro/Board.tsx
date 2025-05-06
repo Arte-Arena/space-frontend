@@ -416,7 +416,7 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
                             startIcon={<IconPlus size="1rem" />}
                             onClick={() => handleAddCardOpen(column.id)}
                           >
-                            Adicionar Cartão
+                            Adicionar cartão
                           </Button>
                         </Box>
                       </Paper>
