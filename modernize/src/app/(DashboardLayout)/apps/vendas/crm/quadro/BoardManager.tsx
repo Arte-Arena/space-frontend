@@ -11,10 +11,41 @@ import {
   ListItemText,
   Divider,
   IconButton,
+  Badge,
+  Tabs,
+  Tab,
 } from "@mui/material";
-import { IconPlus, IconEdit, IconX } from "@tabler/icons-react";
+import { IconPlus, IconEdit, IconX, IconHistory } from "@tabler/icons-react";
 import Board from "./Board";
 import CreateBoardDialog from "./CreateBoardDialog";
+import BoardHistory from "./BoardHistory";
+
+interface HistoryEntry {
+  id: string;
+  userId: string;
+  timestamp: number;
+  boardId: string;
+  boardName: string;
+  action: string;
+  details: string;
+}
+
+interface Item {
+  id: string;
+  content: string;
+}
+
+interface Column {
+  id: string;
+  title: string;
+  items: Item[];
+}
+
+interface BoardData {
+  id: string;
+  name: string;
+  columns: Column[];
+}
 
 const initialBoards = [
   {
@@ -34,12 +65,37 @@ const initialBoards = [
 const drawerWidth = 240;
 
 const BoardManager = () => {
-  const [boards, setBoards] = useState(initialBoards);
+  const [boards, setBoards] = useState<BoardData[]>(initialBoards);
   const [selectedBoardId, setSelectedBoardId] = useState(initialBoards[0].id);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyMode, setHistoryMode] = useState<"board" | "global">("board");
+  const mockUserId = "user-123";
 
   const selectedBoard = boards.find((board) => board.id === selectedBoardId);
+
+  const addHistoryEntry = (
+    boardId: string,
+    action: string,
+    details: string,
+  ) => {
+    const boardName =
+      boards.find((board) => board.id === boardId)?.name ||
+      "Quadro desconhecido";
+
+    const newEntry: HistoryEntry = {
+      id: `hist-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      userId: mockUserId,
+      timestamp: Date.now(),
+      boardId,
+      boardName,
+      action,
+      details,
+    };
+    setHistory((prev) => [newEntry, ...prev]);
+  };
 
   const handleCreateBoard = (boardName: string) => {
     const newBoard = {
@@ -51,9 +107,16 @@ const BoardManager = () => {
     setBoards([...boards, newBoard]);
     setSelectedBoardId(newBoard.id);
     setIsCreateDialogOpen(false);
+
+    addHistoryEntry(
+      newBoard.id,
+      "create_board",
+      `Quadro "${boardName}" criado`,
+    );
   };
 
   const handleDeleteBoard = (boardId: string) => {
+    const boardToDelete = boards.find((board) => board.id === boardId);
     const newBoards = boards.filter((board) => board.id !== boardId);
 
     if (newBoards.length > 0) {
@@ -61,11 +124,54 @@ const BoardManager = () => {
         setSelectedBoardId(newBoards[0].id);
       }
       setBoards(newBoards);
+
+      if (boardToDelete) {
+        addHistoryEntry(
+          boardId,
+          "delete_board",
+          `Quadro "${boardToDelete.name}" excluído`,
+        );
+      }
     }
   };
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleBoardUpdate = (
+    updatedBoard: BoardData,
+    action: string,
+    details: string,
+  ) => {
+    if (!updatedBoard) return;
+
+    setBoards(
+      boards.map((board) =>
+        board.id === updatedBoard.id ? updatedBoard : board,
+      ),
+    );
+
+    addHistoryEntry(updatedBoard.id, action, details);
+  };
+
+  const filteredHistory =
+    historyMode === "board"
+      ? history.filter((entry) => entry.boardId === selectedBoardId)
+      : history;
+
+  const toggleHistory = () => {
+    setShowHistory(!showHistory);
+    if (!showHistory) {
+      setHistoryMode("board");
+    }
+  };
+
+  const handleHistoryModeChange = (
+    _: React.SyntheticEvent,
+    newMode: "board" | "global",
+  ) => {
+    setHistoryMode(newMode);
   };
 
   const drawer = (
@@ -135,7 +241,6 @@ const BoardManager = () => {
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
       >
-        {/* Mobile drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -177,7 +282,57 @@ const BoardManager = () => {
           width: { sm: `calc(100% - ${drawerWidth}px)` },
         }}
       >
-        {selectedBoard && <Board board={selectedBoard} />}
+        {selectedBoard && (
+          <>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <Typography variant="h5">{selectedBoard.name}</Typography>
+              <Button
+                variant="outlined"
+                startIcon={
+                  <Badge badgeContent={history.length} color="primary" max={99}>
+                    <IconHistory size="1.2rem" />
+                  </Badge>
+                }
+                onClick={toggleHistory}
+              >
+                {showHistory ? "Voltar ao Quadro" : "Histórico"}
+              </Button>
+            </Box>
+
+            {showHistory ? (
+              <Box>
+                <Tabs
+                  value={historyMode}
+                  onChange={handleHistoryModeChange}
+                  sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
+                >
+                  <Tab
+                    label={`Histórico do Quadro (${filteredHistory.filter((h) => h.boardId === selectedBoardId).length})`}
+                    value="board"
+                  />
+                  <Tab
+                    label={`Histórico Global (${history.length})`}
+                    value="global"
+                  />
+                </Tabs>
+                <BoardHistory
+                  history={filteredHistory}
+                  onClose={toggleHistory}
+                  showBoardNames={historyMode === "global"}
+                />
+              </Box>
+            ) : (
+              <Board board={selectedBoard} onBoardUpdate={handleBoardUpdate} />
+            )}
+          </>
+        )}
       </Box>
 
       <CreateBoardDialog
