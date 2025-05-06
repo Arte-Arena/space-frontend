@@ -31,3 +31,18 @@ export interface MovimentacaoFormData {
   quantidade: string;
   observacoes: string;
 }
+
+export interface Movimentacao {
+  id: number;
+  estoque_id: number;
+  data_movimentacao: Date | string | null;
+  tipo_movimentacao: 'entrada' | 'saida';
+  documento: string;
+  numero_pedido: string;
+  fornecedor_id: number;
+  localizacao_origem: string;
+  quantidade: string;
+  observacoes: string;
+  created_at: string;
+  updated_at: string;
+}
