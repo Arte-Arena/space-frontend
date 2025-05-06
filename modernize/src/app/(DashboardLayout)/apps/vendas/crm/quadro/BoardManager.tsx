@@ -44,6 +44,7 @@ interface Column {
 interface BoardData {
   id: string;
   name: string;
+  cardType: string;
   columns: Column[];
 }
 
@@ -51,6 +52,7 @@ const initialBoards = [
   {
     id: "1",
     name: "Funil de Vendas",
+    cardType: "lead",
     columns: [
       { id: "col-1", title: "Prospecção", items: [] },
       { id: "col-2", title: "Contato Inicial", items: [] },
@@ -97,10 +99,11 @@ const BoardManager = () => {
     setHistory((prev) => [newEntry, ...prev]);
   };
 
-  const handleCreateBoard = (boardName: string) => {
+  const handleCreateBoard = (boardName: string, cardType: string) => {
     const newBoard = {
       id: Date.now().toString(),
       name: boardName,
+      cardType: cardType,
       columns: [{ id: `col-${Date.now()}-1`, title: "Nova Coluna", items: [] }],
     };
 
@@ -111,7 +114,7 @@ const BoardManager = () => {
     addHistoryEntry(
       newBoard.id,
       "create_board",
-      `Quadro "${boardName}" criado`,
+      `Quadro "${boardName}" (Tipo: ${cardType}) criado`,
     );
   };
 
@@ -329,7 +332,12 @@ const BoardManager = () => {
                 />
               </Box>
             ) : (
-              <Board board={selectedBoard} onBoardUpdate={handleBoardUpdate} />
+              <Box sx={{ flexGrow: 1, overflow: "hidden" }}>
+                <Board
+                  board={selectedBoard}
+                  onBoardUpdate={handleBoardUpdate}
+                />
+              </Box>
             )}
           </>
         )}

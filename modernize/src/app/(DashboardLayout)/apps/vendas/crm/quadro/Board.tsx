@@ -43,6 +43,7 @@ interface BoardProps {
   board: {
     id: string;
     name: string;
+    cardType: string;
     columns: Column[];
   };
   onBoardUpdate?: (
@@ -257,7 +258,14 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
   };
 
   return (
-    <Box>
+    <Box sx={{ height: "100%", overflow: "hidden" }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+        <Typography variant="body2" color="textSecondary" sx={{ mr: 2 }}>
+          Tipo de cartão:{" "}
+          <strong>{board.cardType === "lead" ? "Lead" : "Orçamento"}</strong>
+        </Typography>
+      </Box>
+
       <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
         <Button
           variant="contained"
@@ -381,8 +389,36 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
                                           ? "background.default"
                                           : "background.paper",
                                         position: "relative",
+                                        borderLeft: "4px solid",
+                                        borderLeftColor:
+                                          board.cardType === "lead"
+                                            ? "primary.main"
+                                            : "warning.main",
                                       }}
                                     >
+                                      <Box sx={{ mb: 1 }}>
+                                        <Typography
+                                          variant="caption"
+                                          sx={{
+                                            display: "inline-block",
+                                            px: 1,
+                                            py: 0.5,
+                                            borderRadius: 1,
+                                            bgcolor:
+                                              board.cardType === "lead"
+                                                ? "primary.light"
+                                                : "warning.light",
+                                            color:
+                                              board.cardType === "lead"
+                                                ? "primary.contrastText"
+                                                : "warning.contrastText",
+                                          }}
+                                        >
+                                          {board.cardType === "lead"
+                                            ? "Lead"
+                                            : "Orçamento"}
+                                        </Typography>
+                                      </Box>
                                       <Typography variant="body2">
                                         {item.content}
                                       </Typography>
@@ -492,12 +528,18 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
         open={isAddCardDialogOpen}
         onClose={() => setIsAddCardDialogOpen(false)}
       >
-        <DialogTitle>Novo Cartão</DialogTitle>
+        <DialogTitle>
+          Novo {board.cardType === "lead" ? "Lead" : "Orçamento"}
+        </DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Conteúdo do Cartão"
+            label={
+              board.cardType === "lead"
+                ? "Detalhes do lead"
+                : "Detalhes do orçamento"
+            }
             fullWidth
             multiline
             rows={3}
@@ -513,6 +555,7 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
             onClick={handleAddCard}
             variant="contained"
             disabled={!newCardContent.trim()}
+            color={board.cardType === "lead" ? "primary" : "warning"}
           >
             Adicionar
           </Button>
