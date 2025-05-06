@@ -1,6 +1,7 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
+import { AxiosRequestConfig } from 'axios';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Box,
@@ -15,7 +16,6 @@ import {
   TableCell,
   TableContainer,
   Paper,
-  Stack,
   Card,
   CardContent,
   Divider,
@@ -111,7 +111,7 @@ const DadosGeraisEstoque = ({ estoque }: { estoque: Estoque }) => (
 
 // Componente para exibir as variações
 const VariacoesEstoque = ({ variacoes }: { variacoes: Variacoes[] }) => (
-  <TableContainer component={Paper}>
+  <TableContainer component={Paper} sx={{ p: 3 }}>
     <Table size="small">
       <TableHead>
         <TableRow>
@@ -143,6 +143,15 @@ const VariacoesEstoque = ({ variacoes }: { variacoes: Variacoes[] }) => (
 
 const FornecedoresProdutosEstoque = ({ fornecedores, produtos, loadingFornecedores, errorFornecedores, loadingProduto, errorProduto }
   : { fornecedores: Fornecedor[]; produtos: Produto[]; loadingFornecedores: boolean; errorFornecedores: string; loadingProduto: boolean; errorProduto: string }) => {
+  const hasFornecedores = fornecedores && fornecedores.length > 0;
+  const hasProdutos = produtos && produtos.length > 0;
+  const formatNumber = (value: number | string) => {
+    const num = Number(value);
+    return isNaN(num) ? '-' : num.toFixed(2).replace('.', ',');
+  };
+
+
+
   if (loadingProduto || loadingFornecedores) {
     return (
       <Box textAlign="center" sx={{ py: 4 }}>
@@ -152,14 +161,18 @@ const FornecedoresProdutosEstoque = ({ fornecedores, produtos, loadingFornecedor
     );
   }
 
+
+
   return (
     <Box>
       {!loadingProduto && (
         <>
-          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>Produtos</Typography>
-          <Grid container spacing={2} >
-            {produtos ? (
-              produtos.map(p => (
+          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+            Produtos
+          </Typography>
+          <Grid container spacing={2}>
+            {hasProdutos ? (
+              produtos.map((p) => (
                 <Grid key={p.id} item xs={12} md={6} lg={4}>
                   <Card sx={{
                     height: '100%',
@@ -169,25 +182,62 @@ const FornecedoresProdutosEstoque = ({ fornecedores, produtos, loadingFornecedor
                     p: 2
                   }}>
                     <CardContent>
-                      <Typography variant="subtitle2" color="textSecondary">Nome</Typography>
-                      <Typography variant="body1" sx={{ mb: 1 }}>{p.nome}</Typography>
-                      <Typography variant="subtitle2" color="textSecondary">Preço</Typography>
-                      <Typography variant="body1" sx={{ mb: 1 }}>R$ {Number(p.preco).toFixed(2).replace('.', ',')}</Typography>
-                      <Typography variant="subtitle2" color="textSecondary">Prazo</Typography>
-                      <Typography variant="body1" sx={{ mb: 1 }}>{p.prazo} dias</Typography>
-                      <Typography variant="subtitle2" color="textSecondary">Peso</Typography>
-                      <Typography variant="body1" sx={{ mb: 1 }}>{p.peso} kg</Typography>
-                      <Typography variant="subtitle2" color="textSecondary">Dimensões (L×A×C)</Typography>
-                      <Typography variant="body1">
-                        {p.largura} × {p.altura} × {p.comprimento} cm
+                      <Typography variant="subtitle2" color="textSecondary">
+                        Nome
                       </Typography>
+                      <Typography variant="body1" sx={{ mb: 1 }}>
+                        {p.nome}
+                      </Typography>
+
+                      {p.preco && (
+                        <>
+                          <Typography variant="subtitle2" color="textSecondary">
+                            Preço
+                          </Typography>
+                          <Typography variant="body1" sx={{ mb: 1 }}>
+                            R$ {formatNumber(p.preco)}
+                          </Typography>
+                        </>
+                      )}
+                      {p.prazo && (
+                        <>
+                          <Typography variant="subtitle2" color="textSecondary">
+                            Prazo
+                          </Typography>
+                          <Typography variant="body1" sx={{ mb: 1 }}>
+                            {p.prazo} dias
+                          </Typography>
+                        </>
+                      )}
+                      {p.peso && (
+                        <>
+                          <Typography variant="subtitle2" color="textSecondary">
+                            Peso
+                          </Typography>
+                          <Typography variant="body1" sx={{ mb: 1 }}>
+                            {formatNumber(p.peso)} kg
+                          </Typography>
+                        </>
+                      )}
+                      {(p.largura || p.altura || p.comprimento) && (
+                        <>
+                          <Typography variant="subtitle2" color="textSecondary">
+                            Dimensões (L×A×C)
+                          </Typography>
+                          <Typography variant="body1">
+                            {formatNumber(p.largura)} × {formatNumber(p.altura)} × {formatNumber(p.comprimento)} cm
+                          </Typography>
+                        </>
+                      )}
                     </CardContent>
                   </Card>
                 </Grid>
               ))
             ) : (
               <Grid item xs={12}>
-                <Typography color="error">{errorProduto || 'Nenhum produto encontrado.'}</Typography>
+                <Typography color="error">
+                  {errorProduto || 'Nenhum produto encontrado.'}
+                </Typography>
               </Grid>
             )}
           </Grid>
@@ -196,18 +246,22 @@ const FornecedoresProdutosEstoque = ({ fornecedores, produtos, loadingFornecedor
 
       <Divider sx={{ my: 3 }} />
 
-      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>Fornecedores</Typography>
+      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+        Fornecedores
+      </Typography>
       <Grid container spacing={2}>
         {fornecedores.length > 0 ? (
-          fornecedores.map(f => (
+          fornecedores.map((f) => (
             <Grid key={f.id} item xs={12} md={6} lg={4}>
               <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                <Typography variant="h6">{f.tipo_pessoa === 'J' ? f.razao_social : f.nome_completo}</Typography>
+                <Typography variant="h6">
+                  {f.tipo_pessoa === 'J' ? f.razao_social : f.nome_completo}
+                </Typography>
                 <List sx={{ mt: 2, p: 0 }}>
-                  {f.produtos.map(prod => (
+                  {f.produtos.map((prod) => (
                     <ListItem key={prod.id} sx={{ py: 0.50 }}>
                       <Typography variant="body2" noWrap={true}>
-                        • {prod.nome} — Qtd: {prod.quantidade} — R$ {Number(prod.preco).toFixed(2).replace('.', ',')}
+                        • {prod.nome} {prod.quantidade ? " — Qtd: " : ""} {prod.quantidade ? prod.quantidade : ""} {prod.preco ? " — R$ " : ""} {prod.preco ? Number(prod.preco).toFixed(2).replace('.', ',') : ""}
                       </Typography>
                     </ListItem>
                   ))}
@@ -216,194 +270,279 @@ const FornecedoresProdutosEstoque = ({ fornecedores, produtos, loadingFornecedor
             </Grid>
           ))
         ) : (
-          <Typography sx={{ p: 2, mt: 1 }} color="error">{errorFornecedores || 'Nenhum fornecedor encontrado.'}</Typography>
+          <Typography sx={{ p: 2, mt: 1 }} color="error">
+            {errorFornecedores || 'Nenhum fornecedor encontrado.'}
+          </Typography>
         )}
       </Grid>
+      {!hasFornecedores && !hasProdutos && !loadingFornecedores && !loadingProduto && (
+        <Typography>Nenhum fornecedor ou produto encontrado.</Typography>
+      )}
     </Box>
   );
 };
 
-export default function EstoqueDetailPage() {
+            export default function EstoqueDetailPage() {
   const router = useRouter();
-  const { id } = useParams<{ id: string }>();
-  const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+            const {id} = useParams<{ id: string }>();
+            const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
-  const [estoque, setEstoque] = useState<Estoque | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>('');
+            const [estoque, setEstoque] = useState<Estoque | null>(null);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState<string>('');
+              const [tabIndex, setTabIndex] = useState(0);
+              const abortControllerRef = useRef<AbortController | null>(null);
+              const cacheRef = useRef<Record<string, any>>({ });
 
-  const [tabIndex, setTabIndex] = useState(0);
+                // estados para produtos
+                const [produto, setProduto] = useState<Produto[]>([]);
+                const [loadingProduto, setLoadingProduto] = useState(false);
+                const [errorProduto, setErrorProduto] = useState<string>('');
 
-  // estados para produtos
-  const [produto, setProduto] = useState<Produto[]>([]);
-  const [loadingProduto, setLoadingProduto] = useState(false);
-  const [errorProduto, setErrorProduto] = useState<string>('');
+                  // estados para fornecedores
+                  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
+                  const [loadingFornecedores, setLoadingFornecedores] = useState(false);
+                  const [errorFornecedores, setErrorFornecedores] = useState<string>('');
 
-  // estados para fornecedores
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
-  const [loadingFornecedores, setLoadingFornecedores] = useState(false);
-  const [errorFornecedores, setErrorFornecedores] = useState<string>('');
-
-  // proteção de rota
-  if (!accessToken) {
-    router.push('/auth/login');
-    return null;
+                    // proteção de rota
+                    if (!accessToken) {
+                      router.push('/auth/login');
+                    return null;
   }
+
+                    // Fun o para fazer a requisi o com retry e cache
+                    const fetchDataWithRetryAndCache = async function <T>(
+                      url: string,
+                      config: AxiosRequestConfig = { },
+                      retryCount = 0
+                      ): Promise<T> {
+    const maxRetries = 3;
+                        const initialDelay = 500;
+
+                        // Inicializa o cache se necessário
+                        if (!cacheRef.current) cacheRef.current = { };
+
+                        // Verifica se a resposta está em cache
+                        if (cacheRef.current[url]) {
+                          console.log(`Cache hit for ${url}`);
+                        return cacheRef.current[url];
+    }
+
+                        try {
+                          abortControllerRef.current = new AbortController();
+                        config.signal = abortControllerRef.current.signal;
+
+                        const response = await axios.get<T>(url, config);
+                          cacheRef.current[url] = response.data;
+
+                          return response.data;
+    } catch (err: any) {
+      if (axios.isCancel(err)) throw err;
+
+                          if (err.response?.status === 429 && retryCount < maxRetries) {
+        const delay = initialDelay * Math.pow(2, retryCount);
+                          console.log(`Retrying ${url} after ${delay}ms (attempt ${retryCount + 1})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+                          return fetchDataWithRetryAndCache<T>(url, config, retryCount + 1);
+      }
+
+                            throw err;
+    } finally {
+                              abortControllerRef.current = null;
+    }
+  };
+
 
   // fetch do estoque
   useEffect(() => {
     if (!id) return setLoading(false);
-    setLoading(true);
-    axios.get<Estoque>(`${process.env.NEXT_PUBLIC_API}/api/estoque/${id}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
+                            setLoading(true);
+                            axios.get<Estoque>(`${process.env.NEXT_PUBLIC_API}/api/estoque/${id}`, {
+                              headers: {Authorization: `Bearer ${accessToken}` },
     })
       .then(res => setEstoque(res.data))
       .catch(() => setError('Erro ao carregar dados de estoque.'))
       .finally(() => setLoading(false));
   }, [id, accessToken]);
 
-  // fetch de fornecedores apenas ao abrir a 3ª aba
+  // fetch dos fornecedores
   useEffect(() => {
-    if (!estoque) return;
-    setLoadingFornecedores(true);
-    const requests = estoque.fornecedores.map(f =>
-      axios.get<Fornecedor>(
-        `${process.env.NEXT_PUBLIC_API}/api/fornecedor/${f.fornecedor_id}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`
-          }
-        }
-      )
-    );
+    if (!estoque || !estoque.fornecedores) return;
+                              if (!accessToken) return;
 
-    Promise.all(requests)
-      .then(responses => {
-        // responses é um array de objetos AxiosResponse<Fornecedor>
-        setFornecedores(responses.map(r => r.data));
-      })
+                              setLoadingFornecedores(true);
+                              const promises: Promise<Fornecedor>[] = [];
+
+    estoque.fornecedores.forEach(f => {
+      if (f.id === 0) {
+                                  promises.push(
+                                    Promise.resolve({
+                                      id: 0,
+                                      fornecedor_id: 0,
+                                      tipo_pessoa: '',
+                                      nome_completo: f.nome_completo,
+                                      rg: '',
+                                      cpf: '',
+                                      razao_social: '',
+                                      cnpj: '',
+                                      inscricao_estadual: '',
+                                      email: '',
+                                      celular: '',
+                                      cep: '',
+                                      endereco: '',
+                                      numero: '',
+                                      complemento: '',
+                                      bairro: '',
+                                      cidade: '',
+                                      uf: '',
+                                      produtos: [produto[0]],
+                                      created_at: new Date(),
+                                      updated_at: new Date(),
+                                    })
+                                  );
+      } else {
+                                  // Buscar do backend
+                                  promises.push(fetchDataWithRetryAndCache<Fornecedor>(
+                                    `${process.env.NEXT_PUBLIC_API}/api/fornecedor/${f.fornecedor_id}`,
+                                    {
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                        Authorization: `Bearer ${accessToken}`,
+                                      },
+                                    }));
+      }
+    });
+
+                                Promise.all(promises)
+                                .then(setFornecedores)
       .catch(err => {
         const msg = err.response?.data
-          ? typeof err.response.data === 'string'
-            ? err.response.data
-            : JSON.stringify(err.response.data.message)
-          : err.message;
-        setErrorFornecedores(msg);
+                                ? typeof err.response.data === 'string'
+                                ? err.response.data
+                                : JSON.stringify(err.response.data.message)
+                                : err.message;
+                                setErrorFornecedores(msg);
       })
       .finally(() => setLoadingFornecedores(false));
-  }, [estoque, accessToken]);
+  }, [estoque, produto]);
+
 
   useEffect(() => {
     if (!estoque) return;
-    setLoadingProduto(true);
-    axios.get<Produto | Produto[]>(
-      `${process.env.NEXT_PUBLIC_API}/api/produto-tipo/${estoque.produto_id}/${estoque.produto_table}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`
-      },
-    }
-    )
-      .then(res => {
-        // A API retorna um objeto para um único produto, então garantimos um array
-        const data = res.data;
-        const produtosArray = Array.isArray(data) ? data : [data];
-        setProduto(produtosArray);
-      })
-      .catch(err => {
-        const msg = err.response?.data
-          ? typeof err.response.data === 'string'
-            ? err.response.data
-            : JSON.stringify(err.response.data.message)
-          : err.message;
-        setErrorProduto(msg);
-      })
-      .finally(() => setLoadingProduto(false));
+                                setLoadingProduto(true);
+
+    const fetchProdutos = async () => {
+      try {
+        const data = await fetchDataWithRetryAndCache<Produto | Produto[]>(
+                                `${process.env.NEXT_PUBLIC_API}/api/produto-tipo/${estoque.produto_id}/${estoque.produto_table}`,
+                                {
+                                  headers: {
+                                  'Content-Type': 'application/json',
+                                Authorization: `Bearer ${accessToken}`
+            },
+          }
+                                );
+                                const produtosArray = Array.isArray(data) ? data : [data];
+                                setProduto(produtosArray);
+      } catch (err) {
+        if (!axios.isCancel(err)) {
+                                  setErrorProduto('Erro ao carregar produtos.' + err);
+        }
+      } finally {
+                                  setLoadingProduto(false);
+      }
+    };
+                                fetchProdutos();
+
+    return () => {
+      if (abortControllerRef.current) {
+                                  abortControllerRef.current.abort();
+      }
+    };
   }, [id, accessToken, estoque]);
 
-  if (error) {
+                                if (error) {
     return <Typography color="error" align="center">{error}</Typography>;
   }
-  if (loading || !estoque) {
+                                if (loading || !estoque) {
     return (
-      <Box textAlign="center" sx={{ mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
+                                <Box textAlign="center" sx={{ mt: 4 }}>
+                                  <CircularProgress />
+                                </Box>
+                                );
   }
 
-  const tabLabels = ['Dados Gerais', 'Variações', 'Fornecedores e Produtos'];
+                                const tabLabels = ['Dados Gerais', 'Variações', 'Fornecedores e Produtos'];
 
-  return (
-    <Box sx={{ p: 3, maxWidth: '90%', mx: 'auto' }}>
-      <Breadcrumb
-        title="Estoque / Detalhes"
-        subtitle="Gerencie Itens do Estoque"
-      />
+                                return (
+                                <Box sx={{ p: 3, maxWidth: '90%', mx: 'auto' }}>
+                                  <Breadcrumb
+                                    title="Estoque / Detalhes"
+                                    subtitle="Gerencie Itens do Estoque"
+                                  />
 
-      <Typography variant="h4" component="h1" mb={3} sx={{ fontWeight: 'bold' }}>
-        Detalhes do Estoque
-      </Typography>
+                                  <Typography variant="h4" component="h1" mb={3} sx={{ fontWeight: 'bold' }}>
+                                    Detalhes do Estoque
+                                  </Typography>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', borderRadius: 1 }}>
-        <StyledTabs
-          value={tabIndex}
-          onChange={(_, v) => setTabIndex(v)}
-          aria-label="estoque tabs"
+                                  <Box sx={{ borderBottom: 1, borderColor: 'divider', borderRadius: 1 }}>
+                                    <StyledTabs
+                                      value={tabIndex}
+                                      onChange={(_, v) => setTabIndex(v)}
+                                      aria-label="estoque tabs"
 
-        >
-          {tabLabels.map((label, index) => (
-            <StyledTab key={label} label={label} id={`simple-tab-${index}`} />
-          ))}
-        </StyledTabs>
-      </Box>
-      {/* Aba Dados Gerais */}
-      <TabPanel value={tabIndex} index={0}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" component="h2" mb={2} sx={{ fontWeight: 'semibold' }}>
-              Informações Gerais
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            <DadosGeraisEstoque estoque={estoque} />
-          </CardContent>
-        </Card>
-      </TabPanel>
+                                    >
+                                      {tabLabels.map((label, index) => (
+                                        <StyledTab key={label} label={label} id={`simple-tab-${index}`} />
+                                      ))}
+                                    </StyledTabs>
+                                  </Box>
+                                  {/* Aba Dados Gerais */}
+                                  <TabPanel value={tabIndex} index={0}>
+                                    <Card>
+                                      <CardContent>
+                                        <Typography variant="h6" component="h2" mb={2} sx={{ fontWeight: 'semibold' }}>
+                                          Informações Gerais
+                                        </Typography>
+                                        <Divider sx={{ mb: 2 }} />
+                                        <DadosGeraisEstoque estoque={estoque} />
+                                      </CardContent>
+                                    </Card>
+                                  </TabPanel>
 
-      {/* Aba Variações */}
-      <TabPanel value={tabIndex} index={1}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" component="h2" mb={2} sx={{ fontWeight: 'semibold' }}>
-              Variações do Produto
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            <VariacoesEstoque variacoes={estoque.variacoes} />
-          </CardContent>
-        </Card>
-      </TabPanel>
+                                  {/* Aba Variações */}
+                                  <TabPanel value={tabIndex} index={1}>
+                                    <Card>
+                                      <CardContent>
+                                        <Typography variant="h6" component="h2" mb={2} sx={{ fontWeight: 'semibold' }}>
+                                          Variações do Produto
+                                        </Typography>
+                                        <Divider sx={{ mb: 2 }} />
+                                        <VariacoesEstoque variacoes={estoque.variacoes} />
+                                      </CardContent>
+                                    </Card>
+                                  </TabPanel>
 
-      {/* Aba Fornecedores e Produtos */}
-      <TabPanel value={tabIndex} index={2}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" component="h2" mb={2} sx={{ fontWeight: 'semibold' }}>
-              Fornecedores e Produtos
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            <FornecedoresProdutosEstoque
-              fornecedores={fornecedores}
-              produtos={produto}
-              loadingFornecedores={loadingFornecedores}
-              errorFornecedores={errorFornecedores}
-              loadingProduto={loadingProduto}
-              errorProduto={errorProduto}
-            />
-          </CardContent>
-        </Card>
-      </TabPanel>
-    </Box>
-  );
+                                  {/* Aba Fornecedores e Produtos */}
+                                  <TabPanel value={tabIndex} index={2}>
+                                    <Card>
+                                      <CardContent>
+                                        <Typography variant="h6" component="h2" mb={2} sx={{ fontWeight: 'semibold' }}>
+                                          Fornecedores e Produtos
+                                        </Typography>
+                                        <Divider sx={{ mb: 2 }} />
+                                        <FornecedoresProdutosEstoque
+                                          fornecedores={fornecedores}
+                                          produtos={produto}
+                                          loadingFornecedores={loadingFornecedores}
+                                          errorFornecedores={errorFornecedores}
+                                          loadingProduto={loadingProduto}
+                                          errorProduto={errorProduto}
+                                        />
+                                      </CardContent>
+                                    </Card>
+                                  </TabPanel>
+                                </Box>
+                                );
 }
 

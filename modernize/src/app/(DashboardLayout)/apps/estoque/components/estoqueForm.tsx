@@ -206,6 +206,20 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
         <form
           onSubmit={e => {
             e.preventDefault();
+            if (
+              fornecedoresInputValue &&
+              !selectedFornecedores.some(f => f.nome_completo === fornecedoresInputValue)
+            ) {
+              const novo = { id: 0, nome_completo: fornecedoresInputValue } as Fornecedor;
+              const atualizados = [...selectedFornecedores, novo];
+        
+              setSelectedFornecedores(atualizados);
+              setValues(prev => ({ ...prev, fornecedores: atualizados }));
+        
+              onSubmit({ ...values, fornecedores: atualizados });
+              // evitar que `handleSubmit(values)` abaixo execute com lista vazia
+              return; 
+            }
             onSubmit(values);
           }}
         >

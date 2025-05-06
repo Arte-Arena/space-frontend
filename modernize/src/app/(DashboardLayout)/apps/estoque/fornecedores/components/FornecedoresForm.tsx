@@ -237,6 +237,7 @@ const GenericFornecedorForm: React.FC = () => {
 
   const handleKeyPressProdutos = (event: React.KeyboardEvent) => {
     if (event.key === "Enter") {
+      event.preventDefault();
       setCurrentPageProdutos(1);
       setAllProdutos([]);
       handleSearchProdutos();
