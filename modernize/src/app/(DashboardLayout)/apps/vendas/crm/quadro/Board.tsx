@@ -45,9 +45,14 @@ interface BoardProps {
     name: string;
     columns: Column[];
   };
+  onBoardUpdate?: (
+    updatedBoard: BoardProps["board"],
+    action: string,
+    details: string,
+  ) => void;
 }
 
-const Board: React.FC<BoardProps> = ({ board }) => {
+const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
   const [columns, setColumns] = useState<Column[]>(board.columns);
   const [isAddColumnDialogOpen, setIsAddColumnDialogOpen] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState("");
@@ -62,8 +67,18 @@ const Board: React.FC<BoardProps> = ({ board }) => {
     string | null
   >(null);
 
+  const notifyUpdate = (action: string, details: string) => {
+    if (onBoardUpdate) {
+      const updatedBoard = {
+        ...board,
+        columns,
+      };
+      onBoardUpdate(updatedBoard, action, details);
+    }
+  };
+
   const onDragEnd = (result: DropResult) => {
-    const { source, destination, type } = result;
+    const { source, destination, type, draggableId } = result;
 
     if (
       !destination ||
@@ -78,6 +93,12 @@ const Board: React.FC<BoardProps> = ({ board }) => {
       const [movedColumn] = reorderedColumns.splice(source.index, 1);
       reorderedColumns.splice(destination.index, 0, movedColumn);
       setColumns(reorderedColumns);
+
+      notifyUpdate(
+        "move_column",
+        `Coluna "${movedColumn.title}" movida da posição ${source.index + 1} para ${destination.index + 1}`,
+      );
+
       return;
     }
 
@@ -96,9 +117,12 @@ const Board: React.FC<BoardProps> = ({ board }) => {
           col.id === sourceColumn.id ? { ...col, items: newItems } : col,
         );
         setColumns(newColumns);
-      }
 
-      else {
+        notifyUpdate(
+          "move_card",
+          `Cartão "${movedItem.content.substring(0, 30)}${movedItem.content.length > 30 ? "..." : ""}" reordenado dentro da coluna "${sourceColumn.title}"`,
+        );
+      } else {
         const sourceItems = [...sourceColumn.items];
         const destItems = [...destColumn.items];
         const [movedItem] = sourceItems.splice(source.index, 1);
@@ -115,6 +139,11 @@ const Board: React.FC<BoardProps> = ({ board }) => {
         });
 
         setColumns(newColumns);
+
+        notifyUpdate(
+          "move_card",
+          `Cartão "${movedItem.content.substring(0, 30)}${movedItem.content.length > 30 ? "..." : ""}" movido da coluna "${sourceColumn.title}" para "${destColumn.title}"`,
+        );
       }
     }
   };
@@ -126,14 +155,26 @@ const Board: React.FC<BoardProps> = ({ board }) => {
         title: newColumnTitle,
         items: [],
       };
-      setColumns([...columns, newColumn]);
+      const updatedColumns = [...columns, newColumn];
+      setColumns(updatedColumns);
       setNewColumnTitle("");
       setIsAddColumnDialogOpen(false);
+
+      notifyUpdate("add_column", `Coluna "${newColumn.title}" adicionada`);
     }
   };
 
   const handleDeleteColumn = (columnId: string) => {
-    setColumns(columns.filter((col) => col.id !== columnId));
+    const columnToDelete = columns.find((col) => col.id === columnId);
+    const newColumns = columns.filter((col) => col.id !== columnId);
+    setColumns(newColumns);
+
+    if (columnToDelete) {
+      notifyUpdate(
+        "delete_column",
+        `Coluna "${columnToDelete.title}" removida`,
+      );
+    }
   };
 
   const handleEditColumnOpen = (column: Column) => {
@@ -144,14 +185,20 @@ const Board: React.FC<BoardProps> = ({ board }) => {
 
   const handleEditColumn = () => {
     if (currentEditColumn && editColumnTitle.trim()) {
-      setColumns(
-        columns.map((col) =>
-          col.id === currentEditColumn.id
-            ? { ...col, title: editColumnTitle }
-            : col,
-        ),
+      const oldTitle = currentEditColumn.title;
+      const newColumns = columns.map((col) =>
+        col.id === currentEditColumn.id
+          ? { ...col, title: editColumnTitle }
+          : col,
       );
+
+      setColumns(newColumns);
       setIsEditColumnDialogOpen(false);
+
+      notifyUpdate(
+        "edit_column",
+        `Coluna "${oldTitle}" renomeada para "${editColumnTitle}"`,
+      );
     }
   };
 
@@ -168,38 +215,50 @@ const Board: React.FC<BoardProps> = ({ board }) => {
         content: newCardContent,
       };
 
-      setColumns(
-        columns.map((col) =>
-          col.id === currentColumnForCard
-            ? { ...col, items: [...col.items, newCard] }
-            : col,
-        ),
+      const targetColumn = columns.find(
+        (col) => col.id === currentColumnForCard,
       );
+      const newColumns = columns.map((col) =>
+        col.id === currentColumnForCard
+          ? { ...col, items: [...col.items, newCard] }
+          : col,
+      );
+
+      setColumns(newColumns);
       setIsAddCardDialogOpen(false);
+
+      if (targetColumn) {
+        notifyUpdate(
+          "add_card",
+          `Cartão adicionado na coluna "${targetColumn.title}"`,
+        );
+      }
     }
   };
 
   const handleDeleteCard = (columnId: string, cardId: string) => {
-    setColumns(
-      columns.map((col) =>
-        col.id === columnId
-          ? { ...col, items: col.items.filter((item) => item.id !== cardId) }
-          : col,
-      ),
+    const targetColumn = columns.find((col) => col.id === columnId);
+    const cardToDelete = targetColumn?.items.find((item) => item.id === cardId);
+
+    const newColumns = columns.map((col) =>
+      col.id === columnId
+        ? { ...col, items: col.items.filter((item) => item.id !== cardId) }
+        : col,
     );
+
+    setColumns(newColumns);
+
+    if (targetColumn && cardToDelete) {
+      notifyUpdate(
+        "delete_card",
+        `Cartão "${cardToDelete.content.substring(0, 30)}${cardToDelete.content.length > 30 ? "..." : ""}" removido da coluna "${targetColumn.title}"`,
+      );
+    }
   };
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Typography variant="h5">{board.name}</Typography>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
         <Button
           variant="contained"
           startIcon={<IconPlus size="1rem" />}
