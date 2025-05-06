@@ -42,7 +42,7 @@ const CreateBoardDialog: React.FC<CreateBoardDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Criar Novo Quadro</DialogTitle>
+      <DialogTitle>Criar novo quadro</DialogTitle>
       <DialogContent>
         <TextField
           autoFocus

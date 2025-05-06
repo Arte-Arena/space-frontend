@@ -264,7 +264,7 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
           startIcon={<IconPlus size="1rem" />}
           onClick={() => setIsAddColumnDialogOpen(true)}
         >
-          Nova Coluna
+          Nova coluna
         </Button>
       </Box>
 
@@ -434,12 +434,12 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
         open={isAddColumnDialogOpen}
         onClose={() => setIsAddColumnDialogOpen(false)}
       >
-        <DialogTitle>Nova Coluna</DialogTitle>
+        <DialogTitle>Nova coluna</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Título da Coluna"
+            label="Título da coluna"
             fullWidth
             value={newColumnTitle}
             onChange={(e) => setNewColumnTitle(e.target.value)}
@@ -468,7 +468,7 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
           <TextField
             autoFocus
             margin="dense"
-            label="Título da Coluna"
+            label="Título da coluna"
             fullWidth
             value={editColumnTitle}
             onChange={(e) => setEditColumnTitle(e.target.value)}

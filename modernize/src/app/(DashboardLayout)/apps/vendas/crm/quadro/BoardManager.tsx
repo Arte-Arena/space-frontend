@@ -205,7 +205,7 @@ const BoardManager = () => {
           startIcon={<IconPlus size="1rem" />}
           onClick={() => setIsCreateDialogOpen(true)}
         >
-          Novo Quadro
+          Novo quadro
         </Button>
       </Box>
       <Divider />
@@ -302,7 +302,7 @@ const BoardManager = () => {
                 }
                 onClick={toggleHistory}
               >
-                {showHistory ? "Voltar ao Quadro" : "Histórico"}
+                {showHistory ? "Voltar ao quadro" : "Histórico"}
               </Button>
             </Box>
 
@@ -314,11 +314,11 @@ const BoardManager = () => {
                   sx={{ mb: 2, borderBottom: 1, borderColor: "divider" }}
                 >
                   <Tab
-                    label={`Histórico do Quadro (${filteredHistory.filter((h) => h.boardId === selectedBoardId).length})`}
+                    label={`Histórico do quadro (${filteredHistory.filter((h) => h.boardId === selectedBoardId).length})`}
                     value="board"
                   />
                   <Tab
-                    label={`Histórico Global (${history.length})`}
+                    label={`Histórico global (${history.length})`}
                     value="global"
                   />
                 </Tabs>
