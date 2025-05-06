@@ -27,6 +27,7 @@ export interface EstoqueData {
   categoria: string;
   fornecedores: Fornecedor[];
   produto_id: number | '';
+  preco_produto: number | '';
   produto_table: string;
   produtos?: Produto[];
 }
@@ -75,14 +76,12 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
       ? {
           id: initialValues.produto_id as number,
           nome: initialValues.nome as string,
+          preco: initialValues.preco_produto as number,
           type: initialValues.produto_table as string,
         }
       : null
   );
   
-  // const [selectedFornecedores, setSelectedFornecedores] = useState<Fornecedor[]>([]);
-  // const [selectedProduct, setSelectedProduct] = useState<Produto | null>(null);
-
   // Estado do formulário
   const [values, setValues] = useState<EstoqueData>({
     nome: initialValues.nome || '',
@@ -93,13 +92,14 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
     estoque_max: initialValues.estoque_max || 0,
     categoria: initialValues.categoria || '',
     fornecedores: initialValues.fornecedores || [],
+    preco_produto: initialValues.preco_produto ?? '',
     produto_id: initialValues.produto_id ?? '',
     produto_table: initialValues.produto_table || '',
     variacoes:
       initialValues.variacoes && initialValues.variacoes.length > 0
         ? initialValues.variacoes
         : [
-            { color: '', material: '', tamanhos: '', franjas: '', altura: '', largura: '', preco: '' },
+            { color: '', material: '', tamanhos: '', franjas: '', altura: '', largura: '', comprimento: '', preco: '' },
           ],
   });
 
@@ -128,7 +128,7 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
   const addVariacao = () => {
     setValues(prev => ({
       ...prev,
-      variacoes: [...prev.variacoes, { color: '', material: '', tamanhos: '', franjas: '', altura: '', largura: '', preco: '' }],
+      variacoes: [...prev.variacoes, { color: '', material: '', tamanhos: '', franjas: '', altura: '', largura: '', comprimento: '', preco: '' }],
     }));
   };
 
@@ -206,6 +206,20 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
         <form
           onSubmit={e => {
             e.preventDefault();
+            if (
+              fornecedoresInputValue &&
+              !selectedFornecedores.some(f => f.nome_completo === fornecedoresInputValue)
+            ) {
+              const novo = { id: 0, nome_completo: fornecedoresInputValue } as Fornecedor;
+              const atualizados = [...selectedFornecedores, novo];
+        
+              setSelectedFornecedores(atualizados);
+              setValues(prev => ({ ...prev, fornecedores: atualizados }));
+        
+              onSubmit({ ...values, fornecedores: atualizados });
+              // evitar que `handleSubmit(values)` abaixo execute com lista vazia
+              return; 
+            }
             onSubmit(values);
           }}
         >
@@ -228,7 +242,15 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
                 multiline rows={3} fullWidth
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
+              <TextField
+                label="Unidade de Medida"
+                value={values.unidade_medida}
+                onChange={handleChange('unidade_medida')}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} sm={3}>
               <TextField
                 label="Quantidade"
                 type="number"
@@ -238,7 +260,7 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 label="Estoque Mínimo"
                 type="number"
@@ -248,7 +270,7 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 label="Estoque Máximo"
                 type="number"
@@ -281,7 +303,7 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
                     fullWidth
                   />
                 </Grid>
-                <Grid item xs={12} sm={2}>
+                <Grid item xs={12} sm={1.5}>
                   <TextField
                     label="Tamanhos"
                     placeholder="ex: P,M,G"
@@ -290,7 +312,7 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
                     fullWidth
                   />
                 </Grid>
-                <Grid item xs={12} sm={1.5}>
+                <Grid item xs={12} sm={1.15}>
                   <TextField
                     label="Altura (cm)"
                     type="number"
@@ -300,12 +322,22 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
                     fullWidth
                   />
                 </Grid>
-                <Grid item xs={12} sm={1.5}>
+                <Grid item xs={12} sm={1.15}>
                   <TextField
                     label="Largura (cm)"
                     type="number"
                     value={v.largura}
                     onChange={handleVariacaoChange(idx, 'largura')}
+                    InputProps={{ inputProps: { min: 0 } }}
+                    fullWidth
+                  />
+                </Grid>
+                <Grid item xs={12} sm={1.15}>
+                  <TextField
+                    label="Comprimento (cm)"
+                    type="number"
+                    value={v.comprimento}
+                    onChange={handleVariacaoChange(idx, 'comprimento')}
                     InputProps={{ inputProps: { min: 0 } }}
                     fullWidth
                   />
@@ -323,7 +355,7 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
                     fullWidth
                   />
                 </Grid>
-                <Grid item xs={12} sm={1}>
+                <Grid item xs={12} sm={0.5}>
                   <FormControlLabel
                     control={<Checkbox
                       checked={v.franjas === 'true'}
@@ -334,7 +366,7 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
                     label="Franjas"
                   />
                 </Grid>
-                <Grid item xs={12} sm={1}>
+                <Grid item xs={12} sm={1} textAlign={'right'}>
                   <Button variant="outlined" color="error" onClick={() => removeVariacao(idx)}>
                     –
                   </Button>
@@ -420,7 +452,7 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
 
             {/* Botão Salvar */}
             <Grid item xs={12}>
-              <Box textAlign="center" mt={4}>
+              <Box textAlign="end" mt={4}>
                 <Button type="submit" variant="contained" size="large">
                   Salvar
                 </Button>

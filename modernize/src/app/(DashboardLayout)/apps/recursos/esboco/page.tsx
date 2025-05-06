@@ -31,7 +31,7 @@ import FormularioQuatroAtributos from './components/forms/Bandeiras/Form4Atribut
 import FormChineloShorts from './components/forms/Bandeiras/FormChineloShorts';
 
 const produtos = [
-  "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira",
+  "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira Personalizada",
   "Bandeira de Carro", "Bandeira de Mesa", "Bandeira Oficial", "Bandeira Política", "Bandeira de Mão",
   "Bolachão", "Braçadeira", "Cachecol", "Camisão*", "Caneca Alumínio*", "Caneca Porcelana*",
   "Canga*", "Capa de Barbeiro", "Chinelo de Dedo", "Chinelo Slide", "Chaveiro", "Estandarte",
@@ -352,7 +352,7 @@ const GeradorDeEsbocoScreen = () => {
             />
           )}
 
-          {form.produto.toLowerCase().includes('bandeira oficial') && (
+          {(form.produto.toLowerCase().includes('bandeira oficial') || form.produto.toLowerCase().includes('bandeira personalizada'))  && (
             <FormBandeira
               form={form}
               handleChange={handleChange}
