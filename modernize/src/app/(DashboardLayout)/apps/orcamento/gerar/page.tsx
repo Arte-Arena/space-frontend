@@ -55,6 +55,8 @@ import {
   RadioGroup,
   FormControlLabel,
   Typography,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import {
   calcularDataFuturaDiasUteis,
@@ -339,6 +341,7 @@ const OrcamentoGerarScreen = () => {
   const [checkoutValue, setCheckoutValue] = useState<number | null>(null);
   const [isGeneratingCheckoutLink, setIsGeneratingCheckoutLink] =
     useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const isLoggedIn = useAuth();
 
@@ -468,7 +471,6 @@ const OrcamentoGerarScreen = () => {
   };
 
   const handleBlurCliente = () => {
-    console.log("teste");
     setCurrentPageClients(1); // Reset para a primeira página
     setAllClients([]); // Limpar resultados anteriores
     handleSearchClientes();
@@ -807,16 +809,16 @@ const OrcamentoGerarScreen = () => {
 
   useEffect(() => {
     if (location) {
-      console.log("location: ", location);
+      // console.log("location: ", location);
       getFrete(cep);
     }
   }, [location]);
 
-  useEffect(() => {
-    if (isGrandeSP) {
-      console.log("isGrandeSP", isGrandeSP);
-    }
-  }, [isGrandeSP]);
+  // useEffect(() => {
+  //   if (isGrandeSP) {
+  //     // console.log("isGrandeSP", isGrandeSP);
+  //   }
+  // }, [isGrandeSP]);
 
   const prazoEntregaMenordataDesejadaAntecipa = (
     delivery_time: number,
@@ -1162,11 +1164,11 @@ const OrcamentoGerarScreen = () => {
       isUrgentDeliverySelected &&
       shippingOption === "RETIRADA"
     ) {
-      console.log("0010");
+      // console.log("0010");
       calcPrevisao();
     }
 
-    console.log("shippingOption: ", shippingOption);
+    // console.log("shippingOption: ", shippingOption);
   }, [shippingOption]);
 
   useEffect(() => {
@@ -1180,7 +1182,7 @@ const OrcamentoGerarScreen = () => {
       prazoFrete
     ) {
       if (isUrgentDeliverySelected) {
-        console.log("0011");
+        // console.log("0011");
         calcPrevisao();
       }
     } else if (
@@ -1191,7 +1193,7 @@ const OrcamentoGerarScreen = () => {
       shippingOption === "RETIRADA" &&
       isUrgentDeliverySelected
     ) {
-      console.log("0012");
+      // console.log("0012");
       calcPrevisao();
     }
   }, [isUrgentDeliverySelected]);
@@ -1206,7 +1208,7 @@ const OrcamentoGerarScreen = () => {
       prazoProducao &&
       prazoFrete
     ) {
-      console.log("00001");
+      // console.log("00001");
       calcPrevisao();
     }
   }, [clientId]);
@@ -1221,7 +1223,7 @@ const OrcamentoGerarScreen = () => {
       prazoProducao &&
       (prazoFrete === 0 || prazoFrete)
     ) {
-      console.log("00002");
+      // console.log("00002");
       calcPrevisao();
     }
   }, [productsList]);
@@ -1236,7 +1238,7 @@ const OrcamentoGerarScreen = () => {
       prazoProducao &&
       (prazoFrete === 0 || prazoFrete)
     ) {
-      console.log("00003");
+      // console.log("00003");
       calcPrevisao();
     }
   }, [shippingOption]);
@@ -1251,7 +1253,7 @@ const OrcamentoGerarScreen = () => {
       prazoProducao &&
       (prazoFrete === 0 || prazoFrete)
     ) {
-      console.log("00004");
+      // console.log("00004");
       calcPrevisao();
     }
   }, [cep]);
@@ -1266,7 +1268,7 @@ const OrcamentoGerarScreen = () => {
       prazoProducao &&
       (prazoFrete === 0 || prazoFrete)
     ) {
-      console.log("00005");
+      // console.log("00005");
       calcPrevisao();
     }
   }, [address]);
@@ -1281,7 +1283,7 @@ const OrcamentoGerarScreen = () => {
       prazoProducao &&
       (prazoFrete === 0 || prazoFrete)
     ) {
-      console.log("00006");
+      // console.log("00006");
       calcPrevisao();
     }
   }, [prazoProducao]);
@@ -1296,7 +1298,7 @@ const OrcamentoGerarScreen = () => {
       prazoProducao &&
       (prazoFrete === 0 || prazoFrete)
     ) {
-      console.log("00007");
+      // console.log("00007");
       calcPrevisao();
     }
   }, [prazoFrete]);
@@ -1311,7 +1313,7 @@ const OrcamentoGerarScreen = () => {
       prazoProducao &&
       (prazoFrete === 0 || prazoFrete)
     ) {
-      console.log("00009");
+      // console.log("00009");
       calcPrevisao();
     }
   }, [prazoProducao]);
@@ -1323,7 +1325,7 @@ const OrcamentoGerarScreen = () => {
 
   async function calcPrazoAntecipa() {
     if (isAnticipation && dataDesejadaEntrega) {
-      console.log("0020");
+      // console.log("0020");
       const hojeDate = getBrazilTime();
       const hojeLuxon = DateTime.fromJSDate(hojeDate).startOf("day");
       const dataDesejadaEntregaStart = dataDesejadaEntrega.startOf("day");
@@ -1335,13 +1337,13 @@ const OrcamentoGerarScreen = () => {
       );
 
       if (prazoFrete) {
-        console.log("0021");
+        // console.log("0021");
         const diffDias = dataDesejadaEntregaStart.diff(hojeLuxon, "days").days;
         setDiffHojeDataDesejadaEntrega(diffDias);
         const prazoProducaoAntecipado = diffDias - prazoFrete;
         setPrazoProducaoAntecipado(prazoProducaoAntecipado - qtdDiasNaoUteis);
       } else {
-        console.log("0023");
+        // console.log("0023");
         setPrazoProducaoAntecipado(
           dataDesejadaEntregaStart.diff(hojeLuxon, "days").days +
             -qtdDiasNaoUteis,
@@ -1360,9 +1362,9 @@ const OrcamentoGerarScreen = () => {
     }
   }, [dataDesejadaEntrega]);
 
-  useEffect(() => {
-    console.log(diffHojeDataDesejadaEntrega);
-  }, [diffHojeDataDesejadaEntrega]);
+  // useEffect(() => {
+  //   console.log(diffHojeDataDesejadaEntrega);
+  // }, [diffHojeDataDesejadaEntrega]);
 
   // useEffect(() => {
   //   console.log("prazoProducaoAntecipado: ", prazoProducaoAntecipado);
@@ -1392,15 +1394,15 @@ const OrcamentoGerarScreen = () => {
       ) {
         await new Promise((resolve) => setTimeout(resolve, 300));
         const safeDataFeriados = dataFeriados ?? { dias_feriados: [] };
-        console.log(safeDataFeriados);
+        // console.log(safeDataFeriados);
 
-        console.log(
-          "Calculando a previsão... inciando... shippingOption: ",
-          shippingOption,
-        );
+        // console.log(
+        //   "Calculando a previsão... inciando... shippingOption: ",
+        //   shippingOption,
+        // );
 
-        console.log("Calculando a previsão... prazoProducao: ", prazoProducao);
-        console.log("Calculando a previsão... prazoFrete: ", prazoFrete);
+        // console.log("Calculando a previsão... prazoProducao: ", prazoProducao);
+        // console.log("Calculando a previsão... prazoFrete: ", prazoFrete);
 
         await new Promise((resolve) => setTimeout(resolve, 300));
 
@@ -1414,10 +1416,10 @@ const OrcamentoGerarScreen = () => {
         await new Promise((resolve) => setTimeout(resolve, 300));
 
         setPrevisaoEntrega(dataPrevistaEntrega);
-        console.log(
-          "dataPrevistaEntrega",
-          dataPrevistaEntrega.toLocaleString(DateTime.DATE_FULL),
-        );
+        //   console.log(
+        //     "dataPrevistaEntrega",
+        //     dataPrevistaEntrega.toLocaleString(DateTime.DATE_FULL),
+        // );
 
         await new Promise((resolve) => setTimeout(resolve, 300));
 
@@ -1618,8 +1620,8 @@ const OrcamentoGerarScreen = () => {
 
     // console.log('Testando o estado previsaoEntrega: ', previsaoEntrega);
 
-    console.log("0019");
-    console.log(prazoProducaoAntecipado);
+    // console.log("0019");
+    // console.log(prazoProducaoAntecipado);
 
     const textoOrcamento = `
 Lista de Produtos:
@@ -3352,6 +3354,28 @@ Orçamento válido somente hoje.
                 </>
               )}
             </Button>
+
+            {/* Add a dropdown button */}
+            <Button
+              color="primary"
+              variant="contained"
+              sx={{ ml: 2 }}
+              aria-controls="simple-menu"
+              aria-haspopup="true"
+              onClick={(event) => setAnchorEl(event.currentTarget)}
+            >
+              Opções
+            </Button>
+            <Menu
+              id="simple-menu"
+              anchorEl={anchorEl}
+              keepMounted
+              open={Boolean(anchorEl)}
+              onClose={() => setAnchorEl(null)}
+            >
+              <MenuItem onClick={() => { setAnchorEl(null); /* Handle Orçamento click */ }}>Orçamento</MenuItem>
+              <MenuItem onClick={() => { setAnchorEl(null); /* Handle Proposta Comercial click */ }}>Proposta Comercial</MenuItem>
+            </Menu>
           </div>
 
           <Dialog
@@ -3473,25 +3497,7 @@ Orçamento válido somente hoje.
               </IconButton>
 
               <IconButton
-                onClick={() => {
-                  const htmlContent = `
-                  <style>
-                    body {
-                      color: black !important; /* Garante que o texto seja preto */
-                      font-family: Arial, sans-serif;
-                      font-size: 12px;
-                    }
-                    p {
-                      margin: 0;
-                    }
-                  </style>
-                  <div>
-                    <p><pre>${orçamentoTexto}</pre></p>
-                  </div>
-                `;
 
-                  formatarPDF(htmlContent, address); // Passa o HTML com a cor ajustada
-                }}
               >
                 <IconFileTypePdf />
                 <Typography variant="body2">Exportar PDF</Typography>
