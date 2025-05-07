@@ -25,6 +25,7 @@ const PageWrapper = styled("div")(() => ({
   zIndex: 1,
   width: "100%",
   backgroundColor: "transparent",
+  overflow: "hidden",
 }));
 
 interface Props {
@@ -71,13 +72,14 @@ export default function RootLayout({
           sx={{
             pt: '30px',
             maxWidth: customizer.isLayout === "boxed" ? "lg" : "100%!important",
+            overflow: "hidden",
           }}
         >
           {/* ------------------------------------------- */}
           {/* PageContent */}
           {/* ------------------------------------------- */}
 
-          <Box sx={{ minHeight: "calc(100vh - 170px)" }}>
+          <Box sx={{ minHeight: "calc(100vh - 170px)", overflow: "hidden" }}>
             {/* <Outlet /> */}
             {children}
             {/* <Index /> */}

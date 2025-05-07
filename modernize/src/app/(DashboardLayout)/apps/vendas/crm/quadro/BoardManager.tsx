@@ -239,7 +239,7 @@ const BoardManager = () => {
   );
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex", width: "100%", overflow: "hidden" }}>
       <Box
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
@@ -283,6 +283,7 @@ const BoardManager = () => {
           flexGrow: 1,
           p: 2,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
+          overflow: "hidden",
         }}
       >
         {selectedBoard && (
@@ -332,7 +333,7 @@ const BoardManager = () => {
                 />
               </Box>
             ) : (
-              <Box sx={{ flexGrow: 1, overflow: "hidden" }}>
+              <Box sx={{ flexGrow: 1, overflow: "hidden", width: "100%" }}>
                 <Board
                   board={selectedBoard}
                   onBoardUpdate={handleBoardUpdate}

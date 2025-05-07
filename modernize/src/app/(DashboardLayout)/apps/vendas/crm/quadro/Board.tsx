@@ -258,7 +258,7 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
   };
 
   return (
-    <Box sx={{ height: "100%", overflow: "hidden" }}>
+    <Box sx={{ height: "100%", overflow: "hidden", width: "100%" }}>
       <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
         <Typography variant="body2" color="textSecondary" sx={{ mr: 2 }}>
           Tipo de cartão:{" "}
@@ -276,7 +276,7 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
         </Button>
       </Box>
 
-      <Box sx={{ overflowX: "auto", pb: 2 }}>
+      <Box sx={{ overflowX: "auto", pb: 2, width: "100%" }}>
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="board" type="COLUMN" direction="horizontal">
             {(provided) => (
@@ -288,7 +288,7 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
                   minHeight: "500px",
                   gap: 2,
                   pb: 2,
-                  minWidth: 'max-content',
+                  width: "max-content",
                 }}
               >
                 {columns.map((column, index) => (
@@ -308,6 +308,7 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
                           display: "flex",
                           flexDirection: "column",
                           maxHeight: "100%",
+                          overflow: "hidden",
                         }}
                       >
                         <Box

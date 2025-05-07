@@ -27,7 +27,7 @@ function QuadroScreen() {
     <PageContainer title="Quadro" description="Visualização em Quadro">
       <Breadcrumb title="Quadro" items={BCrumb} />
 
-      <Box sx={{ width: "100%" }}>
+      <Box sx={{ width: "100%", overflow: "hidden" }}>
         <Paper elevation={0} sx={{ p: 3, mb: 4 }}>
           <Typography variant="h4" gutterBottom component="div">
             Quadro de Visualização
@@ -37,7 +37,10 @@ function QuadroScreen() {
           </Typography>
         </Paper>
 
-        <Paper elevation={2} sx={{ p: 3, minHeight: "600px" }}>
+        <Paper
+          elevation={2}
+          sx={{ p: 3, minHeight: "600px", overflow: "hidden" }}
+        >
           <BoardManager />
         </Paper>
       </Box>

@@ -1,4 +1,3 @@
-
 type Props = {
   description?: string;
   children: JSX.Element | JSX.Element[];
@@ -6,7 +5,7 @@ type Props = {
 };
 
 const PageContainer = ({ title, description, children }: Props) => (
-  <div>
+  <div style={{ width: '100%', overflow: 'hidden' }}>
     <title>{title}</title>
     <meta name="description" content={description} />
     {children}
