@@ -3355,29 +3355,6 @@ Orçamento válido somente hoje.
               )}
             </Button>
 
-            {/* Add a dropdown button */}
-            <Button
-              color="primary"
-              variant="contained"
-              sx={{ ml: 2 }}
-              aria-controls="simple-menu"
-              aria-haspopup="true"
-              onClick={(event) => setAnchorEl(event.currentTarget)}
-            >
-              Opções
-            </Button>
-            <Menu
-              id="simple-menu"
-              anchorEl={anchorEl}
-              keepMounted
-              open={Boolean(anchorEl)}
-              onClose={() => setAnchorEl(null)}
-            >
-              <MenuItem onClick={() => { setAnchorEl(null); /* Handle Orçamento click */ }}>Orçamento</MenuItem>
-              <MenuItem onClick={() => { setAnchorEl(null); /* Handle Proposta Comercial click */ }}>Proposta Comercial</MenuItem>
-            </Menu>
-          </div>
-
           <Dialog
             open={openBudget}
             onClose={handleCloseBudget}
