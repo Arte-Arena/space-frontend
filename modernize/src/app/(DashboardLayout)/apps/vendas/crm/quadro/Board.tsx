@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -25,7 +25,6 @@ import {
   IconGripVertical,
   IconX,
 } from "@tabler/icons-react";
-import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 
 interface Item {
@@ -68,15 +67,9 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
     string | null
   >(null);
 
-  const notifyUpdate = (action: string, details: string) => {
-    if (onBoardUpdate) {
-      const updatedBoard = {
-        ...board,
-        columns,
-      };
-      onBoardUpdate(updatedBoard, action, details);
-    }
-  };
+  useEffect(() => {
+    setColumns(board.columns);
+  }, [board.id, board.columns]);
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination, type, draggableId } = result;
@@ -93,12 +86,21 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
       const reorderedColumns = [...columns];
       const [movedColumn] = reorderedColumns.splice(source.index, 1);
       reorderedColumns.splice(destination.index, 0, movedColumn);
+
       setColumns(reorderedColumns);
 
-      notifyUpdate(
-        "move_column",
-        `Coluna "${movedColumn.title}" movida da posição ${source.index + 1} para ${destination.index + 1}`,
-      );
+      const updatedBoard = {
+        ...board,
+        columns: reorderedColumns,
+      };
+
+      if (onBoardUpdate) {
+        onBoardUpdate(
+          updatedBoard,
+          "move_column",
+          `Coluna "${movedColumn.title}" movida da posição ${source.index + 1} para ${destination.index + 1}`,
+        );
+      }
 
       return;
     }
@@ -109,27 +111,39 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
     );
 
     if (sourceColumn && destColumn) {
+      let newColumns;
+      let movedItem;
+
       if (source.droppableId === destination.droppableId) {
         const newItems = [...sourceColumn.items];
-        const [movedItem] = newItems.splice(source.index, 1);
+        [movedItem] = newItems.splice(source.index, 1);
         newItems.splice(destination.index, 0, movedItem);
 
-        const newColumns = columns.map((col) =>
+        newColumns = columns.map((col) =>
           col.id === sourceColumn.id ? { ...col, items: newItems } : col,
         );
+
         setColumns(newColumns);
 
-        notifyUpdate(
-          "move_card",
-          `Cartão "${movedItem.content.substring(0, 30)}${movedItem.content.length > 30 ? "..." : ""}" reordenado dentro da coluna "${sourceColumn.title}"`,
-        );
+        const updatedBoard = {
+          ...board,
+          columns: newColumns,
+        };
+
+        if (onBoardUpdate) {
+          onBoardUpdate(
+            updatedBoard,
+            "move_card",
+            `Cartão "${movedItem.content.substring(0, 30)}${movedItem.content.length > 30 ? "..." : ""}" reordenado dentro da coluna "${sourceColumn.title}"`,
+          );
+        }
       } else {
         const sourceItems = [...sourceColumn.items];
         const destItems = [...destColumn.items];
-        const [movedItem] = sourceItems.splice(source.index, 1);
+        [movedItem] = sourceItems.splice(source.index, 1);
         destItems.splice(destination.index, 0, movedItem);
 
-        const newColumns = columns.map((col) => {
+        newColumns = columns.map((col) => {
           if (col.id === sourceColumn.id) {
             return { ...col, items: sourceItems };
           }
@@ -141,10 +155,18 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
 
         setColumns(newColumns);
 
-        notifyUpdate(
-          "move_card",
-          `Cartão "${movedItem.content.substring(0, 30)}${movedItem.content.length > 30 ? "..." : ""}" movido da coluna "${sourceColumn.title}" para "${destColumn.title}"`,
-        );
+        const updatedBoard = {
+          ...board,
+          columns: newColumns,
+        };
+
+        if (onBoardUpdate) {
+          onBoardUpdate(
+            updatedBoard,
+            "move_card",
+            `Cartão "${movedItem.content.substring(0, 30)}${movedItem.content.length > 30 ? "..." : ""}" movido da coluna "${sourceColumn.title}" para "${destColumn.title}"`,
+          );
+        }
       }
     }
   };
@@ -152,29 +174,50 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
   const handleAddColumn = () => {
     if (newColumnTitle.trim()) {
       const newColumn: Column = {
-        id: `col-${Date.now()}`,
+        id: `col-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         title: newColumnTitle,
         items: [],
       };
       const updatedColumns = [...columns, newColumn];
+
       setColumns(updatedColumns);
       setNewColumnTitle("");
       setIsAddColumnDialogOpen(false);
 
-      notifyUpdate("add_column", `Coluna "${newColumn.title}" adicionada`);
+      const updatedBoard = {
+        ...board,
+        columns: updatedColumns,
+      };
+
+      if (onBoardUpdate) {
+        onBoardUpdate(
+          updatedBoard,
+          "add_column",
+          `Coluna "${newColumn.title}" adicionada`,
+        );
+      }
     }
   };
 
   const handleDeleteColumn = (columnId: string) => {
     const columnToDelete = columns.find((col) => col.id === columnId);
     const newColumns = columns.filter((col) => col.id !== columnId);
+
     setColumns(newColumns);
 
     if (columnToDelete) {
-      notifyUpdate(
-        "delete_column",
-        `Coluna "${columnToDelete.title}" removida`,
-      );
+      const updatedBoard = {
+        ...board,
+        columns: newColumns,
+      };
+
+      if (onBoardUpdate) {
+        onBoardUpdate(
+          updatedBoard,
+          "delete_column",
+          `Coluna "${columnToDelete.title}" removida`,
+        );
+      }
     }
   };
 
@@ -196,10 +239,18 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
       setColumns(newColumns);
       setIsEditColumnDialogOpen(false);
 
-      notifyUpdate(
-        "edit_column",
-        `Coluna "${oldTitle}" renomeada para "${editColumnTitle}"`,
-      );
+      const updatedBoard = {
+        ...board,
+        columns: newColumns,
+      };
+
+      if (onBoardUpdate) {
+        onBoardUpdate(
+          updatedBoard,
+          "edit_column",
+          `Coluna "${oldTitle}" renomeada para "${editColumnTitle}"`,
+        );
+      }
     }
   };
 
@@ -212,7 +263,7 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
   const handleAddCard = () => {
     if (currentColumnForCard && newCardContent.trim()) {
       const newCard: Item = {
-        id: `item-${Date.now()}`,
+        id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         content: newCardContent,
       };
 
@@ -229,10 +280,18 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
       setIsAddCardDialogOpen(false);
 
       if (targetColumn) {
-        notifyUpdate(
-          "add_card",
-          `Cartão adicionado na coluna "${targetColumn.title}"`,
-        );
+        const updatedBoard = {
+          ...board,
+          columns: newColumns,
+        };
+
+        if (onBoardUpdate) {
+          onBoardUpdate(
+            updatedBoard,
+            "add_card",
+            `Cartão adicionado na coluna "${targetColumn.title}"`,
+          );
+        }
       }
     }
   };
@@ -250,10 +309,18 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
     setColumns(newColumns);
 
     if (targetColumn && cardToDelete) {
-      notifyUpdate(
-        "delete_card",
-        `Cartão "${cardToDelete.content.substring(0, 30)}${cardToDelete.content.length > 30 ? "..." : ""}" removido da coluna "${targetColumn.title}"`,
-      );
+      const updatedBoard = {
+        ...board,
+        columns: newColumns,
+      };
+
+      if (onBoardUpdate) {
+        onBoardUpdate(
+          updatedBoard,
+          "delete_card",
+          `Cartão "${cardToDelete.content.substring(0, 30)}${cardToDelete.content.length > 30 ? "..." : ""}" removido da coluna "${targetColumn.title}"`,
+        );
+      }
     }
   };
 

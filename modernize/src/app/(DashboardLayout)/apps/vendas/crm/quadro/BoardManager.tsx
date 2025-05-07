@@ -15,7 +15,7 @@ import {
   Tabs,
   Tab,
 } from "@mui/material";
-import { IconPlus, IconEdit, IconX, IconHistory } from "@tabler/icons-react";
+import { IconPlus, IconX, IconHistory } from "@tabler/icons-react";
 import Board from "./Board";
 import CreateBoardDialog from "./CreateBoardDialog";
 import BoardHistory from "./BoardHistory";
@@ -48,19 +48,35 @@ interface BoardData {
   columns: Column[];
 }
 
+const getDefaultColumns = (cardType: string): Column[] => {
+  if (cardType === "lead") {
+    return [
+      { id: `col-${Date.now()}-1`, title: "Prospecção", items: [] },
+      { id: `col-${Date.now()}-2`, title: "Contato Inicial", items: [] },
+      { id: `col-${Date.now()}-3`, title: "Apresentação", items: [] },
+      { id: `col-${Date.now()}-4`, title: "Proposta", items: [] },
+      { id: `col-${Date.now()}-5`, title: "Negociação", items: [] },
+      { id: `col-${Date.now()}-6`, title: "Fechamento", items: [] },
+    ];
+  } else if (cardType === "orcamento") {
+    return [
+      { id: `col-${Date.now()}-1`, title: "Solicitado", items: [] },
+      { id: `col-${Date.now()}-2`, title: "Em Análise", items: [] },
+      { id: `col-${Date.now()}-3`, title: "Enviado", items: [] },
+      { id: `col-${Date.now()}-4`, title: "Em Negociação", items: [] },
+      { id: `col-${Date.now()}-5`, title: "Aprovado", items: [] },
+      { id: `col-${Date.now()}-6`, title: "Recusado", items: [] },
+    ];
+  }
+  return [{ id: `col-${Date.now()}-1`, title: "Nova Coluna", items: [] }];
+};
+
 const initialBoards = [
   {
     id: "1",
     name: "Funil de Vendas",
     cardType: "lead",
-    columns: [
-      { id: "col-1", title: "Prospecção", items: [] },
-      { id: "col-2", title: "Contato Inicial", items: [] },
-      { id: "col-3", title: "Apresentação", items: [] },
-      { id: "col-4", title: "Proposta", items: [] },
-      { id: "col-5", title: "Negociação", items: [] },
-      { id: "col-6", title: "Fechamento", items: [] },
-    ],
+    columns: getDefaultColumns("lead"),
   },
 ];
 
@@ -104,7 +120,7 @@ const BoardManager = () => {
       id: Date.now().toString(),
       name: boardName,
       cardType: cardType,
-      columns: [{ id: `col-${Date.now()}-1`, title: "Nova Coluna", items: [] }],
+      columns: getDefaultColumns(cardType),
     };
 
     setBoards([...boards, newBoard]);
