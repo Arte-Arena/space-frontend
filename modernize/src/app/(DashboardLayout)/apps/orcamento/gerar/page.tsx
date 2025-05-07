@@ -3355,6 +3355,8 @@ Orçamento válido somente hoje.
               )}
             </Button>
 
+          </div>
+
           <Dialog
             open={openBudget}
             onClose={handleCloseBudget}
