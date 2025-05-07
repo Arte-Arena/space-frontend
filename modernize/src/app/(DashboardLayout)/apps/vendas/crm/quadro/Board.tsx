@@ -11,6 +11,15 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Chip,
+  Avatar,
+  Divider,
+  Stack,
+  Tooltip,
+  Grid,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
 import {
   DragDropContext,
@@ -24,12 +33,34 @@ import {
   IconEdit,
   IconGripVertical,
   IconX,
+  IconUser,
+  IconPhone,
+  IconMail,
+  IconId,
+  IconBuilding,
+  IconEye,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import "simplebar-react/dist/simplebar.min.css";
+import LeadSearchDialog from "./LeadSearchDialog";
+
+interface LeadCardData {
+  nome?: string;
+  email?: string;
+  telefone?: string;
+  status?: string;
+  origem?: string;
+  id?: string;
+  orcamento_id?: string;
+  cpfCnpj?: string;
+  jaCadastrado?: boolean;
+  [key: string]: any;
+}
 
 interface Item {
   id: string;
   content: string;
+  parsedData?: LeadCardData;
 }
 
 interface Column {
@@ -62,14 +93,55 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
   );
   const [editColumnTitle, setEditColumnTitle] = useState("");
   const [isAddCardDialogOpen, setIsAddCardDialogOpen] = useState(false);
+  const [isLeadSearchDialogOpen, setIsLeadSearchDialogOpen] = useState(false);
   const [newCardContent, setNewCardContent] = useState("");
   const [currentColumnForCard, setCurrentColumnForCard] = useState<
     string | null
   >(null);
+  const [selectedCard, setSelectedCard] = useState<Item | null>(null);
+  const [isCardDetailsDialogOpen, setIsCardDetailsDialogOpen] = useState(false);
 
   useEffect(() => {
-    setColumns(board.columns);
+    // Parse existing card content to structured data
+    const parsedColumns = board.columns.map((column) => ({
+      ...column,
+      items: column.items.map((item) => ({
+        ...item,
+        parsedData: parseCardContent(item.content),
+      })),
+    }));
+
+    setColumns(parsedColumns);
   }, [board.id, board.columns]);
+
+  // Parse card content string to structured data
+  const parseCardContent = (content: string): LeadCardData => {
+    const data: LeadCardData = {};
+
+    const lines = content.split("\n");
+    lines.forEach((line) => {
+      const match = line.match(/^(.*?):\s*(.*?)$/);
+      if (match) {
+        const [, key, value] = match;
+        const normalizedKey = key.toLowerCase().trim();
+
+        if (normalizedKey === "nome") data.nome = value.trim();
+        else if (normalizedKey === "email") data.email = value.trim();
+        else if (normalizedKey === "telefone") data.telefone = value.trim();
+        else if (normalizedKey === "status") data.status = value.trim();
+        else if (normalizedKey === "origem") data.origem = value.trim();
+        else if (normalizedKey === "id") data.id = value.trim();
+        else if (normalizedKey === "orçamento")
+          data.orcamento_id = value.trim();
+        else if (normalizedKey === "cpf/cnpj") data.cpfCnpj = value.trim();
+        else if (normalizedKey.includes("cadastrado"))
+          data.jaCadastrado = value.includes("cadastrado");
+        else data[normalizedKey] = value.trim();
+      }
+    });
+
+    return data;
+  };
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination, type, draggableId } = result;
@@ -256,8 +328,13 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
 
   const handleAddCardOpen = (columnId: string) => {
     setCurrentColumnForCard(columnId);
-    setNewCardContent("");
-    setIsAddCardDialogOpen(true);
+
+    if (board.cardType === "lead") {
+      setIsLeadSearchDialogOpen(true);
+    } else {
+      setNewCardContent("");
+      setIsAddCardDialogOpen(true);
+    }
   };
 
   const handleAddCard = () => {
@@ -296,6 +373,45 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
     }
   };
 
+  const handleLeadSelect = (leadContent: string) => {
+    if (currentColumnForCard) {
+      const parsedData = parseCardContent(leadContent);
+
+      const newCard: Item = {
+        id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        content: leadContent,
+        parsedData,
+      };
+
+      const targetColumn = columns.find(
+        (col) => col.id === currentColumnForCard,
+      );
+      const newColumns = columns.map((col) =>
+        col.id === currentColumnForCard
+          ? { ...col, items: [...col.items, newCard] }
+          : col,
+      );
+
+      setColumns(newColumns);
+      setIsLeadSearchDialogOpen(false);
+
+      if (targetColumn) {
+        const updatedBoard = {
+          ...board,
+          columns: newColumns,
+        };
+
+        if (onBoardUpdate) {
+          onBoardUpdate(
+            updatedBoard,
+            "add_card",
+            `Lead adicionado na coluna "${targetColumn.title}"`,
+          );
+        }
+      }
+    }
+  };
+
   const handleDeleteCard = (columnId: string, cardId: string) => {
     const targetColumn = columns.find((col) => col.id === columnId);
     const cardToDelete = targetColumn?.items.find((item) => item.id === cardId);
@@ -322,6 +438,11 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
         );
       }
     }
+  };
+
+  const handleOpenCardDetails = (item: Item) => {
+    setSelectedCard(item);
+    setIsCardDetailsDialogOpen(true);
   };
 
   return (
@@ -463,47 +584,184 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
                                           board.cardType === "lead"
                                             ? "primary.main"
                                             : "warning.main",
+                                        cursor: "pointer",
+                                        "&:hover": {
+                                          boxShadow: 3,
+                                        },
+                                        transition: "all 0.2s ease-in-out",
+                                        borderRadius: "8px",
+                                        "&:active": {
+                                          transform: "scale(0.98)",
+                                        },
+                                      }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenCardDetails(item);
                                       }}
                                     >
-                                      <Box sx={{ mb: 1 }}>
-                                        <Typography
-                                          variant="caption"
+                                      <Box
+                                        sx={{
+                                          mb: 1,
+                                          display: "flex",
+                                          justifyContent: "space-between",
+                                          alignItems: "center",
+                                        }}
+                                      >
+                                        <Chip
+                                          size="small"
+                                          label={
+                                            board.cardType === "lead"
+                                              ? "Lead"
+                                              : "Orçamento"
+                                          }
+                                          color={
+                                            board.cardType === "lead"
+                                              ? "primary"
+                                              : "warning"
+                                          }
+                                          variant="outlined"
+                                        />
+                                        {item.parsedData?.status && (
+                                          <Chip
+                                            size="small"
+                                            label={item.parsedData.status}
+                                            color={
+                                              item.parsedData.status ===
+                                              "Convertido"
+                                                ? "success"
+                                                : item.parsedData.status ===
+                                                    "Aprovado"
+                                                  ? "info"
+                                                  : item.parsedData.status ===
+                                                      "Perdido"
+                                                    ? "error"
+                                                    : item.parsedData.status ===
+                                                        "Em andamento"
+                                                      ? "warning"
+                                                      : "default"
+                                            }
+                                          />
+                                        )}
+                                      </Box>
+
+                                      {item.parsedData?.nome && (
+                                        <Box
                                           sx={{
-                                            display: "inline-block",
-                                            px: 1,
-                                            py: 0.5,
-                                            borderRadius: 1,
-                                            bgcolor:
-                                              board.cardType === "lead"
-                                                ? "primary.light"
-                                                : "warning.light",
-                                            color:
-                                              board.cardType === "lead"
-                                                ? "primary.contrastText"
-                                                : "warning.contrastText",
+                                            mb: 1,
+                                            display: "flex",
+                                            alignItems: "center",
                                           }}
                                         >
-                                          {board.cardType === "lead"
-                                            ? "Lead"
-                                            : "Orçamento"}
-                                        </Typography>
-                                      </Box>
-                                      <Typography variant="body2">
-                                        {item.content}
-                                      </Typography>
-                                      <IconButton
-                                        size="small"
+                                          <Avatar
+                                            sx={{
+                                              width: 24,
+                                              height: 24,
+                                              mr: 1,
+                                              bgcolor: "primary.main",
+                                            }}
+                                          >
+                                            <IconUser size="1rem" />
+                                          </Avatar>
+                                          <Typography
+                                            variant="subtitle2"
+                                            noWrap
+                                            sx={{ fontWeight: "medium" }}
+                                          >
+                                            {item.parsedData.nome}
+                                          </Typography>
+                                        </Box>
+                                      )}
+
+                                      {item.parsedData?.telefone && (
+                                        <Box
+                                          sx={{
+                                            mb: 0.5,
+                                            display: "flex",
+                                            alignItems: "center",
+                                          }}
+                                        >
+                                          <IconPhone
+                                            size="0.9rem"
+                                            style={{
+                                              marginRight: 4,
+                                              opacity: 0.7,
+                                            }}
+                                          />
+                                          <Typography
+                                            variant="caption"
+                                            noWrap
+                                            sx={{ color: "text.secondary" }}
+                                          >
+                                            {item.parsedData.telefone}
+                                          </Typography>
+                                        </Box>
+                                      )}
+
+                                      {item.parsedData?.email && (
+                                        <Box
+                                          sx={{
+                                            mb: 0.5,
+                                            display: "flex",
+                                            alignItems: "center",
+                                          }}
+                                        >
+                                          <IconMail
+                                            size="0.9rem"
+                                            style={{
+                                              marginRight: 4,
+                                              opacity: 0.7,
+                                            }}
+                                          />
+                                          <Typography
+                                            variant="caption"
+                                            noWrap
+                                            sx={{ color: "text.secondary" }}
+                                          >
+                                            {item.parsedData.email}
+                                          </Typography>
+                                        </Box>
+                                      )}
+
+                                      <Box
                                         sx={{
-                                          position: "absolute",
-                                          top: 2,
-                                          right: 2,
+                                          mt: 1,
+                                          display: "flex",
+                                          justifyContent: "space-between",
+                                          alignItems: "center",
+                                          borderTop: "1px dashed",
+                                          borderColor: "divider",
+                                          pt: 1,
                                         }}
-                                        onClick={() =>
-                                          handleDeleteCard(column.id, item.id)
-                                        }
                                       >
-                                        <IconX size="0.8rem" />
-                                      </IconButton>
+                                        <Tooltip title="Ver detalhes">
+                                          <IconButton
+                                            size="small"
+                                            color="primary"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleOpenCardDetails(item);
+                                            }}
+                                          >
+                                            <IconEye size="0.9rem" />
+                                          </IconButton>
+                                        </Tooltip>
+
+                                        <IconButton
+                                          size="small"
+                                          sx={{
+                                            color: "error.main",
+                                          }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteCard(
+                                              column.id,
+                                              item.id,
+                                            );
+                                          }}
+                                        >
+                                          <IconX size="0.8rem" />
+                                        </IconButton>
+                                      </Box>
                                     </Paper>
                                   )}
                                 </Draggable>
@@ -630,6 +888,226 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog
+        open={isCardDetailsDialogOpen}
+        onClose={() => setIsCardDetailsDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        TransitionProps={{
+          enter: true,
+          exit: true,
+        }}
+        PaperProps={{
+          elevation: 2,
+          sx: { borderRadius: 2 },
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Avatar
+                sx={{
+                  mr: 2,
+                  bgcolor:
+                    board.cardType === "lead" ? "primary.main" : "warning.main",
+                  width: 40,
+                  height: 40,
+                }}
+              >
+                <IconUser size="1.5rem" />
+              </Avatar>
+              <Typography variant="h6">
+                {board.cardType === "lead"
+                  ? "Detalhes do Lead"
+                  : "Detalhes do Orçamento"}
+              </Typography>
+            </Box>
+            {selectedCard?.parsedData?.status && (
+              <Chip
+                label={selectedCard.parsedData.status}
+                color={
+                  selectedCard.parsedData.status === "Convertido"
+                    ? "success"
+                    : selectedCard.parsedData.status === "Aprovado"
+                      ? "info"
+                      : selectedCard.parsedData.status === "Perdido"
+                        ? "error"
+                        : selectedCard.parsedData.status === "Em andamento"
+                          ? "warning"
+                          : "default"
+                }
+              />
+            )}
+          </Box>
+        </DialogTitle>
+        <Divider />
+        <DialogContent>
+          {selectedCard && (
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <Box
+                sx={{
+                  p: 2,
+                  bgcolor: "background.default",
+                  borderRadius: 1,
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                {selectedCard.parsedData?.nome && (
+                  <Box sx={{ mb: 2, display: "flex", alignItems: "center" }}>
+                    <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
+                      {selectedCard.parsedData.nome.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h6">
+                        {selectedCard.parsedData.nome}
+                      </Typography>
+                      {selectedCard.parsedData?.jaCadastrado !== undefined && (
+                        <Chip
+                          size="small"
+                          label={
+                            selectedCard.parsedData.jaCadastrado
+                              ? "Cliente cadastrado"
+                              : "Lead não cadastrado"
+                          }
+                          color={
+                            selectedCard.parsedData.jaCadastrado
+                              ? "success"
+                              : "default"
+                          }
+                          sx={{ mt: 0.5 }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                )}
+
+                <Stack spacing={1.5} sx={{ ml: 1 }}>
+                  {selectedCard.parsedData?.email && (
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <IconMail size="1.2rem" style={{ marginRight: 8 }} />
+                      <Typography variant="body2">
+                        {selectedCard.parsedData.email}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {selectedCard.parsedData?.telefone && (
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <IconPhone size="1.2rem" style={{ marginRight: 8 }} />
+                      <Typography variant="body2">
+                        {selectedCard.parsedData.telefone}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {selectedCard.parsedData?.cpfCnpj && (
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <IconId size="1.2rem" style={{ marginRight: 8 }} />
+                      <Typography variant="body2">
+                        {selectedCard.parsedData.cpfCnpj}
+                      </Typography>
+                    </Box>
+                  )}
+                </Stack>
+              </Box>
+
+              <Paper variant="outlined" sx={{ p: 2 }}>
+                <Typography
+                  variant="subtitle2"
+                  color="textSecondary"
+                  gutterBottom
+                >
+                  Informações Adicionais
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+
+                <Grid container spacing={2}>
+                  {selectedCard.parsedData?.origem && (
+                    <Grid item xs={6}>
+                      <Typography
+                        variant="caption"
+                        color="textSecondary"
+                        display="block"
+                      >
+                        Origem
+                      </Typography>
+                      <Typography variant="body2">
+                        {selectedCard.parsedData.origem}
+                      </Typography>
+                    </Grid>
+                  )}
+
+                  {selectedCard.parsedData?.id && (
+                    <Grid item xs={6}>
+                      <Typography
+                        variant="caption"
+                        color="textSecondary"
+                        display="block"
+                      >
+                        ID
+                      </Typography>
+                      <Typography variant="body2">
+                        {selectedCard.parsedData.id}
+                      </Typography>
+                    </Grid>
+                  )}
+
+                  {selectedCard.parsedData?.orcamento_id && (
+                    <Grid item xs={6}>
+                      <Typography
+                        variant="caption"
+                        color="textSecondary"
+                        display="block"
+                      >
+                        Orçamento
+                      </Typography>
+                      <Typography variant="body2">
+                        {selectedCard.parsedData.orcamento_id}
+                      </Typography>
+                    </Grid>
+                  )}
+                </Grid>
+              </Paper>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsCardDetailsDialogOpen(false)}>
+            Fechar
+          </Button>
+          {selectedCard?.parsedData?.id && (
+            <Button
+              variant="contained"
+              color={board.cardType === "lead" ? "primary" : "warning"}
+              startIcon={
+                board.cardType === "lead" ? (
+                  <IconUser size="1rem" />
+                ) : (
+                  <IconBuilding size="1rem" />
+                )
+              }
+            >
+              {board.cardType === "lead"
+                ? "Ver Perfil do Lead"
+                : "Ver Orçamento"}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      <LeadSearchDialog
+        open={isLeadSearchDialogOpen}
+        onClose={() => setIsLeadSearchDialogOpen(false)}
+        onSelectLead={handleLeadSelect}
+      />
     </Box>
   );
 };
