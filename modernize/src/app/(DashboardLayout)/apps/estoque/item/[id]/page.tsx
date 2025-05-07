@@ -235,7 +235,7 @@ const FornecedoresProdutosEstoque = ({ fornecedores, produtos, loadingFornecedor
               ))
             ) : (
               <Grid item xs={12}>
-                <Typography color="error">
+                <Typography color="warning.main">
                   {errorProduto || 'Nenhum produto encontrado.'}
                 </Typography>
               </Grid>
@@ -270,7 +270,7 @@ const FornecedoresProdutosEstoque = ({ fornecedores, produtos, loadingFornecedor
             </Grid>
           ))
         ) : (
-          <Typography sx={{ p: 2, mt: 1 }} color="error">
+          <Typography sx={{ p: 2, mt: 1 }} color="warning.main">
             {errorFornecedores || 'Nenhum fornecedor encontrado.'}
           </Typography>
         )}
@@ -421,7 +421,8 @@ export default function EstoqueDetailPage() {
             ? err.response.data
             : JSON.stringify(err.response.data.message)
           : err.message;
-        setErrorFornecedores(msg);
+        console.error(msg);
+        setErrorFornecedores('Nenhum fornecedor encontrado.');
       })
       .finally(() => setLoadingFornecedores(false));
   }, [estoque, produto]);
@@ -446,7 +447,8 @@ export default function EstoqueDetailPage() {
         setProduto(produtosArray);
       } catch (err) {
         if (!axios.isCancel(err)) {
-          setErrorProduto('Erro ao carregar produtos.' + err);
+          console.error('Erro ao carregar produtos.' + err);
+          setErrorProduto('Produto não encontrado para esse item do estoque.');
         }
       } finally {
         setLoadingProduto(false);

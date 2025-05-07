@@ -399,9 +399,22 @@ const getMenuItems = (): MenuitemsType[] => {
             },
             {
               id: uniqueId(),
-              title: "Ordem de compra",
+              title: "Movimentações",
               icon: IconCubePlus,
-              href: "/apps/estoque/ordem-compra",
+              children: [
+                {
+                  id: uniqueId(),
+                  title: "Ver Movimentações",
+                  icon: IconCubePlus,
+                  href: "/apps/estoque/movimentacoes",
+                },
+                {
+                  id: uniqueId(),
+                  title: "Compra & Venda",
+                  icon: IconCubePlus,
+                  href: "/apps/estoque/movimentacoes/ordens",
+                },
+              ],
             },
             {
               id: uniqueId(),
