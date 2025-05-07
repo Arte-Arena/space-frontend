@@ -276,7 +276,7 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
         </Button>
       </Box>
 
-      <SimpleBar style={{ overflowX: "auto" }}>
+      <Box sx={{ overflowX: "auto", pb: 2 }}>
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="board" type="COLUMN" direction="horizontal">
             {(provided) => (
@@ -288,6 +288,7 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
                   minHeight: "500px",
                   gap: 2,
                   pb: 2,
+                  minWidth: 'max-content',
                 }}
               >
                 {columns.map((column, index) => (
@@ -464,7 +465,7 @@ const Board: React.FC<BoardProps> = ({ board, onBoardUpdate }) => {
             )}
           </Droppable>
         </DragDropContext>
-      </SimpleBar>
+      </Box>
 
       <Dialog
         open={isAddColumnDialogOpen}
