@@ -1,89 +1,70 @@
-import React, { useEffect, useState } from "react";
-import Alert from '@mui/material/Alert'
-import Avatar from '@mui/material/Avatar'
-import Badge from '@mui/material/Badge'
-import Box from '@mui/material/Box'
-import Button from '@mui/material/Button'
-import InputAdornment from '@mui/material/InputAdornment'
-import List from '@mui/material/List'
-import ListItemAvatar from '@mui/material/ListItemAvatar'
-import ListItemButton from '@mui/material/ListItemButton'
-import ListItemText from '@mui/material/ListItemText'
-import Menu from '@mui/material/Menu'
-import MenuItem from '@mui/material/MenuItem'
-import TextField from '@mui/material/TextField'
-import Typography from '@mui/material/Typography'
+import React, { useState } from "react";
+import Alert from '@mui/material/Alert';
+import Avatar from '@mui/material/Avatar';
+import Badge from '@mui/material/Badge';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import InputAdornment from '@mui/material/InputAdornment';
+import List from '@mui/material/List';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemText from '@mui/material/ListItemText';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import { useSelector, useDispatch } from "@/store/hooks";
 import Scrollbar from "../../custom-scroll/Scrollbar";
-import {
-  SelectChat,
-  fetchChats,
-  SearchChat,
-} from "@/store/apps/chat/ChatSlice";
-import { ChatsType } from '../../../(DashboardLayout)/types/apps/chat';
+import { SelectChat, SearchChat } from "@/store/apps/chat/ChatSlice";
+import type { ChatsType } from '../../../(DashboardLayout)/types/apps/chat';
 import { last } from "lodash";
 import { formatDistanceToNowStrict } from "date-fns";
 import { IconChevronDown, IconSearch } from "@tabler/icons-react";
 
 const ChatListing = () => {
-
   const dispatch = useDispatch();
   const activeChat = useSelector((state) => state.chatReducer.chatContent);
-
-  useEffect(() => {
-    dispatch(fetchChats());
-  }, [dispatch]);
+  const chatSearch = useSelector((state) => state.chatReducer.chatSearch);
+  const chats = useSelector((state) =>
+    // filtra já o estado atualizado pelo WS
+    state.chatReducer.chats.filter((t: ChatsType) =>
+      t.name.toLocaleLowerCase().includes(chatSearch.toLocaleLowerCase())
+    )
+  );
 
   const filterChats = (chats: ChatsType[], cSearch: string) => {
-    if (chats)
+    if (chats) {
       return chats.filter((t) =>
         t.name.toLocaleLowerCase().includes(cSearch.toLocaleLowerCase())
       );
-
+    }
     return chats;
   };
 
-  const chats = useSelector((state) =>
-    filterChats(state.chatReducer.chats, state.chatReducer.chatSearch)
-  );
-
   const getDetails = (conversation: ChatsType) => {
-    let displayText = "";
-
-    const lastMessage = conversation.messages[conversation.messages.length - 1];
-    if (lastMessage) {
-      const sender = lastMessage.senderId === conversation.id ? "You: " : "";
-      const message =
-        lastMessage.type === "image" ? "Sent a photo" : lastMessage.msg;
-      displayText = `${sender}${message}`;
-    }
-
-    return displayText;
+    const lastMsg = last(conversation.messages);
+    if (!lastMsg) return "";
+    const sender = lastMsg.senderId === conversation.id ? "You: " : "";
+    const text = lastMsg.type === "image" ? "Sent a photo" : lastMsg.msg;
+    return `${sender}${text}`;
   };
 
   const lastActivity = (chat: ChatsType) => last(chat.messages)?.createdAt;
 
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  // estado do menu de ordenação
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) =>
+    setAnchorEl(e.currentTarget);
+  const handleClose = () => setAnchorEl(null);
 
   return (
     <div>
-      {/* ------------------------------------------- */}
       {/* Profile */}
-      {/* ------------------------------------------- */}
-      <Box display={"flex"} alignItems="center" gap="10px" p={3}>
+      <Box display="flex" alignItems="center" gap="10px" p={3}>
         <Badge
           variant="dot"
-          anchorOrigin={{
-            vertical: "bottom",
-            horizontal: "right",
-          }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           overlap="circular"
           color="success"
         >
@@ -100,77 +81,56 @@ const ChatListing = () => {
           <Typography variant="body2">Designer</Typography>
         </Box>
       </Box>
-      {/* ------------------------------------------- */}
+
       {/* Search */}
-      {/* ------------------------------------------- */}
       <Box px={3} py={1}>
         <TextField
-          id="outlined-search"
           placeholder="Search contacts"
           size="small"
           type="search"
-          variant="outlined"
+          fullWidth
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconSearch size={"16"} />
+                <IconSearch size={16} />
               </InputAdornment>
             ),
           }}
-          fullWidth
           onChange={(e) => dispatch(SearchChat(e.target.value))}
         />
       </Box>
-      {/* ------------------------------------------- */}
+
       {/* Contact List */}
-      {/* ------------------------------------------- */}
       <List sx={{ px: 0 }}>
         <Box px={2.5} pb={1}>
-          <Button
-            id="basic-button"
-            aria-controls={open ? "basic-menu" : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? "true" : undefined}
-            onClick={handleClick}
-            color="inherit"
-          >
-            Recent Chats <IconChevronDown size="16" />
+          <Button onClick={handleClick} color="inherit">
+            Recent Chats <IconChevronDown size={16} />
           </Button>
           <Menu
-            id="basic-menu"
             anchorEl={anchorEl}
             open={open}
             onClose={handleClose}
-            MenuListProps={{
-              "aria-labelledby": "basic-button",
-            }}
+            MenuListProps={{ "aria-labelledby": "basic-button" }}
           >
             <MenuItem onClick={handleClose}>Sort By Time</MenuItem>
             <MenuItem onClick={handleClose}>Sort By Unread</MenuItem>
-            <MenuItem onClick={handleClose}>Mark as all Read</MenuItem>
+            <MenuItem onClick={handleClose}>Mark all Read</MenuItem>
           </Menu>
         </Box>
+
         <Scrollbar
           sx={{
             height: { lg: "calc(100vh - 100px)", md: "100vh" },
             maxHeight: "600px",
           }}
         >
-          {chats && chats.length ? (
+          {chats.length > 0 ? (
             chats.map((chat) => (
               <ListItemButton
                 key={chat.id}
-                onClick={() => {
-                  console.log('[ChatListing] 👉 Clicou em:', chat.id, chat.name)
-                  dispatch(SelectChat(String(chat.id)))
-                }}
-                sx={{
-                  mb: 0.5,
-                  py: 2,
-                  px: 3,
-                  alignItems: "start",
-                }}
                 selected={activeChat === chat.id}
+                onClick={() => dispatch(SelectChat(String(chat.id)))}
+                sx={{ mb: 0.5, py: 2, px: 3, alignItems: "start" }}
               >
                 <ListItemAvatar>
                   <Badge
@@ -178,10 +138,10 @@ const ChatListing = () => {
                       chat.status === "online"
                         ? "success"
                         : chat.status === "busy"
-                          ? "error"
-                          : chat.status === "away"
-                            ? "warning"
-                            : "secondary"
+                        ? "error"
+                        : chat.status === "away"
+                        ? "warning"
+                        : "secondary"
                     }
                     variant="dot"
                     anchorOrigin={{
@@ -191,7 +151,7 @@ const ChatListing = () => {
                     overlap="circular"
                   >
                     <Avatar
-                      alt="Remy Sharp"
+                      alt={chat.name}
                       src={chat.thumb}
                       sx={{ width: 42, height: 42 }}
                     />
@@ -204,18 +164,16 @@ const ChatListing = () => {
                     </Typography>
                   }
                   secondary={getDetails(chat)}
-                  secondaryTypographyProps={{
-                    noWrap: true,
-                  }}
+                  secondaryTypographyProps={{ noWrap: true }}
                   sx={{ my: 0 }}
                 />
-                {/* aqui só renderiza se existir a data */}
                 {chat.lastMessageDate && (
-                  <Box sx={{ flexShrink: 0 }} mt={0.5}>
+                  <Box flexShrink={0} mt={0.5}>
                     <Typography variant="body2">
-                      {formatDistanceToNowStrict(new Date(chat.lastMessageDate), {
-                        addSuffix: false,
-                      })}
+                      {formatDistanceToNowStrict(
+                        new Date(chat.lastMessageDate),
+                        { addSuffix: false }
+                      )}
                     </Typography>
                   </Box>
                 )}
@@ -223,7 +181,7 @@ const ChatListing = () => {
             ))
           ) : (
             <Box m={2}>
-              <Alert severity="error" variant="filled" sx={{ color: "white" }}>
+              <Alert severity="error" variant="filled">
                 No Contacts Found!
               </Alert>
             </Box>

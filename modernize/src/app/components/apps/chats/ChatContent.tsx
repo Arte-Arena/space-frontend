@@ -1,7 +1,6 @@
-// ChatContent.tsx
 import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from '@/store/hooks'
-import { fetchChats } from '@/store/apps/chat/ChatSlice'
+import { getChats, subscribeChats } from '@/store/apps/chat/ChatSlice'
 import { useRouter } from 'next/navigation'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { Theme } from '@mui/material/styles'
@@ -20,10 +19,39 @@ import { IconMenu2, IconPhone, IconVideo, IconDotsVertical } from '@tabler/icons
 import Image from 'next/image'
 
 import ChatInsideSidebar from './ChatInsideSidebar'
-import type { ChatsType, MessageType } from '../../../(DashboardLayout)/types/apps/chat'
+import type { ChatsType, MessageType, attachType } from '../../../(DashboardLayout)/types/apps/chat'
 
 interface ChatContentProps {
   toggleChatSidebar: () => void
+}
+
+function mapRawEventToChat(evt: { raw_event: any; received_at: string }): MessageType {
+  const raw = evt.raw_event || {}
+
+  // 1) monta o array de attachments
+  const attachments: attachType[] = []
+  if (raw.mediaUrl || raw.url) {
+    attachments.push({
+      icon: raw.iconUrl || '',
+      file: raw.filename || raw.url.split('/').pop() || '',
+      fileSize: raw.fileSize || '—',
+    })
+  }
+
+  // 2) separa o texto da URL de mídia para msg
+  const msg =
+    raw.type === 'text'
+      ? raw.body || raw.text || ''
+      : raw.mediaUrl || raw.url || ''
+
+  return {
+    id: raw.id || raw.messageId || `unknown-${evt.received_at}`,
+    senderId: raw.from || raw.sender || 'unknown',
+    type: (raw.type as MessageType['type']) || 'text',
+    msg,
+    attachment: attachments,      // ← sempre um array
+    createdAt: evt.received_at
+  }
 }
 
 const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
@@ -31,83 +59,79 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
   const router = useRouter()
   const lgUp = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'))
 
-  // 1) Chats vindos do Redux
+  // Redux state
   const chats = useSelector((state) => state.chatReducer.chats) as ChatsType[]
-  // 2) ID do chat ativo
-  const activeId = useSelector(
-    (state) => state.chatReducer.chatContent
-  ) as string | number
-  // 3) Dados do chat selecionado
+  const activeId = useSelector((state) => state.chatReducer.chatContent) as string | number
   const chatDetails = chats.find((c) => c.id === activeId)
 
-  // 4) Mensagens da conversa selecionada
+  // Local state for messages
   const [conversationMessages, setConversationMessages] = useState<MessageType[]>([])
 
-  // Redireciona se não tiver token
+  // Redirect if not authenticated
   useEffect(() => {
-    const token = localStorage.getItem('accessToken')
-    if (!token) {
-      console.error('Access token missing')
+    if (!localStorage.getItem('accessToken')) {
       router.push('/auth/login')
     }
   }, [router])
 
-  // 5) Ao montar, carrega a lista de chats
   useEffect(() => {
-    dispatch(fetchChats())
+    fetch(`${process.env.NEXT_PUBLIC_API_CLIENT}/v1/history/whatsapp`)
+      .then(res => res.json())
+      .then((data: { raw_event: any; received_at: string }[]) => {
+        // 1) Filtra eventos válidos
+        const valid = data.filter(evt => evt.raw_event != null)
+  
+        // 2) Agrupa por senderId
+        const chatsMap: Record<string, Omit<ChatsType, 'excerpt' | 'recent'>> = {}
+        valid.forEach(evt => {
+          const raw = evt.raw_event
+          const senderId = raw.from || raw.sender || 'unknown'
+  
+          // Se ainda não existe este chat, inicializa
+          if (!chatsMap[senderId]) {
+            chatsMap[senderId] = {
+              id: senderId,
+              name: raw.fromName       // ou raw.contact?.name, depende do seu payload
+                || raw.profileName     // outra opção, ajuste conforme payload
+                || senderId,
+              thumb: raw.profilePic    // ou raw.avatarUrl, ajuste conforme payload
+                || '/images/profile/default.jpg',
+              status: raw.presence     // ou 'offline' se não vier no histórico
+                || 'offline',
+              messages: []
+            }
+          }
+
+          // Mapeia a mensagem
+          const msg: MessageType = mapRawEventToChat(evt)
+          chatsMap[senderId].messages.push(msg)
+        })
+  
+        // 3) Constrói o array final de ChatsType
+        const initialChats: ChatsType[] = Object.values(chatsMap).map(chat => ({
+          ...chat,
+          // excerpt = última mensagem
+          excerpt: chat.messages[chat.messages.length - 1]?.msg || '',
+          // recent só pra satisfazer o tipo, aqui pode usar boolean ou date
+          recent: true
+        }))
+  
+        dispatch(getChats(initialChats))
+      })
+      .catch(err => console.error('Erro ao carregar histórico:', err))
+  
+    const socket = dispatch(subscribeChats())
+    return () => {
+      socket.close()
+    }
   }, [dispatch])
 
-  // 6) Quando trocamos de chat, buscar as mensagens desse chat
+  // Sync local messages when chat changes or new messages arrive
   useEffect(() => {
-    if (!chatDetails) {
-      setConversationMessages([])
-      return
-    }
+    setConversationMessages(chatDetails ? chatDetails.messages : [])
+  }, [chatDetails?.messages])
 
-    const token = localStorage.getItem('accessToken')
-    if (!token) {
-      console.error('Access token missing')
-      return
-    }
-
-    const fetchConversation = async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API}/api/octa/get-octa-chat-msgs/${chatDetails.id}`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
-        if (!res.ok) throw new Error(`Erro ${res.status}`)
-        const data = await res.json()
-
-        // Mapeia payload -> MessageType
-        const mapped: MessageType[] = data.messages.map((m: any) => ({
-          id: m.id,
-          senderId: m.sentBy.id,
-          type: m.type === 'public' ? 'text' : m.type,
-          msg: m.body,
-          createdAt: m.time,
-          attachment: (m.attachments ?? []).map((att: any) => ({
-            file: att.name,
-            fileSize: att.size ?? '',
-            icon: att.url ?? '',
-          })),
-        }))
-
-        setConversationMessages(mapped)
-      } catch (err) {
-        console.error('Erro ao buscar conversa:', err)
-      }
-    }
-
-    fetchConversation()
-  }, [chatDetails?.id])
-
-  // 7) Se não tiver chat selecionado, mostra o placeholder
+  // If no chat selected, show placeholder
   if (!chatDetails) {
     return (
       <Box display="flex" alignItems="center" p={2}>
@@ -117,149 +141,103 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
     )
   }
 
-  // 8) Render principal
   return (
     <Box>
       {/* Header */}
-      <Box>
-        <Box display="flex" alignItems="center" p={2}>
-          {!lgUp && (
-            <Box mr="10px">
-              <IconMenu2 stroke={1.5} onClick={toggleChatSidebar} />
-            </Box>
-          )}
-          <ListItem dense disableGutters>
-            <ListItemAvatar>
-              <Badge
-                color={
-                  chatDetails.status === 'online'
-                    ? 'success'
-                    : chatDetails.status === 'busy'
-                    ? 'error'
-                    : chatDetails.status === 'away'
-                    ? 'warning'
-                    : 'secondary'
-                }
-                variant="dot"
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                overlap="circular"
-              >
-                <Avatar
-                  alt={chatDetails.name}
-                  src={chatDetails.thumb}
-                  sx={{ width: 40, height: 40 }}
-                />
-              </Badge>
-            </ListItemAvatar>
-            <ListItemText
-              primary={<Typography variant="h5">{chatDetails.name}</Typography>}
-              secondary={chatDetails.status}
-            />
-          </ListItem>
-          <Stack direction="row">
-            <IconButton aria-label="phone">
-              <IconPhone stroke={1.5} />
-            </IconButton>
-            <IconButton aria-label="video">
-              <IconVideo stroke={1.5} />
-            </IconButton>
-            <IconButton aria-label="options">
-              <IconDotsVertical stroke={1.5} />
-            </IconButton>
-          </Stack>
-        </Box>
-        <Divider />
+      <Box display="flex" alignItems="center" p={2}>
+        {!lgUp && (
+          <Box mr="10px">
+            <IconMenu2 stroke={1.5} onClick={toggleChatSidebar} />
+          </Box>
+        )}
+        <ListItem dense disableGutters>
+          <ListItemAvatar>
+            <Badge
+              color={
+                chatDetails.status === 'online'
+                  ? 'success'
+                  : chatDetails.status === 'busy'
+                  ? 'error'
+                  : chatDetails.status === 'away'
+                  ? 'warning'
+                  : 'secondary'
+              }
+              variant="dot"
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              overlap="circular"
+            >
+              <Avatar
+                alt={chatDetails.name}
+                src={chatDetails.thumb}
+                sx={{ width: 40, height: 40 }}
+              />
+            </Badge>
+          </ListItemAvatar>
+          <ListItemText
+            primary={<Typography variant="h5">{chatDetails.name}</Typography>}
+            secondary={chatDetails.status}
+          />
+        </ListItem>
+        <Stack direction="row" spacing={1}>
+          <IconButton aria-label="phone">
+            <IconPhone stroke={1.5} />
+          </IconButton>
+          <IconButton aria-label="video">
+            <IconVideo stroke={1.5} />
+          </IconButton>
+          <IconButton aria-label="options">
+            <IconDotsVertical stroke={1.5} />
+          </IconButton>
+        </Stack>
       </Box>
+      <Divider />
 
-      {/* Mensagens e Sidebar */}
+      {/* Messages */}
       <Box display="flex">
-        {/* Lista de Mensagens */}
         <Box width="100%">
           <Box sx={{ height: '650px', overflow: 'auto', maxHeight: '800px' }} p={3}>
-            {conversationMessages.map((chat) => (
-              <Box key={chat.id + chat.createdAt}>
-                {chatDetails.id === chat.senderId ? (
+            {conversationMessages.map((msg) => (
+              <Box key={`${msg.id}-${msg.createdAt}`} mb={2}>
+                {msg.senderId === chatDetails.id ? (
                   <Box display="flex">
                     <ListItemAvatar>
-                      <Avatar
-                        alt={chatDetails.name}
-                        src={chatDetails.thumb}
-                        sx={{ width: 40, height: 40 }}
-                      />
+                      <Avatar alt={chatDetails.name} src={chatDetails.thumb} sx={{ width: 40, height: 40 }} />
                     </ListItemAvatar>
                     <Box>
-                      {chat.createdAt && (
-                        <Typography variant="body2" color="grey.400" mb={1}>
-                          {chatDetails.name},{' '}
-                          {formatDistanceToNowStrict(new Date(chat.createdAt), {
-                            addSuffix: false,
-                          })}{' '}
-                          ago
-                        </Typography>
-                      )}
-                      {chat.type === 'text' && (
-                        <Box
-                          mb={2}
-                          sx={{
-                            p: 1,
-                            backgroundColor: 'grey.100',
-                            mr: 'auto',
-                            maxWidth: '320px',
-                          }}
-                        >
-                          {chat.msg}
+                      <Typography variant="body2" color="grey.400" mb={1}>
+                        {chatDetails.name}, {msg.createdAt ? formatDistanceToNowStrict(new Date(msg.createdAt), { addSuffix: false }) : ''} ago
+                      </Typography>
+                      {msg.type === 'text' ? (
+                        <Box p={1} sx={{ backgroundColor: 'grey.100', mr: 'auto', maxWidth: 320 }}>
+                          {msg.msg}
                         </Box>
-                      )}
-                      {chat.type === 'image' && (
-                        <Box mb={1} sx={{ overflow: 'hidden', lineHeight: 0 }}>
-                          <Image src={chat.msg} alt="attach" width={150} height={150} />
+                      ) : (
+                        <Box sx={{ overflow: 'hidden', lineHeight: 0 }} mb={1}>
+                          <Image src={msg.msg} alt="attach" width={150} height={150} />
                         </Box>
                       )}
                     </Box>
                   </Box>
                 ) : (
-                  <Box
-                    mb={1}
-                    display="flex"
-                    alignItems="flex-end"
-                    flexDirection="row-reverse"
-                  >
-                    <Box display="flex" flexDirection="column" alignItems="flex-end">
-                      {chat.createdAt && (
-                        <Typography variant="body2" color="grey.400" mb={1}>
-                          {formatDistanceToNowStrict(new Date(chat.createdAt), {
-                            addSuffix: false,
-                          })}{' '}
-                          ago
-                        </Typography>
-                      )}
-                      {chat.type === 'text' && (
-                        <Box
-                          mb={1}
-                          sx={{
-                            p: 1,
-                            backgroundColor: 'primary.light',
-                            ml: 'auto',
-                            maxWidth: '320px',
-                          }}
-                        >
-                          {chat.msg}
-                        </Box>
-                      )}
-                      {chat.type === 'image' && (
-                        <Box mb={1} sx={{ overflow: 'hidden', lineHeight: 0 }}>
-                          <Image src={chat.msg} alt="attach" width={250} height={165} />
-                        </Box>
-                      )}
-                    </Box>
+                  <Box display="flex" flexDirection="column" alignItems="flex-end">
+                    <Typography variant="body2" color="grey.400" mb={1}>
+                      {msg.createdAt ? formatDistanceToNowStrict(new Date(msg.createdAt), { addSuffix: false }) : ''} ago
+                    </Typography>
+                    {msg.type === 'text' ? (
+                      <Box p={1} sx={{ backgroundColor: 'primary.light', ml: 'auto', maxWidth: 320 }} mb={1}>
+                        {msg.msg}
+                      </Box>
+                    ) : (
+                      <Box sx={{ overflow: 'hidden', lineHeight: 0 }} mb={1}>
+                        <Image src={msg.msg} alt="attach" width={250} height={165} />
+                      </Box>
+                    )}
                   </Box>
                 )}
               </Box>
             ))}
           </Box>
         </Box>
-
-        {/* Sidebar de media e anexos */}
         <Box flexShrink={0}>
           <ChatInsideSidebar isInSidebar={lgUp} chat={chatDetails} />
         </Box>
@@ -269,3 +247,4 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
 }
 
 export default ChatContent
+
