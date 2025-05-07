@@ -1,5 +1,5 @@
-'use client';
-import { useState, useEffect } from 'react';
+"use client";
+import { useState, useEffect, use } from "react";
 import {
   Box,
   Button,
@@ -12,15 +12,20 @@ import {
   Grid,
   Paper,
   Autocomplete,
-} from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs, { Dayjs } from 'dayjs';
-import { Alert, AlertTitle } from '@mui/material'; // Importe o componente Alert do Material UI
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { Estoque, Fornecedor, MovimentacaoFormData } from '../components/types';
-import { useRouter } from 'next/navigation';
-import NotificationSnackbar from '@/utils/snackbar';
+} from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs, { Dayjs } from "dayjs";
+import { Alert, AlertTitle } from "@mui/material"; // Importe o componente Alert do Material UI
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import {
+  Estoque,
+  Fornecedor,
+  MovimentacaoFormData,
+} from "../../components/types";
+import { useParams, useRouter } from "next/navigation";
+import NotificationSnackbar from "@/utils/snackbar";
+import utc from 'dayjs/plugin/utc';
 
 export default function NovaMovimentacaoEstoquePage() {
   const [estoques, setEstoques] = useState<Estoque[]>([]);
@@ -28,34 +33,79 @@ export default function NovaMovimentacaoEstoquePage() {
   const [form, setForm] = useState<MovimentacaoFormData>({
     estoque_id: 0,
     data_movimentacao: dayjs(),
-    tipo_movimentacao: 'entrada',
-    documento: '',
-    numero_pedido: '',
+    tipo_movimentacao: "entrada",
+    documento: "",
+    numero_pedido: "",
     fornecedor_id: 0,
-    localizacao_origem: '',
-    quantidade: '',
-    observacoes: '',
+    localizacao_origem: "",
+    quantidade: "",
+    observacoes: "",
   });
   const [loading, setLoading] = useState(true); // Adicionado estado para controlar o carregamento
   const [error, setError] = useState<string | null>(null); // Adicionado estado para armazenar erros
-  const [estoqueInputValue, setEstoqueInputValue] = useState('');
+  const [estoqueInputValue, setEstoqueInputValue] = useState("");
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     severity: "success" | "error" | "info" | "warning";
-  }>({ open: false, message: '', severity: 'success' });
-
-
+  }>({ open: false, message: "", severity: "success" });
+  
+  dayjs.extend(utc);
+  const param = useParams();
   const router = useRouter();
-  const dataFornecedores = localStorage.getItem('fornecedores');
-  const accessToken = localStorage.getItem('accessToken');
+  const dataFornecedores = localStorage.getItem("fornecedores");
+  const accessToken = localStorage.getItem("accessToken");
+  const id = param.id;
 
   // proteção de rota
   if (!accessToken) {
-    router.push('/auth/login');
+    router.push("/auth/login");
     return null;
   }
 
+  useEffect(() => {
+    const fetchMovimentacao = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API}/api/movimentacao/${id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error(`Erro ao buscar movimentação: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("Movimentação:", data);
+        const m = data;
+        setForm({
+          estoque_id: m.estoque_id ?? 0,
+          documento: m.documento ?? '',
+          fornecedor_id: m.fornecedor_id ?? null,
+          localizacao_origem: m.localizacao_origem ?? '',
+          tipo_movimentacao: m.tipo_movimentacao ?? 'entrada',
+          data_movimentacao: m.data_movimentacao ? dayjs(m.data_movimentacao) : dayjs(),
+          quantidade: m.quantidade?.toString() ?? '',
+          numero_pedido: m.numero_pedido ?? '',
+          observacoes: m.observacoes ?? '',
+        });
+      } catch (error: any) {
+        setError(error.message);
+        setSnackbar({
+          open: true,
+          message: error.message || "erro ao pegar movimentação!",
+          severity: "warning",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMovimentacao();
+  }, [id]);
 
   useEffect(() => {
     const fetchEstoques = async () => {
@@ -63,9 +113,9 @@ export default function NovaMovimentacaoEstoquePage() {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API}/api/estoque`,
           {
-            method: 'GET',
+            method: "GET",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
               Authorization: `Bearer ${accessToken}`,
             },
           }
@@ -79,8 +129,8 @@ export default function NovaMovimentacaoEstoquePage() {
         setError(error.message);
         setSnackbar({
           open: true,
-          message: error.message || 'erro ao pegar itens do estoque!',
-          severity: 'warning',
+          message: error.message || "erro ao pegar itens do estoque!",
+          severity: "warning",
         });
       } finally {
         setLoading(false);
@@ -96,8 +146,8 @@ export default function NovaMovimentacaoEstoquePage() {
         setError(error.message);
         setSnackbar({
           open: true,
-          message: error.message || 'erro ao pegar fornecedores!',
-          severity: 'warning',
+          message: error.message || "erro ao pegar fornecedores!",
+          severity: "warning",
         });
       } finally {
         setLoading(false);
@@ -109,30 +159,30 @@ export default function NovaMovimentacaoEstoquePage() {
   }, []);
 
   const formatCEP = (cep: string): string => {
-    return cep.replace(/\D/g, '').replace(/(\d{5})(\d)/, '$1-$2');
+    return cep.replace(/\D/g, "").replace(/(\d{5})(\d)/, "$1-$2");
   };
 
-  const handleChange = (field: keyof MovimentacaoFormData) => (eventOrValue: any) => {
-    let value: string;
-    // Suporte a chamadas com evento (onChange) e valor direto (onBlur manual)
-    if (typeof eventOrValue === 'string') {
-      value = eventOrValue;
-    } else if (eventOrValue?.target?.value !== undefined) {
-      value = eventOrValue.target.value;
-    } else {
-      return;
-    }
-    // Normalização e validação para quantidade
-    if (field === 'quantidade') {
-      value = value.replace(',', '.');
-      if (!/^\d*(\.\d{0,2})?$/.test(value) && value !== '') return;
-    }
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
+  const handleChange =
+    (field: keyof MovimentacaoFormData) => (eventOrValue: any) => {
+      let value: string;
+      // Suporte a chamadas com evento (onChange) e valor direto (onBlur manual)
+      if (typeof eventOrValue === "string") {
+        value = eventOrValue;
+      } else if (eventOrValue?.target?.value !== undefined) {
+        value = eventOrValue.target.value;
+      } else {
+        return;
+      }
+      // Normalização e validação para quantidade
+      if (field === "quantidade") {
+        value = value.replace(",", ".");
+        if (!/^\d*(\.\d{0,2})?$/.test(value) && value !== "") return;
+      }
+      setForm((prev) => ({ ...prev, [field]: value }));
+    };
 
   const handleEstoqueChange = (event: any, newValue: Estoque | null) => {
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       estoque_id: newValue ? newValue.id : 0, // Atualiza com o ID do objeto selecionado ou 0
     }));
@@ -143,33 +193,39 @@ export default function NovaMovimentacaoEstoquePage() {
       const dataToSend = {
         ...form,
         data_movimentacao: form.data_movimentacao
-          ? form.data_movimentacao.format('YYYY-MM-DD HH:mm:ss')
+          ? dayjs(form.data_movimentacao).utc().format("YYYY-MM-DD HH:mm:ss")
           : null,
+        id: Number(id),
+        fornecedor_id: form.fornecedor_id === 0 ? null : form.fornecedor_id,
       };
 
-      const response = await fetch(process.env.NEXT_PUBLIC_API + '/api/movimentacao', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(dataToSend),
-      });
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_API + "/api/movimentacao/upsert",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(dataToSend),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Erro ao registrar movimentação: ${response.status}`);
       }
       setSnackbar({
         open: true,
-        message: 'Dados enviados com sucesso!',
-        severity: 'warning',
+        message: "Dados enviados com sucesso!",
+        severity: "success",
       });
+      router.push("/apps/estoque/movimentacoes");
     } catch (error: any) {
-      console.error('Erro ao registrar movimentação:', error);
+      console.error("Erro ao registrar movimentação:", error);
       setSnackbar({
         open: true,
-        message: 'Erro ao registrar movimentação!',
-        severity: 'error',
+        message: "Erro ao registrar movimentação!",
+        severity: "error",
       });
     }
   };
@@ -193,30 +249,29 @@ export default function NovaMovimentacaoEstoquePage() {
     );
   }
 
-
   return (
     <Box p={4}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h5" mb={3}>
-          Nova Movimentação de Estoque
+          Editar Movimentação de Estoque
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <Autocomplete
               options={estoques}
               getOptionLabel={(option) => option.nome}
-              value={estoques.find((estoque) => estoque.id === form.estoque_id) || null}
+              value={
+                form && estoques.length > 0
+                  ? estoques.find((estoque) => estoque.id === form.estoque_id) || null
+                  : null
+              }
               onChange={handleEstoqueChange}
               inputValue={estoqueInputValue}
               onInputChange={(_, newInputValue) => {
                 setEstoqueInputValue(newInputValue);
               }}
               renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Item do Estoque"
-                  fullWidth
-                />
+                <TextField {...params} label="Item do Estoque" fullWidth />
               )}
             />
           </Grid>
@@ -225,28 +280,26 @@ export default function NovaMovimentacaoEstoquePage() {
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker
                 label="Data da Movimentação"
-                inputFormat='dd/MM/yyyy'
+                inputFormat="dd/MM/yyyy"
                 value={form.data_movimentacao || null}
-                onChange={(date: Dayjs | null) =>
+                onChange={(date) =>
                   setForm((prev) => ({
                     ...prev,
-                    data_movimentacao: date,
+                    data_movimentacao: date ? dayjs(date) : null,
                   }))
                 }
-                renderInput={(params) => (
-                  <TextField {...params} fullWidth />
-                )}
+                renderInput={(params) => <TextField {...params} fullWidth />}
               />
             </LocalizationProvider>
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
+            <FormControl fullWidth disabled={true}>
               <InputLabel>Tipo de Movimentação</InputLabel>
               <Select
                 value={form.tipo_movimentacao}
                 label="Tipo de Movimentação"
-                onChange={handleChange('tipo_movimentacao')}
+                onChange={handleChange("tipo_movimentacao")}
               >
                 <MenuItem value="entrada">Entrada</MenuItem>
                 <MenuItem value="saida">Saída</MenuItem>
@@ -256,10 +309,22 @@ export default function NovaMovimentacaoEstoquePage() {
 
           <Grid item xs={12} sm={6}>
             <TextField
-              label={form.tipo_movimentacao === 'entrada' ? 'N° do Documento' : 'N° do Pedido'}
+              label={
+                form.tipo_movimentacao === "entrada"
+                  ? "N° do Documento"
+                  : "N° do Pedido"
+              }
               fullWidth
-              value={form.tipo_movimentacao === 'entrada' ? form.documento : form.numero_pedido}
-              onChange={handleChange(form.tipo_movimentacao === 'entrada' ? 'documento' : 'numero_pedido')}
+              value={
+                form.tipo_movimentacao === "entrada"
+                  ? form.documento
+                  : form.numero_pedido
+              }
+              onChange={handleChange(
+                form.tipo_movimentacao === "entrada"
+                  ? "documento"
+                  : "numero_pedido"
+              )}
             />
           </Grid>
 
@@ -269,10 +334,10 @@ export default function NovaMovimentacaoEstoquePage() {
               fullWidth
               onBlur={(e) => {
                 const cep = formatCEP(e.target.value);
-                handleChange('localizacao_origem')(cep);
+                handleChange("localizacao_origem")(cep);
               }}
               value={form.localizacao_origem}
-              onChange={handleChange('localizacao_origem')}
+              onChange={handleChange("localizacao_origem")}
             />
           </Grid>
 
@@ -282,22 +347,23 @@ export default function NovaMovimentacaoEstoquePage() {
               fullWidth
               type="text" // Alterado para "text"
               value={form.quantidade}
-              onChange={handleChange('quantidade')}
+              onChange={handleChange("quantidade")}
               inputProps={{
-                inputMode: 'decimal',
-                pattern: '^[0-9]+([.,][0-9]{0,2})?$', // Adicionado padrão para números decimais
+                inputMode: "decimal",
+                pattern: "^[0-9]+([.,][0-9]{0,2})?$", // Adicionado padrão para números decimais
               }}
             />
           </Grid>
 
           <Grid item xs={12} sm={12}>
-            <FormControl fullWidth disabled={form.tipo_movimentacao.includes("saida")}>
+            <FormControl fullWidth disabled={form.tipo_movimentacao.includes("saida")} >
               <InputLabel>Fornecedor</InputLabel>
               <Select
                 value={form.fornecedor_id}
                 label="Fornecedor"
-                onChange={handleChange('fornecedor_id')}
+                onChange={handleChange("fornecedor_id")}
               >
+                <MenuItem value={0}>Nenhum fornecedor</MenuItem>
                 {fornecedores.map((forn) => (
                   <MenuItem key={forn.id} value={forn.id}>
                     {forn.nome_completo}
@@ -314,7 +380,7 @@ export default function NovaMovimentacaoEstoquePage() {
               rows={4}
               fullWidth
               value={form.observacoes}
-              onChange={handleChange('observacoes')}
+              onChange={handleChange("observacoes")}
             />
           </Grid>
 
@@ -335,4 +401,3 @@ export default function NovaMovimentacaoEstoquePage() {
     </Box>
   );
 }
-

@@ -1,184 +1,190 @@
 'use client';
-import { useState, useEffect } from 'react';
 import {
   Box,
-  Button,
-  TextField,
-  Typography,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
   Grid,
   Paper,
-  Autocomplete,
-} from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs, { Dayjs } from 'dayjs';
-import { Alert, AlertTitle } from '@mui/material'; // Importe o componente Alert do Material UI
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { Estoque, Fornecedor, MovimentacaoFormData } from '../../components/types';
-import { useParams, useRouter } from 'next/navigation';
-import NotificationSnackbar from '@/utils/snackbar';
+  Tab,
+  Tabs,
+  Typography,
+  Divider,
+  Chip,
+  Avatar,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  useTheme,
+  CircularProgress,
+  Alert,
+  Stack
+} from "@mui/material";
+import { forwardRef, useEffect, useState } from "react";
+import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+import { useParams, useRouter } from "next/navigation";
+import {
+  Inventory as InventoryIcon,
+  LocalShipping as LocalShippingIcon,
+  ShoppingBasket as ShoppingBasketIcon,
+  CalendarToday as CalendarIcon,
+  Description as DescriptionIcon,
+  Assignment as AssignmentIcon,
+  LocationOn as LocationIcon,
+  Scale as ScaleIcon,
+  Business as BusinessIcon,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  CreditCard as CreditCardIcon,
+  Home as HomeIcon,
+} from "@mui/icons-material";
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert, { AlertProps } from '@mui/material/Alert';
+import { IconBuilding } from "@tabler/icons-react";
+import { useThemeMode } from "@/utils/useThemeMode";
 
-export default function NovaMovimentacaoEstoquePage() {
-  const [estoques, setEstoques] = useState<Estoque[]>([]);
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
-  const [form, setForm] = useState<MovimentacaoFormData>({
-    estoque_id: 0,
-    data_movimentacao: dayjs(),
-    tipo_movimentacao: 'entrada',
-    documento: '',
-    numero_pedido: '',
-    fornecedor_id: 0,
-    localizacao_origem: '',
-    quantidade: '',
-    observacoes: '',
-  });
-  const [loading, setLoading] = useState(true); // Adicionado estado para controlar o carregamento
-  const [error, setError] = useState<string | null>(null); // Adicionado estado para armazenar erros
-  const [estoqueInputValue, setEstoqueInputValue] = useState('');
+dayjs.locale("pt-br");
+
+// Interfaces (mantidas como no seu código original)
+interface Movimentacao {
+  tipo_movimentacao?: string;
+  data_movimentacao?: string;
+  documento?: string;
+  numero_pedido?: string;
+  localizacao_origem?: string;
+  quantidade?: number;
+  estoque?: Estoque;
+  observacoes?: string;
+  fornecedor?: Fornecedor;
+}
+
+interface Estoque {
+  unidade_medida?: string;
+  nome?: string;
+}
+
+interface Fornecedor {
+  nome_completo: string;
+  email: string;
+  celular: string;
+  cnpj: string;
+  endereco: string;
+  numero: string;
+  cidade: string;
+  uf: string;
+  produtos?: Produto[];
+}
+
+interface Produto {
+  id: string;
+  nome: string;
+  peso: number;
+  type: string;
+  altura: number;
+  largura: number;
+  comprimento: number;
+  preco: number;
+}
+
+const Alerta = forwardRef<HTMLDivElement, AlertProps>(function Alerta(
+  props,
+  ref,
+) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
+
+export default function VisualizacaoMovimentacao() {
+  const theme = useTheme();
+  const [movimentacao, setMovimentacao] = useState<Movimentacao | null>(null);
+  const [tabIndex, setTabIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
     severity: "success" | "error" | "info" | "warning";
-  }>({ open: false, message: '', severity: 'success' });
+  }>({ open: false, message: "", severity: "success" });
 
+  const accessToken = typeof window !== 'undefined' ? localStorage.getItem("accessToken") : null;
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => setTabIndex(newValue);
+  const formatDate = (date: string): string => dayjs(date).format("DD/MM/YYYY");
 
-  const param = useParams();
+  const themeMode = useThemeMode();
   const router = useRouter();
-  const dataFornecedores = localStorage.getItem('fornecedores');
-  const accessToken = localStorage.getItem('accessToken');
-  const id = param.id;
-  
-  // proteção de rota
+  const params = useParams();
+  const id = params.id;
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   if (!accessToken) {
     router.push('/auth/login');
     return null;
   }
 
+  if (!id) {
+    setSnackbar({
+      open: true,
+      message: "ID não encontrado!",
+      severity: "error",
+    });
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+        <Typography variant="h6">ID não encontrado!</Typography>
+      </Box>
+    )
+  }
+
   useEffect(() => {
-    const fetchEstoques = async () => {
+    const fetchMovimentacao = async () => {
       try {
+        setLoading(true);
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API}/api/estoque`,
+          `${process.env.NEXT_PUBLIC_API}/api/movimentacao/${id}`,
           {
-            method: 'GET',
+            method: "GET",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
               Authorization: `Bearer ${accessToken}`,
             },
           }
         );
         if (!response.ok) {
-          throw new Error(`Erro ao buscar estoques: ${response.status}`);
+          throw new Error(`Erro ao buscar movimentação: ${response.status}`);
         }
         const data = await response.json();
-        setEstoques(data.data); // Ajuste para acessar data.data
+        setMovimentacao(data);
       } catch (error: any) {
         setError(error.message);
         setSnackbar({
           open: true,
-          message: error.message || 'erro ao pegar itens do estoque!',
-          severity: 'warning',
+          message: error.message || "Erro ao carregar movimentação!",
+          severity: "warning",
         });
       } finally {
         setLoading(false);
       }
     };
+    fetchMovimentacao();
+  }, [id, accessToken]);
 
-    const fetchFornecedores = async () => {
-      try {
-        if (dataFornecedores) {
-          setFornecedores(JSON.parse(dataFornecedores));
-        }
-      } catch (error: any) {
-        setError(error.message);
-        setSnackbar({
-          open: true,
-          message: error.message || 'erro ao pegar fornecedores!',
-          severity: 'warning',
-        });
-      } finally {
-        setLoading(false);
-      }
+
+  const getAvatarColor = (theme: any, baseColor: 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info') => {
+    const bgColor = theme.palette.mode === 'dark'
+      ? theme.palette[baseColor].dark
+      : theme.palette[baseColor].light;
+
+    return {
+      bgcolor: bgColor,
+      color: theme.palette.getContrastText(bgColor)
     };
-
-    fetchEstoques();
-    fetchFornecedores();
-  }, []);
-
-  const formatCEP = (cep: string): string => {
-    return cep.replace(/\D/g, '').replace(/(\d{5})(\d)/, '$1-$2');
   };
 
-  const handleChange = (field: keyof MovimentacaoFormData) => (eventOrValue: any) => {
-    let value: string;
-    // Suporte a chamadas com evento (onChange) e valor direto (onBlur manual)
-    if (typeof eventOrValue === 'string') {
-      value = eventOrValue;
-    } else if (eventOrValue?.target?.value !== undefined) {
-      value = eventOrValue.target.value;
-    } else {
-      return;
-    }
-    // Normalização e validação para quantidade
-    if (field === 'quantidade') {
-      value = value.replace(',', '.');
-      if (!/^\d*(\.\d{0,2})?$/.test(value) && value !== '') return;
-    }
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-
-  const handleEstoqueChange = (event: any, newValue: Estoque | null) => {
-    setForm(prev => ({
-      ...prev,
-      estoque_id: newValue ? newValue.id : 0, // Atualiza com o ID do objeto selecionado ou 0
-    }));
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const dataToSend = {
-        ...form,
-        data_movimentacao: form.data_movimentacao
-          ? form.data_movimentacao.format('YYYY-MM-DD HH:mm:ss')
-          : null,
-      };
-
-      const response = await fetch(process.env.NEXT_PUBLIC_API + '/api/movimentacao', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(dataToSend),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro ao registrar movimentação: ${response.status}`);
-      }
-      setSnackbar({
-        open: true,
-        message: 'Dados enviados com sucesso!',
-        severity: 'warning',
-      });
-    } catch (error: any) {
-      console.error('Erro ao registrar movimentação:', error);
-      setSnackbar({
-        open: true,
-        message: 'Erro ao registrar movimentação!',
-        severity: 'error',
-      });
-    }
-  };
 
   if (loading) {
     return (
-      <Box p={4}>
-        <Typography variant="h6">Carregando...</Typography>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <CircularProgress size={60} />
       </Box>
     );
   }
@@ -186,154 +192,347 @@ export default function NovaMovimentacaoEstoquePage() {
   if (error) {
     return (
       <Box p={4}>
-        <Alert severity="error">
-          <AlertTitle>Erro</AlertTitle>
+        <Alerta severity="error" sx={{ mb: 3 }}>
           {error}
-        </Alert>
+        </Alerta>
       </Box>
     );
   }
 
-
   return (
-    <Box p={4}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h5" mb={3}>
-          Nova Movimentação de Estoque
+    <Box sx={{ p: 4, backgroundColor: theme.palette.background.default }}>
+      <Paper elevation={0} sx={{ p: 3, mb: 3, backgroundColor: theme.palette.background.paper }}>
+        <Typography variant="h4" component="h1" gutterBottom sx={{
+          color: theme.palette.primary.main,
+          fontWeight: 700,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2
+        }}>
+          {movimentacao?.tipo_movimentacao === 'entrada' ? 'Entrada de Estoque' : 'Saída de Estoque'}
+          <Chip
+            label={movimentacao?.tipo_movimentacao === 'entrada' ? 'Entrada' : 'Saída'}
+            color={movimentacao?.tipo_movimentacao === 'entrada' ? 'success' : 'error'}
+            variant="outlined"
+            size="small"
+          />
         </Typography>
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={6}>
-            <Autocomplete
-              options={estoques}
-              getOptionLabel={(option) => option.nome}
-              value={estoques.find((estoque) => estoque.id === form.estoque_id) || null}
-              onChange={handleEstoqueChange}
-              inputValue={estoqueInputValue}
-              onInputChange={(_, newInputValue) => {
-                setEstoqueInputValue(newInputValue);
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Item do Estoque"
-                  fullWidth
-                />
-              )}
-            />
-          </Grid>
 
-          <Grid item xs={12} sm={6}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label="Data da Movimentação"
-                inputFormat='dd/MM/yyyy'
-                value={form.data_movimentacao || null}
-                onChange={(date: Dayjs | null) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    data_movimentacao: date,
-                  }))
-                }
-                renderInput={(params) => (
-                  <TextField {...params} fullWidth />
-                )}
-              />
-            </LocalizationProvider>
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth>
-              <InputLabel>Tipo de Movimentação</InputLabel>
-              <Select
-                value={form.tipo_movimentacao}
-                label="Tipo de Movimentação"
-                onChange={handleChange('tipo_movimentacao')}
-              >
-                <MenuItem value="entrada">Entrada</MenuItem>
-                <MenuItem value="saida">Saída</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label={form.tipo_movimentacao === 'entrada' ? 'N° do Documento' : 'N° do Pedido'}
-              fullWidth
-              value={form.tipo_movimentacao === 'entrada' ? form.documento : form.numero_pedido}
-              onChange={handleChange(form.tipo_movimentacao === 'entrada' ? 'documento' : 'numero_pedido')}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Localização / CEP de Origem"
-              fullWidth
-              onBlur={(e) => {
-                const cep = formatCEP(e.target.value);
-                handleChange('localizacao_origem')(cep);
-              }}
-              value={form.localizacao_origem}
-              onChange={handleChange('localizacao_origem')}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Quantidade"
-              fullWidth
-              type="text" // Alterado para "text"
-              value={form.quantidade}
-              onChange={handleChange('quantidade')}
-              inputProps={{
-                inputMode: 'decimal',
-                pattern: '^[0-9]+([.,][0-9]{0,2})?$', // Adicionado padrão para números decimais
-              }}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={12}>
-            <FormControl fullWidth>
-              <InputLabel>Fornecedor</InputLabel>
-              <Select
-                value={form.fornecedor_id}
-                label="Fornecedor"
-                onChange={handleChange('fornecedor_id')}
-              >
-                {fornecedores.map((forn) => (
-                  <MenuItem key={forn.id} value={forn.id}>
-                    {forn.nome_completo}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              label="Observações"
-              multiline
-              rows={4}
-              fullWidth
-              value={form.observacoes}
-              onChange={handleChange('observacoes')}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <Button variant="contained" color="primary" onClick={handleSubmit}>
-              Salvar Movimentação
-            </Button>
-          </Grid>
-        </Grid>
+        <Typography variant="subtitle1" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CalendarIcon fontSize="small" />
+          {movimentacao?.data_movimentacao ? formatDate(movimentacao.data_movimentacao) : "-"}
+        </Typography>
       </Paper>
-      <NotificationSnackbar
+
+      <Tabs
+        value={tabIndex}
+        onChange={handleTabChange}
+        sx={{
+          mb: 3,
+          '& .MuiTabs-indicator': {
+            backgroundColor: theme.palette.primary.main,
+          },
+          '& .MuiTab-root': {
+            color: theme.palette.text.primary, // Garante visibilidade do texto e ícone
+          }
+        }}
+        variant="fullWidth"
+      >
+        <Tab
+          label="Detalhes"
+          icon={<InventoryIcon />}
+          iconPosition="start"
+          sx={{ minHeight: 48 }}
+        />
+        <Tab
+          label="Fornecedor"
+          icon={<LocalShippingIcon />}
+          iconPosition="start"
+          disabled={!movimentacao?.fornecedor}
+          sx={{ minHeight: 48 }}
+        />
+        <Tab
+          label="Produtos do Fornecedor"
+          icon={<ShoppingBasketIcon />}
+          iconPosition="start"
+          disabled={!movimentacao?.fornecedor?.produtos?.length}
+          sx={{ minHeight: 48 }}
+        />
+      </Tabs>
+
+      {tabIndex === 0 && (
+        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Typography variant="h6" gutterBottom sx={{
+                color: theme.palette.primary.main,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}>
+                <AssignmentIcon /> Informações da Movimentação
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+
+              <List dense>
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={getAvatarColor(theme, 'primary')}>
+                      <DescriptionIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Documento"
+                    secondary={movimentacao?.documento || "Não informado"}
+                  />
+                </ListItem>
+
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={getAvatarColor(theme, 'primary')}>
+                      <AssignmentIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Número do Pedido"
+                    secondary={movimentacao?.numero_pedido || "Não informado"}
+                  />
+                </ListItem>
+
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={getAvatarColor(theme, 'primary')}>
+                      <LocationIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Localização de Origem"
+                    secondary={movimentacao?.localizacao_origem || "Não informado"}
+                  />
+                </ListItem>
+              </List>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Typography variant="h6" gutterBottom sx={{
+                color: theme.palette.primary.main,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}>
+                <InventoryIcon /> Detalhes do Estoque
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+
+              <List dense>
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={getAvatarColor(theme, 'secondary')}>
+                      <ScaleIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Quantidade"
+                    secondary={`${movimentacao?.quantidade} ${movimentacao?.estoque?.unidade_medida || ''}`}
+                  />
+                </ListItem>
+
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={getAvatarColor(theme, 'secondary')}>
+                      <BusinessIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Item do Estoque"
+                    secondary={movimentacao?.estoque?.nome || "Não informado"}
+                  />
+                </ListItem>
+              </List>
+
+              <Typography variant="h6" gutterBottom sx={{
+                mt: 3,
+                color: theme.palette.primary.main,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}>
+                <DescriptionIcon /> Observações
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Paper variant="outlined" sx={{ p: 2, backgroundColor: theme.palette.background.default }}>
+                <Typography variant="body1">
+                  {movimentacao?.observacoes || "Nenhuma observação registrada."}
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Paper>
+      )}
+
+      {tabIndex === 1 && movimentacao?.fornecedor && (
+        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h5" gutterBottom sx={{
+            color: theme.palette.primary.main,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}>
+            <LocalShippingIcon /> Informações do Fornecedor
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <List>
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={getAvatarColor(theme, 'success')}>
+                      <BusinessIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Nome"
+                    secondary={movimentacao.fornecedor.nome_completo}
+                    secondaryTypographyProps={{ sx: { fontWeight: 500 } }}
+                  />
+                </ListItem>
+
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={getAvatarColor(theme, 'success')}>
+                      <EmailIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Email"
+                    secondary={movimentacao.fornecedor.email}
+                  />
+                </ListItem>
+
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={getAvatarColor(theme, 'success')}>
+                      <PhoneIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Telefone"
+                    secondary={movimentacao.fornecedor.celular}
+                  />
+                </ListItem>
+              </List>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <List>
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={getAvatarColor(theme, 'success')}>
+                      <CreditCardIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="CNPJ"
+                    secondary={movimentacao.fornecedor.cnpj}
+                  />
+                </ListItem>
+
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={getAvatarColor(theme, 'success')}>
+                      <HomeIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Endereço"
+                    secondary={`${movimentacao.fornecedor.endereco}, ${movimentacao.fornecedor.numero}`}
+                  />
+                </ListItem>
+
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar sx={getAvatarColor(theme, 'success')}>
+                      <IconBuilding />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Cidade/UF"
+                    secondary={`${movimentacao.fornecedor.cidade} / ${movimentacao.fornecedor.uf}`}
+                  />
+                </ListItem>
+              </List>
+            </Grid>
+          </Grid>
+        </Paper>
+      )}
+
+      {tabIndex === 2 && movimentacao?.fornecedor?.produtos && movimentacao.fornecedor.produtos.length > 0 && (
+        <Box>
+          <Typography variant="h5" gutterBottom sx={{
+            color: theme.palette.primary.main,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            mb: 2
+          }}>
+            <ShoppingBasketIcon /> Produtos do Fornecedor
+          </Typography>
+
+          <Grid container spacing={3}>
+            {movimentacao.fornecedor.produtos.map((produto: Produto) => (
+              <Grid item xs={12} sm={6} md={4} key={produto.id}>
+                <Paper elevation={2} sx={{
+                  p: 3,
+                  height: '100%',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: theme.shadows[6]
+                  }
+                }}>
+                  <Typography variant="h6" gutterBottom sx={{
+                    color: theme.palette.secondary.main,
+                    fontWeight: 600
+                  }}>
+                    {produto.nome}
+                  </Typography>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  <Stack spacing={1.5}>
+                    <Typography variant="body2">
+                      <strong>Tipo:</strong> {produto.type}
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Peso:</strong> {produto.peso} kg
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Dimensões:</strong> {produto.altura} × {produto.largura} × {produto.comprimento} cm
+                    </Typography>
+                    <Typography variant="body2">
+                      <strong>Preço:</strong> {produto.preco
+                        ? Number(produto.preco).toFixed(2)
+                        : "0,00"}
+                    </Typography>
+                  </Stack>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      )}
+
+      <Snackbar
         open={snackbar.open}
-        message={snackbar.message}
-        severity={snackbar.severity}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        autoHideDuration={900}
-      />
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alerta onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alerta>
+      </Snackbar>
     </Box>
   );
 }
-
