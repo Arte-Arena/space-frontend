@@ -199,7 +199,7 @@ const GenericFornecedorForm: React.FC = () => {
         });
 
         setAllProdutos(prev => {
-          const selecionados = fornecedor.produtos;
+          const selecionados = fornecedor?.produtos ?? [];
           const novos = selecionados.filter(
             p => !prev.some(existing => existing.id === p.id)
           );
@@ -237,6 +237,7 @@ const GenericFornecedorForm: React.FC = () => {
 
   const handleKeyPressProdutos = (event: React.KeyboardEvent) => {
     if (event.key === "Enter") {
+      event.preventDefault();
       setCurrentPageProdutos(1);
       setAllProdutos([]);
       handleSearchProdutos();

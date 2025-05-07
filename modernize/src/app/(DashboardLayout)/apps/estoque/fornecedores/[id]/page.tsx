@@ -1,13 +1,22 @@
 'use client';
 import PageContainer from '@/app/components/container/PageContainer';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
-import { Box, Divider, Grid, Typography } from '@mui/material';
+import { Box, Divider, Grid, Typography, ListItemAvatar, Avatar, useTheme } from '@mui/material';
 import { Fornecedor } from '../components/Types';
 import { useEffect, useState } from 'react';
-import { PanoramaSharp } from '@mui/icons-material';
+import {
+  Assignment as AssignmentIcon,
+  LocalShipping as LocalShippingIcon,
+  ShoppingBasket as ShoppingBasketIcon,
+  Business as BusinessIcon,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  CreditCard as CreditCardIcon,
+  Home as HomeIcon,
+} from '@mui/icons-material';
+import { IconBuilding } from '@tabler/icons-react';
 import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { set } from 'lodash';
 
 export default function FornecedoresScreen() {
   const params = useParams();
@@ -15,6 +24,7 @@ export default function FornecedoresScreen() {
   const accessToken = typeof window !== 'undefined'
     ? localStorage.getItem('accessToken')
     : null;
+  const theme = useTheme();
 
   if (!accessToken) {
     typeof window !== 'undefined' && (window.location.href = '/auth/login');
@@ -57,8 +67,22 @@ export default function FornecedoresScreen() {
         mx: 'auto',
       }}>
         <Breadcrumb title="Fornecedor" subtitle='Fornecedor' />
-        <Typography variant="h6" gutterBottom>Dados Gerais</Typography>
-        <Grid container spacing={2} justifyContent="space-between" alignItems="flex-start">
+        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <ListItemAvatar>
+            <Avatar
+              sx={{
+                bgcolor:
+                  theme.palette.mode === "dark"
+                    ? theme.palette.secondary.dark
+                    : theme.palette.secondary.light,
+              }}
+            >
+              <AssignmentIcon />
+            </Avatar>
+          </ListItemAvatar>
+          Dados Gerais
+        </Typography>
+        <Grid container spacing={2} justifyContent="space-between" alignItems="flex-start" paddingLeft={8}>
           <Grid item xs={12} md={4}>
             <Typography variant="subtitle2" color="textSecondary">ID</Typography>
             <Typography variant="body1">{fornecedor?.id}</Typography>
@@ -82,8 +106,22 @@ export default function FornecedoresScreen() {
         {/* Dados Pessoa Física */}
         {fornecedor?.tipo_pessoa === 'PF' && (
           <>
-            <Typography variant="h6" gutterBottom>Dados Pessoa Física</Typography>
-            <Grid container spacing={2} justifyContent="space-between" alignItems="flex-start">
+            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <ListItemAvatar>
+                <Avatar
+                  sx={{
+                    bgcolor:
+                      theme.palette.mode === "dark"
+                        ? theme.palette.secondary.dark
+                        : theme.palette.secondary.light,
+                  }}
+                >
+                  <AssignmentIcon />
+                </Avatar>
+              </ListItemAvatar>
+              Dados Pessoa Física
+            </Typography>
+            <Grid container spacing={2} justifyContent="space-between" alignItems="flex-start" paddingLeft={8}>
               <Grid item xs={12} md={4}>
                 <Typography variant="subtitle2" color="textSecondary">Nome Completo</Typography>
                 <Typography variant="body1">{data?.nome_completo ?? '-'}</Typography>
@@ -104,8 +142,22 @@ export default function FornecedoresScreen() {
         {/* Dados Pessoa Jurídica */}
         {fornecedor?.tipo_pessoa === 'PJ' && (
           <>
-            <Typography variant="h6" gutterBottom>Dados Pessoa Jurídica</Typography>
-            <Grid container spacing={2} justifyContent="space-between" alignItems="flex-start">
+            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <ListItemAvatar>
+                <Avatar
+                  sx={{
+                    bgcolor:
+                      theme.palette.mode === "dark"
+                        ? theme.palette.secondary.dark
+                        : theme.palette.secondary.light,
+                  }}
+                >
+                  <BusinessIcon />
+                </Avatar>
+              </ListItemAvatar>
+              Dados Pessoa Jurídica
+            </Typography>
+            <Grid container spacing={2} justifyContent="space-between" alignItems="flex-start" paddingLeft={8}>
               <Grid item xs={12} md={4}>
                 <Typography variant="subtitle2" color="textSecondary">Razão Social</Typography>
                 <Typography variant="body1">{fornecedor?.razao_social ?? '-'}</Typography>
@@ -124,8 +176,22 @@ export default function FornecedoresScreen() {
         )}
 
         {/* Contato */}
-        <Typography variant="h6" gutterBottom>Contato</Typography>
-        <Grid container spacing={2} justifyContent="space-between" alignItems="flex-start">
+        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <ListItemAvatar>
+            <Avatar
+              sx={{
+                bgcolor:
+                  theme.palette.mode === "dark"
+                    ? theme.palette.secondary.dark
+                    : theme.palette.secondary.light,
+              }}
+            >
+              <PhoneIcon />
+            </Avatar>
+          </ListItemAvatar>
+          Contato
+        </Typography>
+        <Grid container spacing={2} justifyContent="space-between" paddingLeft={8}>
           <Grid item xs={12} md={6}>
             <Typography variant="subtitle2" color="textSecondary">E-mail</Typography>
             <Typography variant="body1">{fornecedor?.email}</Typography>
@@ -139,8 +205,22 @@ export default function FornecedoresScreen() {
         <Divider sx={{ my: 3 }} />
 
         {/* Endereço */}
-        <Typography variant="h6" gutterBottom>Endereço</Typography>
-        <Grid container spacing={2} justifyContent="space-between" alignItems="flex-start">
+        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <ListItemAvatar>
+            <Avatar
+              sx={{
+                bgcolor:
+                  theme.palette.mode === "dark"
+                    ? theme.palette.secondary.dark
+                    : theme.palette.secondary.light,
+              }}
+            >
+              <HomeIcon />
+            </Avatar>
+          </ListItemAvatar>
+          Endereço
+        </Typography>
+        <Grid container spacing={2} justifyContent="space-between" alignItems="flex-start" paddingLeft={8}>
           <Grid item xs={12} md={3}>
             <Typography variant="subtitle2" color="textSecondary">CEP</Typography>
             <Typography variant="body1">{fornecedor?.cep}</Typography>
@@ -166,8 +246,22 @@ export default function FornecedoresScreen() {
         <Divider sx={{ my: 3 }} />
 
         {/* Produtos */}
-        <Typography variant="h6" gutterBottom>Produtos</Typography>
-        <Grid container spacing={2} justifyContent="space-between" alignItems="flex-start">
+        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <ListItemAvatar>
+            <Avatar
+              sx={{
+                bgcolor:
+                  theme.palette.mode === "dark"
+                    ? theme.palette.secondary.dark
+                    : theme.palette.secondary.light,
+              }}
+            >
+              <ShoppingBasketIcon />
+            </Avatar>
+          </ListItemAvatar>
+          Produtos
+        </Typography>
+        <Grid container spacing={2} justifyContent="space-between" alignItems="flex-start" paddingLeft={8}>
           {produtos.length > 0 ? (
             produtos.map((produto, index) => (
               <Grid item xs={12} md={4} key={index}>

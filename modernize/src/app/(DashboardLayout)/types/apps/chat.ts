@@ -1,7 +1,7 @@
 // chat.ts
 import { differenceInHours } from 'date-fns'
 
-type attachType = {
+export type attachType = {
   icon?: string
   file?: string
   fileSize?: string
@@ -29,7 +29,7 @@ export interface ChatsType {
 }
 
 /** Shape mínimo do JSON que vem da API */
-export interface OctaChatApi {
+export interface ChatApi {
   id: string
   number: number
   channel: string
@@ -57,7 +57,7 @@ const isRecent = (isoDate: string): boolean =>
   differenceInHours(new Date(), new Date(isoDate)) <= 24
 
 /** Mapeia cada mensagem bruta para MessageType */
-function mapMessage(m: NonNullable<OctaChatApi['messages']>[number]): MessageType {
+function mapMessage(m: NonNullable<ChatApi['messages']>[number]): MessageType {
   return {
     id: m.id,
     senderId: m.senderId,
@@ -69,7 +69,7 @@ function mapMessage(m: NonNullable<OctaChatApi['messages']>[number]): MessageTyp
 }
 
 /** Mapeia um chat bruto para ChatsType */
-export function mapChat(c: OctaChatApi): ChatsType {
+export function mapChat(c: ChatApi): ChatsType {
   const rawMsgs = c.messages ?? []
   const messages = rawMsgs.map(mapMessage)
   const lastText =
@@ -86,24 +86,4 @@ export function mapChat(c: OctaChatApi): ChatsType {
     chatHistory: rawMsgs.length ? rawMsgs : undefined,
     messages,
   }
-}
-
-/**
- * Faz o fetch e devolve ChatsType[]
- */
-export async function fetchChats(): Promise<ChatsType[]> {
-  const accessToken = localStorage.getItem('accessToken')
-  if (!accessToken) throw new Error('Access token is missing')
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API}/api/octa/get-all-octa-chats`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  )
-  if (!res.ok) throw new Error(`Fetch error: ${res.status}`)
-  const data: OctaChatApi[] = await res.json()
-  return data.map(mapChat)
 }

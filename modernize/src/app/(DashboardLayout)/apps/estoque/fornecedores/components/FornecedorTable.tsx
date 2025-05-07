@@ -4,9 +4,7 @@ import {
   IconButton, Collapse, Box, Typography, Paper,
   Link
 } from '@mui/material';
-import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import { Fornecedor, Produto } from './Types';
-import { useState } from 'react';
 import { IconPencil } from '@tabler/icons-react';
 
 interface RowProps { fornecedor: Fornecedor; }
@@ -35,7 +33,7 @@ function Row({ fornecedor }: RowProps) {
         {/* Nova coluna “Produtos” */}
         <TableCell align="center">
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center' }}>
-            {fornecedor.produtos.map((p: Produto) => (
+            {fornecedor?.produtos?.map((p: Produto) => (
               <Box
                 key={p.id}
                 sx={{

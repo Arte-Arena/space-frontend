@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
@@ -181,14 +181,13 @@ const OrcamentoBackofficeScreen = () => {
     router.push('/auth/login');
   }
 
-  const verificarConfirmacaoPedidoArteFinal = async (orcamentoId: number, numero_pedido: number | null) => {
+  const verificarConfirmacaoPedidoArteFinal = useCallback((orcamentoId: number, numero_pedido: number | null) => {
     if (!numero_pedido) {
       setConfirmacaoArteFinalConfigurados(prev => ({ ...prev, [orcamentoId]: false }));
-      return;
     } else {
       setConfirmacaoArteFinalConfigurados(prev => ({ ...prev, [orcamentoId]: true }));
     }
-  }
+  }, []);
 
   const handleNovoPedido = () => {
     setIsAdding(true);
@@ -283,21 +282,21 @@ const OrcamentoBackofficeScreen = () => {
   useEffect(() => {
     if (dataOrcamentos && dataOrcamentos.data) {
       dataOrcamentos.data.forEach((orcamento: Orcamento) => {
-        setClientesConfigurados(prev => ({ 
-          ...prev, 
-          [orcamento.id]: !!orcamento.client_info?.client_id 
+        setClientesConfigurados(prev => ({
+          ...prev,
+          [orcamento.id]: !!orcamento.client_info?.client_id
         }));
-        
-        setUniformesConfigurados(prev => ({ 
-          ...prev, 
-          [orcamento.id]: !!orcamento.client_info?.has_uniform 
+
+        setUniformesConfigurados(prev => ({
+          ...prev,
+          [orcamento.id]: !!orcamento.client_info?.has_uniform
         }));
-        
-        setArteFinalConfigurados(prev => ({ 
-          ...prev, 
-          [orcamento.id]: orcamento.pedidos && orcamento.pedidos.length > 0 
+
+        setArteFinalConfigurados(prev => ({
+          ...prev,
+          [orcamento.id]: orcamento.pedidos && orcamento.pedidos.length > 0
         }));
-        
+
         verificarConfirmacaoPedidoArteFinal(orcamento.id, Number(orcamento.pedidos[0]?.numero_pedido) ?? false);
       });
     }
@@ -444,7 +443,7 @@ const OrcamentoBackofficeScreen = () => {
   const handleClientEmailDialog = (orcamentoId: number) => {
     setCurrentOrcamentoId(orcamentoId);
     setOpenClientEmailDialog(true);
-    
+
     // Verificar se o cliente já está cadastrado através do client_info
     const orcamento = dataOrcamentos?.data.find((o: Orcamento) => o.id === orcamentoId);
     if (orcamento?.client_info?.client_id) {
@@ -456,17 +455,17 @@ const OrcamentoBackofficeScreen = () => {
       setClientEmail('');
       setClientEmailConfirmation('');
     }
-    
+
     setClientEmailError(null);
   }
 
   const handleLinkClientEmail = async () => {
     if (!currentOrcamentoId) return;
-    
+
     try {
       setIsLinkingClient(true);
       setClientEmailError(null);
-      
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/orcamento/${currentOrcamentoId}/link-client`, {
         method: 'POST',
         headers: {
@@ -479,7 +478,7 @@ const OrcamentoBackofficeScreen = () => {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         setIsClientLinked(true);
         refetch();
@@ -506,12 +505,12 @@ const OrcamentoBackofficeScreen = () => {
   async function handleShortlinkUniform(uniformId: number) {
     setCurrentOrcamentoId(uniformId);
     setIsCheckingUniforms(false);
-    
+
     const orcamento = dataOrcamentos?.data.find((o: Orcamento) => o.id === uniformId);
     setExistingUniforms(!!orcamento?.client_info?.has_uniform);
-    
+
     setSketches([]);
-    
+
     if (orcamento?.client_info?.client_email) {
       setEmail(orcamento.client_info.client_email);
       setEmailConfirmation(orcamento.client_info.client_email);
@@ -519,7 +518,7 @@ const OrcamentoBackofficeScreen = () => {
       setEmail('');
       setEmailConfirmation('');
     }
-    
+
     setIsLinkGenerated(false);
     setApiError(null);
   }
@@ -840,7 +839,7 @@ const OrcamentoBackofficeScreen = () => {
                             >
                               <IconUser />
                             </Button>
-                            
+
                             <Dialog
                               open={openClientEmailDialog}
                               onClose={handleCloseClientEmailDialog}
@@ -866,20 +865,20 @@ const OrcamentoBackofficeScreen = () => {
                                           <strong>Nome:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.client_name}
                                         </Typography>
                                       )}
-                                      
+
                                       {currentOrcamentoId && dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact && (
                                         <Box sx={{ mt: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2 }}>
                                           <Typography variant="subtitle2" gutterBottom>
                                             Informações de Contato
                                           </Typography>
-                                          
+
                                           {/* Person Type */}
                                           {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type && (
                                             <Typography variant="body2">
                                               <strong>Tipo de Pessoa:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'F' ? 'Pessoa Física' : 'Pessoa Jurídica'}
                                             </Typography>
                                           )}
-                                          
+
                                           {/* Company Information - only displayed for PJ */}
                                           {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'J' && (
                                             <>
@@ -900,7 +899,7 @@ const OrcamentoBackofficeScreen = () => {
                                               )}
                                             </>
                                           )}
-                                          
+
                                           {/* PF Information */}
                                           {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.person_type === 'F' && (
                                             <>
@@ -916,26 +915,26 @@ const OrcamentoBackofficeScreen = () => {
                                               )}
                                             </>
                                           )}
-                                          
+
                                           {/* Contact Information */}
                                           {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.cell_phone && (
                                             <Typography variant="body2">
                                               <strong>Telefone:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.cell_phone}
                                             </Typography>
                                           )}
-                                          
+
                                           {/* Address Information */}
                                           <Box sx={{ mt: 1 }}>
                                             <Typography variant="subtitle2" gutterBottom>
                                               Endereço
                                             </Typography>
-                                            
+
                                             {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.zip_code && (
                                               <Typography variant="body2">
                                                 <strong>CEP:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.zip_code}
                                               </Typography>
                                             )}
-                                            
+
                                             {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.address && (
                                               <Typography variant="body2">
                                                 <strong>Endereço:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.address}
@@ -943,23 +942,23 @@ const OrcamentoBackofficeScreen = () => {
                                                 {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.complement && ` - ${dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.complement}`}
                                               </Typography>
                                             )}
-                                            
+
                                             {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.neighborhood && (
                                               <Typography variant="body2">
                                                 <strong>Bairro:</strong> {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.neighborhood}
                                               </Typography>
                                             )}
-                                            
-                                            {(dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.city || 
-                                             dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.state) && (
-                                              <Typography variant="body2">
-                                                <strong>Cidade/Estado:</strong> 
-                                                {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.city}
-                                                {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.city && 
-                                                 dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.state && ' - '}
-                                                {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.state}
-                                              </Typography>
-                                            )}
+
+                                            {(dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.city ||
+                                              dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.state) && (
+                                                <Typography variant="body2">
+                                                  <strong>Cidade/Estado:</strong>
+                                                  {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.city}
+                                                  {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.city &&
+                                                    dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.state && ' - '}
+                                                  {dataOrcamentos?.data.find((o: Orcamento) => o.id === currentOrcamentoId)?.client_info?.contact.state}
+                                                </Typography>
+                                              )}
                                           </Box>
                                         </Box>
                                       )}
@@ -986,7 +985,7 @@ const OrcamentoBackofficeScreen = () => {
                                       />
                                     </>
                                   )}
-                                   
+
                                   {clientEmailError && (
                                     <Box sx={{ mt: 1, p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
                                       <Typography color="error" variant="body2">
@@ -1051,7 +1050,7 @@ const OrcamentoBackofficeScreen = () => {
                             >
                               <IconShirtSport />
                             </Button>
-                            
+
                             <Dialog
                               open={openUniformDialog}
                               onClose={() => setOpenUniformDialog(false)}
@@ -1073,8 +1072,8 @@ const OrcamentoBackofficeScreen = () => {
                                   </Box>
                                 ) : (
                                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, my: 2 }}>
-                                    <Box sx={{ 
-                                      display: 'grid', 
+                                    <Box sx={{
+                                      display: 'grid',
                                       gridTemplateColumns: '1fr 1fr 1fr auto',
                                       gap: 2,
                                       alignItems: 'center',
@@ -1240,8 +1239,8 @@ const OrcamentoBackofficeScreen = () => {
                                     <Button onClick={() => setOpenUniformDialog(false)}>
                                       Fechar
                                     </Button>
-                                    <Button 
-                                      variant="contained" 
+                                    <Button
+                                      variant="contained"
                                       color="primary"
                                       component={Link}
                                       href={`/uniforms/${currentOrcamentoId}`}
