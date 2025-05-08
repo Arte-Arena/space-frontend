@@ -94,7 +94,13 @@ interface LeadTableProps {
   isFiltered: boolean;
 }
 
-type StatusColor = "success" | "warning" | "primary" | "error" | "secondary" | "info";
+type StatusColor =
+  | "success"
+  | "warning"
+  | "primary"
+  | "error"
+  | "secondary"
+  | "info";
 
 interface StatusColorProps {
   bg: StatusColor;
@@ -413,20 +419,25 @@ const LeadTable: React.FC<LeadTableProps> = ({
                                 </Typography>
                                 <Divider sx={{ mb: 2, width: "100%" }} />
                                 <Typography variant="body2" sx={{ mb: 2 }}>
-                                  Este lead possui um orçamento disponível. Você pode acessá-lo para mais detalhes.
+                                  Este lead possui um orçamento disponível. Você
+                                  pode acessá-lo para mais detalhes.
                                 </Typography>
                                 <Button
                                   variant="contained"
                                   color="primary"
                                   startIcon={<IconFileInvoice size={18} />}
-                                  onClick={() => handleNavigateToOrcamento(lead.orcamento_id!)}
+                                  onClick={() =>
+                                    handleNavigateToOrcamento(
+                                      lead.orcamento_id!,
+                                    )
+                                  }
                                 >
                                   Ver Orçamento
                                 </Button>
                               </Paper>
                             </Grid>
                           )}
-                          
+
                           {!lead.client_info &&
                             !lead.endereco &&
                             !lead.observacoes && (

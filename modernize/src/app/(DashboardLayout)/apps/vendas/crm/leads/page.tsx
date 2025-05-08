@@ -168,11 +168,16 @@ function LeadsScreen() {
           status = "Novo";
         } else {
           const hasPedido = item.tem_pedido;
-          
-          const lastInteraction = item.criado_em ? new Date(item.criado_em) : null;
+
+          const lastInteraction = item.criado_em
+            ? new Date(item.criado_em)
+            : null;
           const now = new Date();
-          
-          if (lastInteraction && (now.getTime() - lastInteraction.getTime()) > 60 * 24 * 60 * 60 * 1000) {
+
+          if (
+            lastInteraction &&
+            now.getTime() - lastInteraction.getTime() > 60 * 24 * 60 * 60 * 1000
+          ) {
             status = "Perdido";
           }
 
@@ -275,6 +280,113 @@ function LeadsScreen() {
           <Typography variant="body1" gutterBottom>
             Use o formulário abaixo para pesquisar leads existentes.
           </Typography>
+        </Paper>
+
+        <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+          <Typography variant="subtitle1" gutterBottom fontWeight="medium">
+            Legenda de Status
+          </Typography>
+          <Box
+            sx={{ display: "flex", flexDirection: "column", gap: 1.5, mt: 1 }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Box
+                sx={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: "50%",
+                  bgcolor: "#4caf50",
+                }}
+              />
+              <Box>
+                <Typography variant="body2" fontWeight="medium">
+                  Novo
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Lead recém chegado que ainda não teve orçamento gerado com a
+                  equipe de vendas.
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Box
+                sx={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: "50%",
+                  bgcolor: "#2196f3",
+                }}
+              />
+              <Box>
+                <Typography variant="body2" fontWeight="medium">
+                  Em andamento
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Lead com orçamento pendente, em processo de negociação com a
+                  equipe de vendas.
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Box
+                sx={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: "50%",
+                  bgcolor: "#ff9800",
+                }}
+              />
+              <Box>
+                <Typography variant="body2" fontWeight="medium">
+                  Aprovado
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Lead com orçamento aprovado, aguardando conversão em pedido.
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Box
+                sx={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: "50%",
+                  bgcolor: "#673ab7",
+                }}
+              />
+              <Box>
+                <Typography variant="body2" fontWeight="medium">
+                  Convertido
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Lead convertido em cliente com pedido relacionado finalizado.
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Box
+                sx={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: "50%",
+                  bgcolor: "#f44336",
+                }}
+              />
+              <Box>
+                <Typography variant="body2" fontWeight="medium">
+                  Perdido
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Lead sem andamento ou interação após 30 dias desde o último
+                  contato.
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
         </Paper>
 
         <LeadSearch onSearch={handleSearch} />
