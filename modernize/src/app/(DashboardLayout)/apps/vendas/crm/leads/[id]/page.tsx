@@ -547,7 +547,6 @@ function LeadDetailsPage() {
                     mb: 2,
                   }}
                 >
-                  {/* ID do Lead */}
                   <Typography variant="body2" color="text.secondary">
                     ID: {lead.id}
                   </Typography>
@@ -764,6 +763,8 @@ function LeadDetailsPage() {
                           height: "100%",
                           display: "flex",
                           flexDirection: "column",
+                          transition: "none",
+                          "&:hover": { transform: "none", boxShadow: 1 }
                         }}
                       >
                         <CardContent sx={{ flexGrow: 1, p: 2 }}>
@@ -919,6 +920,8 @@ function LeadDetailsPage() {
                           height: "100%",
                           display: "flex",
                           flexDirection: "column",
+                          transition: "none",
+                          "&:hover": { transform: "none", boxShadow: 1 }
                         }}
                       >
                         <CardContent sx={{ flexGrow: 1, p: 2 }}>
