@@ -21,7 +21,7 @@ jobs:
           echo "tag_name=$tag_name" >> $GITHUB_ENV
           echo "NEXT_PUBLIC_API=https://api.spacearena.net" >> .env
           echo "NEXT_PUBLIC_API_CLIENT=https://api.my.spacearena.net" >> .env
-          echo "NEXT_PUBLIC_WS_URL=ws://api.my.spacearena.net" >> .env
+          echo "NEXT_PUBLIC_WS_URL=wss://api.my.spacearena.net" >> .env
           echo "image_tag=$image_name:0.0.${{ github.run_number }}" >> $GITHUB_ENV
           echo "image_tag_latest=$image_name:latest" >> $GITHUB_ENV
           echo "Environment: Production"

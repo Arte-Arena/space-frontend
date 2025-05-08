@@ -23,7 +23,7 @@ export interface ChatsType {
   thumb: string
   recent: boolean
   excerpt: string
-  lastMessageDate?: string
+  createdAt?: string
   chatHistory?: any[]
   messages: MessageType[]
 }
@@ -82,7 +82,7 @@ export function mapChat(c: ChatApi): ChatsType {
     thumb: c.contact.avatarUrl ?? '',
     recent: isRecent(c.lastMessageDate),
     excerpt: lastText,
-    lastMessageDate: c.lastMessageDate,
+    createdAt: c.lastMessageDate,
     chatHistory: rawMsgs.length ? rawMsgs : undefined,
     messages,
   }
