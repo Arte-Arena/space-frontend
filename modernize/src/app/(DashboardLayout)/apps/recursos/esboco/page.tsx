@@ -29,12 +29,13 @@ import FormCachecol from './components/forms/Bandeiras/FormCachecol';
 import FormularioTresAtributos from './components/forms/Bandeiras/Form3Atributos';
 import FormularioQuatroAtributos from './components/forms/Bandeiras/Form4Atributos';
 import FormChineloShorts from './components/forms/Bandeiras/FormChineloShorts';
+import FormOutros from './components/forms/Bandeiras/fromOutros';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira Personalizada",
   "Bandeira de Carro", "Bandeira de Mesa", "Bandeira Oficial", "Bandeira Política", "Bandeira de Mão",
   "Bolachão", "Braçadeira", "Cachecol", "Camisão*", "Caneca Alumínio*", "Caneca Porcelana*",
-  "Canga*", "Capa de Barbeiro", "Chinelo de Dedo", "Chinelo Slide", "Chaveiro", "Estandarte",
+  "Canga*", "Capa de Barbeiro", "Chinelo de Dedo", "Chinelo Slide", "Chaveiro", "Cordão de Chaveiro", "Estandarte",
   "Faixa de Campeão*", "Faixa de Mão", "Flâmula", "Mouse Pad*", "Sacochila", "Shorts Praia",
   "Shorts Doll", "Tirante", "Toalha", "Windbanner"
 ];
@@ -90,6 +91,12 @@ const GeradorDeEsbocoScreen = () => {
   const isChineloShortsForm =
     form.produto.toLowerCase().includes('shorts') ||
     form.produto.toLowerCase().includes('chinelo');
+  
+    const isOutrosForm =
+    form.produto.toLowerCase().includes('cordão de chaveiro') ||
+    form.produto.toLowerCase() === 'chaveiro' ||
+    form.produto.toLowerCase().includes('mouse') ||
+    form.produto.toLowerCase().includes('tirante');
 
 
   const handleCloseSnackbar = () => {
@@ -192,8 +199,7 @@ const GeradorDeEsbocoScreen = () => {
       }));
     }
   }, [form.produto]);
-
-
+   
   useEffect(() => {
     if (form.produto.includes('Braçadeira')) {
       setForm(prev => ({ ...prev, fechamento: 'VELCRO' }));
@@ -206,6 +212,12 @@ const GeradorDeEsbocoScreen = () => {
     }
     if (form.produto === "Bandeira de Mesa") {
       setForm((prev) => ({ ...prev, haste: '30' }));
+    }
+    if (form.produto.toLowerCase().includes("cordão de chaveiro")){
+      setForm(prev => ({ ...prev, altura: '45', largura: '2' }));
+    }
+    if (form.produto.toLowerCase().includes("tirante")){
+      setForm(prev => ({ ...prev, altura: '1,4', largura: '' }));
     }
   }, [form.produto]);
 
@@ -295,7 +307,6 @@ const GeradorDeEsbocoScreen = () => {
               <TextField
                 label="Altura (m)"
                 name="altura"
-                type="number"
                 fullWidth
                 value={form.altura}
                 onChange={handleChange}
@@ -307,11 +318,11 @@ const GeradorDeEsbocoScreen = () => {
               <TextField
                 label="Largura (m)"
                 name="largura"
-                type="number"
                 fullWidth
                 value={form.largura}
                 onChange={handleChange}
                 disabled={disableDimensao}
+                placeholder={form.produto.toLowerCase().includes("tirante") ? "0,03, 0,04, 0,05m" : ""}
               />
             </Grid>
           </Grid>
@@ -432,6 +443,15 @@ const GeradorDeEsbocoScreen = () => {
               setForm={setForm}
             />
           )}
+          
+          {isOutrosForm && (
+            <FormOutros
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
 
           <Box display="flex" alignItems="center" gap={2} mt={3}>
             <Button
@@ -499,6 +519,22 @@ export default GeradorDeEsbocoScreen;
 // "2_atributos_estampa": ["Chinelo de Dedo", "Chinelo Slide", "Shorts Praia/Doll"],
 // "2_atributos_material": ["Mousepad", "Cordão de Chaveiro", "Tirante"]
 
+// Precisam ser feitos hoje:
+// BALACLAVA:
+
+// BANDEIRA DE MÃO:
+
+// CAMISÃO:
+
+// CANECA DE AUMINIO/procelana:
+
+// capa de barbeiro
+
+// vai ficar no mesmo
+// chaveiro
+// Cordão de Chaveiro
+// mouse pad
+// tirante
 
 // ALMOFADA:#
 // DIMENSÕES (...)
@@ -510,8 +546,6 @@ export default GeradorDeEsbocoScreen;
 // TECIDO (TACTEL, HELASTANO)
 // FACES (UMA OU DUPLA FACE)
 // ESTAMPA (SUBLIMADA)
-
-// BALACLAVA:
 
 // BANDANA:#
 // DIMENSÕES (...)
@@ -561,17 +595,17 @@ export default GeradorDeEsbocoScreen;
 // DUPLA FACE (NÃO, SIM)
 // FRANJAS (...*)
 
-// CANGA
+// CANGA#
 // DIMENSÕES (...)
 // TECIDO (STAR LISO, TACTEL)
 // ESTAMPA (SUBLIMADA)
 
-// CHINELO DE DEDO
+// CHINELO DE DEDO#
 // COR DO SOLADO (BRANCO, PRETO, AZUL MARINHO, AZUL CLARO, ROSA, ROXO, VERMELHO, VERDE, AMARELO)
 // COR DA TIRA (IGUAL AO SOLADO OBRIGATORIAMENTE)
 // ESTAMPA (SUBLIMADA)
 
-// CHINELO SLIDE
+// CHINELO SLIDE#
 // COR DO SOLADO (BRANCO, PRETO, ROSA, AZUL, VERMELHO)
 // ESTAMPA (SUBLIMADA)
 
@@ -580,12 +614,12 @@ export default GeradorDeEsbocoScreen;
 // LARGURA (2CM)
 // MATERIAL (FITA NÃO ALVEJADA)
 
-// FAIXA DE CAMPEÃO
+// FAIXA DE CAMPEÃO#
 // DIMENSÕES (155 X 15CM)
 // TECIDO (TACTEL, CETIM, OXFORD)
 // ESTAMPA (SUBLIMADA)
 
-// FAIXA DE MÃO
+// FAIXA DE MÃO#
 // DIMENSÕES (70 X 20CM, 100 X 25CM)
 // MATERIAL (TACTEL)
 // ESTAMPA (SUBLIMADA)
@@ -606,7 +640,7 @@ export default GeradorDeEsbocoScreen;
 // DIMENSÕES (...)
 // MATERIAL (NEOPLEX)
 
-// SACOCHILA
+// SACOCHILA#
 // DIMENSÕES (40 X 30CM)
 // TECIDO (MICROFIBRA)
 // ESTAMPA (SUBLIMADA)
@@ -623,12 +657,12 @@ export default GeradorDeEsbocoScreen;
 // LARGURA (3, 4, 5CM)
 // MATERIAL (FITA NÃO ALVEJADA)
 
-// TOALHA
+// TOALHA#
 // DIMENSÕES (140 X 70CM)
 // TECIDO (ATOALHADO)
 // ESTAMPA (SUBLIMADA)
 
-// WINDBANNER
+// WINDBANNER#
 // DIMENSÃO (2M, 3M, 4M)
 // TECIDO (MICROFIBRA)
 // MODELO (FACA, VELA, GOTA, PENA)
