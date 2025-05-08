@@ -1,14 +1,14 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import {
-  Box, TextField, MenuItem, FormControlLabel, Checkbox, Typography, Grid, Select, InputLabel, FormControl,
+  Box, TextField, MenuItem, Typography, Grid, Select, InputLabel, FormControl,
   Button,
   AlertProps,
   Alert,
   Snackbar,
   LinearProgress,
-  Backdrop,
-  CircularProgress
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import { IconFileTypePng } from '@tabler/icons-react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
@@ -59,6 +59,7 @@ const GeradorDeEsbocoScreen = () => {
     largura: '',
     material: '',
     ilhoses: false,
+    isCentimeter: false,
     qtdIlhoses: '',
     bordaMastro: false,
     composicao: '',
@@ -91,8 +92,8 @@ const GeradorDeEsbocoScreen = () => {
   const isChineloShortsForm =
     form.produto.toLowerCase().includes('shorts') ||
     form.produto.toLowerCase().includes('chinelo');
-  
-    const isOutrosForm =
+
+  const isOutrosForm =
     form.produto.toLowerCase().includes('cordão de chaveiro') ||
     form.produto.toLowerCase() === 'chaveiro' ||
     form.produto.toLowerCase().includes('mouse') ||
@@ -199,7 +200,7 @@ const GeradorDeEsbocoScreen = () => {
       }));
     }
   }, [form.produto]);
-   
+
   useEffect(() => {
     if (form.produto.includes('Braçadeira')) {
       setForm(prev => ({ ...prev, fechamento: 'VELCRO' }));
@@ -213,10 +214,10 @@ const GeradorDeEsbocoScreen = () => {
     if (form.produto === "Bandeira de Mesa") {
       setForm((prev) => ({ ...prev, haste: '30' }));
     }
-    if (form.produto.toLowerCase().includes("cordão de chaveiro")){
+    if (form.produto.toLowerCase().includes("cordão de chaveiro")) {
       setForm(prev => ({ ...prev, altura: '45', largura: '2' }));
     }
-    if (form.produto.toLowerCase().includes("tirante")){
+    if (form.produto.toLowerCase().includes("tirante")) {
       setForm(prev => ({ ...prev, altura: '1,4', largura: '' }));
     }
   }, [form.produto]);
@@ -303,7 +304,7 @@ const GeradorDeEsbocoScreen = () => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={3}>
+            <Grid item xs={12} sm={1.5}>
               <TextField
                 label="Altura (m)"
                 name="altura"
@@ -314,7 +315,7 @@ const GeradorDeEsbocoScreen = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={3}>
+            <Grid item xs={12} sm={1.5}>
               <TextField
                 label="Largura (m)"
                 name="largura"
@@ -323,6 +324,18 @@ const GeradorDeEsbocoScreen = () => {
                 onChange={handleChange}
                 disabled={disableDimensao}
                 placeholder={form.produto.toLowerCase().includes("tirante") ? "0,03, 0,04, 0,05m" : ""}
+              />
+            </Grid>
+            <Grid item xs={2} display="flex" alignItems="center">
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="isCentimeter"
+                    checked={form.isCentimeter || false}
+                    onChange={handleCheckboxChange}
+                  />
+                }
+                label="Em cm?"
               />
             </Grid>
           </Grid>
@@ -363,7 +376,7 @@ const GeradorDeEsbocoScreen = () => {
             />
           )}
 
-          {(form.produto.toLowerCase().includes('bandeira oficial') || form.produto.toLowerCase().includes('bandeira personalizada'))  && (
+          {(form.produto.toLowerCase().includes('bandeira oficial') || form.produto.toLowerCase().includes('bandeira personalizada')) && (
             <FormBandeira
               form={form}
               handleChange={handleChange}
@@ -443,7 +456,7 @@ const GeradorDeEsbocoScreen = () => {
               setForm={setForm}
             />
           )}
-          
+
           {isOutrosForm && (
             <FormOutros
               form={form}
