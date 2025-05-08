@@ -12,6 +12,18 @@ import {
   Chip,
   Divider,
   Grid,
+  ToggleButtonGroup,
+  ToggleButton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Card,
+  CardContent,
+  CardActions,
+  Tooltip,
+  IconButton,
+  Menu,
 } from "@mui/material";
 import {
   IconArrowLeft,
@@ -24,11 +36,18 @@ import {
   IconInfoCircle,
   IconFileInvoice,
   IconExternalLink,
+  IconThumbUp,
+  IconThumbDown,
+  IconMessages,
+  IconCategory,
+  IconCurrencyReal,
+  IconCalendar,
 } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { logger } from "@/utils/logger";
+import { SelectChangeEvent } from "@mui/material/Select";
 
 const BCrumb = [
   {
@@ -58,8 +77,22 @@ interface Lead {
   jaCadastrado: boolean;
   origem: string;
   idOcta?: string;
+  orcamentos?: Array<{
+    id: string;
+    valor: number;
+    dataCriacao: string;
+    status: "aprovado" | "pendente" | "perdido";
+  }>;
   orcamento_id?: string;
   orcamento_status?: "aprovado" | "pendente" | null;
+  qualificacao?: "bom" | "ruim" | null;
+  seguimento?:
+    | "atletica_interclasse"
+    | "times"
+    | "pessoa_juridica"
+    | "agencias_marketing"
+    | "outros"
+    | null;
   endereco?: {
     rua: string;
     numero: string;
@@ -94,7 +127,6 @@ interface Lead {
   };
 }
 
-// Mock data para exemplificar a interface até que a API esteja pronta
 const mockLeadData: Record<string, Lead> = {
   "123456": {
     id: "123456",
@@ -107,8 +139,30 @@ const mockLeadData: Record<string, Lead> = {
     jaCadastrado: true,
     origem: "Site",
     idOcta: "123456",
+    qualificacao: "bom",
+    seguimento: "atletica_interclasse",
     orcamento_id: "ORÇ-2023-001",
     orcamento_status: "pendente",
+    orcamentos: [
+      {
+        id: "ORÇ-2023-001",
+        valor: 2500.0,
+        dataCriacao: "2023-06-16T14:30:00",
+        status: "pendente",
+      },
+      {
+        id: "ORÇ-2023-015",
+        valor: 1800.5,
+        dataCriacao: "2023-07-05T09:15:00",
+        status: "perdido",
+      },
+      {
+        id: "ORÇ-2023-032",
+        valor: 3200.75,
+        dataCriacao: "2023-08-12T16:45:00",
+        status: "aprovado",
+      },
+    ],
     endereco: {
       rua: "Avenida Paulista",
       numero: "1000",
@@ -154,8 +208,24 @@ const mockLeadData: Record<string, Lead> = {
     jaCadastrado: true,
     origem: "Indicação",
     idOcta: "789012",
+    qualificacao: "ruim",
+    seguimento: "times",
     orcamento_id: "ORÇ-2023-045",
     orcamento_status: "aprovado",
+    orcamentos: [
+      {
+        id: "ORÇ-2023-045",
+        valor: 15750.0,
+        dataCriacao: "2023-07-22T10:30:00",
+        status: "aprovado",
+      },
+      {
+        id: "ORÇ-2023-046",
+        valor: 12800.0,
+        dataCriacao: "2023-07-22T10:35:00",
+        status: "pendente",
+      },
+    ],
     endereco: {
       rua: "Rua da Indústria",
       numero: "500",
@@ -209,6 +279,15 @@ function LeadDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [lead, setLead] = useState<Lead | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [qualificacao, setQualificacao] = useState<"bom" | "ruim" | null>(null);
+  const [seguimento, setSeguimento] = useState<
+    | "atletica_interclasse"
+    | "times"
+    | "pessoa_juridica"
+    | "agencias_marketing"
+    | "outros"
+    | null
+  >(null);
 
   useEffect(() => {
     if (!leadId || leadId === "undefined") {
@@ -217,17 +296,16 @@ function LeadDetailsPage() {
       return;
     }
 
-    // Simular carregamento para demonstrar o estado de loading
     const loadMockData = () => {
       setIsLoading(true);
 
-      // Simular um delay de rede
       setTimeout(() => {
-        // Tentar encontrar os dados mock para o ID fornecido
-        const mockLead = mockLeadData[leadId] || mockLeadData["123456"]; // Fallback para um lead default
+        const mockLead = mockLeadData[leadId] || mockLeadData["123456"];
 
         if (mockLead) {
           setLead(mockLead);
+          setQualificacao(mockLead.qualificacao || null);
+          setSeguimento(mockLead.seguimento || null);
         } else {
           setError("Lead não encontrado");
           setIsValidId(false);
@@ -242,6 +320,38 @@ function LeadDetailsPage() {
 
   const handleNavigateToOrcamento = (orcamentoId: string) => {
     router.push(`/apps/orcamento/${orcamentoId}`);
+  };
+
+  const handleQualificacaoChange = (
+    _event: React.MouseEvent<HTMLElement>,
+    newQualificacao: "bom" | "ruim" | null,
+  ) => {
+    if (newQualificacao !== null) {
+      setQualificacao(newQualificacao);
+      if (lead) {
+        setLead({ ...lead, qualificacao: newQualificacao });
+      }
+    }
+  };
+
+  const handleSeguimentoChange = (event: SelectChangeEvent) => {
+    const newSeguimento = event.target.value as
+      | "atletica_interclasse"
+      | "times"
+      | "pessoa_juridica"
+      | "agencias_marketing"
+      | "outros"
+      | null;
+    setSeguimento(newSeguimento);
+    if (lead) {
+      setLead({ ...lead, seguimento: newSeguimento });
+    }
+  };
+
+  const handleOpenOctaChat = () => {
+    if (lead?.idOcta) {
+      window.open(`https://app.octadesk.com/chat/${lead.idOcta}`, "_blank");
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -311,9 +421,9 @@ function LeadDetailsPage() {
       ) : lead ? (
         <Box>
           <Paper elevation={1} sx={{ p: 4, mb: 3 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={3}>
               <Grid item xs={12} md={8}>
-                <Typography variant="h4" gutterBottom>
+                <Typography variant="h4" gutterBottom sx={{ mb: 1 }}>
                   {lead.nome}
                   {lead.jaCadastrado && (
                     <Chip
@@ -324,9 +434,134 @@ function LeadDetailsPage() {
                     />
                   )}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  ID: {lead.id}
-                </Typography>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 1,
+                    mb: 2,
+                  }}
+                >
+                  {/* ID do Lead */}
+                  <Typography variant="body2" color="text.secondary">
+                    ID: {lead.id}
+                  </Typography>
+
+                  <Divider
+                    orientation="vertical"
+                    flexItem
+                    sx={{ mx: 1, height: 20 }}
+                  />
+
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mr: 1 }}
+                    >
+                      Classificação:
+                    </Typography>
+                    <ToggleButtonGroup
+                      value={qualificacao}
+                      exclusive
+                      onChange={handleQualificacaoChange}
+                      aria-label="qualificação do cliente"
+                      size="small"
+                    >
+                      <ToggleButton
+                        value="bom"
+                        aria-label="bom cliente"
+                        sx={{
+                          py: 0.5,
+                          "&.Mui-selected": {
+                            bgcolor: "success.light",
+                            color: "success.dark",
+                            "&:hover": { bgcolor: "success.light" },
+                          },
+                        }}
+                      >
+                        <IconThumbUp size={18} />
+                      </ToggleButton>
+                      <ToggleButton
+                        value="ruim"
+                        aria-label="cliente ruim"
+                        sx={{
+                          py: 0.5,
+                          "&.Mui-selected": {
+                            bgcolor: "error.light",
+                            color: "error.dark",
+                            "&:hover": { bgcolor: "error.light" },
+                          },
+                        }}
+                      >
+                        <IconThumbDown size={18} />
+                      </ToggleButton>
+                    </ToggleButtonGroup>
+                  </Box>
+
+                  <Divider
+                    orientation="vertical"
+                    flexItem
+                    sx={{ mx: 1, height: 20 }}
+                  />
+
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mr: 1 }}
+                    >
+                      Seguimento:
+                    </Typography>
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                      <Select
+                        value={seguimento || ""}
+                        onChange={handleSeguimentoChange}
+                        displayEmpty
+                        variant="outlined"
+                        sx={{ height: 32 }}
+                      >
+                        <MenuItem value="">
+                          <em>Selecionar</em>
+                        </MenuItem>
+                        <MenuItem value="atletica_interclasse">
+                          Atlética/Interclasse
+                        </MenuItem>
+                        <MenuItem value="times">Times</MenuItem>
+                        <MenuItem value="pessoa_juridica">
+                          Pessoa Jurídica
+                        </MenuItem>
+                        <MenuItem value="agencias_marketing">
+                          Agências/Marketing
+                        </MenuItem>
+                        <MenuItem value="outros">Outros</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
+
+                  {lead.idOcta && (
+                    <>
+                      <Divider
+                        orientation="vertical"
+                        flexItem
+                        sx={{ mx: 1, height: 20 }}
+                      />
+
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        startIcon={<IconMessages size={16} />}
+                        onClick={handleOpenOctaChat}
+                        sx={{ height: 32 }}
+                      >
+                        Chat
+                      </Button>
+                    </>
+                  )}
+                </Box>
               </Grid>
               <Grid item xs={12} md={4} sx={{ textAlign: { md: "right" } }}>
                 <Chip
@@ -356,7 +591,7 @@ function LeadDetailsPage() {
             </Grid>
           </Paper>
 
-          {lead.orcamento_id && (
+          {lead.orcamentos && lead.orcamentos.length > 0 && (
             <Paper elevation={1} sx={{ p: 4, mb: 3 }}>
               <Box
                 sx={{
@@ -366,9 +601,6 @@ function LeadDetailsPage() {
                     theme.palette.mode === "dark"
                       ? "rgba(255, 255, 255, 0.05)"
                       : "rgba(0, 0, 0, 0.02)",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
                 }}
               >
                 <Typography
@@ -383,21 +615,111 @@ function LeadDetailsPage() {
                   }}
                 >
                   <IconFileInvoice size={18} style={{ marginRight: 8 }} />
-                  Orçamento disponível
+                  Orçamentos
                 </Typography>
-                <Divider sx={{ mb: 2, width: "100%" }} />
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                  Este lead possui um orçamento disponível. Você pode acessá-lo
-                  para mais detalhes.
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<IconFileInvoice size={18} />}
-                  onClick={() => handleNavigateToOrcamento(lead.orcamento_id!)}
-                >
-                  Ver orçamento
-                </Button>
+                <Divider sx={{ mb: 2 }} />
+
+                <Grid container spacing={2}>
+                  {lead.orcamentos.map((orcamento) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={orcamento.id}>
+                      <Card
+                        elevation={1}
+                        sx={{
+                          height: "100%",
+                          display: "flex",
+                          flexDirection: "column",
+                        }}
+                      >
+                        <CardContent sx={{ flexGrow: 1, p: 2 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              mb: 1,
+                            }}
+                          >
+                            <Typography variant="subtitle2" component="div">
+                              {orcamento.id}
+                            </Typography>
+                            <Chip
+                              label={
+                                orcamento.status === "aprovado"
+                                  ? "Aprovado"
+                                  : orcamento.status === "perdido"
+                                    ? "Perdido"
+                                    : "Pendente"
+                              }
+                              size="small"
+                              color={
+                                orcamento.status === "aprovado"
+                                  ? "success"
+                                  : orcamento.status === "perdido"
+                                    ? "error"
+                                    : "warning"
+                              }
+                            />
+                          </Box>
+
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              mb: 1,
+                            }}
+                          >
+                            <IconCurrencyReal
+                              size={16}
+                              style={{ marginRight: 6, opacity: 0.7 }}
+                            />
+                            <Typography
+                              variant="body1"
+                              component="div"
+                              sx={{ fontWeight: "medium" }}
+                            >
+                              {orcamento.valor.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              })}
+                            </Typography>
+                          </Box>
+
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <IconCalendar
+                              size={16}
+                              style={{ marginRight: 6, opacity: 0.7 }}
+                            />
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {format(
+                                new Date(orcamento.dataCriacao),
+                                "dd/MM/yyyy",
+                                {
+                                  locale: ptBR,
+                                },
+                              )}
+                            </Typography>
+                          </Box>
+                        </CardContent>
+                        <CardActions sx={{ p: 1, pt: 0 }}>
+                          <Button
+                            size="small"
+                            variant="text"
+                            fullWidth
+                            startIcon={<IconFileInvoice size={14} />}
+                            onClick={() =>
+                              handleNavigateToOrcamento(orcamento.id)
+                            }
+                          >
+                            Ver detalhes
+                          </Button>
+                        </CardActions>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
               </Box>
             </Paper>
           )}
