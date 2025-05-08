@@ -295,7 +295,7 @@ function LeadsScreen() {
                   width: 16,
                   height: 16,
                   borderRadius: "50%",
-                  bgcolor: "#4caf50",
+                  bgcolor: (theme) => theme.palette.info.main,
                 }}
               />
               <Box>
@@ -315,7 +315,7 @@ function LeadsScreen() {
                   width: 16,
                   height: 16,
                   borderRadius: "50%",
-                  bgcolor: "#2196f3",
+                  bgcolor: (theme) => theme.palette.warning.main,
                 }}
               />
               <Box>
@@ -335,7 +335,7 @@ function LeadsScreen() {
                   width: 16,
                   height: 16,
                   borderRadius: "50%",
-                  bgcolor: "#ff9800",
+                  bgcolor: (theme) => theme.palette.success.main,
                 }}
               />
               <Box>
@@ -354,7 +354,7 @@ function LeadsScreen() {
                   width: 16,
                   height: 16,
                   borderRadius: "50%",
-                  bgcolor: "#673ab7",
+                  bgcolor: (theme) => theme.palette.primary.main,
                 }}
               />
               <Box>
@@ -373,7 +373,7 @@ function LeadsScreen() {
                   width: 16,
                   height: 16,
                   borderRadius: "50%",
-                  bgcolor: "#f44336",
+                  bgcolor: (theme) => theme.palette.error.main,
                 }}
               />
               <Box>
