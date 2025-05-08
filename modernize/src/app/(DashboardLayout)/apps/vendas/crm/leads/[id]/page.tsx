@@ -15,15 +15,11 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   Card,
   CardContent,
   CardActions,
-  Tooltip,
-  IconButton,
-  Menu,
 } from "@mui/material";
 import {
   IconArrowLeft,
@@ -35,18 +31,19 @@ import {
   IconNotes,
   IconInfoCircle,
   IconFileInvoice,
-  IconExternalLink,
   IconThumbUp,
   IconThumbDown,
   IconMessages,
-  IconCategory,
   IconCurrencyReal,
   IconCalendar,
+  IconUserCircle,
+  IconPackage,
+  IconShoppingCart,
+  IconTruckDelivery,
 } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { logger } from "@/utils/logger";
 import { SelectChangeEvent } from "@mui/material/Select";
 
 const BCrumb = [
@@ -77,11 +74,24 @@ interface Lead {
   jaCadastrado: boolean;
   origem: string;
   idOcta?: string;
+  tipoCliente?: "b2b" | "b2c";
   orcamentos?: Array<{
     id: string;
     valor: number;
     dataCriacao: string;
     status: "aprovado" | "pendente" | "perdido";
+    vendedor: string;
+  }>;
+  produtos?: Array<{
+    id: string;
+    dataCriacao: string;
+    itens: Array<{
+      produto: string;
+      quantidade: number;
+      valorUnitario: number;
+    }>;
+    valorTotal: number;
+    status: "entregue" | "em_producao" | "enviado" | "cancelado";
   }>;
   orcamento_id?: string;
   orcamento_status?: "aprovado" | "pendente" | null;
@@ -139,6 +149,7 @@ const mockLeadData: Record<string, Lead> = {
     jaCadastrado: true,
     origem: "Site",
     idOcta: "123456",
+    tipoCliente: "b2c",
     qualificacao: "bom",
     seguimento: "atletica_interclasse",
     orcamento_id: "ORÇ-2023-001",
@@ -149,18 +160,54 @@ const mockLeadData: Record<string, Lead> = {
         valor: 2500.0,
         dataCriacao: "2023-06-16T14:30:00",
         status: "pendente",
+        vendedor: "Carlos Oliveira",
       },
       {
         id: "ORÇ-2023-015",
         valor: 1800.5,
         dataCriacao: "2023-07-05T09:15:00",
         status: "perdido",
+        vendedor: "Ana Silva",
       },
       {
         id: "ORÇ-2023-032",
         valor: 3200.75,
         dataCriacao: "2023-08-12T16:45:00",
         status: "aprovado",
+        vendedor: "Mariana Santos",
+      },
+    ],
+    produtos: [
+      {
+        id: "PED-2023-078",
+        dataCriacao: "2023-07-05T14:30:00",
+        itens: [
+          {
+            produto: "Camiseta Personalizada",
+            quantidade: 25,
+            valorUnitario: 45.9,
+          },
+          {
+            produto: "Shorts Esportivo",
+            quantidade: 15,
+            valorUnitario: 65.5,
+          },
+        ],
+        valorTotal: 2130.0,
+        status: "entregue",
+      },
+      {
+        id: "PED-2023-103",
+        dataCriacao: "2023-08-18T09:45:00",
+        itens: [
+          {
+            produto: "Agasalho Completo",
+            quantidade: 10,
+            valorUnitario: 189.9,
+          },
+        ],
+        valorTotal: 1899.0,
+        status: "em_producao",
       },
     ],
     endereco: {
@@ -208,6 +255,7 @@ const mockLeadData: Record<string, Lead> = {
     jaCadastrado: true,
     origem: "Indicação",
     idOcta: "789012",
+    tipoCliente: "b2b",
     qualificacao: "ruim",
     seguimento: "times",
     orcamento_id: "ORÇ-2023-045",
@@ -218,12 +266,52 @@ const mockLeadData: Record<string, Lead> = {
         valor: 15750.0,
         dataCriacao: "2023-07-22T10:30:00",
         status: "aprovado",
+        vendedor: "Rafael Costa",
       },
       {
         id: "ORÇ-2023-046",
         valor: 12800.0,
         dataCriacao: "2023-07-22T10:35:00",
         status: "pendente",
+        vendedor: "Juliana Mendes",
+      },
+    ],
+    produtos: [
+      {
+        id: "PED-2023-055",
+        dataCriacao: "2023-07-25T11:20:00",
+        itens: [
+          {
+            produto: "Uniforme Completo Time",
+            quantidade: 30,
+            valorUnitario: 320.0,
+          },
+          {
+            produto: "Meiões Esportivos",
+            quantidade: 30,
+            valorUnitario: 28.9,
+          },
+          {
+            produto: "Jaqueta do Time",
+            quantidade: 15,
+            valorUnitario: 189.5,
+          },
+        ],
+        valorTotal: 12742.5,
+        status: "enviado",
+      },
+      {
+        id: "PED-2023-067",
+        dataCriacao: "2023-08-10T16:40:00",
+        itens: [
+          {
+            produto: "Camiseta Comemorativa",
+            quantidade: 50,
+            valorUnitario: 79.9,
+          },
+        ],
+        valorTotal: 3995.0,
+        status: "cancelado",
       },
     ],
     endereco: {
@@ -268,6 +356,7 @@ const mockLeadData: Record<string, Lead> = {
     jaCadastrado: false,
     origem: "Formulário de Contato",
     idOcta: "987654",
+    tipoCliente: "b2c",
   },
 };
 
@@ -288,6 +377,7 @@ function LeadDetailsPage() {
     | "outros"
     | null
   >(null);
+  const [tipoCliente, setTipoCliente] = useState<"b2b" | "b2c" | null>(null);
 
   useEffect(() => {
     if (!leadId || leadId === "undefined") {
@@ -306,6 +396,7 @@ function LeadDetailsPage() {
           setLead(mockLead);
           setQualificacao(mockLead.qualificacao || null);
           setSeguimento(mockLead.seguimento || null);
+          setTipoCliente(mockLead.tipoCliente || null);
         } else {
           setError("Lead não encontrado");
           setIsValidId(false);
@@ -348,6 +439,14 @@ function LeadDetailsPage() {
     }
   };
 
+  const handleTipoClienteChange = (event: SelectChangeEvent) => {
+    const newTipoCliente = event.target.value as "b2b" | "b2c" | null;
+    setTipoCliente(newTipoCliente);
+    if (lead) {
+      setLead({ ...lead, tipoCliente: newTipoCliente as "b2b" | "b2c" });
+    }
+  };
+
   const handleOpenOctaChat = () => {
     if (lead?.idOcta) {
       window.open(`https://app.octadesk.com/chat/${lead.idOcta}`, "_blank");
@@ -357,17 +456,21 @@ function LeadDetailsPage() {
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "novo":
-        return { bg: "info.light", color: "info.main" };
+        return "info";
       case "em andamento":
-        return { bg: "warning.light", color: "warning.main" };
+      case "em_producao":
+        return "warning";
       case "aprovado":
-        return { bg: "success.light", color: "success.main" };
+      case "entregue":
+        return "success";
       case "convertido":
-        return { bg: "primary.light", color: "primary.main" };
+      case "enviado":
+        return "primary";
       case "perdido":
-        return { bg: "error.light", color: "error.main" };
+      case "cancelado":
+        return "error";
       default:
-        return { bg: "secondary.light", color: "secondary.main" };
+        return "secondary";
     }
   };
 
@@ -541,6 +644,37 @@ function LeadDetailsPage() {
                     </FormControl>
                   </Box>
 
+                  <Divider
+                    orientation="vertical"
+                    flexItem
+                    sx={{ mx: 1, height: 20 }}
+                  />
+
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mr: 1 }}
+                    >
+                      Tipo:
+                    </Typography>
+                    <FormControl size="small" sx={{ minWidth: 100 }}>
+                      <Select
+                        value={tipoCliente || ""}
+                        onChange={handleTipoClienteChange}
+                        displayEmpty
+                        variant="outlined"
+                        sx={{ height: 32 }}
+                      >
+                        <MenuItem value="">
+                          <em>Selecionar</em>
+                        </MenuItem>
+                        <MenuItem value="b2b">B2B</MenuItem>
+                        <MenuItem value="b2c">B2C</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
+
                   {lead.idOcta && (
                     <>
                       <Divider
@@ -567,8 +701,10 @@ function LeadDetailsPage() {
                 <Chip
                   label={lead.status}
                   sx={{
-                    bgcolor: (theme) => getStatusColor(lead.status).bg,
-                    color: (theme) => getStatusColor(lead.status).color,
+                    bgcolor: (theme) =>
+                      `${theme.palette[getStatusColor(lead.status)].light}`,
+                    color: (theme) =>
+                      `${theme.palette[getStatusColor(lead.status)].main}`,
                     borderRadius: "8px",
                     fontSize: "0.9rem",
                     py: 0.5,
@@ -702,6 +838,28 @@ function LeadDetailsPage() {
                               )}
                             </Typography>
                           </Box>
+
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              mt: 1,
+                              pt: 1,
+                              borderTop: "1px dashed",
+                              borderColor: "divider",
+                            }}
+                          >
+                            <IconUserCircle
+                              size={16}
+                              style={{ marginRight: 6, opacity: 0.7 }}
+                            />
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              Vendedor: {orcamento.vendedor}
+                            </Typography>
+                          </Box>
                         </CardContent>
                         <CardActions sx={{ p: 1, pt: 0 }}>
                           <Button
@@ -712,6 +870,203 @@ function LeadDetailsPage() {
                             onClick={() =>
                               handleNavigateToOrcamento(orcamento.id)
                             }
+                          >
+                            Ver detalhes
+                          </Button>
+                        </CardActions>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            </Paper>
+          )}
+
+          {lead.produtos && lead.produtos.length > 0 && (
+            <Paper elevation={1} sx={{ p: 4, mb: 3 }}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "rgba(255, 255, 255, 0.05)"
+                      : "rgba(0, 0, 0, 0.02)",
+                }}
+              >
+                <Typography
+                  variant="subtitle1"
+                  gutterBottom
+                  sx={{
+                    color: "primary.main",
+                    fontWeight: "medium",
+                    display: "flex",
+                    alignItems: "center",
+                    pb: 1,
+                  }}
+                >
+                  <IconPackage size={18} style={{ marginRight: 8 }} />
+                  Produtos
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+
+                <Grid container spacing={2}>
+                  {lead.produtos.map((pedido) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={pedido.id}>
+                      <Card
+                        elevation={1}
+                        sx={{
+                          height: "100%",
+                          display: "flex",
+                          flexDirection: "column",
+                        }}
+                      >
+                        <CardContent sx={{ flexGrow: 1, p: 2 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              mb: 1,
+                            }}
+                          >
+                            <Typography variant="subtitle2" component="div">
+                              {pedido.id}
+                            </Typography>
+                            {pedido.status === "entregue" && (
+                              <Chip
+                                label="Entregue"
+                                size="small"
+                                color="success"
+                                icon={<IconTruckDelivery size={14} />}
+                              />
+                            )}
+                            {pedido.status === "em_producao" && (
+                              <Chip
+                                label="Em Produção"
+                                size="small"
+                                color="warning"
+                              />
+                            )}
+                            {pedido.status === "enviado" && (
+                              <Chip
+                                label="Enviado"
+                                size="small"
+                                color="primary"
+                              />
+                            )}
+                            {pedido.status === "cancelado" && (
+                              <Chip
+                                label="Cancelado"
+                                size="small"
+                                color="error"
+                              />
+                            )}
+                          </Box>
+
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              mb: 1,
+                            }}
+                          >
+                            <IconCurrencyReal
+                              size={16}
+                              style={{ marginRight: 6, opacity: 0.7 }}
+                            />
+                            <Typography
+                              variant="body1"
+                              component="div"
+                              sx={{ fontWeight: "medium" }}
+                            >
+                              {pedido.valorTotal.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              })}
+                            </Typography>
+                          </Box>
+
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              mb: 1,
+                            }}
+                          >
+                            <IconCalendar
+                              size={16}
+                              style={{ marginRight: 6, opacity: 0.7 }}
+                            />
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {format(
+                                new Date(pedido.dataCriacao),
+                                "dd/MM/yyyy",
+                                {
+                                  locale: ptBR,
+                                },
+                              )}
+                            </Typography>
+                          </Box>
+
+                          <Divider sx={{ my: 1 }} />
+
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ display: "block", mb: 0.5 }}
+                          >
+                            Itens:
+                          </Typography>
+
+                          {pedido.itens.map((item, index) => (
+                            <Box
+                              key={index}
+                              sx={{
+                                mb: 0.5,
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Box
+                                sx={{ display: "flex", alignItems: "center" }}
+                              >
+                                <IconShoppingCart
+                                  size={12}
+                                  style={{ marginRight: 4, opacity: 0.7 }}
+                                />
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    maxWidth: "150px",
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    display: "inline-block",
+                                  }}
+                                >
+                                  {item.produto}
+                                </Typography>
+                              </Box>
+                              <Typography
+                                variant="caption"
+                                sx={{ fontWeight: "medium" }}
+                              >
+                                {item.quantidade}x
+                              </Typography>
+                            </Box>
+                          ))}
+                        </CardContent>
+                        <CardActions sx={{ p: 1, pt: 0 }}>
+                          <Button
+                            size="small"
+                            variant="text"
+                            fullWidth
+                            startIcon={<IconPackage size={14} />}
                           >
                             Ver detalhes
                           </Button>
