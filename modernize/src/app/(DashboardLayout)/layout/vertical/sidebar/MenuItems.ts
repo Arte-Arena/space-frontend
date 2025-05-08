@@ -45,6 +45,7 @@ import {
   IconUserPentagon,
   IconUserPlus,
   IconZoomInArea,
+  IconBrandWhatsapp,
 } from "@tabler/icons-react";
 
 interface MenuitemsType {
@@ -138,7 +139,7 @@ const getMenuItems = (): MenuitemsType[] => {
             {
               id: uniqueId(),
               title: "Atendimento Externo",
-              icon: IconMessage2Dollar,
+              icon: IconBrandWhatsapp,
               href: "/apps/chats/chat-externo",
             },
           ],
