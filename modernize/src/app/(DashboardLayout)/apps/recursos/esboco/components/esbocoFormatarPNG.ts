@@ -177,9 +177,9 @@ const esbocoFormatarPNG = async (form: FormState) => {
               <div class="value">${form.dimensao}</div>
             </div>`
           : `
-            ${form.altura && !form.largura ? `<div class="info-box"><div class="label">Altura:</div><div class="value">${form.altura} ${form.isCentimeter ? 'cm' : 'm'}</div></div>` : 'm'}
-            ${form.largura && !form.altura ? `<div class="info-box"><div class="label">Largura:</div><div class="value">${form.largura} ${form.isCentimeter ? 'cm' : 'm'}</div></div>` : 'm'}
-            ${form.altura && form.largura ? `<div class="info-box"><div class="label">Dimensões:</div><div class="value">${form.altura} x ${form.largura} ${form.isCentimeter ? 'cm' : 'm'}</div></div>` : 'm'}
+            ${form.altura && !form.largura ? `<div class="info-box"><div class="label">Altura:</div><div class="value">${form.altura} ${form.isCentimeter ? 'cm' : 'm'}</div></div>` : ''}
+            ${form.largura && !form.altura ? `<div class="info-box"><div class="label">Largura:</div><div class="value">${form.largura} ${form.isCentimeter ? 'cm' : 'm'}</div></div>` : ''}
+            ${form.altura && form.largura ? `<div class="info-box"><div class="label">Dimensões:</div><div class="value">${form.altura} x ${form.largura} ${form.isCentimeter ? 'cm' : 'm'}</div></div>` : ''}
           `
       }
       ${form.material ? `<div class="info-box"><div class="label">Material:</div><div class="value">${form.material}</div></div>` : ''}
