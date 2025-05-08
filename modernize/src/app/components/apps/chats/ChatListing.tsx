@@ -43,13 +43,8 @@ const ChatListing = () => {
 
   const getDetails = (conversation: ChatsType) => {
     const lastMsg = last(conversation.messages);
-    if (!lastMsg) return "";
-    const sender = lastMsg.senderId === conversation.id ? "You: " : "";
-    const text = lastMsg.type === "image" ? "Sent a photo" : lastMsg.msg;
-    return `${sender}${text}`;
+    return lastMsg?.msg || "";
   };
-
-  const lastActivity = (chat: ChatsType) => last(chat.messages)?.createdAt;
 
   // estado do menu de ordenação
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -138,10 +133,10 @@ const ChatListing = () => {
                       chat.status === "online"
                         ? "success"
                         : chat.status === "busy"
-                        ? "error"
-                        : chat.status === "away"
-                        ? "warning"
-                        : "secondary"
+                          ? "error"
+                          : chat.status === "away"
+                            ? "warning"
+                            : "secondary"
                     }
                     variant="dot"
                     anchorOrigin={{
@@ -167,11 +162,11 @@ const ChatListing = () => {
                   secondaryTypographyProps={{ noWrap: true }}
                   sx={{ my: 0 }}
                 />
-                {chat.lastMessageDate && (
+                {chat.createdAt && (
                   <Box flexShrink={0} mt={0.5}>
                     <Typography variant="body2">
                       {formatDistanceToNowStrict(
-                        new Date(chat.lastMessageDate),
+                        new Date(chat.createdAt),
                         { addSuffix: false }
                       )}
                     </Typography>
