@@ -39,18 +39,20 @@ function mapRawEventToChat(evt: { raw_event: any; received_at: string }): Messag
   }
 
   // 2) separa o texto da URL de mídia para msg
-  const msg =
-    raw.type === 'text'
-      ? raw.body || raw.text || ''
-      : raw.mediaUrl || raw.url || ''
+  let msg = ''
+  if (raw.message || raw.body || raw.text) {
+    msg = raw.message || raw.body || raw.text || ''
+  } else if (raw.mediaUrl || raw.url) {
+    msg = raw.mediaUrl || raw.url || ''
+  }
 
   return {
     id: raw.id || raw.messageId || `unknown-${evt.received_at}`,
     senderId: raw.from || raw.sender || 'unknown',
-    type: (raw.type as MessageType['type']) || 'text',
+    type: msg && !raw.mediaUrl && !raw.url ? 'text' : 'image',
     msg,
     attachment: attachments,      // ← sempre um array
-    createdAt: evt.received_at
+    createdAt: raw.timestamp || evt.received_at
   }
 }
 
@@ -75,7 +77,7 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
   }, [router])
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_CLIENT}/v1/history/whatsapp`)
+    fetch(`${process.env.NEXT_PUBLIC_API_CLIENT}/v1/history/whatsapp2`)
       .then(res => res.json())
       .then((data: { raw_event: any; received_at: string }[]) => {
         // 1) Filtra eventos válidos

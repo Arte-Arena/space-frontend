@@ -57,7 +57,7 @@ const chatSlice = createSlice({
           name: chatId,
           thumb: '',
           status: 'online',
-          lastMessageDate: message.createdAt,
+          createdAt: message.createdAt,
           messages: [message],
           recent: false,
           excerpt: message.msg,
