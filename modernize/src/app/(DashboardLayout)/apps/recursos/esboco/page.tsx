@@ -29,7 +29,8 @@ import FormCachecol from './components/forms/Bandeiras/FormCachecol';
 import FormularioTresAtributos from './components/forms/Bandeiras/Form3Atributos';
 import FormularioQuatroAtributos from './components/forms/Bandeiras/Form4Atributos';
 import FormChineloShorts from './components/forms/Bandeiras/FormChineloShorts';
-import FormOutros from './components/forms/Bandeiras/fromOutros';
+import FormOutros from './components/forms/Bandeiras/formOutros';
+import FormCanecas from './components/forms/Bandeiras/formCanecas';
 
 const produtos = [
   "Almofada", "Almofada de pescoço", "Balaclava*", "Bandana", "Bandeira Personalizada",
@@ -97,6 +98,8 @@ const GeradorDeEsbocoScreen = () => {
     form.produto.toLowerCase().includes('cordão de chaveiro') ||
     form.produto.toLowerCase() === 'chaveiro' ||
     form.produto.toLowerCase().includes('mouse') ||
+    form.produto.toLowerCase().includes('camisão') ||
+    form.produto.toLowerCase().includes('balaclava') ||
     form.produto.toLowerCase().includes('tirante');
 
 
@@ -323,7 +326,7 @@ const GeradorDeEsbocoScreen = () => {
                 value={form.largura}
                 onChange={handleChange}
                 disabled={disableDimensao}
-                placeholder={form.produto.toLowerCase().includes("tirante") ? "0,03, 0,04, 0,05m" : ""}
+                placeholder={form.produto.toLowerCase().includes("tirante") ? "3cm, 4cm, 5cm" : ""}
               />
             </Grid>
             <Grid item xs={2} display="flex" alignItems="center">
@@ -376,7 +379,7 @@ const GeradorDeEsbocoScreen = () => {
             />
           )}
 
-          {(form.produto.toLowerCase().includes('bandeira oficial') || form.produto.toLowerCase().includes('bandeira personalizada')) && (
+          {(form.produto.toLowerCase().includes('bandeira oficial') || form.produto.toLowerCase().includes('bandeira personalizada') || form.produto.toLowerCase().includes('bandeira de mão')) && (
             <FormBandeira
               form={form}
               handleChange={handleChange}
@@ -465,6 +468,15 @@ const GeradorDeEsbocoScreen = () => {
               setForm={setForm}
             />
           )}
+         
+          {form.produto.toLowerCase().includes('caneca ') && (
+            <FormCanecas
+              form={form}
+              handleChange={handleChange}
+              handleCheckboxChange={handleCheckboxChange}
+              setForm={setForm}
+            />
+          )}
 
           <Box display="flex" alignItems="center" gap={2} mt={3}>
             <Button
@@ -540,8 +552,9 @@ export default GeradorDeEsbocoScreen;
 // CAMISÃO:
 
 // CANECA DE AUMINIO/procelana:
+// dimesões provavelmente são sempre unicas
 
-// capa de barbeiro
+// capa de barbeiro:
 
 // vai ficar no mesmo
 // chaveiro
