@@ -31,6 +31,7 @@ import {
   IconNotes,
   IconInfoCircle,
   IconFileInvoice,
+  IconExternalLink,
 } from "@tabler/icons-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -130,6 +131,10 @@ const LeadTable: React.FC<LeadTableProps> = ({
 
   const handleNavigateToOrcamento = (orcamentoId: string) => {
     router.push(`/apps/orcamento/${orcamentoId}`);
+  };
+
+  const handleNavigateToLeadDetails = (idOcta: string) => {
+    router.push(`/apps/vendas/crm/leads/${idOcta}`);
   };
 
   const sortedLeads = React.useMemo(() => {
@@ -376,10 +381,29 @@ const LeadTable: React.FC<LeadTableProps> = ({
                             pb: 1,
                             display: "flex",
                             alignItems: "center",
+                            justifyContent: "space-between",
                           }}
                         >
-                          <IconUser size={20} style={{ marginRight: 8 }} />
-                          Detalhes do Lead
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <IconUser size={20} style={{ marginRight: 8 }} />
+                            Detalhes do lead
+                          </Box>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (lead.idOcta) {
+                                handleNavigateToLeadDetails(lead.idOcta);
+                              }
+                            }}
+                            disabled={!lead.idOcta}
+                            startIcon={<IconExternalLink size={16} />}
+                            sx={{ minWidth: "auto", borderRadius: 1 }}
+                          >
+                            Ver página do lead
+                          </Button>
                         </Typography>
 
                         <Grid container spacing={3} sx={{ mt: 0.5 }}>
@@ -432,7 +456,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                                     )
                                   }
                                 >
-                                  Ver Orçamento
+                                  Ver orçamento
                                 </Button>
                               </Paper>
                             </Grid>
