@@ -1,41 +1,104 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
-import ContaForm from '../components/formConta';
+import ContaForm from '../../components/formConta';
 import ParentCard from '@/app/components/shared/ParentCard';
-import { ContasForm } from '../components/types';
+import { ContasForm } from '../../components/types';
 import NotificationSnackbar from '@/utils/snackbar';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { Box, CircularProgress, LinearProgress } from '@mui/material';
 
-const ContasPagarReceberAdicionarScreen = () => {
+const ContasPagarReceberEditarScreen = () => {
+  const [conta, setConta] = useState<ContasForm | null>(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'success' as 'success' | 'error',
   });
 
+  const params = useParams();
   const router = useRouter();
   const accessToken = localStorage.getItem('accessToken');
+  const id = params.id;
 
   if (!accessToken) {
     router.push('/login');
     return null;
   }
+
+ useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API}/api/conta/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Dados recebidos :", data);
+        setConta(data);
+        setSnackbar({
+          open: true,
+          message: ' com sucesso!',
+          severity: 'success',
+        });
+      })
+      .catch((error) => {
+        // console.error("Erro ao buscar Produtos:", error);
+        setSnackbar({
+          open: true,
+          message: error.message || 'Falha ao adicionar produto.',
+          severity: 'error',
+        });
+      });
+  }, [id])
+
+
+  if (!conta) {
+    return (
+      <ParentCard title='Editar Conta'>
+        <Box>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '50vh',
+            }}
+          >
+            <CircularProgress />
+          </Box>
+          <LinearProgress
+            sx={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              zIndex: 9999,
+            }}
+          />
+        </Box>
+      </ParentCard>
+    );
+  }
+
+
   const handleCloseSnackbar = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   const handleSubmit = async (values: ContasForm) => {
     try {
-      const token = localStorage.getItem('accessToken');
       const res = await fetch(`${process.env.NEXT_PUBLIC_API}/api/conta`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${accessToken}`
         },
         body: JSON.stringify({
+          conta_id: id,
           titulo: values.titulo,
           descricao: values.descricao,
           valor: values.valor,
@@ -57,7 +120,7 @@ const ContasPagarReceberAdicionarScreen = () => {
       });
 
       const data = await res.json();
-      
+
       if (!res.ok) {
         console.error(data);
         setSnackbar({
@@ -71,6 +134,7 @@ const ContasPagarReceberAdicionarScreen = () => {
           message: 'Conta salva com sucesso!',
           severity: 'success'
         });
+        router.push('/apps/contas-pagar-receber/buscar');
       }
     } catch (error) {
       console.error(error);
@@ -83,12 +147,12 @@ const ContasPagarReceberAdicionarScreen = () => {
   };
 
   return (
-    <PageContainer title="Nova Conta" description="Criar ou editar conta">
-      <Breadcrumb title="Nova Conta" subtitle="Gerenciar contas" />
+    <PageContainer title="Editar Conta" description="Editar conta">
+      <Breadcrumb title="Editar Conta" subtitle="Gerenciar contas" />
       <ParentCard title="Formulário de Conta">
-        <ContaForm onSubmit={handleSubmit} />
+        <ContaForm onSubmit={handleSubmit} initialValues={conta}/>
       </ParentCard>
-      
+
       <NotificationSnackbar
         open={snackbar.open}
         message={snackbar.message}
@@ -99,4 +163,4 @@ const ContasPagarReceberAdicionarScreen = () => {
   );
 };
 
-export default ContasPagarReceberAdicionarScreen;
+export default ContasPagarReceberEditarScreen;
