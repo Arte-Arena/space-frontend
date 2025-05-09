@@ -22,6 +22,8 @@ import { AddCircle, RemoveCircle } from "@mui/icons-material";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { ContaFormProps, Parcela } from "./types";
+import RecorrenciaFormDialog from "./recorrenciaForm";
+import CustomStyledSwitch from "@/app/components/switch/switch";
 
 const formasPagamento = [
   { value: "dinheiro", label: "Dinheiro físico" },
@@ -32,18 +34,37 @@ const formasPagamento = [
 ];
 
 const opcoesRecorrencia = [
-  "Mensal",
-  "Bimestral",
-  "Trimestral",
-  "Semestral",
-  "Anual",
-];
+  "diaria",
+  "semanal",
+  "quinzenal",
+  "mensal",
+  "bimestral",
+  "trimestral",
+  "semestral",
+  "anual",
+  "personalizada",
+].map((opcao) => ({
+  value: opcao,
+  label: opcao.charAt(0).toUpperCase() + opcao.slice(1),
+}));
 
 const ContaForm = ({
   initialValues = {},
   onSubmit,
   submitLabel = "Salvar",
 }: ContaFormProps) => {
+  const parseParcelaData = (data: string | Date): string => {
+    // Caso já esteja em formato ISO ou Date
+    if (data instanceof Date) return dayjs(data).format('YYYY-MM-DD');
+    if (/^\d{4}-\d{2}-\d{2}$/.test(data)) return data; // já está em ISO
+
+    // Parse "dd/MM/yyyy"
+    const [dia, mes, ano] = data.split('/');
+    if (!dia || !mes || !ano) return dayjs().format('YYYY-MM-DD'); // fallback
+    return dayjs(`${ano}-${mes}-${dia}`).format('YYYY-MM-DD');
+  };
+
+  const [mostrarRecorrencia, setMostrarRecorrencia] = useState<boolean>(false);
   const [titulo, setTitulo] = useState(initialValues.titulo || "");
   const [descricao, setDescricao] = useState(initialValues.descricao || "");
   const [valor, setValor] = useState(initialValues.valor || 0);
@@ -54,9 +75,15 @@ const ContaForm = ({
   );
   const [status, setStatus] = useState(initialValues.status || "");
   const [tipo, setTipo] = useState(initialValues.tipo || "");
+
   const [parcelas, setParcelas] = useState<Parcela[]>(
-    initialValues.parcelas || []
+    (initialValues.parcelas || []).map((p: Parcela) => ({
+      ...p,
+      data: parseParcelaData(p.data),
+
+    }))
   );
+
   const [dataPagamento, setDataPagamento] = useState(
     initialValues.data_pagamento ? new Date(initialValues.data_pagamento) : null
   );
@@ -80,7 +107,21 @@ const ContaForm = ({
     initialValues.observacoes || ""
   );
 
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedContaId, setSelectedContaId] = useState<number | string | null | undefined>(null);
+
   dayjs.extend(utc);
+
+  const handleOpenDialog = (contaId: number | string) => {
+    setSelectedContaId(contaId);
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setSelectedContaId(null); // Limpa o ID da conta selecionada ao fechar
+  };
+
 
   const handleParcelasChange = <K extends keyof Parcela>(
     index: number,
@@ -287,9 +328,6 @@ const ContaForm = ({
             thousandSeparator="."
             decimalSeparator=","
             prefix="R$ "
-            // onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            //   setValor(e.target.value)
-            // }
             onValueChange={(values) => {
               setValor(values.floatValue || 0);
             }}
@@ -376,12 +414,23 @@ const ContaForm = ({
             }
             fullWidth
           >
-            <MenuItem value="A Pagar">A Pagar</MenuItem>
-            <MenuItem value="A Receber">A Receber</MenuItem>
+            <MenuItem value="a pagar">A Pagar</MenuItem>
+            <MenuItem value="a receber">A Receber</MenuItem>
           </CustomSelect>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={3}>
+          <CustomFormLabel>Documento</CustomFormLabel>
+          <CustomTextField
+            value={documento}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setDocumento(e.target.value)
+            }
+            fullWidth
+          />
+        </Grid>
+
+        <Grid item xs={6} sm={6} md={6}>
           <CustomFormLabel>Fixa</CustomFormLabel>
           <FormControlLabel
             control={
@@ -395,36 +444,67 @@ const ContaForm = ({
             label="Será uma conta fixa?"
           />
         </Grid>
-
-        {/* Linha 4 - Recorrência, Documento */}
-        <Grid item xs={12} sm={6}>
-          <CustomFormLabel>Recorrência</CustomFormLabel>
-          <Autocomplete
-            freeSolo
-            options={opcoesRecorrencia}
-            value={recorrencia}
-            onInputChange={(_, newInputValue) =>
-              setRecorrencia(newInputValue)
-            }
-            renderInput={(params) => (
-              <CustomTextField
-                {...params}
-                placeholder="Mensal, Bimestral, Trimestral, etc."
-                fullWidth
+        <Grid item xs={6} sm={6} md={6}>
+          <CustomFormLabel>Recorrência?</CustomFormLabel>
+          <FormControlLabel
+            control={
+              <CustomStyledSwitch
+                checked={mostrarRecorrencia}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setMostrarRecorrencia(e.target.checked)
+                }
               />
-            )}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <CustomFormLabel>Documento</CustomFormLabel>
-          <CustomTextField
-            value={documento}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setDocumento(e.target.value)
             }
-            fullWidth
+            label={mostrarRecorrencia ? "Sim" : "Não"}
           />
         </Grid>
+
+        {mostrarRecorrencia && (
+          <Grid item xs={12}> {/* Este Grid item garante que a seção ocupe a largura total */}
+            <Grid container spacing={2} alignItems="flex-end"> {/* Novo container para os elementos lado a lado */}
+              <Grid item xs={12} sm={7} md={8}> {/* Autocomplete com mais espaço */}
+                <CustomFormLabel htmlFor="recorrencia-autocomplete">Configuração da Recorrência</CustomFormLabel>
+                <Autocomplete
+                  id="recorrencia-autocomplete"
+                  freeSolo
+                  options={opcoesRecorrencia}
+                  value={recorrencia} // Este é o campo de texto livre
+                  onInputChange={(_, newInputValue) =>
+                    setRecorrencia(newInputValue)
+                  }
+                  renderInput={(params) => (
+                    <CustomTextField
+                      {...params}
+                      placeholder="Ex: Mensal a cada 2 meses (use o botão para detalhes)"
+                      fullWidth
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid item xs={12} sm={5} md={4} sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                {/* O alignItems="flex-end" no container pai ajuda.
+                    Para o botão ter a mesma altura do TextField do Autocomplete:
+                    - Garanta que o CustomTextField tenha uma altura padrão (MUI TextField ~56px)
+                    - Você pode setar uma altura fixa no botão ou usar padding.
+                */}
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => handleOpenDialog(initialValues.id || 0)} // Passar o ID da conta atual se estiver editando
+                  fullWidth // Faz o botão ocupar a largura do seu Grid item
+                  sx={{
+                    // Ajuste a altura se o CustomTextField tiver uma altura padrão, ex:
+                    // height: '56px', (para TextField outlined padrão)
+                    // ou mb: se o label do autocomplete estiver acima e quiser alinhar pela base do campo
+                    // mb: 0.5 // Exemplo se o Autocomplete tiver um label
+                  }}
+                >
+                  Detalhes da Recorrência
+                </Button>
+              </Grid>
+            </Grid>
+          </Grid>
+        )}
 
         {/* devo primeiro ver uma forma de fazer uma movimentação sempre que for aprovada uma das recorrencias de Contas */}
         {/* Linha 5 - estoque, quantidade */}
@@ -452,12 +532,21 @@ const ContaForm = ({
         {/* Botão de submit */}
         <Grid item xs={12}>
           <Box mt={2}>
-            <Button variant="contained" onClick={handleSubmit} fullWidth>
-              {submitLabel}
-            </Button>
+
+            <Grid item xs={6}>
+              <Button variant="contained" onClick={handleSubmit} fullWidth>
+                {submitLabel}
+              </Button>
+            </Grid>
           </Box>
         </Grid>
       </Grid>
+      <RecorrenciaFormDialog
+        open={dialogOpen}
+        onClose={handleCloseDialog}
+        contaId={selectedContaId}
+      // onSave={handleSaveRecorrencia}
+      />
     </Box>
   );
 };
