@@ -1,106 +1,125 @@
-// RelatoriosVendas.tsx
-import React from "react";
-import PageContainer from "@/app/components/container/PageContainer";
-import ParentCard from '@/app/components/shared/ParentCard';
-import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
-import SalesReportCard from "@/app/components/dashboards/skeleton/SalesReportCard";
-import { IconFlagDollar, IconMessage2Dollar, IconReportMoney, IconChecklist, IconReceiptDollar, IconPackageImport, IconChartLine } from "@tabler/icons-react";
+"use client";
+import { useState } from "react";
+import {
+  Box,
+  Tab,
+  Card,
+  CardContent,
+  Typography,
+  Tabs,
+  CircularProgress,
+} from "@mui/material";
+import { IconUsers, IconReceipt } from "@tabler/icons-react";
 
-interface Report {
-  report: string;
-  path: string;
-  icon: React.ReactNode;
+import PageContainer from "@/app/components/container/PageContainer";
+import ClientesDashboard from "./ClientesDashboard";
+import OrcamentosDashboard from "./OrcamentosDashboard";
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
 }
 
-const reports: Report[] = [
-  {
-    report: "Quantidade de Orcamentos",
-    path: "/apps/vendas/relatorios/quantidade-orcamentos",
-    icon: <IconReportMoney />
-  },
-  {
-    report: "Todos os Orcamentos",
-    path: "/apps/vendas/relatorios/orcamentos-todos",
-    icon: <IconReportMoney />
-  },
-  {
-    report: "Orçamentos Por Data",
-    path: "/apps/vendas/relatorios/quantidade-orcamentos-por-data",
-    icon: <IconChartLine />
-  },
-  {
-    report: "Orçamentos Por Data Filtrada",
-    path: "/apps/vendas/relatorios/quantidade-orcamentos-por-data-filtrada",
-    icon: <IconChartLine />
-  },
-  {
-    report: "Orçamentos Por Status",
-    path: "/apps/vendas/relatorios/quantidade-orcamentos-por-status",
-    icon: <IconChartLine />
-  },
-  {
-    report: "Quantidade de Orçamentos Aprovados",
-    path: "/apps/vendas/relatorios/quantidade-orcamentos-aprovados",
-    icon: <IconChecklist />
-  },
-  {
-    report: "Orçamentos Não Aprovados",
-    path: "/apps/vendas/relatorios/orcamentos-nao-aprovados",
-    icon: <IconReportMoney />
-  },
-  {
-    report: "Produtos Vendidos por Orçamento",
-    path: "/apps/vendas/relatorios/produtos-vendidos-por-orcamento",
-    icon: <IconFlagDollar />
-  },
-  {
-    report: "Valores Vendidos por Orcamento",
-    path: "/apps/vendas/relatorios/valores-vendidos-por-orcamento",
-    icon: <IconReceiptDollar />
-  },
-  {
-    report: "Valores Vendidos por Produto",
-    path: "/apps/vendas/relatorios/valores-vendidos-por-produto",
-    icon: <IconReceiptDollar />
-  },
-  {
-    report: "Valores Vendidos (Últimos 7 dias)",
-    path: "/apps/vendas/relatorios/valores-vendidos-ultimos-7-dias",
-    icon: <IconReceiptDollar />
-  },
-  {
-    report: "Produtos Vendidos (Últimos 7 dias)",
-    path: "/apps/vendas/relatorios/produtos-vendidos-ultimos-7-dias",
-    icon: <IconReceiptDollar />
-  },
-  {
-    report: "Clientes Atendidos",
-    path: "/apps/vendas/relatorios/orcamentos",
-    icon: <IconMessage2Dollar />
-  },
-];
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
 
-const RelatoriosVendas = (): React.ReactElement => {
   return (
-    <PageContainer title="Vendas / Relatórios" description="Relatórios de Vendas da Arte Arena">
-      <Breadcrumb title="Vendas / Relatórios" subtitle="Visualize os Relatórios de Vendas da Arte Arena / Buscar" />
-      <ParentCard title="Relatórios de Vendas">
-        <>
-          <h1>Relatórios</h1>
-          <div>
-            {reports.map((item, index) => (
-              <SalesReportCard
-                key={index}
-                icon={item.icon}
-                title={item.report}
-                link={item.path}
-              />
-            ))}
-          </div>
-        </>
-      </ParentCard>
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`dashboard-tabpanel-${index}`}
+      aria-labelledby={`dashboard-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `dashboard-tab-${index}`,
+    "aria-controls": `dashboard-tabpanel-${index}`,
+  };
+}
+
+export default function RelatoriosPage() {
+  const [isLoading, setLoading] = useState(false);
+  const [value, setValue] = useState(0);
+
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setValue(newValue);
+  };
+
+  return (
+    <PageContainer
+      title="Relatórios de Vendas"
+      description="Análise de Vendas e Clientes"
+    >
+      <Box sx={{ width: "100%" }}>
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h4" color="textPrimary" mb={1}>
+            Relatórios de Vendas
+          </Typography>
+          <Typography variant="subtitle1" color="textSecondary">
+            Visualize indicadores de desempenho sobre clientes e orçamentos
+          </Typography>
+        </Box>
+
+        <Card sx={{ width: "100%" }}>
+          <CardContent sx={{ p: 0 }}>
+            <Box>
+              <Tabs
+                value={value}
+                onChange={handleChange}
+                variant="scrollable"
+                scrollButtons="auto"
+                aria-label="dashboard tabs"
+                sx={{
+                  px: 3,
+                  pt: 2,
+                  "& .MuiTab-root": {
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    "& svg": {
+                      marginRight: 1,
+                      marginBottom: "0 !important",
+                    },
+                  },
+                }}
+              >
+                <Tab icon={<IconUsers />} label="Clientes" {...a11yProps(0)} />
+                <Tab
+                  icon={<IconReceipt />}
+                  label="Orçamentos"
+                  {...a11yProps(1)}
+                />
+              </Tabs>
+
+              {isLoading ? (
+                <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}>
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <>
+                  <TabPanel value={value} index={0}>
+                    <Box sx={{ p: 3 }}>
+                      <ClientesDashboard isLoading={isLoading} />
+                    </Box>
+                  </TabPanel>
+                  <TabPanel value={value} index={1}>
+                    <Box sx={{ p: 3 }}>
+                      <OrcamentosDashboard isLoading={isLoading} />
+                    </Box>
+                  </TabPanel>
+                </>
+              )}
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
     </PageContainer>
   );
-};
-
-export default RelatoriosVendas;
+}
