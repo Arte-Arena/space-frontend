@@ -23,6 +23,14 @@ type Lead = {
   idOcta?: string;
   orcamento_id?: string;
   orcamento_status?: "aprovado" | "pendente" | null;
+  tipoCliente?: "b2b" | "b2c";
+  seguimento?:
+    | "atletica_interclasse"
+    | "times"
+    | "pessoa_juridica"
+    | "agencias_marketing"
+    | "outros"
+    | null;
   endereco?: {
     rua: string;
     numero: string;
@@ -223,6 +231,10 @@ function LeadsScreen() {
           };
 
           lead.client_info = clientInfo;
+
+          lead.tipoCliente =
+            clientInfo.contact.person_type === "F" ? "b2c" : "b2b";
+          lead.seguimento = null;
         }
 
         return lead;

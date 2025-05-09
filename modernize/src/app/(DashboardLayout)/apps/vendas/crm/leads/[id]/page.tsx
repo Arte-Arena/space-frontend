@@ -764,7 +764,7 @@ function LeadDetailsPage() {
                           display: "flex",
                           flexDirection: "column",
                           transition: "none",
-                          "&:hover": { transform: "none", boxShadow: 1 }
+                          "&:hover": { transform: "none", boxShadow: 1 },
                         }}
                       >
                         <CardContent sx={{ flexGrow: 1, p: 2 }}>
@@ -921,7 +921,7 @@ function LeadDetailsPage() {
                           display: "flex",
                           flexDirection: "column",
                           transition: "none",
-                          "&:hover": { transform: "none", boxShadow: 1 }
+                          "&:hover": { transform: "none", boxShadow: 1 },
                         }}
                       >
                         <CardContent sx={{ flexGrow: 1, p: 2 }}>

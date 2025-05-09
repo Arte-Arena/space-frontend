@@ -50,6 +50,14 @@ interface Lead {
   idOcta?: string;
   orcamento_id?: string;
   orcamento_status?: "aprovado" | "pendente" | null;
+  tipoCliente?: "b2b" | "b2c";
+  seguimento?:
+    | "atletica_interclasse"
+    | "times"
+    | "pessoa_juridica"
+    | "agencias_marketing"
+    | "outros"
+    | null;
   endereco?: {
     rua: string;
     numero: string;
@@ -264,6 +272,24 @@ const LeadTable: React.FC<LeadTableProps> = ({
               <TableCell>CPF/CNPJ</TableCell>
               <TableCell>
                 <TableSortLabel
+                  active={orderBy === "tipoCliente"}
+                  direction={orderBy === "tipoCliente" ? order : "asc"}
+                  onClick={() => handleRequestSort("tipoCliente")}
+                >
+                  Tipo
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={orderBy === "seguimento"}
+                  direction={orderBy === "seguimento" ? order : "asc"}
+                  onClick={() => handleRequestSort("seguimento")}
+                >
+                  Seguimento
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
                   active={orderBy === "dataCriacao"}
                   direction={orderBy === "dataCriacao" ? order : "asc"}
                   onClick={() => handleRequestSort("dataCriacao")}
@@ -341,6 +367,28 @@ const LeadTable: React.FC<LeadTableProps> = ({
                   <TableCell>{lead.telefone || "-"}</TableCell>
                   <TableCell>{lead.cpfCnpj || "-"}</TableCell>
                   <TableCell>
+                    {lead.tipoCliente
+                      ? lead.tipoCliente === "b2b"
+                        ? "B2B"
+                        : "B2C"
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    {lead.seguimento
+                      ? lead.seguimento === "atletica_interclasse"
+                        ? "Atlética/Interclasse"
+                        : lead.seguimento === "times"
+                          ? "Times"
+                          : lead.seguimento === "pessoa_juridica"
+                            ? "Pessoa Jurídica"
+                            : lead.seguimento === "agencias_marketing"
+                              ? "Agências/Marketing"
+                              : lead.seguimento === "outros"
+                                ? "Outros"
+                                : "-"
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
                     {lead.dataCriacao
                       ? format(new Date(lead.dataCriacao), "dd/MM/yyyy HH:mm", {
                           locale: ptBR,
@@ -363,7 +411,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                 <TableRow>
                   <TableCell
                     style={{ paddingBottom: 0, paddingTop: 0 }}
-                    colSpan={9}
+                    colSpan={11}
                   >
                     <Collapse
                       in={expandedRow === lead.id}
