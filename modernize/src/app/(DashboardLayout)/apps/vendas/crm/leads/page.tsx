@@ -9,6 +9,14 @@ import LeadTable from "./LeadTable";
 import { logger } from "@/utils/logger";
 
 type SearchType = "nome" | "celular" | "cpf" | "cnpj" | "idOcta";
+type StatusType =
+  | "all"
+  | "novo"
+  | "em andamento"
+  | "aprovado"
+  | "convertido"
+  | "perdido";
+type ClientType = "all" | "b2b" | "b2c";
 
 type Lead = {
   id: string;
@@ -23,6 +31,7 @@ type Lead = {
   idOcta?: string;
   orcamento_id?: string;
   orcamento_status?: "aprovado" | "pendente" | null;
+  orcamento_valor?: number;
   tipoCliente?: "b2b" | "b2c";
   seguimento?:
     | "atletica_interclasse"
@@ -75,6 +84,7 @@ interface ApiResponse {
     criado_em: string;
     orcamento_id?: string;
     orcamento_status?: "aprovado" | "pendente" | null;
+    orcamento_valor?: number;
     tem_pedido?: boolean;
     client_info: {
       client_id: string;
@@ -124,6 +134,7 @@ function LeadsScreen() {
   const isLoggedIn = useAuth();
   const [isSearching, setIsSearching] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchType, setSearchType] = useState<SearchType>("nome");
   const [isLoadingLeads, setIsLoadingLeads] = useState(true);
@@ -131,10 +142,29 @@ function LeadsScreen() {
   const [totalItems, setTotalItems] = useState(0);
   const rowsPerPage = 25;
 
+  const [activeFilters, setActiveFilters] = useState<{
+    status: StatusType | null;
+    budgetRange: [number, number] | null;
+    clientType: ClientType | null;
+    budgetSort: "none" | "asc" | "desc";
+  }>({
+    status: null,
+    budgetRange: null,
+    clientType: null,
+    budgetSort: "none",
+  });
+  const [isFiltering, setIsFiltering] = useState(false);
+
   useEffect(() => {
     if (!isLoggedIn) return;
     fetchLeads();
   }, [isLoggedIn, page]);
+
+  useEffect(() => {
+    if (!isSearching && !isFiltering) {
+      setFilteredLeads(leads);
+    }
+  }, [leads, isSearching, isFiltering]);
 
   const fetchLeads = async (search = "", searchType: SearchType = "nome") => {
     setIsLoadingLeads(true);
@@ -212,6 +242,7 @@ function LeadsScreen() {
           idOcta: item.id,
           orcamento_id: item.orcamento_id,
           orcamento_status: item.orcamento_status,
+          orcamento_valor: item.orcamento_valor,
         };
 
         if (clientInfo) {
@@ -241,10 +272,12 @@ function LeadsScreen() {
       });
 
       setLeads(transformedLeads);
+      setFilteredLeads(transformedLeads);
       setTotalItems(result.pagination.total_items);
     } catch (error) {
       logger.error("Error fetching leads:", error);
       setLeads([]);
+      setFilteredLeads([]);
     } finally {
       setIsLoadingLeads(false);
     }
@@ -268,6 +301,61 @@ function LeadsScreen() {
     });
   };
 
+  const handleFilter = (filters: {
+    status: StatusType | null;
+    budgetRange: [number, number] | null;
+    clientType: ClientType | null;
+    budgetSort: "none" | "asc" | "desc";
+  }) => {
+    setIsFiltering(true);
+    setActiveFilters(filters);
+
+    let filtered = [...leads];
+
+    if (filters.status) {
+      filtered = filtered.filter(
+        (lead) => lead.status.toLowerCase() === filters.status,
+      );
+    }
+
+    if (filters.budgetRange) {
+      const [min, max] = filters.budgetRange;
+      filtered = filtered.filter((lead) => {
+        const valor = lead.orcamento_valor || 0;
+        return valor >= min && valor <= max;
+      });
+    }
+
+    if (filters.clientType) {
+      filtered = filtered.filter(
+        (lead) => lead.tipoCliente === filters.clientType,
+      );
+    }
+
+    if (filters.budgetSort !== "none") {
+      filtered.sort((a, b) => {
+        const valorA = a.orcamento_valor || 0;
+        const valorB = b.orcamento_valor || 0;
+
+        return filters.budgetSort === "asc" ? valorA - valorB : valorB - valorA;
+      });
+    }
+
+    setFilteredLeads(filtered);
+    setIsFiltering(false);
+  };
+
+  const handleClearFilters = () => {
+    setActiveFilters({
+      status: null,
+      budgetRange: null,
+      clientType: null,
+      budgetSort: "none",
+    });
+    setFilteredLeads(leads);
+    setIsFiltering(false);
+  };
+
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
 
@@ -277,7 +365,7 @@ function LeadsScreen() {
   };
 
   const getCurrentPageData = () => {
-    return leads;
+    return filteredLeads;
   };
 
   return (
@@ -401,9 +489,13 @@ function LeadsScreen() {
           </Box>
         </Paper>
 
-        <LeadSearch onSearch={handleSearch} />
+        <LeadSearch
+          onSearch={handleSearch}
+          onFilter={handleFilter}
+          onClearFilters={handleClearFilters}
+        />
 
-        {isSearching ? (
+        {isSearching || isFiltering ? (
           <Box
             sx={{
               textAlign: "center",
@@ -424,7 +516,7 @@ function LeadsScreen() {
             >
               <CircularProgress color="primary" size={40} />
               <Typography variant="body2" color="text.secondary">
-                Buscando leads...
+                {isSearching ? "Buscando leads..." : "Filtrando leads..."}
               </Typography>
             </Box>
           </Box>
@@ -437,7 +529,10 @@ function LeadsScreen() {
             totalLeads={totalItems}
             onPageChange={handleChangePage}
             onRowsPerPageChange={() => {}}
-            isFiltered={!!searchTerm}
+            isFiltered={
+              !!searchTerm ||
+              Object.values(activeFilters).some((f) => f !== null)
+            }
           />
         )}
       </Box>
