@@ -1,30 +1,63 @@
-// src/store/apps/chat/ChatSlice.tsx
-
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit'
 import type { AppDispatch } from '../../store'
 import { uniqueId } from 'lodash'
 import { sub } from 'date-fns'
 import type { ChatsType, ChatApi, MessageType } from '@/app/(DashboardLayout)/types/apps/chat'
 import { mapChat } from '@/app/(DashboardLayout)/types/apps/chat'
 
-/** Payload para receber uma única mensagem em um chat existente ou novo */
-interface ReceiveMessagePayload {
-  chatId: string
-  message: MessageType
+/** Payload para envio de mensagem */
+interface SendMsgPayload {
+  id: string  // conversation ID (número destino)
+  msg: string // texto da mensagem
 }
 
-/** Estado inicial */
+/** Retorno esperado do backend Go / 360Dialog */
+interface SendMsgResponse {
+  messages?: { id: string }[]
+  // outros campos do retorno podem ser adicionados aqui
+}
+
+/** Estado estendido para status de envio */
 interface ChatState {
   chats: ChatsType[]
   chatContent: string
   chatSearch: string
+  sendStatus: 'idle' | 'loading' | 'succeeded' | 'failed'
+  sendError: string | null
 }
 
 const initialState: ChatState = {
   chats: [],
   chatContent: '',
   chatSearch: '',
+  sendStatus: 'idle',
+  sendError: null,
 }
+
+// Thunk para enviar mensagem via backend Go
+export const sendMsg = createAsyncThunk<
+  { id: string; msg: string; echo?: SendMsgResponse },
+  SendMsgPayload,
+  { rejectValue: string }
+>('chat/sendMsg', async ({ id, msg }, { rejectWithValue }) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_CLIENT}/v1/extchat/send-message`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: id, body: msg }),
+      }
+    )
+    const data: SendMsgResponse = await res.json()
+    if (!res.ok) {
+      return rejectWithValue(data as any)
+    }
+    return { id, msg, echo: data }
+  } catch (err: any) {
+    return rejectWithValue(err.message)
+  }
+})
 
 const chatSlice = createSlice({
   name: 'chat',
@@ -45,13 +78,15 @@ const chatSlice = createSlice({
       }
     },
     /** Recebe apenas uma mensagem nova em um chat */
-    receiveMessage(state, action: PayloadAction<ReceiveMessagePayload>) {
+    receiveMessage(
+      state,
+      action: PayloadAction<{ chatId: string; message: MessageType }>
+    ) {
       const { chatId, message } = action.payload
       const chat = state.chats.find(c => c.id === chatId)
       if (chat) {
         chat.messages.push(message)
       } else {
-        // Se for um remetente novo, cria um chat básico
         state.chats.unshift({
           id: chatId,
           name: chatId,
@@ -72,37 +107,52 @@ const chatSlice = createSlice({
     SelectChat(state, action: PayloadAction<string>) {
       state.chatContent = action.payload
     },
-    /** Adiciona mensagem quando o usuário digita no frontend */
-    sendMsg(
-      state,
-      action: PayloadAction<{ id: string | number; msg: string }>
-    ) {
-      const { id, msg } = action.payload
-      const newMessage: MessageType = {
-        id: uniqueId(),
-        msg,
-        type: 'text',
-        attachment: [],
-        createdAt: sub(new Date(), { seconds: 1 }).toISOString(),
-        senderId: id,
-      }
-      state.chats = state.chats.map(chat =>
-        chat.id === id
-          ? { ...chat, messages: [...chat.messages, newMessage] }
-          : chat
-      )
-    },
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(sendMsg.pending, state => {
+        state.sendStatus = 'loading'
+        state.sendError = null
+      })
+      .addCase(sendMsg.fulfilled, (state, { payload }) => {
+        state.sendStatus = 'succeeded'
+        const chat = state.chats.find(c => c.id === payload.id)
+        const newMessage: MessageType = {
+          id: uniqueId(),
+          msg: payload.msg,
+          type: 'text',
+          attachment: [],
+          createdAt: new Date().toISOString(),
+          senderId: payload.id,
+        }
+        if (chat) {
+          chat.messages.push(newMessage)
+        } else {
+          state.chats.unshift({
+            id: payload.id,
+            name: payload.id,
+            thumb: '',
+            status: 'online',
+            createdAt: newMessage.createdAt,
+            messages: [newMessage],
+            recent: false,
+            excerpt: newMessage.msg,
+          })
+        }
+      })
+      .addCase(sendMsg.rejected, (state, { payload }) => {
+        state.sendStatus = 'failed'
+        state.sendError = payload || 'Falha desconhecida'
+      })
   },
 })
 
-// Export único de todas as actions
 export const {
   getChats,
   receiveChat,
   receiveMessage,
   SearchChat,
   SelectChat,
-  sendMsg,
 } = chatSlice.actions
 
 export default chatSlice.reducer
@@ -123,14 +173,11 @@ export const subscribeChats = () => (dispatch: AppDispatch): WebSocket => {
     try {
       const data = JSON.parse(event.data)
 
-      // Se vier um array de chats (forma ChatApi[]), mapeia cada um
       if (Array.isArray(data)) {
         (data as ChatApi[]).forEach(item => {
           dispatch(receiveChat(mapChat(item)))
         })
-      }
-      // Se vier o formato cru do webhook (raw-event), despacha só a mensagem
-      else if (
+      } else if (
         typeof data === 'object' &&
         'message' in data &&
         'from' in data &&
