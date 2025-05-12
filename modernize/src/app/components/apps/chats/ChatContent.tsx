@@ -25,7 +25,7 @@ interface ChatContentProps {
   toggleChatSidebar: () => void
 }
 
-function mapRawEventToChat(evt: { raw_event: any; received_at: string }): MessageType {
+export function mapRawEventToChat(evt: { raw_event: any; received_at: string }): MessageType {
   const raw = evt.raw_event || {}
 
   // 1) monta o array de attachments
