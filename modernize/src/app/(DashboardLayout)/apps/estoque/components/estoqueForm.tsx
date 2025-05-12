@@ -49,6 +49,7 @@ export default function EstoqueForm({ initialValues = {}, onSubmit }: EstoqueFor
 
   if (!accessToken) {
     router.push('/login');
+    return null;
   }
 
   // Estados de Fornecedores

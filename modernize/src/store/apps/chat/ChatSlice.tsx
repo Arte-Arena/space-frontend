@@ -216,7 +216,6 @@ export const subscribeChats = () => (dispatch: AppDispatch): WebSocket => {
     console.log('WebSocket desconectado')
   })
 
-  // --- aqui começa o heartbeat ---
   const HEARTBEAT_INTERVAL = 60 * 1000 // 1 minuto
   const heartbeat = setInterval(() => {
     if (socket.readyState === WebSocket.OPEN) {
@@ -224,7 +223,6 @@ export const subscribeChats = () => (dispatch: AppDispatch): WebSocket => {
     }
   }, HEARTBEAT_INTERVAL)
 
-  // limpa o heartbeat quando o socket fechar (tanto no onclose quanto no event listener)
   const cleanup = () => clearInterval(heartbeat)
   socket.addEventListener('close', cleanup)
   socket.onclose = (event) => {

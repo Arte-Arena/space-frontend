@@ -5,6 +5,7 @@ export interface FormState {
     altura: string;
     largura: string;
     ilhoses: boolean;
+    isCentimeter: boolean;
     qtdIlhoses: string;
     bordaMastro: boolean;
     materialHaste: string;

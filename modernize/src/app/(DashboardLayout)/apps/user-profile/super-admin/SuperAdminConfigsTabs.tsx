@@ -7,13 +7,14 @@ import Tab from "@mui/material/Tab";
 import TabContext from "@mui/lab/TabContext";
 import TabPanel from "@mui/lab/TabPanel";
 import ChildCard from "@/app/components/shared/ChildCard";
-import { IconUser, IconShieldHalfFilled, IconCoins, IconDatabaseExport, IconBrandDaysCounter, IconShirt } from "@tabler/icons-react";
+import { IconUser, IconShieldHalfFilled, IconCoins, IconDatabaseExport, IconBrandDaysCounter, IconShirt, IconBox } from "@tabler/icons-react";
 import SuperAdminUsersTab from "./SuperAdminUsersTab";
 import SuperAdminPermissionsTab from "./SuperAdminPermissionsTab";
 import SuperAdminCostsTab from "./SuperAdminCostsTab";
 import SuperAdminBackupTab from "./SuperAdminBackupTab";
 import SuperAdminTermTab from "./SuperAdminTermTab";
 import SuperAdminMedidasUniformesTab from "./SuperAdminMedidasUniformesTab";
+import SuperAdminStorageTab from "./SuperAdminStorageTab";
 
 const SUPERADMIN_TAB = [
   { value: "1", icon: <IconUser width={20} height={20} />, label: "Usuários" },
@@ -22,6 +23,7 @@ const SUPERADMIN_TAB = [
   { value: "4", icon: <IconBrandDaysCounter width={20} height={20} />, label: "Prazos" },
   { value: "5", icon: <IconDatabaseExport width={20} height={20} />, label: "Backups" },
   { value: "6", icon: <IconShirt width={20} height={20} />, label: "Medidas uniformes" },
+  { value: "7", icon: <IconBox width={20} height={20} />, label: "Estoque" },
 ];
 
 const SuperAdminConfigsTabs = () => {
@@ -64,6 +66,7 @@ const SuperAdminConfigsTabs = () => {
                   {panel.value === "4" && <div><SuperAdminTermTab /></div>}
                   {panel.value === "5" && <div><SuperAdminBackupTab /></div>}
                   {panel.value === "6" && <div><SuperAdminMedidasUniformesTab /></div>}
+                  {panel.value === "7" && <div><SuperAdminStorageTab /></div>}
                 </div>
               </TabPanel>
             ))}

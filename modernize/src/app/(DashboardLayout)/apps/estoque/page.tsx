@@ -1,11 +1,11 @@
-'use client';
-import PageContainer from '@/app/components/container/PageContainer';
-import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import ParentCard from '@/app/components/shared/ParentCard';
-import NotificationSnackbar from '../../../../utils/snackbar';
+"use client";
+import PageContainer from "@/app/components/container/PageContainer";
+import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import ParentCard from "@/app/components/shared/ParentCard";
+import NotificationSnackbar from "../../../../utils/snackbar";
 import {
   Table,
   TableHead,
@@ -24,41 +24,51 @@ import {
   IconButton,
   Stack,
   Chip,
-} from '@mui/material';
-import { IconPencil, IconSearch } from '@tabler/icons-react';
-import type { Estoque } from './components/Types';
-import { method } from 'lodash';
-
+  Link,
+} from "@mui/material";
+import { IconPencil, IconSearch } from "@tabler/icons-react";
+import type { Estoque } from "./components/Types";
+import { method } from "lodash";
 
 export default function Estoque() {
   const router = useRouter();
-  const accessToken = localStorage.getItem('accessToken');
+  const accessToken = localStorage.getItem("accessToken");
   if (!accessToken) {
-    router.push('/login');
+    router.push("/login");
     return null;
   }
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(15);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error",
+  });
 
-  const { data, isFetching, isError, refetch } = useQuery<{ data: Estoque[]; total: number }>({
-    queryKey: ['estoque', page, rowsPerPage],
+  const { data, isFetching, isError, refetch } = useQuery<{
+    data: Estoque[];
+    total: number;
+  }>({
+    queryKey: ["estoque", page, rowsPerPage],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.set('per_page', String(rowsPerPage));
-      params.set('page', String(page + 1)); // backend espera 1-based
-      if (searchQuery.trim()) params.set('q', searchQuery.trim());
+      params.set("per_page", String(rowsPerPage));
+      params.set("page", String(page + 1)); // backend espera 1-based
+      if (searchQuery.trim()) params.set("q", searchQuery.trim());
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API}/api/estoque?${params}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`
-        },
-      });
-      if (!res.ok) throw new Error('Erro ao carregar estoque');
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API}/api/estoque?${params}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Erro ao carregar estoque");
       return res.json();
     },
   });
@@ -77,12 +87,12 @@ export default function Estoque() {
     setPage(0);
   };
 
-  const handleCloseSnackbar = () => setSnackbar(prev => ({ ...prev, open: false }));
-
+  const handleCloseSnackbar = () =>
+    setSnackbar((prev) => ({ ...prev, open: false }));
 
   return (
     <PageContainer title="Estoque" description="Estoque">
-      <Breadcrumb title="Estoque" subtitle='Estoque' />
+      <Breadcrumb title="Estoque" subtitle="Estoque" />
       <ParentCard title="Estoque">
         <Box>
           <TextField
@@ -90,10 +100,16 @@ export default function Estoque() {
             variant="outlined"
             placeholder="Buscar por nome ou categoria..."
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            InputProps={{ startAdornment: <InputAdornment position="start"><IconSearch /></InputAdornment> }}
-            sx={{ mb: 2, width: '300px' }}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <IconSearch />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ mb: 2, width: "300px" }}
           />
           {!isError && data && (
             <>
@@ -114,43 +130,105 @@ export default function Estoque() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {data.data.map(item => (
+                    {data.data.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell align="center" width={'2%'}>{item.id}</TableCell>
-                        <TableCell align="center" width={'10%'}>{item.nome}</TableCell>
-                        <TableCell align="center" width={'10%'}>{item.categoria}</TableCell>
-                        <TableCell align="center" width={'5%'}>{item.preco_produto ?? '-'}</TableCell>
-                        <TableCell align="center" width={'10%'}>{item.quantidade}</TableCell>
-                        <TableCell align="center" width={'10%'}>{item.estoque_min}</TableCell>
-                        <TableCell align="center" width={'10%'}>{item.estoque_max}</TableCell>
-                        <TableCell align="center" width={'10%'}>{item.unidade_medida}</TableCell>
-                        <TableCell align="center" width={'20%'}>
-                          <Stack direction="row" spacing={0.5} justifyContent="center" flexWrap="wrap">
-                            {item.fornecedores?.map(f => (
-                              <Chip
-                                key={f.id}
-                                label={f.nome_completo ?? '-'}
-                                size="small"
+                        <TableCell align="center" width={"2%"}>
+                          {item.id}
+                        </TableCell>
+                        <TableCell align="center" width={"10%"}>
+                          <Link
+                            component={Link}
+                            href={`/apps/estoque/item/${item.id}`}
+                            underline="hover"
+                            target="_blank"
+                            sx={{ fontWeight: "500" }}
+                          >
+                            <Typography
+                              variant="body2"
+                              component="span"
+                              color="text.primary"
+                            >
+                              {item.nome}
+                            </Typography>
+                          </Link>
+                        </TableCell>
+                        <TableCell align="center" width={"10%"}>
+                          {item.categoria}
+                        </TableCell>
+                        <TableCell align="center" width={"5%"}>
+                          {item.preco_produto ?? "-"}
+                        </TableCell>
+                        <TableCell align="center" width={"10%"}>
+                          {item.quantidade}
+                        </TableCell>
+                        <TableCell align="center" width={"10%"}>
+                          {item.estoque_min}
+                        </TableCell>
+                        <TableCell align="center" width={"10%"}>
+                          {item.estoque_max}
+                        </TableCell>
+                        <TableCell align="center" width={"10%"}>
+                          {item.unidade_medida}
+                        </TableCell>
+                        <TableCell align="center" width={"20%"}>
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            justifyContent="center"
+                            flexWrap="wrap"
+                          >
+                            {item.fornecedores?.map((f) => (
+                              <Box
+                                p={0}
+                                m={0}
                                 sx={{
-                                  bgcolor: 'primary.main',
-                                  color: 'common.white',
-                                  px: 1,
-                                  py: 0.5,
-                                  borderRadius: '8px',
-                                  maxWidth: '90%',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
+                                  cursor:
+                                    f.fornecedor_id === 0
+                                      ? "default"
+                                      : "pointer",
+                                  maxWidth: "100%",
                                 }}
-                              />
+                                onClick={() => {
+                                  if (f.fornecedor_id !== 0) {
+                                    router.push(
+                                      `/apps/estoque/fornecedores/${f.fornecedor_id}`
+                                    );
+                                  }
+                                }}
+                                key={f.id}
+                              >
+                                <input
+                                  type="radio"
+                                  name="fornecedores"
+                                  onChange={() => {}}
+                                  style={{ display: "none" }}
+                                />
+                                <Chip
+                                  label={f.nome_completo ?? "-"}
+                                  size="small"
+                                  sx={{
+                                    bgcolor: "primary.main",
+                                    color: "common.white",
+                                    px: 1,
+                                    py: 0.5,
+                                    borderRadius: "8px",
+                                    maxWidth: "100%",
+                                    whiteSpace: "inherit",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                  }}
+                                />
+                              </Box>
                             ))}
                           </Stack>
                         </TableCell>
                         <TableCell align="center">
-                          <Button size="small" onClick={() => router.push(`/apps/estoque/item/${item.id}`)}>
-                            Ver
-                          </Button>
-                          <IconButton aria-label="edit" onClick={() => { window.location.href = `/apps/estoque/editar/${item.id}`; }}>
+                          <IconButton
+                            aria-label="edit"
+                            onClick={() => {
+                              window.location.href = `/apps/estoque/editar/${item.id}`;
+                            }}
+                          >
                             <IconPencil />
                           </IconButton>
                           {/* adicionar o botão de excluir o produto */}
@@ -188,10 +266,10 @@ export default function Estoque() {
         {isFetching && (
           <LinearProgress
             sx={{
-              position: 'fixed',
+              position: "fixed",
               top: 0,
               left: 0,
-              width: '100%',
+              width: "100%",
               zIndex: 9999,
             }}
           />
