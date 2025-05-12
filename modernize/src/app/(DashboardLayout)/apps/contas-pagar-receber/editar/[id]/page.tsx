@@ -116,6 +116,7 @@ const ContasPagarReceberEditarScreen = () => {
           estoque_quantidade: values.estoque_quantidade,
           documento: values.documento,
           observacoes: values.observacoes,
+          recorrente: values.recorrente,
         })
       });
 
