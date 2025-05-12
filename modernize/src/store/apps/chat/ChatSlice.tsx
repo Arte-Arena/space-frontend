@@ -156,18 +156,8 @@ export const {
 
 export default chatSlice.reducer
 
-
-// -----------------------------------------------------------------------------
-//  AQUI COMEÇA A PARTE DE WS
-// -----------------------------------------------------------------------------
-
-// Guarda a instância atual para podermos fechá-la antes de abrir outra
 let currentSocket: WebSocket | null = null
 
-/**
- * Thunk que abre o WebSocket e despacha receiveChat ou receiveMessage
- * Retorna o socket para cleanup no componente.
- */
 export const subscribeChats = () => (dispatch: AppDispatch): WebSocket => {
   // Fecha conexão anterior
   if (currentSocket) {
@@ -176,10 +166,13 @@ export const subscribeChats = () => (dispatch: AppDispatch): WebSocket => {
 
   const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL}/v1/ws/whatsapp`
   const socket = new WebSocket(wsUrl)
-  socket.onopen = () => console.log('WS aberto');
-  socket.onclose = e => console.log('WS fechado:', e.code, e.reason);
-  socket.onerror = e => console.log('WS erro:', e);
   currentSocket = socket
+
+  socket.onopen = () => console.log('WS aberto');
+  socket.onerror = e => console.log('WS erro:', e);
+  socket.onclose = (event) => {
+    console.log('WebSocket fechado:', event.code, event.reason, 'wasClean:', event.wasClean);
+  };
 
   socket.addEventListener('open', () => {
     console.log('WebSocket conectado em', wsUrl)
@@ -215,13 +208,27 @@ export const subscribeChats = () => (dispatch: AppDispatch): WebSocket => {
     }
   })
 
+  socket.addEventListener('error', err => {
+    console.error('WebSocket error:', err)
+  })
+
   socket.addEventListener('close', () => {
     console.log('WebSocket desconectado')
   })
 
-  socket.addEventListener('error', err => {
-    console.error('WebSocket error:', err)
-  })
+  const HEARTBEAT_INTERVAL = 60 * 1000 // 1 minuto
+  const heartbeat = setInterval(() => {
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'ping' }))
+    }
+  }, HEARTBEAT_INTERVAL)
+
+  const cleanup = () => clearInterval(heartbeat)
+  socket.addEventListener('close', cleanup)
+  socket.onclose = (event) => {
+    cleanup()
+    console.log('WebSocket fechado:', event.code, event.reason, 'wasClean:', event.wasClean)
+  }
 
   return socket
 }
