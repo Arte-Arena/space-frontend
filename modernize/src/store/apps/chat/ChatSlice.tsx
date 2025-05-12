@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit'
 import type { AppDispatch } from '../../store'
 import { uniqueId } from 'lodash'
-import { sub } from 'date-fns'
 import type { ChatsType, ChatApi, MessageType } from '@/app/(DashboardLayout)/types/apps/chat'
 import { mapChat } from '@/app/(DashboardLayout)/types/apps/chat'
 
@@ -157,13 +156,30 @@ export const {
 
 export default chatSlice.reducer
 
+
+// -----------------------------------------------------------------------------
+//  AQUI COMEÇA A PARTE DE WS
+// -----------------------------------------------------------------------------
+
+// Guarda a instância atual para podermos fechá-la antes de abrir outra
+let currentSocket: WebSocket | null = null
+
 /**
  * Thunk que abre o WebSocket e despacha receiveChat ou receiveMessage
  * Retorna o socket para cleanup no componente.
  */
 export const subscribeChats = () => (dispatch: AppDispatch): WebSocket => {
+  // Fecha conexão anterior
+  if (currentSocket) {
+    currentSocket.close()
+  }
+
   const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL}/v1/ws/whatsapp`
   const socket = new WebSocket(wsUrl)
+  socket.onopen = () => console.log('WS aberto');
+  socket.onclose = e => console.log('WS fechado:', e.code, e.reason);
+  socket.onerror = e => console.log('WS erro:', e);
+  currentSocket = socket
 
   socket.addEventListener('open', () => {
     console.log('WebSocket conectado em', wsUrl)
