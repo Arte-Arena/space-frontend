@@ -3,6 +3,7 @@ import type { AppDispatch } from '../../store'
 import { uniqueId } from 'lodash'
 import type { ChatsType, ChatApi, MessageType } from '@/app/(DashboardLayout)/types/apps/chat'
 import { mapChat } from '@/app/(DashboardLayout)/types/apps/chat'
+import { mapRawEventToChat } from '@/app/components/apps/chats/ChatContent'
 
 /** Payload para envio de mensagem */
 interface SendMsgPayload {
@@ -183,15 +184,30 @@ export const subscribeChats = () => (dispatch: AppDispatch): WebSocket => {
       const data = JSON.parse(event.data)
 
       if (Array.isArray(data)) {
-        (data as ChatApi[]).forEach(item => {
-          dispatch(receiveChat(mapChat(item)))
-        })
+        const first = data[0] as any
+
+        if (first.raw_event) {
+          // ===== RAW_EVENTS (novas mensagens) =====
+          data.forEach(evt => {
+            const message = mapRawEventToChat(evt)
+            dispatch(
+              receiveMessage({ chatId: String(message.senderId), message })
+            )
+          })
+        } else {
+          // ===== CHATAPI (p.ex. histórico ou lote) =====
+          ; (data as ChatApi[]).forEach(item => {
+            dispatch(receiveChat(mapChat(item)))
+          })
+        }
+
       } else if (
         typeof data === 'object' &&
         'message' in data &&
         'from' in data &&
         'timestamp' in data
       ) {
+        // seu handler antigo de objeto simples
         const raw = data as Record<string, any>
         const message: MessageType = {
           id: uniqueId(),
