@@ -335,7 +335,7 @@ export default function ContaDetalhesPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {conta.parcelas.map((parcela) => (
+                {conta.parcelas?.map((parcela) => (
                   <TableRow key={parcela.parcela}>
                     <TableCell align="center">{parcela.parcela}</TableCell>
                     <TableCell align="center">
@@ -372,7 +372,7 @@ export default function ContaDetalhesPage() {
                             : theme.palette.success.main,
                       }}
                     >
-                      R$ {parcela.valor.toFixed(2)}
+                      {parcela.valor ? `R$ ${parcela.valor.toFixed(2)}` : 'Valor não informado'}
                     </TableCell>
                     <TableCell align="center">
                       {parcela.status === "Não Pago" && (
