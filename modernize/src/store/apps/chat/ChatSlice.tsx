@@ -191,7 +191,7 @@ export const subscribeChats = () => (dispatch: AppDispatch): WebSocket => {
           data.forEach(evt => {
             const message = mapRawEventToChat(evt)
             dispatch(
-              receiveMessage({ chatId: message.senderId, message })
+              receiveMessage({ chatId: String(message.senderId), message })
             )
           })
         } else {
