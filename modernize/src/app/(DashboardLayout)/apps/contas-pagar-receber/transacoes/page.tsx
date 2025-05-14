@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import { Box, Button, Chip, IconButton, LinearProgress, Tooltip, Typography, useTheme } from '@mui/material';
+import { AlertProps, Box, Button, Chip, IconButton, LinearProgress, Tooltip, Typography, useTheme } from '@mui/material';
 import { Transaction } from './components/types';
 import TransactionDetails from './components/transacaoDetails';
 import PageContainer from '@/app/components/container/PageContainer';
@@ -10,6 +10,7 @@ import { IconEye, IconRefresh } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import CustomStyledSwitch from '@/app/components/switch/switch';
 import { format, parse } from 'date-fns';
+import NotificationSnackbar from '@/utils/snackbar';
 
 const formatDate = (dateString: string) => {
   try {
@@ -54,6 +55,15 @@ const TransactionTable = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [total, setTotal] = useState(0);
   const [statusFiltroAtivo, setStatusFiltroAtivo] = useState(false);
+  const [snackbar, setSnackbar] = React.useState<{
+    open: boolean;
+    message: string;
+    severity: AlertProps['severity'];
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   const fetchTransacoes = async () => {
     setLoading(true);
@@ -72,7 +82,13 @@ const TransactionTable = () => {
       setRows(data.data);
       setTotal(data.total);
     } catch (err: any) {
+      setSnackbar({
+        open: true,
+        message: `${'Erro ao buscar extratos!'}`,
+        severity: 'error'
+      });
       setError(err.message || 'Erro desconhecido');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -101,12 +117,23 @@ const TransactionTable = () => {
           'Content-Type': 'application/json',
         },
       });
-      if (!res.ok) throw new Error('Erro ao buscar extrato');
+      if (!res.ok) throw new Error('Erro ao atualizar os extratos');
       const data = await res.json();
       console.log(data);
     } catch (err: any) {
       setError(err.message || 'Erro desconhecido');
+      setSnackbar({
+        open: true,
+        message: `${'Erro ao atualizar os extratos!'}`,
+        severity: 'error'
+      });
+      console.error(err);
     } finally {
+      setSnackbar({
+        open: true,
+        message: `✅ ${'Sucesso ao atualizar os extratos!'}`,
+        severity: 'success'
+      });
       setLoading(false);
     }
     fetchTransacoes();
@@ -459,6 +486,7 @@ const TransactionTable = () => {
             }}
           />
         )}
+        <NotificationSnackbar message={snackbar.message} open={snackbar.open} severity={snackbar.severity} onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} />
       </Box>
     </PageContainer>
   );
