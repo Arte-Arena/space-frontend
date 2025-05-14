@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as yup from 'yup';
 import {
@@ -20,7 +20,8 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { CalendarToday, Add, Delete } from '@mui/icons-material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import CustomSelect from '@/app/components/forms/theme-elements/CustomSelect';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import NotificationSnackbar from '@/utils/snackbar';
 
 // Tipos para as parcelas
 interface Parcela {
@@ -112,22 +113,118 @@ const initialValues = {
 };
 
 const FormMovimentacoes = () => {
+  const router = useRouter();
   const params = useParams();
   const id = params.id;
+  const [initialFormValues, setInitialFormValues] = useState(initialValues);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error',
+  });
 
+  // Carrega dados para edição
   useEffect(() => {
     if (id) {
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/movimentacoes/${id}`)
-        .then((response) => response.json())
-        .then((data) => {
-          console.log(data);
-        });
+      const fetchData = async () => {
+        try {
+          const token = localStorage.getItem('accessToken');
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/movimentacoes-financeiras/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) throw new Error('Erro ao carregar dados');
+
+          const data = await response.json();
+
+          // Ajusta os dados recebidos para o formato do formulário
+          const formattedData = {
+            ...data,
+            data_operacao: data.data_operacao ? new Date(data.data_operacao) : new Date(),
+            data_lancamento: data.data_lancamento ? new Date(data.data_lancamento) : new Date(),
+            metadados: {
+              ...data.metadados,
+              parcelas: data.metadados?.parcelas?.map((p: any) => ({
+                ...p,
+                data_vencimento: p.data_vencimento ? new Date(p.data_vencimento) : new Date(),
+              })) || [],
+            },
+          };
+
+          setInitialFormValues(formattedData);
+        } catch (error) {
+          setSnackbar({
+            open: true,
+            message: 'Erro ao carregar dados da movimentação',
+            severity: 'error',
+          });
+        }
+      };
+
+      fetchData();
     }
   }, [id]);
 
+  const handleSubmit = async (values: typeof initialValues) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setSnackbar({
+          open: true,
+          message: 'Autenticação necessária',
+          severity: 'error',
+        });
+        return;
+      }
+      // Prepara o body da requisição
+      const body = {
+        ...values,
+        origin_type: 'movimentacoes-financeiras',
+        data_operacao: values.data_operacao.toISOString(),
+        data_lancamento: values.data_lancamento.toISOString(),
+        metadados: {
+          ...values.metadados,
+          parcelas: values.metadados.parcelas.map(p => ({
+            ...p,
+            data_vencimento: p.data_vencimento.toISOString(),
+          })),
+        },
+      };
 
-  const handleSubmit = (values: typeof initialValues) => {
-    console.log('Dados do formulário:', values);
+      const url = id
+        ? `${process.env.NEXT_PUBLIC_API}/api/movimentacoes-financeiras/${id}`
+        : `${process.env.NEXT_PUBLIC_API}/api/movimentacoes-financeiras`;
+      const method = id ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Erro ao salvar movimentação');
+      }
+      setSnackbar({
+        open: true,
+        message: id ? 'Movimentação atualizada com sucesso!' : 'Movimentação criada com sucesso!',
+        severity: 'success',
+      });
+    } catch (error) {
+      console.error(error);
+      setSnackbar({
+        open: true,
+        message: error instanceof Error ? error.message : 'Erro na comunicação com o servidor',
+        severity: 'error',
+      });
+    } finally {
+      router.push('/apps/contas-pagar-receber/movimentacoes');
+    }
   };
 
   const handleAddParcela = (values: typeof initialValues, setFieldValue: any) => {
@@ -164,7 +261,7 @@ const FormMovimentacoes = () => {
 
   return (
     <Formik
-      initialValues={initialValues}
+      initialValues={initialFormValues}
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
@@ -634,6 +731,12 @@ const FormMovimentacoes = () => {
                 </Grid>
               </Grid>
             </Grid>
+            <NotificationSnackbar
+              open={snackbar.open}
+              message={snackbar.message}
+              severity={snackbar.severity}
+              onClose={() => setSnackbar({ open: false, message: '', severity: 'success' })}
+            />
           </Form>
         )
       }}
