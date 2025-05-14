@@ -632,7 +632,6 @@ const MeuDesempenhoDashboard = ({ isLoading }: MeuDesempenhoDashboardProps) => {
           </DashboardCard>
         </Grid>
 
-        {/* Gráficos */}
         <Grid item xs={12} lg={8}>
           <DashboardCard title="Histórico de Desempenho">
             {renderHistoricoChart()}
@@ -645,7 +644,6 @@ const MeuDesempenhoDashboard = ({ isLoading }: MeuDesempenhoDashboardProps) => {
           </DashboardCard>
         </Grid>
 
-        {/* Tabela de Orçamentos */}
         <Grid item xs={12}>
           <DashboardCard title="Meus Orçamentos">
             <TableContainer>
