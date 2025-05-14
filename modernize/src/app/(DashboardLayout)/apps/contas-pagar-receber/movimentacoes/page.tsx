@@ -45,8 +45,6 @@ const MovimentacoesTable = () => {
     return null;
   }
 
-  const [open, setOpen] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<MovimentacaoFinanceira | null>(null);
   const [rows, setRows] = useState<MovimentacaoFinanceira[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +62,7 @@ const MovimentacoesTable = () => {
     severity: 'success'
   });
 
-  const fetchTransacoes = async () => {
+  const fetchMovimentacoes = async () => {
     setLoading(true);
     try {
       const statusParam = statusFiltroAtivo ? `&status=approved` : '';
@@ -94,49 +92,9 @@ const MovimentacoesTable = () => {
   };
 
   useEffect(() => {
-    fetchTransacoes();
+    fetchMovimentacoes();
   }, [page, rowsPerPage, statusFiltroAtivo]);
 
-  const openTransactionDetails = (transaction: MovimentacaoFinanceira) => {
-    setSelectedTransaction(transaction);
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    setSelectedTransaction(null);
-  };
-
-  const updateLastResults = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API}/api/extrato/mercadopago`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!res.ok) throw new Error('Erro ao atualizar os extratos');
-      const data = await res.json();
-      console.log(data);
-    } catch (err: any) {
-      setError(err.message || 'Erro desconhecido');
-      setSnackbar({
-        open: true,
-        message: `${'Erro ao atualizar os extratos!'}`,
-        severity: 'error'
-      });
-      console.error(err);
-    } finally {
-      setSnackbar({
-        open: true,
-        message: `✅ ${'Sucesso ao atualizar os extratos!'}`,
-        severity: 'success'
-      });
-      setLoading(false);
-    }
-    fetchTransacoes();
-  };
 
   const columns: GridColDef<MovimentacaoFinanceira>[] = [
     {
@@ -350,7 +308,7 @@ const MovimentacoesTable = () => {
             ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'center', height: '100%' }}>
                 {listaProdutos.map((produto: any) => (
-                  <Tooltip key={produto.id} title={produto.nome}>
+                  <Tooltip key={produto.id} title={produto.nome} placement='right'>
                     <Typography variant="body2" component="li" sx={{ mt: 0.5, '&:first-child': { mt: 0 } }}>
                       {produto.nome.length > 20 ? `${produto.nome.slice(0, 20)}...` : produto.nome}
                     </Typography>
@@ -400,35 +358,11 @@ const MovimentacoesTable = () => {
       <Breadcrumb title="transações Bancarias" subtitle="Transações bancarias" />
       {/* <Box display="flex" alignItems="center" justifyContent={'space-around'} ml={-1.5} my={3} marginLeft={1}>
         <Box display={'flex'} alignItems={'center'}>
-          <CustomStyledSwitch
-            checked={statusFiltroAtivo}
-            onChange={(e) => {
-              setStatusFiltroAtivo(e.target.checked);
-              setPage(0); // resetar página
-            }}
-          />
-          <Typography variant="subtitle1" sx={{ mr: 2 }}>
-            Mostrar apenas Status Mercado Pago Aprovado
-          </Typography>
+          
         </Box>
 
         <Box display={'flex'} alignItems={'center'}>
-          <IconButton
-            onClick={updateLastResults}
-            sx={{
-              color: theme.palette.success.main,
-              '&:hover': {
-                backgroundColor: theme.palette.success.light,
-              },
-            }}
-          >
-            <Tooltip title="Atualizar Últimos 100 Resultados" placement="top">
-              <IconRefresh />
-            </Tooltip>
-          </IconButton>
-          <Typography variant="subtitle1" sx={{ mr: 2 }}>
-            Atualizar Últimos 100 Resultados
-          </Typography>
+
         </Box>
       </Box> */}
       <Box
@@ -470,18 +404,6 @@ const MovimentacoesTable = () => {
               },
             }}
           />
-
-          {error && (
-            <Typography color="error" mt={2}>
-              Erro ao carregar transações: {error}
-            </Typography>
-          )}
-
-          {/* <TransactionDetails
-            open={open}
-            onClose={handleClose}
-            transaction={selectedTransaction}
-          /> */}
         </div>
         {loading && (
           <LinearProgress
