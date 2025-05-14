@@ -16,14 +16,18 @@ import {
   TableHead,
   TableRow,
   Chip,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import {
   IconArrowUpRight,
   IconCurrencyReal,
   IconUserCheck,
+  IconEye,
 } from "@tabler/icons-react";
 import { differenceInDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import Link from "next/link";
 
 import DashboardCard from "../../../../components/shared/DashboardCard";
 import { desempenhoData } from "./mockData";
@@ -33,7 +37,6 @@ interface MeuDesempenhoDashboardProps {
   isLoading?: boolean;
 }
 
-// Tipo para os orçamentos
 interface Orcamento {
   id: string;
   cliente: string;
@@ -69,7 +72,6 @@ const MeuDesempenhoDashboard = ({ isLoading }: MeuDesempenhoDashboardProps) => {
     }
   };
 
-  // Função para obter a cor do chip de status
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Aprovado":
@@ -115,7 +117,6 @@ const MeuDesempenhoDashboard = ({ isLoading }: MeuDesempenhoDashboardProps) => {
     let meusOrcamentos = [...desempenhoData.meusOrcamentos];
     const historicoMensal = [...desempenhoData.historicoMensal];
 
-    // Filtrar orçamentos por período
     if (periodo !== "todos") {
       const hoje = new Date();
       let dataLimite: Date;
@@ -427,7 +428,6 @@ const MeuDesempenhoDashboard = ({ isLoading }: MeuDesempenhoDashboardProps) => {
     setDataFim(novaDataFim);
   };
 
-  // Renderização condicional dos gráficos
   const renderHistoricoChart = () => {
     if (typeof window === "undefined") {
       return <></>;
@@ -466,7 +466,6 @@ const MeuDesempenhoDashboard = ({ isLoading }: MeuDesempenhoDashboardProps) => {
       />
 
       <Grid container spacing={3}>
-        {/* Indicadores principais */}
         <Grid item xs={12} sm={6} lg={4}>
           <DashboardCard
             title="Meus Orçamentos"
@@ -658,6 +657,7 @@ const MeuDesempenhoDashboard = ({ isLoading }: MeuDesempenhoDashboardProps) => {
                     <TableCell>Data</TableCell>
                     <TableCell align="right">Valor</TableCell>
                     <TableCell align="center">Status</TableCell>
+                    <TableCell align="center">Ações</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -685,6 +685,22 @@ const MeuDesempenhoDashboard = ({ isLoading }: MeuDesempenhoDashboardProps) => {
                               borderRadius: "6px",
                             }}
                           />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Tooltip title="Ver detalhes do orçamento">
+                            <Link
+                              href={`/apps/vendas/orcamentos/${orcamento.id}`}
+                              passHref
+                            >
+                              <IconButton
+                                color="primary"
+                                size="small"
+                                aria-label="ver orçamento"
+                              >
+                                <IconEye size={18} />
+                              </IconButton>
+                            </Link>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     );
