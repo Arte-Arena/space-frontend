@@ -9,11 +9,12 @@ import {
   Tabs,
   CircularProgress,
 } from "@mui/material";
-import { IconUsers, IconReceipt } from "@tabler/icons-react";
+import { IconUsers, IconReceipt, IconUserCircle } from "@tabler/icons-react";
 
 import PageContainer from "@/app/components/container/PageContainer";
 import ClientesDashboard from "./ClientesDashboard";
 import OrcamentosDashboard from "./OrcamentosDashboard";
+import MeuDesempenhoDashboard from "./MeuDesempenhoDashboard";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -96,6 +97,11 @@ export default function RelatoriosPage() {
                   label="Orçamentos"
                   {...a11yProps(1)}
                 />
+                <Tab
+                  icon={<IconUserCircle />}
+                  label="Meu desempenho"
+                  {...a11yProps(2)}
+                />
               </Tabs>
 
               {isLoading ? (
@@ -112,6 +118,11 @@ export default function RelatoriosPage() {
                   <TabPanel value={value} index={1}>
                     <Box sx={{ p: 3 }}>
                       <OrcamentosDashboard isLoading={isLoading} />
+                    </Box>
+                  </TabPanel>
+                  <TabPanel value={value} index={2}>
+                    <Box sx={{ p: 3 }}>
+                      <MeuDesempenhoDashboard isLoading={isLoading} />
                     </Box>
                   </TabPanel>
                 </>
