@@ -28,16 +28,14 @@ interface Parcela {
   numero: number;
   valor: number;
   status: 'pendente' | 'pago' | 'atrasado' | 'cancelado';
-  data_vencimento: Date;
+  data: Date;
 }
 
-// Schema de validação Yup
 const validationSchema = yup.object({
   numero_pedido: yup.string(),
   documento: yup.string(),
   tipo_documento: yup
-    .string()
-    .oneOf(['nota fiscal', 'recibo', 'outros'], 'Tipo de Documento inválido'),
+    .string(),
   valor_bruto: yup
     .number()
     .min(0, 'Valor deve ser maior ou igual a 0')
@@ -51,14 +49,8 @@ const validationSchema = yup.object({
     .string()
     .oneOf(['entrada', 'saida'], 'Tipo inválido')
     .required('Tipo é obrigatório'),
-  etapa: yup
-    .string()
-    .oneOf(['aprovado', 'pendente', 'rejeitado'], 'Etapa inválida')
-    .required('Etapa é obrigatória'),
-  status: yup
-    .string()
-    .oneOf(['pendente', 'pago', 'cancelado'], 'Status inválido')
-    .required('Status é obrigatório'),
+  etapa: yup.string().required('Etapa é obrigatória'),
+  status: yup.string().required('Status é obrigatório'),
   observacoes: yup.string().optional(),
   metadados: yup.object({
     forma_pagamento: yup.string(),
@@ -68,7 +60,7 @@ const validationSchema = yup.object({
         numero: yup.number().required(),
         valor: yup.number().min(0).required(),
         status: yup.string().required(),
-        data_vencimento: yup.date().required(),
+        data: yup.date().required(),
       })
     ).max(3, 'Máximo de 3 parcelas permitidas'),
   }),
@@ -134,27 +126,33 @@ const FormMovimentacoes = () => {
               Authorization: `Bearer ${token}`,
             },
           });
-
           if (!response.ok) throw new Error('Erro ao carregar dados');
-
           const data = await response.json();
-
+          // Parse dos campos que estão como string JSON
+          const parsedMetadados = typeof data.metadados === 'string' ? JSON.parse(data.metadados) : data.metadados;
+          const parsedListaProdutos = typeof data.lista_produtos === 'string' ? JSON.parse(data.lista_produtos) : data.lista_produtos;
+          const parsedMetadadosCliente = typeof data.metadados_cliente === 'string' ? JSON.parse(data.metadados_cliente) : data.metadados_cliente;
           // Ajusta os dados recebidos para o formato do formulário
           const formattedData = {
             ...data,
+            valor_bruto: parseFloat(data.valor_bruto) || 0,
+            valor_liquido: parseFloat(data.valor_liquido) || 0,
             data_operacao: data.data_operacao ? new Date(data.data_operacao) : new Date(),
             data_lancamento: data.data_lancamento ? new Date(data.data_lancamento) : new Date(),
+            lista_produtos: parsedListaProdutos,
+            metadados_cliente: parsedMetadadosCliente,
             metadados: {
-              ...data.metadados,
-              parcelas: data.metadados?.parcelas?.map((p: any) => ({
+              ...parsedMetadados,
+              parcelas: parsedMetadados?.parcelas?.map((p: any) => ({
                 ...p,
-                data_vencimento: p.data_vencimento ? new Date(p.data_vencimento) : new Date(),
+                valor: parseFloat(p.valor) || 0,
+                data: p.data ? new Date(p.data) : new Date(),
               })) || [],
             },
           };
-
           setInitialFormValues(formattedData);
         } catch (error) {
+          console.error('Erro ao formatar dados:', error);
           setSnackbar({
             open: true,
             message: 'Erro ao carregar dados da movimentação',
@@ -162,7 +160,6 @@ const FormMovimentacoes = () => {
           });
         }
       };
-
       fetchData();
     }
   }, [id]);
@@ -188,7 +185,7 @@ const FormMovimentacoes = () => {
           ...values.metadados,
           parcelas: values.metadados.parcelas.map(p => ({
             ...p,
-            data_vencimento: p.data_vencimento.toISOString(),
+            data: p.data.toISOString(),
           })),
         },
       };
@@ -239,7 +236,7 @@ const FormMovimentacoes = () => {
       numero: i + 1,
       valor: valorParcela,
       status: 'pendente',
-      data_vencimento: new Date(new Date().setMonth(new Date().getMonth() + i))
+      data: new Date(new Date().setMonth(new Date().getMonth() + i))
     }));
 
     setFieldValue('metadados.parcelas', novasParcelas);
@@ -253,7 +250,7 @@ const FormMovimentacoes = () => {
         ...p,
         numero: i + 1,
         valor: total / (values.metadados.parcelas.length - 1), // Recalcula o valor
-        data_vencimento: new Date(new Date().setMonth(new Date().getMonth() + i))
+        data: new Date(new Date().setMonth(new Date().getMonth() + i))
       }));
 
     setFieldValue('metadados.parcelas', novasParcelas);
@@ -261,6 +258,7 @@ const FormMovimentacoes = () => {
 
   return (
     <Formik
+      enableReinitialize
       initialValues={initialFormValues}
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
@@ -268,6 +266,7 @@ const FormMovimentacoes = () => {
       {({ values, errors, touched, handleChange, setFieldValue }) => {
 
         useEffect(() => {
+          if (id) return;
           const qtdParcelas = values.metadados.parcelas.length;
           const total = values.valor_bruto;
 
@@ -284,13 +283,13 @@ const FormMovimentacoes = () => {
                 numero: 1,
                 valor: valorParcela,
                 status: 'pendente',
-                data_vencimento: hoje
+                data: hoje
               },
               {
                 numero: 2,
                 valor: valorParcela,
                 status: 'pendente',
-                data_vencimento: new Date(hoje.setMonth(hoje.getMonth() + 1))
+                data: new Date(hoje.setMonth(hoje.getMonth() + 1))
               }
             ]);
           }
@@ -303,19 +302,19 @@ const FormMovimentacoes = () => {
                 numero: 1,
                 valor: valorParcela,
                 status: 'pendente',
-                data_vencimento: hoje
+                data: hoje
               },
               {
                 numero: 2,
                 valor: valorParcela,
                 status: 'pendente',
-                data_vencimento: new Date(hoje.setMonth(hoje.getMonth() + 1))
+                data: new Date(hoje.setMonth(hoje.getMonth() + 1))
               },
               {
                 numero: 3,
                 valor: valorParcela,
                 status: 'pendente',
-                data_vencimento: new Date(hoje.setMonth(hoje.getMonth() + 2))
+                data: new Date(hoje.setMonth(hoje.getMonth() + 2))
               }
             ]);
           }
@@ -325,6 +324,8 @@ const FormMovimentacoes = () => {
         const handleTipoFaturamentoChange = (e: React.ChangeEvent<{ value: unknown }>) => {
           const value = e.target.value as string;
           setFieldValue('metadados.tipo_faturamento', value);
+
+          if (id) return;
 
           // Lógica específica para cada tipo
           if (value === 'a_vista') {
@@ -339,13 +340,13 @@ const FormMovimentacoes = () => {
                 numero: 1,
                 valor: valorParcela,
                 status: 'pendente',
-                data_vencimento: hoje
+                data: hoje
               },
               {
                 numero: 2,
                 valor: valorParcela,
                 status: 'pendente',
-                data_vencimento: new Date(hoje.setMonth(hoje.getMonth() + 1))
+                data: new Date(hoje.setMonth(hoje.getMonth() + 1))
               }
             ]);
           }
@@ -358,19 +359,19 @@ const FormMovimentacoes = () => {
                 numero: 1,
                 valor: valorParcela,
                 status: 'pendente',
-                data_vencimento: hoje
+                data: hoje
               },
               {
                 numero: 2,
                 valor: valorParcela,
                 status: 'pendente',
-                data_vencimento: new Date(hoje.setMonth(hoje.getMonth() + 1))
+                data: new Date(hoje.setMonth(hoje.getMonth() + 1))
               },
               {
                 numero: 3,
                 valor: valorParcela,
                 status: 'pendente',
-                data_vencimento: new Date(hoje.setMonth(hoje.getMonth() + 2))
+                data: new Date(hoje.setMonth(hoje.getMonth() + 2))
               }
             ]);
           }
@@ -415,6 +416,7 @@ const FormMovimentacoes = () => {
                   >
                     <MenuItem value="nota fiscal">Nota Fiscal</MenuItem>
                     <MenuItem value="recibo">Recibo</MenuItem>
+                    <MenuItem value="orçamento">Orçamento</MenuItem>
                     <MenuItem value="outros">Outros</MenuItem>
                   </Select>
                   <FormHelperText>
@@ -486,9 +488,16 @@ const FormMovimentacoes = () => {
                 <Field
                   as={TextField}
                   fullWidth
-                  type="number"
                   name="valor_bruto"
                   label="Valor Bruto"
+                  value={values.valor_bruto.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const value = parseFloat(e.target.value.replace(/\./g, '').replace(',', '.')) || 0;
+                    setFieldValue('valor_bruto', value);
+                  }}
                   InputProps={{
                     startAdornment: <InputAdornment position="start">R$</InputAdornment>,
                   }}
@@ -551,7 +560,9 @@ const FormMovimentacoes = () => {
                     label="Status"
                   >
                     <MenuItem value="">Limpar</MenuItem>
-                    <MenuItem value="pendente">Pendente</MenuItem>
+                    <MenuItem value={values.status === "pendente" ? "pendente" : "pendente conciliação"}>
+                      Pendente
+                    </MenuItem>
                     <MenuItem value="conciliado">conciliado</MenuItem>
                   </CustomSelect>
                   <FormHelperText>
@@ -668,10 +679,10 @@ const FormMovimentacoes = () => {
                                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                                   <DatePicker
                                     label="Data de Vencimento"
-                                    value={parcela.data_vencimento}
+                                    value={parcela.data}
                                     onChange={(date) => {
                                       const novasParcelas = [...values.metadados.parcelas];
-                                      novasParcelas[index].data_vencimento = date || new Date();
+                                      novasParcelas[index].data = date || new Date();
                                       setFieldValue('metadados.parcelas', novasParcelas);
                                     }}
                                     inputFormat="dd/MM/yyyy"
