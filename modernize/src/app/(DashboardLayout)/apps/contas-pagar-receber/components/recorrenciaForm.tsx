@@ -18,15 +18,15 @@ import {
   SelectChangeEvent,
   Box, // Adicionado para espaçamento
 } from '@mui/material';
+import { RecorrenciaFormDialogProps } from './types';
 
 // Importando os tipos definidos acima (ou defina-os no mesmo arquivo se preferir)
-export type TipoRecorrencia = 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
 export type DiaSemana = 'seg' | 'ter' | 'qua' | 'qui' | 'sex' | 'sab' | 'dom' | '';
 export type StatusRecorrencia = 'ativa' | 'pausada';
 
 export interface RecorrenciaFormData {
   conta_id: number | string | null | undefined;
-  tipo_recorrencia: TipoRecorrencia;
+  tipo_recorrencia: string;
   intervalo: number | string;
   dia_mes?: number | string;
   dia_semana?: DiaSemana;
@@ -50,59 +50,70 @@ export interface RecorrenciaFormErrors {
   status?: string;
 }
 
-export interface RecorrenciaFormDialogProps {
-  open: boolean;
-  onClose: () => void;
-  contaId: number | string | null | undefined;
-  onSave?: (formData: RecorrenciaFormData) => void;
-}
-
 const RecorrenciaFormDialog: React.FC<RecorrenciaFormDialogProps> = ({
   open,
   onClose,
   contaId,
   onSave,
+  tipoRecorrencia,
+  setTipoRecorrencia,
+  intervalo,
+  setIntervalo,
+  initialData
 }) => {
-  const initialState: RecorrenciaFormData = {
+  const [formData, setFormData] = useState<RecorrenciaFormData>({
     conta_id: contaId,
-    tipo_recorrencia: 'mensal',
-    intervalo: 1,
-    dia_mes: new Date().getDate().toString(), // Convertido para string para o TextField
-    dia_semana: 'seg',
+    tipo_recorrencia: tipoRecorrencia,
+    intervalo: intervalo,
+    dia_mes: '',
+    dia_semana: '',
     data_inicio: new Date().toISOString().split('T')[0],
     data_fim: '',
     max_ocorrencias: '',
     valor: '',
     status: 'ativa',
-  };
+  });
 
-  const [formData, setFormData] = useState<RecorrenciaFormData>(initialState);
   const [errors, setErrors] = useState<RecorrenciaFormErrors>({});
 
-  // Atualiza o conta_id no formData se o prop contaId mudar
   useEffect(() => {
-    setFormData(prev => ({ ...prev, conta_id: contaId }));
-  }, [contaId]);
+    if (open) {
+      setFormData({
+        conta_id: contaId,
+        tipo_recorrencia: initialData?.tipo_recorrencia || tipoRecorrencia,
+        intervalo: initialData?.intervalo || intervalo,
+        dia_mes: initialData?.dia_mes || '',
+        dia_semana: initialData?.dia_semana || '',
+        data_inicio: initialData?.data_inicio || new Date().toISOString().split('T')[0],
+        data_fim: initialData?.data_fim || '',
+        max_ocorrencias: initialData?.max_ocorrencias || '',
+        valor: initialData?.valor || '',
+        status: initialData?.status || 'ativa',
+      });
+      setErrors({});
+    }
+  }, [open, contaId, tipoRecorrencia, intervalo, initialData]);
 
-
-  // Limpa campos não relevantes quando o tipo de recorrência muda
-  useEffect(() => {
-    setFormData(prevData => {
-      const newData: RecorrenciaFormData = { ...prevData };
-      if (!['mensal', 'bimestral', 'trimestral', 'semestral'].includes(prevData.tipo_recorrencia)) {
-        newData.dia_mes = '';
-      }
-      if (prevData.tipo_recorrencia !== 'semanal') {
-        newData.dia_semana = '';
-      }
-      return newData;
-    });
-  }, [formData.tipo_recorrencia]);
-
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>) => {
+  const handleChange = (
+    e: SelectChangeEvent | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'tipo_recorrencia') {
+      const val = value as string;
+      setTipoRecorrencia(val);
+      setFormData(prev => ({
+        ...prev,
+        tipo_recorrencia: val,
+        dia_mes: ['mensal', 'bimestral', 'trimestral', 'semestral'].includes(val) ? prev.dia_mes : '',
+        dia_semana: ['semanal', 'quinzenal'].includes(val) ? prev.dia_semana : '',
+      }));
+    } else if (name === 'intervalo') {
+      setIntervalo(value);
+      setFormData(prev => ({ ...prev, intervalo: value }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSwitchChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -123,18 +134,14 @@ const RecorrenciaFormDialog: React.FC<RecorrenciaFormDialogProps> = ({
     }
 
     if (formData.tipo_recorrencia === 'mensal') {
-      if (!formData.dia_mes) {
-        newErrors.dia_mes = 'Dia do mês é obrigatório para recorrência mensal.';
-      } else {
-        const diaMesNum = parseInt(String(formData.dia_mes), 10);
-        if (isNaN(diaMesNum) || diaMesNum < 1 || diaMesNum > 31) {
-          newErrors.dia_mes = 'Dia do mês deve ser entre 1 e 31.';
-        }
+      const diaMesNum = parseInt(String(formData.dia_mes), 10);
+      if (!formData.dia_mes || isNaN(diaMesNum) || diaMesNum < 1 || diaMesNum > 31) {
+        newErrors.dia_mes = 'Dia do mês deve ser entre 1 e 31.';
       }
     }
 
     if (formData.tipo_recorrencia === 'semanal' && !formData.dia_semana) {
-      newErrors.dia_semana = 'Dia da semana é obrigatório para recorrência semanal.';
+      newErrors.dia_semana = 'Dia da semana é obrigatório.';
     }
 
     if (formData.intervalo === '' || parseInt(String(formData.intervalo), 10) < 1) {
@@ -142,13 +149,12 @@ const RecorrenciaFormDialog: React.FC<RecorrenciaFormDialogProps> = ({
     }
 
     if (formData.max_ocorrencias && parseInt(String(formData.max_ocorrencias), 10) < 1) {
-      newErrors.max_ocorrencias = 'Nº de ocorrências deve ser 1 ou maior, se informado.';
+      newErrors.max_ocorrencias = 'Nº de ocorrências deve ser 1 ou maior.';
     }
 
     if (formData.valor && parseFloat(String(formData.valor)) < 0) {
       newErrors.valor = 'Valor não pode ser negativo.';
     }
-
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -157,34 +163,48 @@ const RecorrenciaFormDialog: React.FC<RecorrenciaFormDialogProps> = ({
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      // Converte campos numéricos de string para número antes de salvar
       const dataToSave: RecorrenciaFormData = {
         ...formData,
+        tipo_recorrencia: formData.tipo_recorrencia as string,
         intervalo: parseInt(String(formData.intervalo), 10),
         dia_mes: formData.dia_mes ? parseInt(String(formData.dia_mes), 10) : undefined,
         max_ocorrencias: formData.max_ocorrencias ? parseInt(String(formData.max_ocorrencias), 10) : undefined,
         valor: formData.valor ? parseFloat(String(formData.valor)) : undefined,
       };
-      if (onSave) {
-        onSave(dataToSave);
-      }
-      onClose(); // Fecha o diálogo após salvar
-      setFormData(initialState); // Reseta o formulário para o estado inicial
-      setErrors({}); // Limpa os erros
+      onSave?.(dataToSave);
+      onClose();
     }
   };
 
-  // Reseta o formulário quando o diálogo é fechado ou o estado inicial muda
-  useEffect(() => {
-    if (open) {
-      setFormData({
-        ...initialState,
-        conta_id: contaId, // Garante que o contaId está atualizado ao abrir
-      });
-      setErrors({});
-    }
-  }, [open, contaId]);
+  const handleCancel = () => {
+    onClose();
+    setFormData({
+      conta_id: contaId,
+      tipo_recorrencia: tipoRecorrencia,
+      intervalo: intervalo,
+      dia_mes: '',
+      dia_semana: '',
+      data_inicio: new Date().toISOString().split('T')[0],
+      data_fim: '',
+      max_ocorrencias: '',
+      valor: '',
+      status: 'ativa',
+    });
+    setErrors({});
+  };
 
+
+  const opcoesRecorrencia: string[] = [
+    "Diaria",
+    "Semanal",
+    "Quinzenal",
+    "Mensal",
+    "Bimestral",
+    "Trimestral",
+    "Semestral",
+    "Anual",
+    "Personalizada",
+  ]
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -202,15 +222,10 @@ const RecorrenciaFormDialog: React.FC<RecorrenciaFormDialogProps> = ({
                   onChange={handleChange}
                   label="Tipo de Recorrência"
                 >
-                  <MenuItem value="diaria">Diária</MenuItem>
-                  <MenuItem value="semanal">Semanal</MenuItem>
-                  <MenuItem value="quinzenal">Quinzenal</MenuItem>
-                  <MenuItem value="mensal">Mensal</MenuItem>
-                  <MenuItem value="bimestral">Bimestral</MenuItem>
-                  <MenuItem value="trimestral">Trimestral</MenuItem>
-                  <MenuItem value="semestral">Semestral</MenuItem>
-                  <MenuItem value="anual">Anual</MenuItem>
-                  <MenuItem value="personalizada">Personalizada</MenuItem>
+                  {opcoesRecorrencia.map((value) => (
+                    <MenuItem key={value} value={value}>{value}</MenuItem>
+                  ))}
+
                 </Select>
                 {errors.tipo_recorrencia && <FormHelperText>{errors.tipo_recorrencia}</FormHelperText>}
               </FormControl>
@@ -347,7 +362,22 @@ const RecorrenciaFormDialog: React.FC<RecorrenciaFormDialogProps> = ({
         </Box>
       </DialogContent>
       <DialogActions sx={{ padding: '16px 24px' }}>
-        <Button onClick={() => { onClose(); setFormData(initialState); setErrors({}); }} color="secondary">
+        <Button onClick={() => {
+          onClose();
+          setFormData({
+            conta_id: contaId,
+            tipo_recorrencia: tipoRecorrencia,
+            intervalo: intervalo,
+            dia_mes: '',
+            dia_semana: '',
+            data_inicio: new Date().toISOString().split('T')[0],
+            data_fim: '',
+            max_ocorrencias: '',
+            valor: '',
+            status: 'ativa',
+          });
+          setErrors({});
+        }} color="secondary">
           Cancelar
         </Button>
         <Button onClick={handleSubmit} variant="contained" color="primary">

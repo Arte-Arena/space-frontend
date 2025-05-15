@@ -10,6 +10,7 @@ export type attachType = {
 export type MessageType = {
   id: string
   senderId: number | string
+  to?: string
   type: string
   msg: string
   createdAt?: string
