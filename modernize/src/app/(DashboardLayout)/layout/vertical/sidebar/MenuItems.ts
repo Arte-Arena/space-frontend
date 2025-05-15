@@ -552,7 +552,7 @@ const getMenuItems = (): MenuitemsType[] => {
                 },
                 {
                   id: uniqueId(),
-                  title: "Conciliar Contas",
+                  title: "Concilição",
                   icon: IconBuildingBank,
                   href: "/apps/contas-pagar-receber/transacoes/conciliar",
                 },
