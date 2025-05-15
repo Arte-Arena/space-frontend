@@ -5,7 +5,7 @@ import { AlertProps, Box, Button, Chip, IconButton, LinearProgress, Tooltip, Typ
 import { MovimentacaoFinanceira, Parcela } from './components/types';
 import PageContainer from '@/app/components/container/PageContainer';
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
-import { IconEye, IconRefresh } from '@tabler/icons-react';
+import { IconBuildingBank, IconEye, IconRefresh } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import CustomStyledSwitch from '@/app/components/switch/switch';
 import { format, parse } from 'date-fns';
@@ -337,25 +337,36 @@ const MovimentacoesTable = () => {
     {
       field: 'actions',
       headerName: 'Ações',
-      width: 80,
+      width: 100,
       sortable: false,
       renderCell: (params: GridRenderCellParams<MovimentacaoFinanceira>) => (
-        <IconButton
-          onClick={() => { /* Implemente sua função openTransactionDetails aqui */ console.log('Detalhes', params.row) }}
-          color="primary"
-        >
-          <Tooltip title="Detalhes">
-            <IconEye />
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Tooltip title="Detalhes" placement='left'>
+            <IconButton
+              onClick={() => { /* Implemente sua função openTransactionDetails aqui */ console.log('Detalhes', params.row) }}
+              color="primary"
+            >
+              <IconEye />
+            </IconButton>
           </Tooltip>
-        </IconButton>
+          <Tooltip title="Conciliar" placement='right'>
+            <IconButton
+              onClick={() => { router.push(`/apps/contas-pagar-receber/movimentacoes/detalhes/${params.row.id}`) }}
+              color="primary"
+            >
+              <IconBuildingBank />
+            </IconButton>
+          </Tooltip>
+        </div>
+
       ),
     },
   ];
 
-
   return (
-    <PageContainer title='transações Bancarias' description="Gestão de Transações">
-      <Breadcrumb title="transações Bancarias" subtitle="Transações bancarias" />
+    <PageContainer title='Movimentações Financeiras' description="Gestão de Movimentações">
+      <Breadcrumb title="Movimentações Financeiras" subtitle="Gestão de Movimentações Financeiras" />
+
       {/* <Box display="flex" alignItems="center" justifyContent={'space-around'} ml={-1.5} my={3} marginLeft={1}>
         <Box display={'flex'} alignItems={'center'}>
           
