@@ -316,12 +316,22 @@ const OrcamentoAprovarEspecificoScreen = ({ params }: { params: { id: string } }
           return response.json();
         })
         .then(() => {
-          console.log('Orçamento aprovado com sucesso');
+          setSnackbar({
+            open: true,
+            message: 'orçamento aprovado com sucesso',
+            severity: 'success'
+          })
           setIsLoadingOrcamentoState(false);
-          router.push(`/apps/orcamento/buscar`);
         })
         .catch(error => {
+          setSnackbar({
+            open: true,
+            message: 'orçamento não aprovado erro interno do servidor',
+            severity: 'error'
+          });
           console.error('Erro:', error);
+        }).finally(() => {
+          router.push(`/apps/orcamento/buscar`);
         });
     }
   };

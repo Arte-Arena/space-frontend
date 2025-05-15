@@ -46,7 +46,15 @@ import {
   IconUserPlus,
   IconZoomInArea,
   IconBrandWhatsapp,
+  IconWallet,
+  IconPigMoney,
+  IconPig,
+  IconHandMove,
 } from "@tabler/icons-react";
+import { IconTelescope } from "@tabler/icons-react";
+import { IconCreditCard } from "@tabler/icons-react";
+import { IconDeviceDesktopPlus } from "@tabler/icons-react";
+import { IconDeviceImacDollar } from "@tabler/icons-react";
 
 interface MenuitemsType {
   id?: string;
@@ -478,34 +486,79 @@ const getMenuItems = (): MenuitemsType[] => {
         },
         {
           id: uniqueId(),
-          title: "Contas",
+          title: "Financeiro",
           icon: IconBrandCashapp,
-          href: "/apps/contas-pagar-receber",
           children: [
             {
               id: uniqueId(),
-              title: "Adicionar Conta",
-              icon: IconBrandCashapp,
-              href: "/apps/contas-pagar-receber/adicionar",
+              title: "Conta",
+              icon: IconWallet,
+              children: [
+                {
+                  id: uniqueId(),
+                  title: "Adicionar Conta",
+                  icon: IconBrandCashapp,
+                  href: "/apps/contas-pagar-receber/adicionar",
+                },
+                {
+                  id: uniqueId(),
+                  title: "Buscar Conta",
+                  icon: IconZoomMoney,
+                  href: "/apps/contas-pagar-receber/buscar",
+                },
+                {
+                  id: uniqueId(),
+                  title: "Pagamentos",
+                  icon: IconMoneybag,
+                  href: "/apps/contas-pagar-receber/pagamentos",
+                },
+                {
+                  id: uniqueId(),
+                  title: "Relatórios de Contas",
+                  icon: IconChartBar,
+                  href: "/apps/contas-pagar-receber/relatorios",
+                },
+              ],
             },
             {
               id: uniqueId(),
-              title: "Buscar Conta",
-              icon: IconZoomMoney,
-              href: "/apps/contas-pagar-receber/buscar",
+              title: "Movimentações",
+              icon: IconDeviceImacDollar,
+              children: [
+                {
+                  id: uniqueId(),
+                  title: "Ver Movimentações",
+                  icon: IconTelescope,
+                  href: "/apps/contas-pagar-receber/movimentacoes",
+                },
+                {
+                  id: uniqueId(),
+                  title: "Adicionar Movimentação",
+                  icon: IconDeviceDesktopPlus,
+                  href: "/apps/contas-pagar-receber/movimentacoes/adicionar",
+                },
+              ]
             },
             {
               id: uniqueId(),
-              title: "Pagamentos",
-              icon: IconMoneybag,
-              href: "/apps/contas-pagar-receber/pagamentos",
+              title: "Transações",
+              icon: IconCreditCard,
+              children: [
+                {
+                  id: uniqueId(),
+                  title: "Ver Transações",
+                  icon: IconPig,
+                  href: "/apps/contas-pagar-receber/transacoes",
+                },
+                {
+                  id: uniqueId(),
+                  title: "Conciliar Contas",
+                  icon: IconBuildingBank,
+                  href: "/apps/contas-pagar-receber/transacoes/conciliar",
+                },
+              ]
             },
-            {
-              id: uniqueId(),
-              title: "Relatórios de Contas",
-              icon: IconChartBar,
-              href: "/apps/contas-pagar-receber/relatorios",
-            },
+
           ],
         },
       ],

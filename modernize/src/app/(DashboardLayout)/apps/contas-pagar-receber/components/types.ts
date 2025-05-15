@@ -9,6 +9,7 @@ export interface ContaFormProps {
   initialValues?: ContasForm,
   onSubmit: (values: any) => void;
   submitLabel?: string;
+  recorrente?: RecorrenciaFormData;
 }
 
 export interface ContasForm {
@@ -30,6 +31,7 @@ export interface ContasForm {
   fixa?: boolean;
   documento?: string;
   observacoes?: string;
+  recorrente?: RecorrenciaFormData;
 };
 
 export interface Conta {
@@ -54,19 +56,18 @@ export interface Conta {
   observacoes?: string;
   created_at: Date;
   updated_at: Date,
+  recorrente?: RecorrenciaFormData;
 };
 
-
-
 // Tipos para os valores possíveis das strings literais
-export type TipoRecorrencia = 'diaria' | 'semanal' | 'mensal' | 'anual' | 'personalizada';
+// export type TipoRecorrencia = 'diaria' | 'semanal' | 'quinzenal' | 'mensal' | 'bimestral' | 'trimestral' | 'semestral' | 'anual' | 'personalizada';
 export type DiaSemana = 'seg' | 'ter' | 'qua' | 'qui' | 'sex' | 'sab' | 'dom' | '';
 export type StatusRecorrencia = 'ativa' | 'pausada';
 
 // Interface para os dados do formulário de recorrência
 export interface RecorrenciaFormData {
   conta_id: number | string | null | undefined; // O ID da conta à qual a recorrência pertence
-  tipo_recorrencia: TipoRecorrencia;
+  tipo_recorrencia: string;
   intervalo: number | string; // string para permitir campo vazio, mas será convertido para número
   dia_mes?: number | string; // Dia do mês (1-31), opcional e pode ser string do input
   dia_semana?: DiaSemana; // Dia da semana, opcional
@@ -97,4 +98,9 @@ export interface RecorrenciaFormDialogProps {
   onClose: () => void;
   contaId: number | string | null | undefined; // Deve corresponder ao tipo em RecorrenciaFormData
   onSave: (formData: RecorrenciaFormData) => void; // Função chamada ao salvar
+  tipoRecorrencia: string;
+  setTipoRecorrencia: (tipoRecorrencia: string) => void;
+  intervalo: string;
+  setIntervalo: (intervalo: string) => void;
+  initialData?: RecorrenciaFormData | null;
 }
