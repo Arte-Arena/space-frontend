@@ -25,10 +25,25 @@ interface ChatContentProps {
   toggleChatSidebar: () => void
 }
 
+const numeroDoSistema = process.env.NEXT_PUBLIC_NUMERO_WHATSAPP?.replace(/\D/g, '') || '551123371548'
+
 export function mapRawEventToChat(evt: { raw_event: any; received_at: string }): MessageType {
   const raw = evt.raw_event || {}
 
-  // 1) monta o array de attachments
+  // 1. Tenta extrair a mensagem via estrutura padrão do 360dialog (entry → changes → value → messages)
+  const entry = raw.entry?.[0]
+  const change = entry?.changes?.find((c: any) => c.field === 'messages')
+  const msgObj = change?.value?.messages?.[0]
+
+  const from = msgObj?.from || raw.from || raw.sender || 'unknown'
+  const to = msgObj?.to || raw.to || 'unknown'
+  const msgBody = msgObj?.text?.body || raw.message || raw.body || raw.text || ''
+  const msgType = msgObj?.type || (msgBody && !raw.mediaUrl && !raw.url ? 'text' : 'image')
+  const timestamp: string = msgObj?.timestamp
+    ? new Date(Number(msgObj.timestamp) * 1000).toISOString()
+    : raw.timestamp || evt.received_at
+
+  // 2. Anexos (não usados aqui, mas mantido para estrutura)
   const attachments: attachType[] = []
   if (raw.mediaUrl || raw.url) {
     attachments.push({
@@ -38,25 +53,27 @@ export function mapRawEventToChat(evt: { raw_event: any; received_at: string }):
     })
   }
 
-  // 2) separa o texto da URL de mídia para msg
-  let msg = ''
-  if (raw.message || raw.body || raw.text) {
-    msg = raw.message || raw.body || raw.text || ''
-  } else if (raw.mediaUrl || raw.url) {
-    msg = raw.mediaUrl || raw.url || ''
-  }
+  console.log('[mapRawEventToChat]', {
+    from,
+    to,
+    msgBody,
+    isFromEmpresa: from === numeroDoSistema
+  })
 
   return {
-    id: raw.id || raw.messageId || `unknown-${evt.received_at}`,
-    senderId: raw.from || raw.sender || 'unknown',
-    type: msg && !raw.mediaUrl && !raw.url ? 'text' : 'image',
-    msg,
-    attachment: attachments,      // ← sempre um array
-    createdAt: raw.timestamp || evt.received_at
+    id: msgObj?.id || raw.id || `unknown-${evt.received_at}`,
+    senderId: from,
+    type: msgType,
+    msg: msgBody,
+    attachment: attachments,
+    createdAt: timestamp,
+    to,
   }
 }
 
 const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
+
+
   const dispatch = useDispatch()
   const router = useRouter()
   const lgUp = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'))
@@ -82,33 +99,31 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
       .then((data: { raw_event: any; received_at: string }[]) => {
         // 1) Filtra eventos válidos
         const valid = data.filter(evt => evt.raw_event != null)
-  
+
         // 2) Agrupa por senderId
         const chatsMap: Record<string, Omit<ChatsType, 'excerpt' | 'recent'>> = {}
         valid.forEach(evt => {
-          const raw = evt.raw_event
-          const senderId = raw.from || raw.sender || 'unknown'
-  
+          const msg: MessageType = mapRawEventToChat(evt)
+          const participantId = msg.senderId === numeroDoSistema ? msg.to! : msg.senderId
+
+          if (!participantId) return
+
+          const key = String(participantId)
+
           // Se ainda não existe este chat, inicializa
-          if (!chatsMap[senderId]) {
-            chatsMap[senderId] = {
-              id: senderId,
-              name: raw.fromName       // ou raw.contact?.name, depende do seu payload
-                || raw.profileName     // outra opção, ajuste conforme payload
-                || senderId,
-              thumb: raw.profilePic    // ou raw.avatarUrl, ajuste conforme payload
-                || '/images/profile/default.jpg',
-              status: raw.presence     // ou 'offline' se não vier no histórico
-                || 'offline',
-              messages: []
+          if (!chatsMap[participantId]) {
+            chatsMap[participantId] = {
+              id: participantId,
+              name: key,
+              thumb: '/images/profile/default.jpg',
+              status: 'offline',
+              messages: [],
             }
           }
 
-          // Mapeia a mensagem
-          const msg: MessageType = mapRawEventToChat(evt)
-          chatsMap[senderId].messages.push(msg)
+          chatsMap[participantId].messages.push(msg)
         })
-  
+
         // 3) Constrói o array final de ChatsType
         const initialChats: ChatsType[] = Object.values(chatsMap).map(chat => ({
           ...chat,
@@ -117,11 +132,13 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
           // recent só pra satisfazer o tipo, aqui pode usar boolean ou date
           recent: true
         }))
-  
+
+        console.log('[initialChats]', initialChats)
+
         dispatch(getChats(initialChats))
       })
       .catch(err => console.error('Erro ao carregar histórico:', err))
-  
+
     const socket = dispatch(subscribeChats())
     return () => {
       socket.close()
@@ -159,10 +176,10 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
                 chatDetails.status === 'online'
                   ? 'success'
                   : chatDetails.status === 'busy'
-                  ? 'error'
-                  : chatDetails.status === 'away'
-                  ? 'warning'
-                  : 'secondary'
+                    ? 'error'
+                    : chatDetails.status === 'away'
+                      ? 'warning'
+                      : 'secondary'
               }
               variant="dot"
               anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
@@ -198,46 +215,52 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
       <Box display="flex">
         <Box width="100%">
           <Box sx={{ height: '650px', overflow: 'auto', maxHeight: '800px' }} p={3}>
-            {conversationMessages.map((msg) => (
-              <Box key={`${msg.id}-${msg.createdAt}`} mb={2}>
-                {msg.senderId === chatDetails.id ? (
-                  <Box display="flex">
-                    <ListItemAvatar>
-                      <Avatar alt={chatDetails.name} src={chatDetails.thumb} sx={{ width: 40, height: 40 }} />
-                    </ListItemAvatar>
-                    <Box>
+            {conversationMessages.map((msg) => {
+              const isMyMessage = msg.senderId === numeroDoSistema
+
+              return (
+                <Box key={`${msg.id}-${msg.createdAt}`} mb={2}>
+                  {isMyMessage ? (
+                    // Mensagem enviada (direita)
+                    <Box display="flex" flexDirection="column" alignItems="flex-end">
                       <Typography variant="body2" color="grey.400" mb={1}>
-                        {chatDetails.name}, {msg.createdAt ? formatDistanceToNowStrict(new Date(msg.createdAt), { addSuffix: false }) : ''} ago
+                        {msg.createdAt ? formatDistanceToNowStrict(new Date(msg.createdAt), { addSuffix: false }) : ''} ago
                       </Typography>
                       {msg.type === 'text' ? (
-                        <Box p={1} sx={{ backgroundColor: 'grey.100', mr: 'auto', maxWidth: 320 }}>
+                        <Box p={1} sx={{ backgroundColor: 'primary.light', ml: 'auto', maxWidth: 320 }} mb={1}>
                           {msg.msg}
                         </Box>
                       ) : (
                         <Box sx={{ overflow: 'hidden', lineHeight: 0 }} mb={1}>
-                          <Image src={msg.msg} alt="attach" width={150} height={150} />
+                          <Image src={msg.msg} alt="attach" width={250} height={165} />
                         </Box>
                       )}
                     </Box>
-                  </Box>
-                ) : (
-                  <Box display="flex" flexDirection="column" alignItems="flex-end">
-                    <Typography variant="body2" color="grey.400" mb={1}>
-                      {msg.createdAt ? formatDistanceToNowStrict(new Date(msg.createdAt), { addSuffix: false }) : ''} ago
-                    </Typography>
-                    {msg.type === 'text' ? (
-                      <Box p={1} sx={{ backgroundColor: 'primary.light', ml: 'auto', maxWidth: 320 }} mb={1}>
-                        {msg.msg}
+                  ) : (
+                    // Mensagem recebida (esquerda)
+                    <Box display="flex">
+                      <ListItemAvatar>
+                        <Avatar alt={chatDetails.name} src={chatDetails.thumb} sx={{ width: 40, height: 40 }} />
+                      </ListItemAvatar>
+                      <Box>
+                        <Typography variant="body2" color="grey.400" mb={1}>
+                          {chatDetails.name}, {msg.createdAt ? formatDistanceToNowStrict(new Date(msg.createdAt), { addSuffix: false }) : ''} ago
+                        </Typography>
+                        {msg.type === 'text' ? (
+                          <Box p={1} sx={{ backgroundColor: 'grey.100', mr: 'auto', maxWidth: 320 }}>
+                            {msg.msg}
+                          </Box>
+                        ) : (
+                          <Box sx={{ overflow: 'hidden', lineHeight: 0 }} mb={1}>
+                            <Image src={msg.msg} alt="attach" width={150} height={150} />
+                          </Box>
+                        )}
                       </Box>
-                    ) : (
-                      <Box sx={{ overflow: 'hidden', lineHeight: 0 }} mb={1}>
-                        <Image src={msg.msg} alt="attach" width={250} height={165} />
-                      </Box>
-                    )}
-                  </Box>
-                )}
-              </Box>
-            ))}
+                    </Box>
+                  )}
+                </Box>
+              )
+            })}
           </Box>
         </Box>
         <Box flexShrink={0}>

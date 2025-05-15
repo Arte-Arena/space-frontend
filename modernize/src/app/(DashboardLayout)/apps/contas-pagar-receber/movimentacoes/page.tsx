@@ -358,14 +358,15 @@ const MovimentacoesTable = () => {
             </IconButton>
           </Tooltip>
         </div>
+
       ),
     },
   ];
 
-
   return (
     <PageContainer title='Movimentações Financeiras' description="Gestão de Movimentações">
       <Breadcrumb title="Movimentações Financeiras" subtitle="Gestão de Movimentações Financeiras" />
+
       {/* <Box display="flex" alignItems="center" justifyContent={'space-around'} ml={-1.5} my={3} marginLeft={1}>
         <Box display={'flex'} alignItems={'center'}>
           
