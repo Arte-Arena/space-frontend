@@ -229,7 +229,7 @@ const OrcamentoBuscarScreen = () => {
                         </TableCell>
                         <TableCell align='center'>
                           <Link
-                            href={`/apps/orcamento/editar/${row.id}`}
+                            href={`/apps/orcamento/${row.id}`}
                             passHref
                             style={{ textDecoration: "none"}} // Remove o sublinhado do link
                           >
