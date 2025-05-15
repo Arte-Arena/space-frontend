@@ -15,7 +15,12 @@ import ListItemText from '@mui/material/ListItemText'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { formatDistanceToNowStrict } from 'date-fns'
-import { IconMenu2, IconPhone, IconVideo, IconDotsVertical } from '@tabler/icons-react'
+import {
+  IconMenu2,
+  IconPhone,
+  IconLayoutSidebarRightCollapse,
+  IconLayoutSidebarRightExpand,
+} from '@tabler/icons-react'
 import Image from 'next/image'
 
 import ChatInsideSidebar from './ChatInsideSidebar'
@@ -29,12 +34,9 @@ const numeroDoSistema = process.env.NEXT_PUBLIC_NUMERO_WHATSAPP?.replace(/\D/g, 
 
 export function mapRawEventToChat(evt: { raw_event: any; received_at: string }): MessageType {
   const raw = evt.raw_event || {}
-
-  // 1. Tenta extrair a mensagem via estrutura padrão do 360dialog (entry → changes → value → messages)
   const entry = raw.entry?.[0]
   const change = entry?.changes?.find((c: any) => c.field === 'messages')
   const msgObj = change?.value?.messages?.[0]
-
   const from = msgObj?.from || raw.from || raw.sender || 'unknown'
   const to = msgObj?.to || raw.to || 'unknown'
   const msgBody = msgObj?.text?.body || raw.message || raw.body || raw.text || ''
@@ -43,7 +45,6 @@ export function mapRawEventToChat(evt: { raw_event: any; received_at: string }):
     ? new Date(Number(msgObj.timestamp) * 1000).toISOString()
     : raw.timestamp || evt.received_at
 
-  // 2. Anexos (não usados aqui, mas mantido para estrutura)
   const attachments: attachType[] = []
   if (raw.mediaUrl || raw.url) {
     attachments.push({
@@ -52,13 +53,6 @@ export function mapRawEventToChat(evt: { raw_event: any; received_at: string }):
       fileSize: raw.fileSize || '—',
     })
   }
-
-  console.log('[mapRawEventToChat]', {
-    from,
-    to,
-    msgBody,
-    isFromEmpresa: from === numeroDoSistema
-  })
 
   return {
     id: msgObj?.id || raw.id || `unknown-${evt.received_at}`,
@@ -72,21 +66,17 @@ export function mapRawEventToChat(evt: { raw_event: any; received_at: string }):
 }
 
 const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
-
-
   const dispatch = useDispatch()
   const router = useRouter()
   const lgUp = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'))
 
-  // Redux state
   const chats = useSelector((state) => state.chatReducer.chats) as ChatsType[]
   const activeId = useSelector((state) => state.chatReducer.chatContent) as string | number
   const chatDetails = chats.find((c) => c.id === activeId)
 
-  // Local state for messages
   const [conversationMessages, setConversationMessages] = useState<MessageType[]>([])
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(lgUp)
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!localStorage.getItem('accessToken')) {
       router.push('/auth/login')
@@ -97,20 +87,14 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
     fetch(`${process.env.NEXT_PUBLIC_API_CLIENT}/v1/history/whatsapp2`)
       .then(res => res.json())
       .then((data: { raw_event: any; received_at: string }[]) => {
-        // 1) Filtra eventos válidos
         const valid = data.filter(evt => evt.raw_event != null)
-
-        // 2) Agrupa por senderId
         const chatsMap: Record<string, Omit<ChatsType, 'excerpt' | 'recent'>> = {}
         valid.forEach(evt => {
           const msg: MessageType = mapRawEventToChat(evt)
           const participantId = msg.senderId === numeroDoSistema ? msg.to! : msg.senderId
-
           if (!participantId) return
 
           const key = String(participantId)
-
-          // Se ainda não existe este chat, inicializa
           if (!chatsMap[participantId]) {
             chatsMap[participantId] = {
               id: participantId,
@@ -124,16 +108,11 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
           chatsMap[participantId].messages.push(msg)
         })
 
-        // 3) Constrói o array final de ChatsType
         const initialChats: ChatsType[] = Object.values(chatsMap).map(chat => ({
           ...chat,
-          // excerpt = última mensagem
           excerpt: chat.messages[chat.messages.length - 1]?.msg || '',
-          // recent só pra satisfazer o tipo, aqui pode usar boolean ou date
-          recent: true
+          recent: true,
         }))
-
-        console.log('[initialChats]', initialChats)
 
         dispatch(getChats(initialChats))
       })
@@ -145,12 +124,10 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
     }
   }, [dispatch])
 
-  // Sync local messages when chat changes or new messages arrive
   useEffect(() => {
     setConversationMessages(chatDetails ? chatDetails.messages : [])
   }, [chatDetails?.messages])
 
-  // If no chat selected, show placeholder
   if (!chatDetails) {
     return (
       <Box display="flex" alignItems="center" p={2}>
@@ -163,65 +140,63 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
   return (
     <Box>
       {/* Header */}
-      <Box display="flex" alignItems="center" p={2}>
-        {!lgUp && (
-          <Box mr="10px">
-            <IconMenu2 stroke={1.5} onClick={toggleChatSidebar} />
-          </Box>
-        )}
-        <ListItem dense disableGutters>
-          <ListItemAvatar>
-            <Badge
-              color={
-                chatDetails.status === 'online'
-                  ? 'success'
-                  : chatDetails.status === 'busy'
-                    ? 'error'
-                    : chatDetails.status === 'away'
-                      ? 'warning'
-                      : 'secondary'
-              }
-              variant="dot"
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-              overlap="circular"
-            >
-              <Avatar
-                alt={chatDetails.name}
-                src={chatDetails.thumb}
-                sx={{ width: 40, height: 40 }}
-              />
-            </Badge>
-          </ListItemAvatar>
-          <ListItemText
-            primary={<Typography variant="h5">{chatDetails.name}</Typography>}
-            secondary={chatDetails.status}
-          />
-        </ListItem>
+      <Box display="flex" alignItems="center" justifyContent="space-between" p={2}>
+        <Box display="flex" alignItems="center">
+          {!lgUp && (
+            <Box mr="10px">
+              <IconMenu2 stroke={1.5} onClick={toggleChatSidebar} />
+            </Box>
+          )}
+          <ListItem dense disableGutters>
+            <ListItemAvatar>
+              <Badge
+                color={
+                  chatDetails.status === 'online'
+                    ? 'success'
+                    : chatDetails.status === 'busy'
+                      ? 'error'
+                      : chatDetails.status === 'away'
+                        ? 'warning'
+                        : 'secondary'
+                }
+                variant="dot"
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                overlap="circular"
+              >
+                <Avatar
+                  alt={chatDetails.name}
+                  src={chatDetails.thumb}
+                  sx={{ width: 40, height: 40 }}
+                />
+              </Badge>
+            </ListItemAvatar>
+            <ListItemText
+              primary={<Typography variant="h5">{chatDetails.name}</Typography>}
+              secondary={chatDetails.status}
+            />
+          </ListItem>
+        </Box>
+
         <Stack direction="row" spacing={1}>
-          <IconButton aria-label="phone">
-            <IconPhone stroke={1.5} />
-          </IconButton>
-          <IconButton aria-label="video">
-            <IconVideo stroke={1.5} />
-          </IconButton>
-          <IconButton aria-label="options">
-            <IconDotsVertical stroke={1.5} />
-          </IconButton>
+          <IconButton aria-label="phone"><IconPhone stroke={1.5} /></IconButton>
+          {lgUp && (
+            <IconButton aria-label="toggle sidebar" onClick={() => setIsSidebarOpen((prev) => !prev)}>
+              {isSidebarOpen ? <IconLayoutSidebarRightCollapse stroke={1.5} /> : <IconLayoutSidebarRightExpand stroke={1.5} />}
+            </IconButton>
+          )}
         </Stack>
       </Box>
       <Divider />
 
-      {/* Messages */}
+      {/* Messages + Sidebar */}
       <Box display="flex">
         <Box width="100%">
           <Box sx={{ height: '650px', overflow: 'auto', maxHeight: '800px' }} p={3}>
             {conversationMessages.map((msg) => {
               const isMyMessage = msg.senderId === numeroDoSistema
-
               return (
                 <Box key={`${msg.id}-${msg.createdAt}`} mb={2}>
                   {isMyMessage ? (
-                    // Mensagem enviada (direita)
                     <Box display="flex" flexDirection="column" alignItems="flex-end">
                       <Typography variant="body2" color="grey.400" mb={1}>
                         {msg.createdAt ? formatDistanceToNowStrict(new Date(msg.createdAt), { addSuffix: false }) : ''} ago
@@ -237,7 +212,6 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
                       )}
                     </Box>
                   ) : (
-                    // Mensagem recebida (esquerda)
                     <Box display="flex">
                       <ListItemAvatar>
                         <Avatar alt={chatDetails.name} src={chatDetails.thumb} sx={{ width: 40, height: 40 }} />
@@ -263,13 +237,16 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
             })}
           </Box>
         </Box>
-        <Box flexShrink={0}>
-          <ChatInsideSidebar isInSidebar={lgUp} chat={chatDetails} />
-        </Box>
+
+        {/* Sidebar lateral (pode ser escondido) */}
+        {isSidebarOpen && (
+          <Box flexShrink={0}>
+            <ChatInsideSidebar isInSidebar={true} chat={chatDetails} />
+          </Box>
+        )}
       </Box>
     </Box>
   )
 }
 
 export default ChatContent
-
