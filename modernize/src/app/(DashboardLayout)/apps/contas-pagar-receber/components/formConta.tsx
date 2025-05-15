@@ -70,7 +70,6 @@ const ContaForm = ({
   );
   const [status, setStatus] = useState(initialValues.status || "");
   const [tipo, setTipo] = useState(initialValues.tipo || "");
-
   const [parcelas, setParcelas] = useState<Parcela[]>(
     (initialValues.parcelas || []).map((p: Parcela) => ({
       ...p,
@@ -84,6 +83,7 @@ const ContaForm = ({
   const [dataEmissao, setDataEmissao] = useState(
     initialValues.data_emissao ? new Date(initialValues.data_emissao) : null
   );
+
   const [formaPagamento, setFormaPagamento] = useState(initialValues.forma_pagamento || "");
   const [orcamentoStatusId, setOrcamentoStatusId] = useState(initialValues.orcamento_staus_id || "");
   const [estoqueId, setEstoqueId] = useState(initialValues.estoque_id || "");

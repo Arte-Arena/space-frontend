@@ -49,19 +49,26 @@ const validationSchema = Yup.object().shape({
   }),
   inscricao_estadual: Yup.string().when('tipo_pessoa', {
     is: 'PJ',
-    then: Yup.string().required('Inscrição Estadual é obrigatória'),
+    then: Yup.string(),
   }),
-  email: Yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
-  celular: Yup.string().required('Telefone é obrigatório'),
-  cep: Yup.string()
-    .matches(/^\d{5}-\d{3}$/, 'Formato de CEP inválido')
-    .required('CEP é obrigatório'),
-  endereco: Yup.string().required('Endereço é obrigatório'),
-  numero: Yup.string().required('Número é obrigatório'),
+  email: Yup.string(),
+  // .email('E-mail inválido').required('E-mail é obrigatório'),
+  celular: Yup.string(),
+  // .required('Telefone é obrigatório'),
+  cep: Yup.string(),
+    // .matches(/^\d{5}-\d{3}$/, 'Formato de CEP inválido'),
+    // .required('CEP é obrigatório'),
+  endereco: Yup.string(),
+  // .required('Endereço é obrigatório'),
+  numero: Yup.string(),
+  // .required('Número é obrigatório'),
   complemento: Yup.string(),
-  bairro: Yup.string().required('Bairro é obrigatório'),
-  cidade: Yup.string().required('Cidade é obrigatória'),
-  uf: Yup.string().required('UF é obrigatório'),
+  bairro: Yup.string(),
+  // .required('Bairro é obrigatório'),
+  cidade: Yup.string(),
+  // .required('Cidade é obrigatória'),
+  uf: Yup.string(),
+  // .required('UF é obrigatório'),
   produtos: Yup.array()
     .min(1, 'Selecione ao menos um produto')
     .of(
