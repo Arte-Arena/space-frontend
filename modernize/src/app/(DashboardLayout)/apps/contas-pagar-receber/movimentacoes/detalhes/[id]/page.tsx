@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Grid,
@@ -26,173 +26,156 @@ import {
   ListItemText,
   LinearProgress,
   Button,
+  CircularProgress,
 } from '@mui/material';
 import { AttachMoney, Cancel, CheckCircle, Receipt } from '@mui/icons-material';
+import { useParams, useRouter } from 'next/navigation';
+import { MovimentacaoFinanceiraDetails, ParcelaDetails, Produto, TransacaoBancariaDetails } from '../../components/types';
 
-// Dados completos de exemplo
-const data = {
-  id: 6,
-  pedido_arte_final_id: null,
-  orcamento_id: 293,
-  orcamento_status_id: 47,
-  carteira_id: null,
-  conta_id: null,
-  estoque_id: null,
-  fornecedor_id: null,
-  cliente_id: null,
-  categoria_id: null,
-  origin_type: "Orçamento",
-  origin_id: 293,
-  numero_pedido: "0",
-  documento: "orçamento N° 293",
-  tipo_documento: "orçamento",
-  valor_bruto: "89.07",
-  valor_liquido: "89.07",
-  data_operacao: "2025-05-15T12:46:56.000000Z",
-  data_lancamento: "2025-05-15T12:46:56.000000Z",
-  tipo: "entrada",
-  etapa: "orçamento aprovado",
-  status: "pendente conciliação",
-  // status: "conciliado",
-  observacoes: null,
-  lista_produtos: [
-    {
-      id: 1071,
-      nome: "Bandeira Personalizada - 1.5 x 1 - Uma face",
-      peso: "0.16",
-      type: "produtosOrcamento",
-      prazo: 15,
-      preco: 42.50,
-      altura: "5.00",
-      largura: "20.00",
-      created_at: null,
-      quantidade: 1,
-      updated_at: null,
-      comprimento: "20.00",
-    },
-    {
-      id: 1072,
-      nome: "Bandeira Personalizada - 1.5 x 1.5 - Uma face",
-      peso: "0.18",
-      type: "produtosOrcamento",
-      prazo: 15,
-      preco: 43.20,
-      altura: "5.00",
-      largura: "20.00",
-      created_at: null,
-      quantidade: 1,
-      updated_at: null,
-      comprimento: "20.00",
-    },
-  ],
-  metadados_cliente: {
-    cliente_octa_number: "123",
-  },
-  metadados: {
-    forma_pagamento: "pix",
-    tipo_faturamento: "a_vista",
-    parcelas: [
-      {
-        numero: 1,
-        data: "2025-05-15T12:46:52.203Z",
-        valor: "89.07",
-        status: "pago",
-      },
-      {
-        numero: 2,
-        data: "2025-06-15T12:46:52.203Z",
-        valor: "89.07",
-        status: "pendente",
-      },
-    ],
-  },
-  created_at: "2025-05-15T12:46:56.000000Z",
-  updated_at: "2025-05-15T12:46:56.000000Z",
-  deleted_at: null,
-};
 
-// Dados de transações bancárias de exemplo
-const transacoesBanco = [
-  {
-    id: 82,
-    valor: "85.80",
-    data_transacao: "2025-05-15T12:37:30.000000Z",
-    descricao: "Pagamento Orçamento 293",
-    status: "confirmado",
-    plataforma: "mercado_pago",
-    chave_conciliacao: "1702190852",
-    detalhes: {
-      payer: {
-        id: "123",
-        email: "cliente@example.com"
-      }
-    }
-  },
-  {
-    id: 83,
-    valor: "89.07",
-    data_transacao: "2025-05-15T12:45:00.000000Z",
-    descricao: "Transferência Pix",
-    status: "pendente",
-    plataforma: "banco_brasil",
-    chave_conciliacao: null
-  },
-  {
-    id: 84,
-    valor: "92.50",
-    data_transacao: "2025-05-15T13:10:00.000000Z",
-    descricao: "Pagamento não identificado",
-    status: "confirmado",
-    plataforma: "mercado_pago",
-    chave_conciliacao: null
-  }
-];
+type MetadadosRaw = {
+  forma_pagamento: string;
+  tipo_faturamento: string;
+  parcelas: ParcelaDetails[];
+}
 
 const TransactionDetailsPage = () => {
   const theme = useTheme();
+  const params = useParams();
+  const router = useRouter();
+  const accessToken = localStorage.getItem('accessToken');
   const [tab, setTab] = useState('gerais');
-  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
-  const isEntrada = data.tipo === 'entrada';
+  const [selectedTransaction, setSelectedTransaction] = useState<TransacaoBancariaDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [movimentacao, setMovimentacao] = useState<MovimentacaoFinanceiraDetails | null>(null);
+  const [transacoesParecidas, setTransacoesParecidas] = useState<TransacaoBancariaDetails[]>([]);
+  const id = params.id;
+
+  if (!accessToken) {
+    router.push('/login');
+    return null;
+  }
+
+  useEffect(() => {
+    const carregarDados = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API}/api/movimentacoes-financeiras/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        // Verifica se a resposta foi bem sucedida
+        if (!res.ok) {
+          throw new Error('Erro ao carregar dados');
+        }
+
+        // Converte a resposta para JSON
+        const data = await res.json();
+
+        setMovimentacao(data.movimentacao);
+
+        if (data.transacoes_parecidas) {
+          setTransacoesParecidas(data.transacoes_parecidas);
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        setLoading(false);
+      }
+    };
+
+    carregarDados();
+  }, [id, accessToken]);
+
+  const isEntrada = movimentacao?.tipo === 'entrada';
   const numberColor = isEntrada ? theme.palette.success.main : theme.palette.error.main;
 
+  const parseListaProdutos = (lista: string | Produto[]): Produto[] => {
+    if (typeof lista === 'string') {
+      try {
+        return JSON.parse(lista) as Produto[];
+      } catch (error) {
+        console.error('Erro ao parsear lista_produtos:', error);
+        return [];
+      }
+    }
+    return lista;
+  };
+
+  const parseParcelas = (
+    input: string | ParcelaDetails[]
+  ): ParcelaDetails[] => {
+    if (typeof input === 'string') {
+      try {
+        const parsed = JSON.parse(input) as MetadadosRaw | ParcelaDetails[];
+        // Se o JSON inteiro for o objeto metadados:
+        if ((parsed as MetadadosRaw).parcelas) {
+          return (parsed as MetadadosRaw).parcelas;
+        }
+        // Se o JSON já for um array de ParcelaDetails:
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+        console.error('Formato inesperado em parseParcelas:', parsed);
+        return [];
+      } catch (err) {
+        console.error('Erro ao parsear parcelas:', err);
+        return [];
+      }
+    }
+    // já é um array no formato certo
+    return input;
+  };
+
+  const parcelas: ParcelaDetails[] = parseParcelas(movimentacao?.metadados?.parcelas || []);
+
   // Totais
-  const totalProdutos = data.lista_produtos.reduce(
+  const totalProdutos = parseListaProdutos(movimentacao?.lista_produtos || []).reduce(
     (sum, prod) => sum + prod.preco * prod.quantidade,
     0
   );
-  const totalParcelas = data.metadados.parcelas.reduce(
-    (sum, parc) => sum + parseFloat(parc.valor),
+  const totalParcelas = parseListaProdutos(movimentacao?.lista_produtos || []).reduce(
+    (sum, parc) => sum + parc.preco,
     0
   );
   const tipoFaturamentoLabel =
-    data.metadados.tipo_faturamento === 'a_vista' ? 'À Vista' : data.metadados.tipo_faturamento;
+    movimentacao?.metadados.tipo_faturamento === 'a_vista' ? 'À Vista' : movimentacao?.metadados.tipo_faturamento;
 
   const handleTabChange = (_: any, newValue: string) => setTab(newValue);
 
-  // Encontrar correspondências
   const encontrarCorrespondencias = () => {
-    const margem = 0.15;
-    const valorMovimentacao = parseFloat(data.valor_bruto);
-
-    return transacoesBanco.filter(transacao => {
-      const valorTransacao = parseFloat(transacao.valor);
-      const diferenca = Math.abs(valorTransacao - valorMovimentacao);
-      return diferenca <= (valorMovimentacao * margem);
-    });
+    return transacoesParecidas.map(transacao => ({
+      ...transacao,
+      porcentagem_semelhanca: transacao.porcentagem_semelhanca ||
+        calcularSemelhancaPercentual(parseFloat(transacao.valor))
+    }));
   };
 
   const correspondencias = encontrarCorrespondencias();
 
   const calcularDiferencaPercentual = (valorTransacao: number) => {
-    const valorMovimentacao = parseFloat(data.valor_bruto);
+    const valorMovimentacao = parseFloat(movimentacao?.valor_bruto || '0');
     return ((valorTransacao - valorMovimentacao) / valorMovimentacao * 100).toFixed(2);
   };
 
   const calcularSemelhancaPercentual = (valorTransacao: number) => {
-    const valorMovimentacao = parseFloat(data.valor_bruto);
+    const valorMovimentacao = parseFloat(movimentacao?.valor_bruto || '0');
     const diferencaPercentual = Math.abs((valorTransacao - valorMovimentacao) / valorMovimentacao * 100);
     return (100 - diferencaPercentual).toFixed(2);
   };
+
+  if (loading) {
+    return <CircularProgress />;
+  }
+
+  if (!movimentacao) {
+    return <Typography>Nenhuma movimentação encontrada</Typography>;
+  }
 
   return (
     <Box p={4} component={Paper} elevation={3}>
@@ -213,7 +196,7 @@ const TransactionDetailsPage = () => {
           <Tab label="Gerais" value="gerais" />
           <Tab label="Produtos" value="produtos" />
           <Tab label="Parcelas" value="parcelas" />
-          {data.status.includes('pendente') && (
+          {movimentacao?.status.includes('pendente') && (
             <Tab label="Conciliação" value="conciliacao" />
           )}
         </Tabs>
@@ -226,15 +209,15 @@ const TransactionDetailsPage = () => {
           <Grid container spacing={2} justifyContent="space-evenly">
             <Grid item xs={12} sm={4}>
               <Typography variant="subtitle2" fontWeight={600}>ID</Typography>
-              <Typography variant="body1">{data.id}</Typography>
+              <Typography variant="body1">{movimentacao?.id}</Typography>
             </Grid>
             <Grid item xs={12} sm={4}>
               <Typography variant="subtitle2" fontWeight={600}>Origin Type</Typography>
-              <Chip label={data.origin_type} />
+              <Chip label={movimentacao?.origin_type} />
             </Grid>
             <Grid item xs={12} sm={4}>
               <Typography variant="subtitle2" fontWeight={600}>Tipo Documento</Typography>
-              <Chip label={data.tipo_documento} color="primary" />
+              <Chip label={movimentacao?.tipo_documento} color="primary" />
             </Grid>
           </Grid>
           <Divider sx={{ my: 2 }} />
@@ -244,18 +227,18 @@ const TransactionDetailsPage = () => {
             <Grid item xs={12} sm={4}>
               <Typography variant="subtitle2" fontWeight={600}>Valor Bruto</Typography>
               <Typography variant="h6" sx={{ color: numberColor }}>
-                R$ {parseFloat(data.valor_bruto).toFixed(2)}
+                R$ {parseFloat(movimentacao?.valor_bruto).toFixed(2)}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={4}>
               <Typography variant="subtitle2" fontWeight={600}>Valor Líquido</Typography>
               <Typography variant="h6" sx={{ color: numberColor }}>
-                R$ {totalProdutos.toFixed(2)}
+                R$ {totalProdutos?.toFixed(2)}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={4}>
               <Typography variant="subtitle2" fontWeight={600}>Status</Typography>
-              <Chip label={data.status} color="warning" />
+              <Chip label={movimentacao?.status} color="warning" />
             </Grid>
           </Grid>
           <Divider sx={{ my: 2 }} />
@@ -265,18 +248,18 @@ const TransactionDetailsPage = () => {
             <Grid item xs={12} sm={4}>
               <Typography variant="subtitle2" fontWeight={600}>Data Operação</Typography>
               <Typography variant="body2">
-                {new Date(data.data_operacao).toLocaleString()}
+                {new Date(movimentacao?.data_operacao).toLocaleString()}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={4}>
               <Typography variant="subtitle2" fontWeight={600}>Data Lançamento</Typography>
               <Typography variant="body2">
-                {new Date(data.data_lancamento).toLocaleString()}
+                {new Date(movimentacao?.data_lancamento).toLocaleString()}
               </Typography>
             </Grid>
             <Grid item xs={12} sm={4}>
               <Typography variant="subtitle2" fontWeight={600}>Etapa</Typography>
-              <Chip label={data.etapa} />
+              <Chip label={movimentacao?.etapa} />
             </Grid>
           </Grid>
           <Divider sx={{ my: 2 }} />
@@ -285,7 +268,7 @@ const TransactionDetailsPage = () => {
           <Grid container spacing={2} justifyContent="space-between">
             <Grid item xs={12} sm={4}>
               <Typography variant="subtitle2" fontWeight={600}>Forma Pagamento</Typography>
-              <Chip label={data.metadados.forma_pagamento.toUpperCase()} />
+              <Chip label={movimentacao?.metadados.forma_pagamento ? movimentacao?.metadados.forma_pagamento.toUpperCase() : 'N/A'} />
             </Grid>
             <Grid item xs={12} sm={4}>
               <Typography variant="subtitle2" fontWeight={700}>Tipo Faturamento</Typography>
@@ -310,7 +293,7 @@ const TransactionDetailsPage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data.lista_produtos.map((prod) => (
+                {parseListaProdutos(movimentacao?.lista_produtos || []).map((prod) => (
                   <TableRow key={prod.id}>
                     <TableCell sx={{ fontWeight: 600, fontSize: 15 }} >{prod.nome}</TableCell>
                     <TableCell sx={{ fontWeight: 600, fontSize: 15 }} align="right">{prod.quantidade}</TableCell>
@@ -327,7 +310,7 @@ const TransactionDetailsPage = () => {
                   <TableCell />
                   <TableCell />
                   <TableCell sx={{ fontWeight: 600, fontSize: 15 }} align="right">
-                    <strong>R$ {totalProdutos.toFixed(2)}</strong>
+                    <strong>R$ {totalProdutos?.toFixed(2)}</strong>
                   </TableCell>
                 </TableRow>
               </TableFooter>
@@ -349,11 +332,13 @@ const TransactionDetailsPage = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data.metadados.parcelas.map((parc) => (
+                {parseParcelas(movimentacao?.metadados?.parcelas || []).map((parc) => (
                   <TableRow key={parc.numero}>
                     <TableCell sx={{ fontWeight: 600, fontSize: 15 }} >#{parc.numero}</TableCell>
                     <TableCell sx={{ fontWeight: 600, fontSize: 15 }} >{new Date(parc.data).toLocaleDateString()}</TableCell>
-                    <TableCell sx={{ fontWeight: 600, fontSize: 15 }} align="right">R$ {parseFloat(parc.valor).toFixed(2)}</TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: 15 }} align="right">
+                      R$ {parc.valor ? Number(parc.valor).toFixed(2) : '0.00'}
+                    </TableCell>
                     <TableCell sx={{ fontWeight: 600, fontSize: 15 }} >
                       <Chip label={parc.status} size="small" color={parc.status === 'pago' ? 'success' : 'warning'} />
                     </TableCell>
@@ -365,7 +350,7 @@ const TransactionDetailsPage = () => {
                   <TableCell sx={{ fontWeight: 600, fontSize: 15 }} ><strong>Total Parcelas</strong></TableCell>
                   <TableCell sx={{ fontWeight: 600, fontSize: 15 }} />
                   <TableCell sx={{ fontWeight: 600, fontSize: 15 }} align="right">
-                    <strong>R$ {totalParcelas.toFixed(2)}</strong>
+                    <strong>R$ {totalParcelas?.toFixed(2)}</strong>
                   </TableCell>
                   <TableCell />
                 </TableRow>
@@ -375,7 +360,7 @@ const TransactionDetailsPage = () => {
         </Box>
       )}
 
-      {data.status.toLowerCase().includes('pendente') && (
+      {movimentacao?.status.toLowerCase().includes('pendente') && (
         <div>
           <Divider sx={{ my: 5 }} />
           <Box mt={2}>
@@ -391,50 +376,62 @@ const TransactionDetailsPage = () => {
               <Grid item xs={12} md={6}>
                 <Card variant="outlined">
                   <CardContent>
-                    <Typography variant="subtitle1" gutterBottom>
-                      Transações Potenciais ({correspondencias.length})
-                    </Typography>
-
-                    <List>
-                      {correspondencias.map((transacao) => (
-                        <ListItem
-                          key={transacao.id}
-                          button
-                          selected={selectedTransaction?.id === transacao.id}
-                          onClick={() => setSelectedTransaction(transacao)}
-                          sx={{
-                            borderLeft: selectedTransaction?.id === transacao.id ?
-                              `4px solid ${theme.palette.primary.main}` : 'none',
-                            mb: 1
-                          }}
-                        >
-                          <ListItemAvatar>
-                            <Avatar sx={{ bgcolor: theme.palette.grey[200] }}>
-                              <AttachMoney color="action" />
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText
-                            primary={`R$ ${parseFloat(transacao.valor).toFixed(2)}`}
-                            secondary={
-                              <>
-                                <Box component="span" display="block">{transacao.descricao}</Box>
-                                <Box component="span" display="block">
-                                  {new Date(transacao.data_transacao).toLocaleString()}
-                                </Box>
-                              </>
-                            }
-                          />
-                          <Chip
-                            label={`${calcularSemelhancaPercentual(parseFloat(transacao.valor))}%`}
-                            color={
-                              parseFloat(calcularSemelhancaPercentual(parseFloat(transacao.valor))) > 95 ?
-                                'success' : 'warning'
-                            }
-                            size="small"
-                          />
-                        </ListItem>
-                      ))}
-                    </List>
+                    <Box
+                      sx={{
+                        height: '500px', // Altura fixa (ajuste conforme necessário)
+                        overflowY: 'auto', // Scroll vertical
+                        backgroundColor: theme.palette.background.paper
+                      }}
+                    >
+                      <Typography variant="subtitle1" gutterBottom>
+                        Transações Potenciais ({correspondencias.length})
+                      </Typography>
+                      <List dense>
+                        {correspondencias.map((transacao) => (
+                          <ListItem
+                            key={transacao.id}
+                            button
+                            selected={selectedTransaction?.id === transacao.id}
+                            onClick={() => setSelectedTransaction({
+                              ...transacao,
+                              porcentagem_semelhanca: typeof transacao.porcentagem_semelhanca === 'string'
+                                ? parseFloat(transacao.porcentagem_semelhanca)
+                                : transacao.porcentagem_semelhanca
+                            })}
+                            sx={{
+                              borderLeft: selectedTransaction?.id === transacao.id ?
+                                `4px solid ${theme.palette.primary.main}` : 'none',
+                              mb: 1
+                            }}
+                          >
+                            <ListItemAvatar>
+                              <Avatar sx={{ bgcolor: theme.palette.grey[200] }}>
+                                <AttachMoney color="action" />
+                              </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText
+                              primary={`R$ ${parseFloat(transacao.valor).toFixed(2)}`}
+                              secondary={
+                                <>
+                                  <Box component="span" display="block">{transacao.descricao}</Box>
+                                  <Box component="span" display="block">
+                                    {new Date(transacao.data_transacao).toLocaleString()}
+                                  </Box>
+                                </>
+                              }
+                            />
+                            <Chip
+                              label={`${calcularSemelhancaPercentual(parseFloat(transacao.valor))}%`}
+                              color={
+                                parseFloat(calcularSemelhancaPercentual(parseFloat(transacao.valor))) > 95 ?
+                                  'success' : 'warning'
+                              }
+                              size="small"
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Box>
                   </CardContent>
                 </Card>
               </Grid>
@@ -569,20 +566,37 @@ const TransactionDetailsPage = () => {
                           Movimentação Financeira
                         </Typography>
                         <Typography variant="h5" color={numberColor}>
-                          R$ {parseFloat(data.valor_bruto).toFixed(2)}
+                          R$ {parseFloat(movimentacao?.valor_bruto).toFixed(2)}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {data.documento}
+                          {movimentacao?.documento}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {data.metadados.forma_pagamento}
+                          {movimentacao?.metadados.forma_pagamento}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {data.metadados.tipo_faturamento === 'a_vista' ? 'A Vista' : data.metadados.tipo_faturamento}
+                          {movimentacao?.metadados.tipo_faturamento === 'a_vista' ? 'A Vista' : movimentacao?.metadados.tipo_faturamento}
                         </Typography>
                         <Typography variant="body2">
-                          Cliente: {data.metadados_cliente.cliente_octa_number}
+                          Cliente: {movimentacao?.metadados_cliente.cliente_octa_number}
                         </Typography>
+
+                        {/* Lista de produtos */}
+                        <Box>
+                          <List dense sx={{ maxHeight: 150, overflow: 'auto', bgcolor: 'background.paper' }}>
+                            {parseListaProdutos(movimentacao?.lista_produtos || []).map((produto) => (
+                              <ListItem key={produto.id} sx={{ py: 0, px: 0 }}>
+                                <ListItemText
+                                  primary={`${produto.quantidade}x ${produto.nome}`}
+                                  secondary={`R$ ${produto.preco.toFixed(2)} (Total: R$ ${(produto.preco * produto.quantidade).toFixed(2)})`}
+                                  primaryTypographyProps={{ variant: 'body2' }}
+                                  secondaryTypographyProps={{ variant: 'body2' }}
+                                />
+                              </ListItem>
+                            ))}
+                          </List>
+                        </Box>
+
                       </CardContent>
                     </Card>
                   </Grid>
@@ -603,6 +617,31 @@ const TransactionDetailsPage = () => {
                             Pagador: {selectedTransaction.detalhes.payer.id}
                           </Typography>
                         )}
+                        {selectedTransaction.detalhes?.payer?.email && (
+                          <Typography variant="body2">
+                            Email: {selectedTransaction.detalhes.payer.email}
+                          </Typography>
+                        )}
+                        {selectedTransaction.detalhes?.payer?.phone?.number && (
+                          <Typography variant="body2">
+                            Fone: {selectedTransaction?.detalhes?.payer?.phone?.number}
+                          </Typography>
+                        )}
+                        {selectedTransaction.detalhes?.payer?.identification.number && (
+                          <Box>
+                            <Typography variant="body2">
+                              Doc: {selectedTransaction?.detalhes?.payer?.identification.type}
+                            </Typography>
+                            <Typography variant="body2">
+                              N°: {selectedTransaction?.detalhes?.payer?.identification.number}
+                            </Typography>
+                          </Box>
+                        )}
+                        {selectedTransaction.detalhes?.payer?.first_name && (
+                          <Typography variant="body2">
+                            Nome: {selectedTransaction?.detalhes?.payer?.first_name} {selectedTransaction?.detalhes?.payer?.last_name}
+                          </Typography>
+                        )}
                       </CardContent>
                     </Card>
                   </Grid>
@@ -618,3 +657,124 @@ const TransactionDetailsPage = () => {
 };
 
 export default TransactionDetailsPage;
+
+
+
+// // Dados completos de exemplo
+// const data = {
+//   id: 6,
+//   pedido_arte_final_id: null,
+//   orcamento_id: 293,
+//   orcamento_status_id: 47,
+//   carteira_id: null,
+//   conta_id: null,
+//   estoque_id: null,
+//   fornecedor_id: null,
+//   cliente_id: null,
+//   categoria_id: null,
+//   origin_type: "Orçamento",
+//   origin_id: 293,
+//   numero_pedido: "0",
+//   documento: "orçamento N° 293",
+//   tipo_documento: "orçamento",
+//   valor_bruto: "89.07",
+//   valor_liquido: "89.07",
+//   data_operacao: "2025-05-15T12:46:56.000000Z",
+//   data_lancamento: "2025-05-15T12:46:56.000000Z",
+//   tipo: "entrada",
+//   etapa: "orçamento aprovado",
+//   status: "pendente conciliação",
+//   // status: "conciliado",
+//   observacoes: null,
+//   lista_produtos: [
+//     {
+//       id: 1071,
+//       nome: "Bandeira Personalizada - 1.5 x 1 - Uma face",
+//       peso: "0.16",
+//       type: "produtosOrcamento",
+//       prazo: 15,
+//       preco: 42.50,
+//       altura: "5.00",
+//       largura: "20.00",
+//       created_at: null,
+//       quantidade: 1,
+//       updated_at: null,
+//       comprimento: "20.00",
+//     },
+//     {
+//       id: 1072,
+//       nome: "Bandeira Personalizada - 1.5 x 1.5 - Uma face",
+//       peso: "0.18",
+//       type: "produtosOrcamento",
+//       prazo: 15,
+//       preco: 43.20,
+//       altura: "5.00",
+//       largura: "20.00",
+//       created_at: null,
+//       quantidade: 1,
+//       updated_at: null,
+//       comprimento: "20.00",
+//     },
+//   ],
+//   metadados_cliente: {
+//     cliente_octa_number: "123",
+//   },
+//   metadados: {
+//     forma_pagamento: "pix",
+//     tipo_faturamento: "a_vista",
+//     parcelas: [
+//       {
+//         numero: 1,
+//         data: "2025-05-15T12:46:52.203Z",
+//         valor: "89.07",
+//         status: "pago",
+//       },
+//       {
+//         numero: 2,
+//         data: "2025-06-15T12:46:52.203Z",
+//         valor: "89.07",
+//         status: "pendente",
+//       },
+//     ],
+//   },
+//   created_at: "2025-05-15T12:46:56.000000Z",
+//   updated_at: "2025-05-15T12:46:56.000000Z",
+//   deleted_at: null,
+// };
+
+// // Dados de transações bancárias de exemplo
+// const transacoesBanco = [
+//   {
+//     id: 82,
+//     valor: "85.80",
+//     data_transacao: "2025-05-15T12:37:30.000000Z",
+//     descricao: "Pagamento Orçamento 293",
+//     status: "confirmado",
+//     plataforma: "mercado_pago",
+//     chave_conciliacao: "1702190852",
+//     detalhes: {
+//       payer: {
+//         id: "123",
+//         email: "cliente@example.com"
+//       }
+//     }
+//   },
+//   {
+//     id: 83,
+//     valor: "89.07",
+//     data_transacao: "2025-05-15T12:45:00.000000Z",
+//     descricao: "Transferência Pix",
+//     status: "pendente",
+//     plataforma: "banco_brasil",
+//     chave_conciliacao: null
+//   },
+//   {
+//     id: 84,
+//     valor: "92.50",
+//     data_transacao: "2025-05-15T13:10:00.000000Z",
+//     descricao: "Pagamento não identificado",
+//     status: "confirmado",
+//     plataforma: "mercado_pago",
+//     chave_conciliacao: null
+//   }
+// ];
