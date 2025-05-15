@@ -21,7 +21,7 @@ import { NumericFormat } from "react-number-format";
 import { AddCircle, RemoveCircle } from "@mui/icons-material";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { ContaFormProps, Parcela } from "./types";
+import { ContaFormProps, Parcela, RecorrenciaFormData } from "./types";
 import RecorrenciaFormDialog from "./recorrenciaForm";
 import CustomStyledSwitch from "@/app/components/switch/switch";
 
@@ -33,20 +33,17 @@ const formasPagamento = [
   { value: "credito", label: "Cartão de Crédito" },
 ];
 
-const opcoesRecorrencia = [
-  "diaria",
-  "semanal",
-  "quinzenal",
-  "mensal",
-  "bimestral",
-  "trimestral",
-  "semestral",
-  "anual",
-  "personalizada",
-].map((opcao) => ({
-  value: opcao,
-  label: opcao.charAt(0).toUpperCase() + opcao.slice(1),
-}));
+const opcoesRecorrencia: string[] = [
+  "Diaria",
+  "Semanal",
+  "Quinzenal",
+  "Mensal",
+  "Bimestral",
+  "Trimestral",
+  "Semestral",
+  "Anual",
+  "Personalizada",
+]
 
 const ContaForm = ({
   initialValues = {},
@@ -69,18 +66,14 @@ const ContaForm = ({
   const [descricao, setDescricao] = useState(initialValues.descricao || "");
   const [valor, setValor] = useState(initialValues.valor || 0);
   const [dataVencimento, setDataVencimento] = useState(
-    initialValues.data_vencimento
-      ? new Date(initialValues.data_vencimento)
-      : null
+    initialValues.data_vencimento ? new Date(initialValues.data_vencimento) : null
   );
   const [status, setStatus] = useState(initialValues.status || "");
   const [tipo, setTipo] = useState(initialValues.tipo || "");
-
   const [parcelas, setParcelas] = useState<Parcela[]>(
     (initialValues.parcelas || []).map((p: Parcela) => ({
       ...p,
       data: parseParcelaData(p.data),
-
     }))
   );
 
@@ -90,38 +83,51 @@ const ContaForm = ({
   const [dataEmissao, setDataEmissao] = useState(
     initialValues.data_emissao ? new Date(initialValues.data_emissao) : null
   );
-  const [formaPagamento, setFormaPagamento] = useState(
-    initialValues.forma_pagamento || ""
-  );
-  const [orcamentoStatusId, setOrcamentoStatusId] = useState(
-    initialValues.orcamento_staus_id || ""
-  );
+
+  const [formaPagamento, setFormaPagamento] = useState(initialValues.forma_pagamento || "");
+  const [orcamentoStatusId, setOrcamentoStatusId] = useState(initialValues.orcamento_staus_id || "");
   const [estoqueId, setEstoqueId] = useState(initialValues.estoque_id || "");
   const [estoqueQuantidade, setEstoqueQuantidade] = useState(initialValues.estoque_quantidade || "");
-  const [recorrencia, setRecorrencia] = useState(
-    initialValues.recorrencia || ""
-  );
+  const [recorrencia, setRecorrencia] = useState<string>(initialValues.recorrencia || "mensal");
   const [fixa, setFixa] = useState(initialValues.fixa || false);
   const [documento, setDocumento] = useState(initialValues.documento || "");
-  const [observacoes, setObservacoes] = useState(
-    initialValues.observacoes || ""
-  );
-
+  const [observacoes, setObservacoes] = useState(initialValues.observacoes || "");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedContaId, setSelectedContaId] = useState<number | string | null | undefined>(null);
-
+  const [recorrenciaData, setRecorrenciaData] = useState<RecorrenciaFormData | null>(null);
   dayjs.extend(utc);
 
-  const handleOpenDialog = (contaId: number | string) => {
+  useEffect(() => {
+    if (initialValues.recorrente) {
+      setMostrarRecorrencia(true);
+      setRecorrenciaData({
+        ...initialValues.recorrente,
+        tipo_recorrencia:
+          initialValues.recorrente.tipo_recorrencia.charAt(0).toUpperCase() +
+          initialValues.recorrente.tipo_recorrencia.slice(1),
+      });
+      setRecorrencia(
+        initialValues.recorrente.tipo_recorrencia.charAt(0).toUpperCase() +
+          initialValues.recorrente.tipo_recorrencia.slice(1)
+      );
+    }
+  }, [initialValues.recorrente]);
+
+  const handleSaveRecorrencia = (data: RecorrenciaFormData) => {
+    setRecorrenciaData(data);
+    setRecorrencia(data.tipo_recorrencia);
+    handleCloseDialog();
+  };
+
+  const handleOpenDialog = (contaId: number | string | null) => {
     setSelectedContaId(contaId);
     setDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
-    setSelectedContaId(null); // Limpa o ID da conta selecionada ao fechar
+    setSelectedContaId(null);
   };
-
 
   const handleParcelasChange = <K extends keyof Parcela>(
     index: number,
@@ -135,13 +141,11 @@ const ContaForm = ({
 
   const adicionarParcela = () => {
     let novaData;
-    // Pega a data da última parcela e adiciona 30 dias
     if (parcelas.length > 0) {
       const ultimaParcela = parcelas[parcelas.length - 1];
-      novaData = dayjs(ultimaParcela.data).add(30, 'day').format('YYYY-MM-DD');
+      novaData = dayjs(ultimaParcela.data).add(30, "day").format("YYYY-MM-DD");
     } else {
-      // Se for a primeira parcela, usa a data atual
-      novaData = dayjs().format('YYYY-MM-DD');
+      novaData = dayjs().format("YYYY-MM-DD");
     }
 
     const novaParcela: Parcela = {
@@ -162,9 +166,9 @@ const ContaForm = ({
 
   const handleSubmit = () => {
     onSubmit({
-      titulo: titulo,
-      descricao: descricao,
-      valor: valor,
+      titulo,
+      descricao,
+      valor,
       data_vencimento: dataVencimento?.toISOString().split("T")[0],
       status: status.toLowerCase(),
       tipo: tipo.toLowerCase(),
@@ -179,6 +183,7 @@ const ContaForm = ({
       fixa,
       documento,
       observacoes,
+      recorrente: recorrenciaData,
     });
   };
 
@@ -460,18 +465,18 @@ const ContaForm = ({
         </Grid>
 
         {mostrarRecorrencia && (
-          <Grid item xs={12}> {/* Este Grid item garante que a seção ocupe a largura total */}
-            <Grid container spacing={2} alignItems="flex-end"> {/* Novo container para os elementos lado a lado */}
-              <Grid item xs={12} sm={7} md={8}> {/* Autocomplete com mais espaço */}
+          <Grid item xs={12}>
+            <Grid container spacing={2} alignItems="flex-end">
+              <Grid item xs={12} sm={7} md={8}>
                 <CustomFormLabel htmlFor="recorrencia-autocomplete">Configuração da Recorrência</CustomFormLabel>
                 <Autocomplete
                   id="recorrencia-autocomplete"
                   freeSolo
                   options={opcoesRecorrencia}
                   value={recorrencia} // Este é o campo de texto livre
-                  onInputChange={(_, newInputValue) =>
-                    setRecorrencia(newInputValue)
-                  }
+                  onInputChange={(_, newInputValue) => {
+                    setRecorrencia(newInputValue);
+                  }}
                   renderInput={(params) => (
                     <CustomTextField
                       {...params}
@@ -490,7 +495,7 @@ const ContaForm = ({
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={() => handleOpenDialog(initialValues.id || 0)} // Passar o ID da conta atual se estiver editando
+                  onClick={() => handleOpenDialog(initialValues.id || null)} // Passar o ID da conta atual se estiver editando
                   fullWidth // Faz o botão ocupar a largura do seu Grid item
                   sx={{
                     // Ajuste a altura se o CustomTextField tiver uma altura padrão, ex:
@@ -544,8 +549,13 @@ const ContaForm = ({
       <RecorrenciaFormDialog
         open={dialogOpen}
         onClose={handleCloseDialog}
-        contaId={selectedContaId}
-      // onSave={handleSaveRecorrencia}
+        contaId={selectedContaId || null}
+        onSave={handleSaveRecorrencia}
+        tipoRecorrencia={recorrencia}
+        setTipoRecorrencia={setRecorrencia}
+        intervalo="1"
+        setIntervalo={() => { }}
+        initialData={recorrenciaData}
       />
     </Box>
   );
