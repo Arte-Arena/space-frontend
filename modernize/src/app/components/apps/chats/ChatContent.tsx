@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useSelector, useDispatch } from '@/store/hooks'
 import { getChats, subscribeChats } from '@/store/apps/chat/ChatSlice'
 import { useRouter } from 'next/navigation'
@@ -76,6 +76,15 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
 
   const [conversationMessages, setConversationMessages] = useState<MessageType[]>([])
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(lgUp)
+
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [conversationMessages]);
 
   useEffect(() => {
     if (!localStorage.getItem('accessToken')) {
@@ -191,7 +200,11 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
       {/* Messages + Sidebar */}
       <Box display="flex">
         <Box width="100%">
-          <Box sx={{ height: '650px', overflow: 'auto', maxHeight: '800px' }} p={3}>
+          <Box
+            ref={messagesContainerRef}
+            sx={{ height: '650px', overflow: 'auto', maxHeight: '800px' }}
+            p={3}
+          >
             {conversationMessages.map((msg) => {
               const isMyMessage = msg.senderId === numeroDoSistema
               return (
@@ -236,6 +249,9 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
               )
             })}
           </Box>
+
+          {/* âncora para scroll automático */}
+          <div ref={messagesEndRef} />
         </Box>
 
         {/* Sidebar lateral (pode ser escondido) */}
