@@ -99,11 +99,18 @@ export default function Erros() {
   const roles = localStorage.getItem('roles')?.split(',').map(Number) || [];
   const CorteRoles = [1, 11, 13, 15];
   const unableActions = roles.some(role => CorteRoles.includes(role));
+  const queryParams = new URLSearchParams({
+  page: String(page),
+  per_page: String(rowsPerPage),
+  ...(searchQuery && { q: searchQuery }),
+  ...(searchDateStart && { data_inicial: searchDateStart }),
+  ...(searchDateEnd && { data_final: searchDateEnd }),
+});
 
   const { data: dataErros, isLoading: isLoadingErros, isError: isErrorErros, refetch } = useQuery<ApiResponseErros>({
     queryKey: ['erros', searchQuery, page, rowsPerPage],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API}/api/erros`, {
+      fetch(`${process.env.NEXT_PUBLIC_API}/api/erros?${queryParams.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -712,7 +719,7 @@ export default function Erros() {
                   onPageChange={handleTablePageChange}
                   rowsPerPage={rowsPerPage}
                   onRowsPerPageChange={handleRowsPerPageChange}
-                  rowsPerPageOptions={[15, 25, 50]}
+                  rowsPerPageOptions={[5, 15, 25, 50]}
                 />
               </TableContainer>
             )}
