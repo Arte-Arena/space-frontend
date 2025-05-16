@@ -47,6 +47,7 @@ const TransactionDetailsPage = () => {
   const [tab, setTab] = useState('gerais');
   const [selectedTransaction, setSelectedTransaction] = useState<TransacaoBancariaDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [conciliando, setConciliando] = useState(false);
   const [movimentacao, setMovimentacao] = useState<MovimentacaoFinanceiraDetails | null>(null);
   const [transacoesParecidas, setTransacoesParecidas] = useState<TransacaoBancariaDetails[]>([]);
   const id = params.id;
@@ -90,7 +91,8 @@ const TransactionDetailsPage = () => {
     };
 
     carregarDados();
-  }, [id, accessToken]);
+  }, [id, accessToken, conciliando]);
+
 
   const isEntrada = movimentacao?.tipo === 'entrada';
   const numberColor = isEntrada ? theme.palette.success.main : theme.palette.error.main;
@@ -169,6 +171,40 @@ const TransactionDetailsPage = () => {
     return (100 - diferencaPercentual).toFixed(2);
   };
 
+  const handleConciliate = async () => {
+    if (!selectedTransaction || !movimentacao) return;
+    setConciliando(true);
+    try {
+      const diferenca = (parseFloat(selectedTransaction.valor) - parseFloat(movimentacao.valor_bruto)).toFixed(2);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API}/api/conciliacao`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            transacao_bancaria_id: selectedTransaction.id,
+            movimentacao_financeira_id: movimentacao.id,
+            status: 'conciliado',
+            diferenca,
+            observacoes: '',
+          }),
+        }
+      );
+      if (!res.ok) throw new Error('Erro ao conciliar');
+      alert('Conciliação realizada com sucesso');
+      router.refresh();
+      setTab('gerais');
+    } catch (err) {
+      console.error(err);
+      alert('Falha ao conciliar');
+    } finally {
+      setConciliando(false);
+    }
+  };
+    
   if (loading) {
     return <CircularProgress />;
   }
@@ -532,9 +568,11 @@ const TransactionDetailsPage = () => {
                         <Button
                           variant="contained"
                           color="primary"
-                          startIcon={<CheckCircle />}
+                          startIcon={conciliando ? <CircularProgress size={20} color="inherit" /> : <CheckCircle />}
+                          onClick={handleConciliate}
+                          disabled={conciliando}
                         >
-                          Conciliar
+                          {conciliando ? 'Conciliando...' : 'Conciliar'}
                         </Button>
                       </Box>
                     </CardContent>
@@ -651,130 +689,19 @@ const TransactionDetailsPage = () => {
           </Box>
         </div>
       )}
-
+      {conciliando && 
+      <LinearProgress
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          zIndex: 9999,
+        }}
+      />
+      }
     </Box>
   );
 };
 
 export default TransactionDetailsPage;
-
-
-
-// // Dados completos de exemplo
-// const data = {
-//   id: 6,
-//   pedido_arte_final_id: null,
-//   orcamento_id: 293,
-//   orcamento_status_id: 47,
-//   carteira_id: null,
-//   conta_id: null,
-//   estoque_id: null,
-//   fornecedor_id: null,
-//   cliente_id: null,
-//   categoria_id: null,
-//   origin_type: "Orçamento",
-//   origin_id: 293,
-//   numero_pedido: "0",
-//   documento: "orçamento N° 293",
-//   tipo_documento: "orçamento",
-//   valor_bruto: "89.07",
-//   valor_liquido: "89.07",
-//   data_operacao: "2025-05-15T12:46:56.000000Z",
-//   data_lancamento: "2025-05-15T12:46:56.000000Z",
-//   tipo: "entrada",
-//   etapa: "orçamento aprovado",
-//   status: "pendente conciliação",
-//   // status: "conciliado",
-//   observacoes: null,
-//   lista_produtos: [
-//     {
-//       id: 1071,
-//       nome: "Bandeira Personalizada - 1.5 x 1 - Uma face",
-//       peso: "0.16",
-//       type: "produtosOrcamento",
-//       prazo: 15,
-//       preco: 42.50,
-//       altura: "5.00",
-//       largura: "20.00",
-//       created_at: null,
-//       quantidade: 1,
-//       updated_at: null,
-//       comprimento: "20.00",
-//     },
-//     {
-//       id: 1072,
-//       nome: "Bandeira Personalizada - 1.5 x 1.5 - Uma face",
-//       peso: "0.18",
-//       type: "produtosOrcamento",
-//       prazo: 15,
-//       preco: 43.20,
-//       altura: "5.00",
-//       largura: "20.00",
-//       created_at: null,
-//       quantidade: 1,
-//       updated_at: null,
-//       comprimento: "20.00",
-//     },
-//   ],
-//   metadados_cliente: {
-//     cliente_octa_number: "123",
-//   },
-//   metadados: {
-//     forma_pagamento: "pix",
-//     tipo_faturamento: "a_vista",
-//     parcelas: [
-//       {
-//         numero: 1,
-//         data: "2025-05-15T12:46:52.203Z",
-//         valor: "89.07",
-//         status: "pago",
-//       },
-//       {
-//         numero: 2,
-//         data: "2025-06-15T12:46:52.203Z",
-//         valor: "89.07",
-//         status: "pendente",
-//       },
-//     ],
-//   },
-//   created_at: "2025-05-15T12:46:56.000000Z",
-//   updated_at: "2025-05-15T12:46:56.000000Z",
-//   deleted_at: null,
-// };
-
-// // Dados de transações bancárias de exemplo
-// const transacoesBanco = [
-//   {
-//     id: 82,
-//     valor: "85.80",
-//     data_transacao: "2025-05-15T12:37:30.000000Z",
-//     descricao: "Pagamento Orçamento 293",
-//     status: "confirmado",
-//     plataforma: "mercado_pago",
-//     chave_conciliacao: "1702190852",
-//     detalhes: {
-//       payer: {
-//         id: "123",
-//         email: "cliente@example.com"
-//       }
-//     }
-//   },
-//   {
-//     id: 83,
-//     valor: "89.07",
-//     data_transacao: "2025-05-15T12:45:00.000000Z",
-//     descricao: "Transferência Pix",
-//     status: "pendente",
-//     plataforma: "banco_brasil",
-//     chave_conciliacao: null
-//   },
-//   {
-//     id: 84,
-//     valor: "92.50",
-//     data_transacao: "2025-05-15T13:10:00.000000Z",
-//     descricao: "Pagamento não identificado",
-//     status: "confirmado",
-//     plataforma: "mercado_pago",
-//     chave_conciliacao: null
-//   }
-// ];
