@@ -1,0 +1,328 @@
+{/* Movimentações Potenciais */}
+      {movimentacoesParecidas.length > 0 && (
+        <div>
+          <Divider sx={{ my: 5 }} />
+          <Box mt={2}>
+            <Typography variant="h3" gutterBottom>
+              Correspondências Bancárias
+            </Typography>
+            <Typography variant="body1" color="text.secondary" gutterBottom>
+              Transações com valores dentro da margem de 15% do valor da movimentação
+            </Typography>
+
+            <Grid container spacing={3} mt={2}>
+              {/* Lista de correspondências */}
+              <Grid item xs={12} md={6}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Box
+                      sx={{
+                        height: '500px', // Altura fixa (ajuste conforme necessário)
+                        overflowY: 'auto', // Scroll vertical
+                        backgroundColor: theme.palette.background.paper
+                      }}
+                    >
+                      <Typography variant="subtitle1" gutterBottom>
+                        Transações Potenciais ({movimentacoesParecidas.length})
+                      </Typography>
+                      <List dense>
+                        {movimentacoesParecidas.map((movimentacao) => (
+                          <ListItem
+                            key={movimentacao.id}
+                            button
+                            selected={selectedMovimentacao?.id === movimentacao.id}
+                            onClick={() => setSelectedMovimentacao({
+                              ...movimentacao,
+                              porcentagem_semelhanca: typeof movimentacao.porcentagem_semelhanca === 'string'
+                                ? parseFloat(movimentacao.porcentagem_semelhanca)
+                                : movimentacao.porcentagem_semelhanca
+                            })}
+                            sx={{
+                              borderLeft: selectedMovimentacao?.id === movimentacao.id ?
+                                `4px solid ${theme.palette.primary.main}` : 'none',
+                              mb: 1
+                            }}
+                          >
+                            <ListItemAvatar>
+                              <Avatar sx={{ bgcolor: theme.palette.grey[200] }}>
+                                <AttachMoney color="action" />
+                              </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText
+                              primary={`R$ ${parseFloat(movimentacao.valor).toFixed(2)}`}
+                              secondary={
+                                <>
+                                  <Box component="span" display="block">{movimentacao.descricao}</Box>
+                                  <Box component="span" display="block">
+                                    {new Date(movimentacao.data_movimentacao).toLocaleString()}
+                                  </Box>
+                                </>
+                              }
+                            />
+                            <Chip
+                              label={`${calcularSemelhancaPercentual(parseFloat(movimentacao.valor))}%`}
+                              color={
+                                parseFloat(calcularSemelhancaPercentual(parseFloat(movimentacao.valor))) > 95 ?
+                                  'success' : 'warning'
+                              }
+                              size="small"
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Detalhes da transação selecionada */}
+              <Grid item xs={12} md={6}>
+                {selectedMovimentacao ? (
+                  <Card variant="outlined">
+                    <CardContent>
+                      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                        <Typography variant="h6">Detalhes da Transação</Typography>
+                        <Chip
+                          label={selectedMovimentacao.status}
+                          color={selectedMovimentacao.status === 'confirmado' ? 'success' : 'warning'}
+                        />
+                      </Box>
+
+                      <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                          <Typography variant="subtitle2">ID Transação</Typography>
+                          <Typography>{selectedMovimentacao.id}</Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="subtitle2">Valor</Typography>
+                          <Typography variant="h6">
+                            R$ {parseFloat(selectedMovimentacao.valor).toFixed(2)}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="subtitle2">Data</Typography>
+                          <Typography>
+                            {new Date(selectedMovimentacao.data_movimentacao).toLocaleString()}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="subtitle2">Plataforma</Typography>
+                          <Typography>{selectedMovimentacao.plataforma}</Typography>
+                        </Grid>
+                        {selectedMovimentacao.detalhes?.payer && (
+                          <Grid item xs={12}>
+                            <Typography variant="subtitle2">Pagador</Typography>
+                            <Typography>
+                              ID: {selectedMovimentacao.detalhes.payer.id}
+                              {selectedMovimentacao.detalhes.payer.email && (
+                                <Box component="span" display="block">
+                                  Email: {selectedMovimentacao.detalhes.payer.email}
+                                </Box>
+                              )}
+                            </Typography>
+                          </Grid>
+                        )}
+                        <Grid item xs={12}>
+                          <Typography variant="subtitle2">Diferença</Typography>
+                          <Box display="flex" alignItems="center">
+                            <Box width="100%" mr={1}>
+                              <LinearProgress
+                                variant="determinate"
+                                value={Math.min(100, Math.abs(parseFloat(calcularDiferencaPercentual(parseFloat(selectedMovimentacao.valor)))) * 5)}
+                                color={
+                                  Math.abs(parseFloat(calcularDiferencaPercentual(parseFloat(selectedMovimentacao.valor)))) < 5 ?
+                                    'success' : 'warning'
+                                }
+                              />
+                            </Box>
+                            <Typography>
+                              {calcularDiferencaPercentual(parseFloat(selectedMovimentacao.valor))}%
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="subtitle2">Semelhança</Typography>
+                          <Box display="flex" alignItems="center">
+                            <Box width="100%" mr={1}>
+                              <LinearProgress
+                                variant="determinate"
+                                value={parseFloat(calcularSemelhancaPercentual(parseFloat(selectedMovimentacao.valor)))}
+                                color={
+                                  parseFloat(calcularSemelhancaPercentual(parseFloat(selectedMovimentacao.valor))) > 95 ?
+                                    'success' : 'warning'
+                                }
+                              />
+                            </Box>
+                            <Typography>
+                              {calcularSemelhancaPercentual(parseFloat(selectedMovimentacao.valor))}%
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      </Grid>
+
+                      <Box mt={4} display="flex" justifyContent="flex-end" gap={2}>
+                        {/* <Button
+                              variant="outlined"
+                              color="error"
+                              startIcon={<Cancel />}
+                              >
+                              Descartar
+                              </Button> */}
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          startIcon={conciliando ? <CircularProgress size={20} color="inherit" /> : <CheckCircle />}
+                          // onClick={handleConciliate}
+                          disabled={conciliando}
+                        >
+                          {conciliando ? 'Conciliando...' : 'Conciliar'}
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card variant="outlined">
+                    <CardContent sx={{ textAlign: 'center', py: 4 }}>
+                      <Receipt sx={{ fontSize: 48, color: theme.palette.grey[400], mb: 2 }} />
+                      <Typography variant="body1" color="text.secondary">
+                        Selecione uma transação para visualizar os detalhes
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                )}
+              </Grid>
+            </Grid>
+
+            {/* Comparação de valores */}
+            {selectedMovimentacao && (
+              <Box mt={4}>
+                <Typography variant="h6" gutterBottom>
+                  Comparação de Valores
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Card>
+                      <CardContent>
+                        <Typography variant="subtitle1" gutterBottom>
+                          Movimentação Financeira
+                        </Typography>
+                        {/* <Typography variant="h5" color={numberColor}>
+                          R$ {parseFloat(movimentacao?.valor_bruto).toFixed(2)}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {movimentacao?.documento}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {movimentacao?.metadados.forma_pagamento}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {movimentacao?.metadados.tipo_faturamento === 'a_vista' ? 'A Vista' : movimentacao?.metadados.tipo_faturamento}
+                        </Typography>
+                        <Typography variant="body2">
+                          Cliente: {movimentacao?.metadados_cliente.cliente_octa_number}
+                        </Typography> */}
+
+                        {/* Lista de produtos */}
+                        <Box>
+                          {/* <List dense sx={{ maxHeight: 150, overflow: 'auto', bgcolor: 'background.paper' }}>
+                            {parseListaProdutos(movimentacao?.lista_produtos || []).map((produto) => (
+                              <ListItem key={produto.id} sx={{ py: 0, px: 0 }}>
+                                <ListItemText
+                                  primary={`${produto.quantidade}x ${produto.nome}`}
+                                  secondary={`R$ ${produto.preco.toFixed(2)} (Total: R$ ${(produto.preco * produto.quantidade).toFixed(2)})`}
+                                  primaryTypographyProps={{ variant: 'body2' }}
+                                  secondaryTypographyProps={{ variant: 'body2' }}
+                                />
+                              </ListItem>
+                            ))}
+                          </List> */}
+                        </Box>
+
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Card>
+                      <CardContent>
+                        <Typography variant="subtitle1" gutterBottom>
+                          Transação Bancária
+                        </Typography>
+                        <Typography variant="h5" color={numberColor}>
+                          R$ {parseFloat(selectedMovimentacao.valor).toFixed(2)}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {selectedMovimentacao.descricao}
+                        </Typography>
+                        {selectedMovimentacao.detalhes?.payer && (
+                          <Typography variant="body2">
+                            Pagador: {selectedMovimentacao.detalhes.payer.id}
+                          </Typography>
+                        )}
+                        {selectedMovimentacao.detalhes?.payer?.email && (
+                          <Typography variant="body2">
+                            Email: {selectedMovimentacao.detalhes.payer.email}
+                          </Typography>
+                        )}
+                        {selectedMovimentacao.detalhes?.payer?.phone?.number && (
+                          <Typography variant="body2">
+                            Fone: {selectedMovimentacao?.detalhes?.payer?.phone?.number}
+                          </Typography>
+                        )}
+                        {selectedMovimentacao.detalhes?.payer?.identification.number && (
+                          <Box>
+                            <Typography variant="body2">
+                              Doc: {selectedMovimentacao?.detalhes?.payer?.identification.type}
+                            </Typography>
+                            <Typography variant="body2">
+                              N°: {selectedMovimentacao?.detalhes?.payer?.identification.number}
+                            </Typography>
+                          </Box>
+                        )}
+                        {selectedMovimentacao.detalhes?.payer?.first_name && (
+                          <Typography variant="body2">
+                            Nome: {selectedMovimentacao?.detalhes?.payer?.first_name} {selectedMovimentacao?.detalhes?.payer?.last_name}
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
+          </Box>
+        </div>
+      )}
+
+      {/* Detalhes da Movimentação Selecionada para Conciliação */}
+      {selectedMovimentacao && (
+        <Card sx={{ mt: 4, p: 2, borderLeft: `5px solid ${theme.palette.primary.main}` }}>
+          <Typography variant="h6" gutterBottom>Detalhes da Movimentação Selecionada</Typography>
+          <Grid container spacing={2}>
+            <DetailItem icon={<Fingerprint />} label="ID Movimentação" value={selectedMovimentacao.id} />
+            <DetailItem icon={<AttachMoney />} label="Valor" value={formatCurrency(selectedMovimentacao.valor)} />
+            <DetailItem icon={<CalendarToday />} label="Data" value={formatDate(selectedMovimentacao.data_transacao)} />
+            <DetailItem icon={<Info />} label="Descrição" value={selectedMovimentacao.descricao} />
+            <DetailItem icon={<CheckCircle />} label="Status" value={<Chip label={selectedMovimentacao.status} color={getStatusChipColor(selectedMovimentacao.status)} size="small" />} />
+          </Grid>
+          <Box mt={3} display="flex" justifyContent="flex-end">
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={conciliando ? <CircularProgress size={20} color="inherit" /> : <CheckCircle />}
+              onClick={() => {
+                setConciliando(true);
+                // Lógica de conciliação aqui
+                // Ex: conciliarTransacao(transacao.id, selectedMovimentacao.id)
+                // .then(() => { /* sucesso */ })
+                // .catch(() => { /* erro */ })
+                // .finally(() => setConciliando(false));
+                console.log('Conciliar transação:', transacao.id, 'com movimentação:', selectedMovimentacao.id);
+                setTimeout(() => setConciliando(false), 2000); // Simulação
+              }}
+              disabled={conciliando || transacao.conciliado} // Desabilitar se já conciliado
+            >
+              {conciliando ? 'Conciliando...' : (transacao.conciliado ? 'Já Conciliado' : 'Conciliar com esta Movimentação')}
+            </Button>
+          </Box>
+        </Card>
+      )}
