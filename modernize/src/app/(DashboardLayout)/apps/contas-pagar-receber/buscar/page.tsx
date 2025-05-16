@@ -33,11 +33,7 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'; // Para erros
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'; // Para sucesso
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'; // Para info
-
-// Tabler Icons (se ainda for necessário)
-import { IconArrowIteration, IconPlus } from "@tabler/icons-react";
-
-// Project Components
+import { IconArrowIteration, IconPlus, IconX } from "@tabler/icons-react";
 import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb';
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
@@ -358,16 +354,20 @@ const ContasPagarReceberAdicionarScreen = () => {
                   <TableBody>
                     {accounts.map((account) => (
                       <React.Fragment key={account.id}>
-                        <TableRow
-                          hover
-                          onClick={() => (account.parcelas && account.parcelas.length > 0) && toggleRowExpansion(account.id)}
-                          sx={{
-                            cursor: (account.parcelas && account.parcelas.length > 0) ? 'pointer' : 'default',
-                            '& > *': { borderBottom: 'unset' },
-                            '&:last-child td, &:last-child th': { border: 0 },
-                          }}
-                        >
-                          <TableCell sx={{ p: 1 }}>
+                        <TableRow>
+                          <TableCell
+                            
+                            onClick={() => (account.parcelas && account.parcelas.length > 0) && toggleRowExpansion(account.id)}
+                            sx={{
+                              p: 1,
+                              cursor: (account.parcelas && account.parcelas.length > 0) ? 'pointer' : 'default',
+                              '& > *': { borderBottom: 'unset' },
+                              '&:last-child td, &:last-child th': { border: 0 },
+                              '&:hover': {
+                                cursor: 'pointer',
+                              },
+                            }}
+                          >
                             {(account.parcelas && account.parcelas.length > 0) ? (
                               <IconButton aria-label="expandir linha" size="small">
                                 {expandedRows[account.id] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -376,7 +376,13 @@ const ContasPagarReceberAdicionarScreen = () => {
                           </TableCell>
                           <TableCell component="th" scope="row">
                             <Typography variant="subtitle2" fontWeight={600} color="textPrimary">
-                              {account.titulo}
+                              <Link
+                                href={`/apps/contas-pagar-receber/detalhes/${account.id}`}
+                                underline="hover"
+                                color="inherit"
+                              >
+                                {account.titulo}
+                              </Link>
                             </Typography>
                             {account.observacoes && (
                               <Typography variant="caption" display="block" color="textSecondary" sx={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
