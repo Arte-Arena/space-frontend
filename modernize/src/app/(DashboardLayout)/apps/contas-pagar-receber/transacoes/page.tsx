@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import { AlertProps, Box, Button, Chip, IconButton, LinearProgress, Tooltip, Typography, useTheme } from '@mui/material';
+import { AlertProps, Box, Button, Chip, IconButton, LinearProgress, Link, Tooltip, Typography, useTheme } from '@mui/material';
 import { Transaction } from './components/types';
 import TransactionDetails from './components/transacaoDetails';
 import PageContainer from '@/app/components/container/PageContainer';
@@ -140,7 +140,16 @@ const TransactionTable = () => {
   };
 
   const columns: GridColDef<Transaction>[] = [
-    { field: 'id', headerName: 'ID', width: 70 },
+    {
+      field: 'id',
+      headerName: 'ID',
+      width: 70,
+      renderCell: (params: GridRenderCellParams) => (
+        <Link href={`/apps/contas-pagar-receber/transacoes/detalhes/${params.value}`}>
+          <a>{params.value}</a>
+        </Link>
+      ),
+    },
     {
       field: 'id_transacao_externa',
       headerName: 'ID Externo',
