@@ -179,6 +179,9 @@ export const {
 
 export default chatSlice.reducer
 
+// ==========================
+// WebSocket subscription
+// ==========================
 let currentSocket: WebSocket | null = null
 
 export const subscribeChats = () => (dispatch: AppDispatch): WebSocket => {
@@ -188,11 +191,23 @@ export const subscribeChats = () => (dispatch: AppDispatch): WebSocket => {
   const socket = new WebSocket(wsUrl)
   currentSocket = socket
 
+  console.log('Conectando WebSocket em:', wsUrl)
+
+  socket.onopen = () => {
+    console.log('WebSocket conectado')
+  }
+
+  socket.onerror = err => {
+    console.error('WebSocket erro:', err)
+  }
+
   socket.onmessage = event => {
     try {
       const data = JSON.parse(event.data)
+
       if (Array.isArray(data)) {
         const first = data[0]
+
         if (first.raw_event) {
           data.forEach(evt => {
             const message = mapRawEventToChat(evt)
@@ -219,13 +234,22 @@ export const subscribeChats = () => (dispatch: AppDispatch): WebSocket => {
     }
   }
 
+  const HEARTBEAT_INTERVAL = 60 * 1000
   const heartbeat = setInterval(() => {
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({ type: 'ping' }))
     }
-  }, 60 * 1000)
+  }, HEARTBEAT_INTERVAL)
 
-  socket.onclose = () => clearInterval(heartbeat)
+  const cleanup = () => {
+    console.log('Limpando heartbeat')
+    clearInterval(heartbeat)
+  }
+
+  socket.onclose = (event) => {
+    cleanup()
+    console.log('WebSocket fechado:', event.code, event.reason, 'wasClean:', event.wasClean)
+  }
 
   return socket
 }
