@@ -93,6 +93,7 @@ const TransactionDetailsPage = () => {
     carregarDados();
   }, [id, accessToken, conciliando]);
 
+
   const isEntrada = movimentacao?.tipo === 'entrada';
   const numberColor = isEntrada ? theme.palette.success.main : theme.palette.error.main;
 
@@ -170,7 +171,6 @@ const TransactionDetailsPage = () => {
     return (100 - diferencaPercentual).toFixed(2);
   };
 
-
   const handleConciliate = async () => {
     if (!selectedTransaction || !movimentacao) return;
     setConciliando(true);
@@ -204,7 +204,7 @@ const TransactionDetailsPage = () => {
       setConciliando(false);
     }
   };
-
+    
   if (loading) {
     return <CircularProgress />;
   }
