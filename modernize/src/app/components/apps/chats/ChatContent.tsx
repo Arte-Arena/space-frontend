@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { useSelector, useDispatch } from '@/store/hooks'
-import { getChats, subscribeChats } from '@/store/apps/chat/ChatSlice'
+import { getChats, sendMsg, setChatsLoaded, setChatsLoading, subscribeChats } from '@/store/apps/chat/ChatSlice'
 import { useRouter } from 'next/navigation'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { Theme } from '@mui/material/styles'
@@ -93,21 +93,23 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
   }, [router])
 
   useEffect(() => {
+    dispatch(setChatsLoading())
+
     fetch(`${process.env.NEXT_PUBLIC_API_CLIENT}/v1/history/whatsapp2`)
       .then(res => res.json())
       .then((data: { raw_event: any; received_at: string }[]) => {
         const valid = data.filter(evt => evt.raw_event != null)
         const chatsMap: Record<string, Omit<ChatsType, 'excerpt' | 'recent'>> = {}
+
         valid.forEach(evt => {
           const msg: MessageType = mapRawEventToChat(evt)
           const participantId = msg.senderId === numeroDoSistema ? msg.to! : msg.senderId
           if (!participantId) return
 
-          const key = String(participantId)
           if (!chatsMap[participantId]) {
             chatsMap[participantId] = {
               id: participantId,
-              name: key,
+              name: participantId.toString(),
               thumb: '/images/profile/default.jpg',
               status: 'offline',
               messages: [],
@@ -124,13 +126,14 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
         }))
 
         dispatch(getChats(initialChats))
+        dispatch(setChatsLoaded())
       })
-      .catch(err => console.error('Erro ao carregar histórico:', err))
+      .catch(err => {
+        console.error('Erro ao carregar histórico:', err)
+      })
 
     const socket = dispatch(subscribeChats())
-    return () => {
-      socket.close()
-    }
+    return () => socket.close()
   }, [dispatch])
 
   useEffect(() => {
@@ -205,8 +208,15 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
             sx={{ height: '650px', overflow: 'auto', maxHeight: '800px' }}
             p={3}
           >
+
             {conversationMessages.map((msg) => {
               const isMyMessage = msg.senderId === numeroDoSistema
+
+              const handleResend = () => {
+                if (!msg.to || !msg.msg) return
+                dispatch(sendMsg({ id: msg.to, msg: msg.msg }))
+              }
+
               return (
                 <Box key={`${msg.id}-${msg.createdAt}`} mb={2}>
                   {isMyMessage ? (
@@ -214,15 +224,39 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
                       <Typography variant="body2" color="grey.400" mb={1}>
                         {msg.createdAt ? formatDistanceToNowStrict(new Date(msg.createdAt), { addSuffix: false }) : ''} ago
                       </Typography>
-                      {msg.type === 'text' ? (
-                        <Box p={1} sx={{ backgroundColor: 'primary.light', ml: 'auto', maxWidth: 320 }} mb={1}>
-                          {msg.msg}
-                        </Box>
-                      ) : (
-                        <Box sx={{ overflow: 'hidden', lineHeight: 0 }} mb={1}>
-                          <Image src={msg.msg} alt="attach" width={250} height={165} />
-                        </Box>
-                      )}
+
+                      <Box position="relative" display="flex" alignItems="center">
+                        {msg.type === 'text' ? (
+                          <Box
+                            p={1}
+                            sx={{
+                              backgroundColor: 'primary.light',
+                              ml: 'auto',
+                              maxWidth: 320,
+                              border: msg.erro ? '1px solid red' : 'none',
+                              borderRadius: 1,
+                            }}
+                            mb={1}
+                          >
+                            {msg.msg}
+                          </Box>
+                        ) : (
+                          <Box sx={{ overflow: 'hidden', lineHeight: 0 }} mb={1}>
+                            <Image src={msg.msg} alt="attach" width={250} height={165} />
+                          </Box>
+                        )}
+
+                        {msg.erro && (
+                          <IconButton
+                            size="small"
+                            onClick={handleResend}
+                            sx={{ color: 'red', ml: 1 }}
+                            title="Reenviar mensagem"
+                          >
+                            🔁
+                          </IconButton>
+                        )}
+                      </Box>
                     </Box>
                   ) : (
                     <Box display="flex">
@@ -248,6 +282,7 @@ const ChatContent: React.FC<ChatContentProps> = ({ toggleChatSidebar }) => {
                 </Box>
               )
             })}
+
           </Box>
 
           {/* âncora para scroll automático */}
