@@ -38,7 +38,8 @@ import {
   CreditCard as CreditCardIcon,
   AttachMoney as AttachMoneyIcon,
   CalendarToday as CalendarIcon,
-  Info as InfoIcon
+  Info as InfoIcon,
+  Delete
 } from '@mui/icons-material';
 import { visuallyHidden } from '@mui/utils';
 import PageContainer from '@/app/components/container/PageContainer';
@@ -195,6 +196,21 @@ export default function EnhancedConciliacaoTable() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API}/api/conciliacao/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+      fetchData(); // colocar snaclbar de sucesso
+    } catch (err) { // colocar snackbar de erro
+      console.error(err);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -441,16 +457,14 @@ export default function EnhancedConciliacaoTable() {
                           </Typography>
                         </TableCell>
                         <TableCell align="center">
-                          <Tooltip title="Detalhes">
-                            <Button
-                              variant="outlined"
+                          <Tooltip title="Deletar">
+                            <IconButton
                               size="small"
                               color="primary"
-                              startIcon={<InfoIcon />}
-                              onClick={() => console.log('Detalhes', row)}
+                              onClick={() => handleDelete(row.id)}
                             >
-                              Detalhes
-                            </Button>
+                              <Delete />
+                            </IconButton>
                           </Tooltip>
                         </TableCell>
                       </TableRow>
