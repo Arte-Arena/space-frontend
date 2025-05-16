@@ -163,13 +163,6 @@ const TransactionTable = () => {
         return formatDate(params);
       },
     },
-    // {
-    //   field: 'data_lancamento',
-    //   headerName: 'Data Lançamento',
-    //   width: 150,
-    //   valueFormatter: (params: any) =>
-    //     formatDate(params.value),
-    // },
     {
       field: 'descricao',
       headerName: 'Descrição',
@@ -209,20 +202,6 @@ const TransactionTable = () => {
         );
       },
     },
-    // {
-    //   field: 'valor_liquido',
-    //   headerName: 'Líquido (R$)',
-    //   width: 80,
-    //   align: 'right',
-    //   headerAlign: 'right',
-    //   valueFormatter: (params: any) =>
-    //     typeof params.value === 'number'
-    //       ? Number(params.value).toLocaleString('pt-BR', {
-    //         style: 'currency',
-    //         currency: 'BRL',
-    //       })
-    //       : `R$ ${params.value}`,
-    // },
     {
       field: 'valor_taxas',
       headerName: 'Taxas (R$)',
@@ -317,31 +296,11 @@ const TransactionTable = () => {
         )
       ),
     },
-    // {
-    //   field: 'fonte_dados',
-    //   headerName: 'Fonte',
-    //   width: 100,
-    // },
-    // {
-    //   field: 'documento_pagador',
-    //   headerName: 'CPF/CNPJ',
-    //   width: 150,
-    // },
     {
       field: 'nome_pagador',
       headerName: 'Nome',
       width: 150,
     },
-    // {
-    //   field: 'email_pagador',
-    //   headerName: 'Email',
-    //   width: 200,
-    // },
-    // {
-    //   field: 'chave_conciliacao',
-    //   headerName: 'Chave Conciliação',
-    //   width: 160,
-    // },
     {
       field: 'conciliado',
       headerName: 'Conciliado',
@@ -356,22 +315,6 @@ const TransactionTable = () => {
         />
       ),
     },
-    // {
-    //   field: 'created_at',
-    //   headerName: 'Criado em',
-    //   width: 160,
-    //    valueFormatter: (params: string) => {
-    //   return formatDate(params);
-    // }
-    // },
-    // {
-    //   field: 'updated_at',
-    //   headerName: 'Atualizado em',
-    //   width: 160,
-    //    valueFormatter: (params: string) => {
-    //   return formatDate(params);
-    // }
-    // },
     {
       field: 'actions',
       headerName: 'Ações',

@@ -550,15 +550,14 @@ const getMenuItems = (): MenuitemsType[] => {
                   icon: IconPig,
                   href: "/apps/contas-pagar-receber/transacoes",
                 },
-                {
-                  id: uniqueId(),
-                  title: "Concilição",
-                  icon: IconBuildingBank,
-                  href: "/apps/contas-pagar-receber/transacoes/conciliar",
-                },
               ]
             },
-
+            {
+              id: uniqueId(),
+              title: "Conciliações",
+              icon: IconBuildingBank,
+              href: "/apps/contas-pagar-receber/conciliacao",
+            },
           ],
         },
       ],
