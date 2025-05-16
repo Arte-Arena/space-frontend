@@ -15,6 +15,7 @@ export type MessageType = {
   msg: string
   createdAt?: string
   attachment: attachType[]
+  erro?: boolean
 }
 
 export interface ChatsType {
