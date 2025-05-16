@@ -22,7 +22,9 @@ import {
   Tooltip,
   useTheme,
   Link,
-  Button, // Para links em breadcrumbs ou outros locais
+  Button,
+  FormControlLabel,
+  LinearProgress, // Para links em breadcrumbs ou outros locais
 } from '@mui/material';
 
 // MUI Icons
@@ -38,6 +40,7 @@ import Breadcrumb from '@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcr
 import PageContainer from '@/app/components/container/PageContainer';
 import ParentCard from '@/app/components/shared/ParentCard';
 import { useRouter } from 'next/navigation';
+import CustomStyledSwitch from '@/app/components/switch/switch';
 
 // Supondo que suas definições de tipo estejam aqui
 // É crucial que estas interfaces reflitam a estrutura real dos seus dados
@@ -106,6 +109,8 @@ const ContasPagarReceberAdicionarScreen = () => {
   const [snackbarMessage, setSnackbarMessage] = useState<string>('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'warning' | 'info'>('info');
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
+  const [showPagar, setShowPagar] = useState(true);
+  const [showReceber, setShowReceber] = useState(true);
 
   const router = useRouter();
   const accessToken = localStorage.getItem('accessToken');
@@ -114,6 +119,13 @@ const ContasPagarReceberAdicionarScreen = () => {
     router.push('/login');
     return null;
   }
+
+  const handleChangePagar = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setShowPagar(event.target.checked);
+  };
+  const handleChangeReceber = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setShowReceber(event.target.checked);
+  };
 
   const toggleRowExpansion = (accountId: number) => {
     setExpandedRows(prev => ({
@@ -131,7 +143,7 @@ const ContasPagarReceberAdicionarScreen = () => {
         throw new Error('Token de acesso não encontrado. Por favor, realize o login novamente.');
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/contas-and-recorrentes`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/contas-and-recorrentes?pagar=${showPagar}&receber=${showReceber}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -163,7 +175,7 @@ const ContasPagarReceberAdicionarScreen = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // Adicionar dependências se 'process.env.NEXT_PUBLIC_API' puder mudar, mas geralmente é constante
+  }, [showPagar, showReceber]);
 
   useEffect(() => {
     fetchAccounts();
@@ -275,6 +287,15 @@ const ContasPagarReceberAdicionarScreen = () => {
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '70vh' }}>
           <CircularProgress />
           <Typography variant="h6" sx={{ mt: 2 }}>Carregando contas...</Typography>
+          <LinearProgress
+            sx={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              zIndex: 9999,
+            }}
+          />
         </Box>
       </PageContainer>
     );
@@ -301,6 +322,30 @@ const ContasPagarReceberAdicionarScreen = () => {
 
       <ParentCard title="Contas Registradas">
         <Box>
+          <Stack direction="row" justifyContent="space-evenly" alignItems="center" spacing={4} sx={{ mb: 3 }}>
+            <FormControlLabel
+              control={
+                <CustomStyledSwitch
+                  checked={showPagar}
+                  onChange={handleChangePagar}
+                  color="error"
+                  name="pagarSwitch"
+                />
+              }
+              label="Contas a Pagar"
+            />
+            <FormControlLabel
+              control={
+                <CustomStyledSwitch
+                  checked={showReceber}
+                  onChange={handleChangeReceber}
+                  color="success"
+                  name="receberSwitch"
+                />
+              }
+              label="Contas a Receber"
+            />
+          </Stack>
           {error && accounts.length > 0 && ( // Mostra erro como um alerta acima da tabela se já houver contas carregadas
             <Alert severity="warning" sx={{ mb: 2 }}>
               {error} - Algumas informações podem estar desatualizadas.
@@ -356,7 +401,7 @@ const ContasPagarReceberAdicionarScreen = () => {
                       <React.Fragment key={account.id}>
                         <TableRow>
                           <TableCell
-                            
+
                             onClick={() => (account.parcelas && account.parcelas.length > 0) && toggleRowExpansion(account.id)}
                             sx={{
                               p: 1,
