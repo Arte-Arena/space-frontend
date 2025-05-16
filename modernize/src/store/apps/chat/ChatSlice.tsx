@@ -40,7 +40,7 @@ export const sendMsg = createAsyncThunk<
   { rejectValue: string }
 >('chat/sendMsg', async ({ id, msg }, { rejectWithValue }) => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_CLIENT}/v5/extchat/send-message`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_CLIENT}/v1/extchat/send-message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ to: id, body: msg }),

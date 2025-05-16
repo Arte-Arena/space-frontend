@@ -7,7 +7,7 @@ interface chatType {
   onSidebarClose: (event: React.MouseEvent<HTMLElement>) => void;
 }
 
-const drawerWidth = 320;
+const drawerWidth = 520;
 
 const ChatSidebar = ({ isMobileSidebarOpen, onSidebarClose }: chatType) => {
   const lgUp = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
